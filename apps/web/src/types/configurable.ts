@@ -12,62 +12,49 @@ export type ConfigurableFieldUIType =
 /**
  * The type interface for options in a select field.
  */
-export interface Option {
+export interface ConfigurableFieldOption {
   label: string;
   value: string;
 }
 
-export type ConfigurableField<V = unknown> = {
+/**
+ * The UI configuration for a field in the configurable object.
+ */
+export type ConfigurableFieldUIMetadata<V = unknown> = {
   /**
-   * The value of the field. This will contain any inputs the
-   * user has made, and it should also contain any default value
-   * you choose to provide to this field.
+   * The default value to render in the UI.
    *
    * @default undefined
    */
-  value?: V;
+  default?: V;
   /**
-   * The config options for the UI field.
+   * The type of the field.
+   * @default "text"
    */
-  uiConfig: {
-    /**
-     * The type of the field.
-     */
-    type: ConfigurableFieldUIType;
-    /**
-     * The description of the field.
-     */
-    description?: string;
-    /**
-     * The placeholder of the field.
-     */
-    placeholder?: string;
-    /**
-     * The options of the field.
-     */
-    options?: Option[];
-    /**
-     * The minimum value of the field.
-     */
-    min?: number;
-    /**
-     * The maximum value of the field.
-     */
-    max?: number;
-    /**
-     * The step value of the field. E.g if using a slider, where you want
-     * people to be able to increment by 0.1, you would set this field to 0.1
-     */
-    step?: number;
-  };
-};
-
-/**
- * The type interface for a configurable object.
- */
-export type Configurable<V = unknown> = {
+  type?: ConfigurableFieldUIType;
   /**
-   * The name of the field. Used to render a label in the UI.
+   * The description of the field.
    */
-  [name: string]: ConfigurableField<V>;
+  description?: string;
+  /**
+   * The placeholder of the field.
+   */
+  placeholder?: string;
+  /**
+   * The options of the field.
+   */
+  options?: ConfigurableFieldOption[];
+  /**
+   * The minimum value of the field.
+   */
+  min?: number;
+  /**
+   * The maximum value of the field.
+   */
+  max?: number;
+  /**
+   * The step value of the field. E.g if using a slider, where you want
+   * people to be able to increment by 0.1, you would set this field to 0.1
+   */
+  step?: number;
 };
