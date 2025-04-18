@@ -22,6 +22,10 @@ export interface ConfigurableFieldOption {
  */
 export type ConfigurableFieldUIMetadata<V = unknown> = {
   /**
+   * The label of the field. This will be what is rendered in the UI.
+   */
+  label: string;
+  /**
    * The default value to render in the UI.
    *
    * @default undefined
