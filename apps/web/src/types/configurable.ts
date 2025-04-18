@@ -4,7 +4,7 @@ export type ConfigurableFieldUIType =
   | "text"
   | "textarea"
   | "number"
-  | "switch"
+  | "boolean"
   | "slider"
   | "select"
   | "json";
