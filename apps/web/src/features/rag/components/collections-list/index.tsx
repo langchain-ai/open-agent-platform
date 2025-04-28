@@ -106,7 +106,7 @@ export function CollectionsList({
             className={`flex cursor-pointer items-center justify-between rounded-md p-2 ${selectedCollection?.name === collection.name ? "bg-muted" : "hover:bg-muted/50"}`}
             onClick={() => onSelect(collection.name)}
           >
-            <span>{collection.name}</span>
+            <span>{collection.name === DEFAULT_COLLECTION_NAME ? "Default" : collection.name}</span>
             {collection.name !== DEFAULT_COLLECTION_NAME && (
               <DeleteCollection
                 collection={collection}

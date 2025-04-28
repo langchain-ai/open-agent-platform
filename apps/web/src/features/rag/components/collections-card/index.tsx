@@ -19,6 +19,8 @@ import { useRagContext } from "../../providers/RAG";
 import type { Collection } from "@/types/collection";
 import { useState } from "react";
 import { CollectionsList } from "../collections-list";
+import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
+import { toast } from "sonner";
 
 interface CollectionsCardProps {
   collections: Collection[];
@@ -49,6 +51,13 @@ export function CollectionsCard({
 
   // Handle creating a new collection (uses hook)
   const handleCreateCollection = async () => {
+    if (newCollectionName === DEFAULT_COLLECTION_NAME) {
+      toast.warning(`Default collection name is reserved.`, {
+        description: "Please choose a different name.",
+        duration: 5000,
+      });
+      return;
+    }
     const success = await createCollection(newCollectionName);
     if (success) {
       setNewCollectionName(""); // Clear input fields on success

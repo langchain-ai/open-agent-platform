@@ -3,7 +3,7 @@ import { Document } from "@langchain/core/documents";
 import { v4 as uuidv4 } from "uuid";
 import { Collection, CollectionCreate } from "@/types/collection";
 
-export const DEFAULT_COLLECTION_NAME = "Default";
+export const DEFAULT_COLLECTION_NAME = "default_collection";
 
 export function getDefaultCollection(collections: Collection[]): Collection {
   return (
@@ -11,6 +11,13 @@ export function getDefaultCollection(collections: Collection[]): Collection {
     collections[0]
   );
 }
+
+function getApiUrlOrThrow() {
+  if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
+    throw new Error("Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL")
+  }
+  return process.env.NEXT_PUBLIC_RAG_API_URL;
+};
 
 /**
  * Uploads documents to a specific collection using the API.
@@ -26,9 +33,12 @@ async function uploadDocuments(
   collectionName: string,
   files: File[],
   metadatas?: Record<string, any>[],
-  apiUrlBase: string = "http://localhost:8080", // Default API base URL
 ): Promise<any> {
-  const url = `${apiUrlBase}/collections/${encodeURIComponent(collectionName)}/documents`;
+  const API_BASE_URL = getApiUrlOrThrow();
+  if (!API_BASE_URL) {
+    throw new Error("Failed to upload documents: API URL not configured.");
+  }
+  const url = `${API_BASE_URL}/collections/${encodeURIComponent(collectionName)}/documents`;
 
   const formData = new FormData();
 
@@ -167,11 +177,7 @@ export function useRag(): UseRagReturn {
       collectionName: string,
       args?: { limit?: number; offset?: number },
     ): Promise<Document[]> => {
-      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-        throw new Error("Failed to fetch documents: API URL not configured.");
-      }
-
-      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      const url = new URL(getApiUrlOrThrow());
       url.pathname = `/collections/${collectionName}/documents`;
       if (args?.limit) {
         url.searchParams.set("limit", args.limit.toString());
@@ -192,14 +198,11 @@ export function useRag(): UseRagReturn {
 
   const deleteDocument = useCallback(
     async (id: string) => {
-      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-        throw new Error("Failed to fetch documents: API URL not configured.");
-      }
       if (!selectedCollection) {
         throw new Error("No collection selected");
       }
 
-      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      const url = new URL(getApiUrlOrThrow());
       url.pathname = `/collections/${selectedCollection.name}/documents/${id}`;
 
       const response = await fetch(url.toString(), { method: "DELETE" });
@@ -277,11 +280,7 @@ export function useRag(): UseRagReturn {
   // --- Collection Operations ---
 
   const getCollections = useCallback(async (): Promise<Collection[]> => {
-    if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-      throw new Error("Failed to fetch collections: API URL not configured.");
-    }
-
-    const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+    const url = new URL(getApiUrlOrThrow());
     url.pathname = "/collections";
 
     const response = await fetch(url.toString());
@@ -294,11 +293,7 @@ export function useRag(): UseRagReturn {
 
   const createCollection = useCallback(
     async (name: string): Promise<Collection | undefined> => {
-      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-        throw new Error("Failed to fetch collections: API URL not configured.");
-      }
-
-      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      const url = new URL(getApiUrlOrThrow());
       url.pathname = "/collections";
 
       const trimmedName = name.trim();
@@ -337,9 +332,6 @@ export function useRag(): UseRagReturn {
 
   const deleteCollection = useCallback(
     async (name: string): Promise<string | undefined> => {
-      if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-        throw new Error("Failed to fetch collections: API URL not configured.");
-      }
       const collectionToDelete = collections.find((c) => c.name === name);
       const deletedCollectionName = collectionToDelete?.name;
 
@@ -347,7 +339,7 @@ export function useRag(): UseRagReturn {
         return;
       }
 
-      const url = new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+      const url = new URL(getApiUrlOrThrow());
       url.pathname = `/collections/${name}`;
 
       const response = await fetch(url.toString(), {
