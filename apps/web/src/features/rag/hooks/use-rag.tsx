@@ -14,10 +14,17 @@ export function getDefaultCollection(collections: Collection[]): Collection {
 
 function getApiUrlOrThrow() {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
-    throw new Error("Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL")
+    throw new Error(
+      "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
+    );
   }
   return process.env.NEXT_PUBLIC_RAG_API_URL;
-};
+}
+
+export function getCollectionName(name: string | undefined) {
+  if (!name) return "";
+  return name === DEFAULT_COLLECTION_NAME ? "Default" : name;
+}
 
 /**
  * Uploads documents to a specific collection using the API.

@@ -63,8 +63,11 @@ export function CollectionsCard({
       setNewCollectionName(""); // Clear input fields on success
       setOpen(false);
     } else {
-      console.warn(
+      toast.warning(
         `Collection named '${newCollectionName}' could not be created (likely already exists).`,
+        {
+          duration: 5000,
+        },
       );
     }
   };

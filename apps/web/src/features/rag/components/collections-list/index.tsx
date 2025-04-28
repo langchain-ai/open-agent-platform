@@ -23,7 +23,11 @@ import {
 } from "@/components/ui/pagination";
 import { Trash2 } from "lucide-react";
 import type { Collection } from "@/types/collection";
-import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
+import {
+  DEFAULT_COLLECTION_NAME,
+  getCollectionName,
+} from "../../hooks/use-rag";
+import { cn } from "@/lib/utils";
 
 function DeleteCollection({
   collection,
@@ -103,10 +107,15 @@ export function CollectionsList({
         {paginatedCollections.map((collection) => (
           <div
             key={collection.name}
-            className={`flex cursor-pointer items-center justify-between rounded-md p-2 ${selectedCollection?.name === collection.name ? "bg-muted" : "hover:bg-muted/50"}`}
+            className={cn(
+              "flex cursor-pointer items-center justify-between rounded-md p-2",
+              selectedCollection?.name === collection.name
+                ? "bg-muted"
+                : "hover:bg-muted/50",
+            )}
             onClick={() => onSelect(collection.name)}
           >
-            <span>{collection.name === DEFAULT_COLLECTION_NAME ? "Default" : collection.name}</span>
+            <span>{getCollectionName(collection.name)}</span>
             {collection.name !== DEFAULT_COLLECTION_NAME && (
               <DeleteCollection
                 collection={collection}
@@ -128,11 +137,11 @@ export function CollectionsList({
                   onPageChange(Math.max(1, currentPage - 1));
                 }}
                 aria-disabled={currentPage === 1}
-                className={
+                className={cn(
                   currentPage === 1
                     ? "text-muted-foreground pointer-events-none"
-                    : undefined
-                }
+                    : undefined,
+                )}
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, page) => (
@@ -157,11 +166,11 @@ export function CollectionsList({
                   onPageChange(Math.min(totalPages, currentPage + 1));
                 }}
                 aria-disabled={currentPage === totalPages}
-                className={
+                className={cn(
                   currentPage === totalPages
                     ? "text-muted-foreground pointer-events-none"
-                    : undefined
-                }
+                    : undefined,
+                )}
               />
             </PaginationItem>
           </PaginationContent>

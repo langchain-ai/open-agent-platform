@@ -33,6 +33,7 @@ import { Document } from "@langchain/core/documents";
 import { useRagContext } from "../../providers/RAG";
 import { format } from "date-fns";
 import { Collection } from "@/types/collection";
+import { getCollectionName } from "../../hooks/use-rag";
 
 interface DocumentsTableProps {
   documents: Document[];
@@ -69,7 +70,9 @@ export function DocumentsTable({
             <TableRow key={doc.id}>
               <TableCell className="font-medium">{doc.metadata.name}</TableCell>
               <TableCell>
-                <Badge variant="secondary">{selectedCollection.name}</Badge>
+                <Badge variant="secondary">
+                  {getCollectionName(selectedCollection.name)}
+                </Badge>
               </TableCell>
               <TableCell>
                 {format(new Date(doc.metadata.created_at), "MM/dd/yyyy h:mm a")}

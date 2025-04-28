@@ -26,7 +26,7 @@ import { Plus, FileUp, X } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
-import { DEFAULT_COLLECTION_NAME } from "../../hooks/use-rag";
+import { getCollectionName } from "../../hooks/use-rag";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -124,7 +124,7 @@ export function DocumentsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{`${selectedCollection?.name ? selectedCollection?.name === DEFAULT_COLLECTION_NAME ? "Default" : selectedCollection?.name : ""} Documents`}</CardTitle>
+        <CardTitle>{`${getCollectionName(selectedCollection?.name)} Documents`}</CardTitle>
         <CardDescription>
           {"Manage documents in this collection"}
         </CardDescription>
