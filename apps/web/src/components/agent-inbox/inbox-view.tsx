@@ -1,4 +1,4 @@
-import { useThreadsContext } from "@/components/agent-inbox/contexts/ThreadContext";
+import { useThreadsContext } from "@/providers/Thread";
 import { InboxItem } from "./components/inbox-item";
 import React from "react";
 import { Pagination } from "./components/pagination";

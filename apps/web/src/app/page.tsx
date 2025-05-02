@@ -6,6 +6,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { ChatBreadcrumb } from "@/features/chat/components/chat-breadcrumb";
+import { ThreadsProvider } from "@/providers/Thread";
 
 /**
  * The default page (/).
@@ -25,7 +26,9 @@ export default function ChatPage(): React.ReactNode {
           <ChatBreadcrumb />
         </div>
       </header>
-      <ChatInterface />
+      <ThreadsProvider>
+        <ChatInterface />
+      </ThreadsProvider>
     </React.Suspense>
   );
 }

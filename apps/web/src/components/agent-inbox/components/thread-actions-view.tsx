@@ -13,6 +13,7 @@ import { constructOpenInStudioURL } from "../utils";
 import { ThreadIdCopyable } from "./thread-id";
 import { InboxItemInput } from "./inbox-item-input";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { IMPROPER_SCHEMA } from "@/constants";
 import {
   STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
   VIEW_STATE_THREAD_QUERY_PARAM,
@@ -20,8 +21,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useQueryStates, parseAsString, useQueryState } from "nuqs";
-import { useThreadsContext } from "../contexts/ThreadContext";
-import { useState } from "react";
+import { useThreadsContext } from "@/providers/Thread";
+import { useMemo, useState } from "react";
 
 import {
   Tooltip,
@@ -37,7 +38,6 @@ interface ThreadActionsViewProps<
 > {
   threadData: ThreadData<ThreadValues>;
   isInterrupted: boolean;
-  threadTitle: string;
   showState: boolean;
   showDescription: boolean;
   handleShowSidePanel?: (
@@ -112,7 +112,6 @@ export function ThreadActionsView<
 >({
   threadData,
   isInterrupted: _propIsInterrupted,
-  threadTitle,
   showDescription,
   showState,
   handleShowSidePanel,
@@ -124,6 +123,17 @@ export function ThreadActionsView<
     [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,
   });
   const [refreshing, setRefreshing] = useState(false);
+
+  // Derive thread title
+  const threadTitle = useMemo(() => {
+    if (
+      threadData?.interrupts?.[0]?.action_request?.action &&
+      threadData.interrupts[0].action_request.action !== IMPROPER_SCHEMA
+    ) {
+      return threadData.interrupts[0].action_request.action;
+    }
+    return `Thread: ${threadData?.thread.thread_id.slice(0, 6)}...`;
+  }, [threadData]);
 
   // Only use interrupted actions for interrupted threads
   const isInterrupted =

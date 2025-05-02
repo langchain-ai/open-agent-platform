@@ -2,7 +2,7 @@
 
 import { AgentInbox } from "@/components/agent-inbox";
 import React from "react";
-import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
+import { ThreadsProvider } from "@/providers/Thread";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";

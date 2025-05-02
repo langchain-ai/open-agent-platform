@@ -10,6 +10,7 @@ import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
 import { useQueryState, parseAsBoolean } from "nuqs";
+import { Interrupt } from "./interrupt";
 
 function CustomComponent({
   message,
@@ -79,7 +80,14 @@ export function AssistantMessage({
   );
 
   const thread = useStreamContext();
+  const isLastMessage =
+    thread.messages[thread.messages.length - 1].id === message?.id;
+  const hasNoAIOrToolMessages = !thread.messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
+
   const meta = message ? thread.getMessagesMetadata(message) : undefined;
+  const threadInterrupt = thread.interrupt;
 
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
   const anthropicStreamedToolCalls = Array.isArray(content)
@@ -106,7 +114,14 @@ export function AssistantMessage({
   return (
     <div className="group mr-auto flex items-start gap-2">
       {isToolResult ? (
-        <ToolResult message={message} />
+        <>
+          <ToolResult message={message} />
+          <Interrupt
+            interruptValue={threadInterrupt?.value}
+            isLastMessage={isLastMessage}
+            hasNoAIOrToolMessages={hasNoAIOrToolMessages}
+          />
+        </>
       ) : (
         <div className="flex flex-col gap-2">
           {contentString.length > 0 && (
@@ -133,19 +148,11 @@ export function AssistantMessage({
               thread={thread}
             />
           )}
-          {/**
-           * TODO: Support rendering interrupts.
-           * Tracking issue: https://github.com/langchain-ai/open-agent-platform/issues/22
-           */}
-          {/* {isAgentInboxInterruptSchema(threadInterrupt?.value) &&
-            (isLastMessage || hasNoAIOrToolMessages) && (
-              <ThreadView interrupt={threadInterrupt.value} />
-            )}
-          {threadInterrupt?.value &&
-          !isAgentInboxInterruptSchema(threadInterrupt.value) &&
-          isLastMessage ? (
-            <GenericInterruptView interrupt={threadInterrupt.value} />
-          ) : null} */}
+          <Interrupt
+            interruptValue={threadInterrupt?.value}
+            isLastMessage={isLastMessage}
+            hasNoAIOrToolMessages={hasNoAIOrToolMessages}
+          />
           <div
             className={cn(
               "mr-auto flex items-center gap-2 transition-opacity",

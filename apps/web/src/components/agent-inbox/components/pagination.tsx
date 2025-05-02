@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useThreadsContext } from "../contexts/ThreadContext";
+import { useThreadsContext } from "@/providers/Thread";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";

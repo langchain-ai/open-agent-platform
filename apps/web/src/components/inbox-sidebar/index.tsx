@@ -27,7 +27,7 @@ import { Deployment } from "@/types/deployment";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
-import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
+import { useThreadsContext } from "@/providers/Thread";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {

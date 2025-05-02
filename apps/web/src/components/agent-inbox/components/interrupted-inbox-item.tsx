@@ -4,7 +4,8 @@ import React from "react";
 import { InboxItemStatuses } from "./statuses";
 import { format } from "date-fns";
 import { useQueryState, parseAsString } from "nuqs";
-import { IMPROPER_SCHEMA, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
+import { VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
+import { IMPROPER_SCHEMA } from "@/constants";
 import { ThreadIdCopyable } from "./thread-id";
 
 interface InterruptedInboxItem<

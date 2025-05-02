@@ -1,11 +1,11 @@
 import { StateView } from "./components/state-view";
 import { ThreadActionsView } from "./components/thread-actions-view";
-import { useThreadsContext } from "./contexts/ThreadContext";
+import { useThreadsContext } from "@/providers/Thread";
 import { ThreadData } from "./types";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { useQueryState, parseAsString } from "nuqs";
-import { IMPROPER_SCHEMA, VIEW_STATE_THREAD_QUERY_PARAM } from "./constants";
+import { VIEW_STATE_THREAD_QUERY_PARAM } from "./constants";
 import { logger } from "./utils/logger";
 
 export function ThreadView<
@@ -26,17 +26,6 @@ export function ThreadView<
 
   // Show side panel for all thread types
   const showSidePanel = showDescription || showState;
-
-  // Derive thread title
-  const threadTitle = React.useMemo(() => {
-    if (
-      threadData?.interrupts?.[0]?.action_request?.action &&
-      threadData.interrupts[0].action_request.action !== IMPROPER_SCHEMA
-    ) {
-      return threadData.interrupts[0].action_request.action;
-    }
-    return `Thread: ${threadData?.thread.thread_id.slice(0, 6)}...`;
-  }, [threadData]);
 
   // Scroll to top when thread view is mounted
   React.useEffect(() => {
@@ -109,7 +98,6 @@ export function ThreadView<
         <ThreadActionsView<ThreadValues>
           threadData={threadData}
           isInterrupted={isInterrupted}
-          threadTitle={threadTitle}
           showState={showState}
           showDescription={showDescription}
           handleShowSidePanel={handleShowSidePanel}
