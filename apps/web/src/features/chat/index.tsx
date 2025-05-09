@@ -6,6 +6,7 @@ import { Thread } from "./components/thread";
 import { ConfigurationSidebar } from "./components/configuration-sidebar";
 import { ThreadHistorySidebar } from "./components/thread-history-sidebar";
 import { SidebarButtons } from "./components/sidebar-buttons";
+import { ArtifactProvider } from "./components/artifact/artifact";
 
 /**
  * The parent component containing the chat interface.
@@ -81,27 +82,27 @@ export default function ChatInterface(): React.ReactNode {
 
   return (
     <StreamProvider>
-      <div className="flex h-full overflow-x-hidden">
-        <div className="flex h-full flex-1 flex-col p-4">
+      <ArtifactProvider>
+        <div className="flex h-full overflow-x-hidden">
           <Thread />
+          <SidebarButtons
+            ref={buttonRef}
+            historyOpen={historyOpen}
+            setHistoryOpen={setHistoryOpen}
+            configOpen={configOpen}
+            setConfigOpen={setConfigOpen}
+          />
+          <ThreadHistorySidebar
+            ref={historyRef}
+            open={historyOpen}
+            setOpen={setHistoryOpen}
+          />
+          <ConfigurationSidebar
+            ref={configRef}
+            open={configOpen}
+          />
         </div>
-        <SidebarButtons
-          ref={buttonRef}
-          historyOpen={historyOpen}
-          setHistoryOpen={setHistoryOpen}
-          configOpen={configOpen}
-          setConfigOpen={setConfigOpen}
-        />
-        <ThreadHistorySidebar
-          ref={historyRef}
-          open={historyOpen}
-          setOpen={setHistoryOpen}
-        />
-        <ConfigurationSidebar
-          ref={configRef}
-          open={configOpen}
-        />
-      </div>
+      </ArtifactProvider>
     </StreamProvider>
   );
 }
