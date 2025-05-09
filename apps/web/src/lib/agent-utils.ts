@@ -64,3 +64,11 @@ export function groupAgentsByGraphs(agents: Agent[]): Agent[][] {
     }, {}),
   );
 }
+
+export function getUserSpecifiedDefaultAgent(agents: Agent[]): Agent | null {
+  const defaultGraphId = process.env.NEXT_PUBLIC_DEFAULT_GRAPH_ID;
+  if (!defaultGraphId) {
+    return null;
+  }
+  return agents.find(isUserSpecifiedDefaultAgent) ?? null;
+}

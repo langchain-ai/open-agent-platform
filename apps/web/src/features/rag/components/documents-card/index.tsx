@@ -1,5 +1,6 @@
 "use client";
 
+import NextLink from "next/link";
 import type React from "react";
 import { useState, useMemo, DragEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Plus, FileUp, X } from "lucide-react";
+import { Plus, FileUp, X, MessageSquare } from "lucide-react";
 import { useRagContext } from "../../providers/RAG";
 import { DocumentsTable } from "./documents-table";
 import { Collection } from "@/types/collection";
 import { getCollectionName } from "../../hooks/use-rag";
 import { toast } from "sonner";
+import { useAgentsContext } from "@/providers/Agents";
+import { getUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 interface DocumentsCardProps {
   selectedCollection: Collection | undefined;
@@ -40,6 +43,8 @@ export function DocumentsCard({
   currentPage,
   setCurrentPage,
 }: DocumentsCardProps) {
+  const { agents } = useAgentsContext();
+  const defaultAgent = getUserSpecifiedDefaultAgent(agents);
   const {
     documents,
     handleFileUpload: handleDocumentFileUpload,
@@ -194,11 +199,23 @@ export function DocumentsCard({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>{`${getCollectionName(selectedCollection?.name)} Documents`}</CardTitle>
-        <CardDescription>
-          {"Manage documents in this collection"}
-        </CardDescription>
+      <CardHeader className="flex w-full items-center justify-between">
+        <div className="flex flex-col gap-2">
+          <CardTitle>{`${getCollectionName(selectedCollection?.name)} Documents`}</CardTitle>
+          <CardDescription>
+            {"Manage documents in this collection"}
+          </CardDescription>
+        </div>
+        {defaultAgent && (
+          <NextLink
+            href={`/?agentId=${defaultAgent.assistant_id}&deploymentId=${defaultAgent.deploymentId}`}
+          >
+            <Button onClick={() => {}}>
+              <MessageSquare className="mr-2 h-3.5 w-3.5" />
+              Chat with your documents
+            </Button>
+          </NextLink>
+        )}
       </CardHeader>
       <CardContent>
         <div className="mb-6">

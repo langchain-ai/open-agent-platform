@@ -20,7 +20,7 @@ import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { getUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -85,7 +85,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     if (value || !agents.length) {
       return;
     }
-    const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+    const defaultAgent = getUserSpecifiedDefaultAgent(agents);
     if (defaultAgent) {
       setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
     }
