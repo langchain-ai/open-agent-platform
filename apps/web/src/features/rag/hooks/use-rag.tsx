@@ -93,7 +93,9 @@ async function uploadDocuments(
 
 // Return type for the combined hook
 interface UseRagReturn {
-  // Initial load
+  // Misc
+  initialSearchExecuted: boolean;
+  setInitialSearchExecuted: Dispatch<SetStateAction<boolean>>;
   initialFetch: () => Promise<void>;
 
   // Collection state and operations
@@ -150,36 +152,56 @@ export function useRag(): UseRagReturn {
   const [selectedCollection, setSelectedCollection] = useState<
     Collection | undefined
   >(undefined);
+  const [initialSearchExecuted, setInitialSearchExecuted] = useState(false);
 
   // --- Initial Fetch ---
   const initialFetch = useCallback(async () => {
     setCollectionsLoading(true);
     setDocumentsLoading(true);
-    let defaultCollectionId = "";
-    const initCollections = await getCollections();
-    if (!initCollections.length) {
-      // No collections exist, create the default collection.
-      const defaultCollection = await createCollection(DEFAULT_COLLECTION_NAME);
-      if (!defaultCollection) {
-        throw new Error("Failed to create default collection");
+    let initCollections: Collection[] = [];
+    
+    try {
+      initCollections = await getCollections();
+    } catch (e: any) {
+      if (e.message.includes("Failed to fetch collections")) {
+        // Database likely not initialized yet. Let's try this then re-fetch.
+        await initializeDatabase();
+        initCollections = await getCollections();
       }
-      defaultCollectionId = defaultCollection.uuid;
-    } else {
-      setCollections(initCollections);
-      defaultCollectionId =
-        initCollections.find((c) => c.name === DEFAULT_COLLECTION_NAME)?.uuid ||
-        "";
     }
-    setCollectionsLoading(false);
-    setSelectedCollection(
-      initCollections.find((c) => c.uuid === defaultCollectionId),
-    );
 
-    const documents = await listDocuments(DEFAULT_COLLECTION_NAME, {
+    if (!initCollections.length) {
+      // No collections exist, return early
+      setCollectionsLoading(false);
+      setDocumentsLoading(false);
+      console.log("No collections exist, returning early")
+      setInitialSearchExecuted(true);
+      return;
+    }
+
+    setCollections(initCollections);
+    const defaultCollection = initCollections[0];
+    setSelectedCollection(defaultCollection);
+
+    setInitialSearchExecuted(true);
+    setCollectionsLoading(false);
+
+    const documents = await listDocuments(defaultCollection.name, {
       limit: 100,
     });
     setDocuments(documents);
     setDocumentsLoading(false);
+  }, []);
+
+  const initializeDatabase = useCallback(async () => {
+    const url = getApiUrlOrThrow();
+    url.pathname = "/admin/initialize-database";
+    const response = await fetch(url.toString(), { method: "POST" });
+    if (!response.ok) {
+      throw new Error(`Failed to initialize database: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data;
   }, []);
 
   // --- Document Operations ---
@@ -459,7 +481,9 @@ export function useRag(): UseRagReturn {
 
   // --- Return combined state and functions ---
   return {
-    // Initial load
+    // Misc
+    initialSearchExecuted,
+    setInitialSearchExecuted,
     initialFetch,
 
     // Collections
