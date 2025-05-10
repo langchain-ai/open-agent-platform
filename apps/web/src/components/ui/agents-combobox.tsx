@@ -23,7 +23,6 @@ import { Agent } from "@/types/agent";
 import {
   groupAgentsByGraphs,
   isDefaultAssistant,
-  isUserSpecifiedDefaultAgent,
   sortAgentGroup,
 } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -131,13 +130,6 @@ export function AgentsCombobox({
   triggerAsChild,
   agentsLoading,
 }: AgentsComboboxProps) {
-  // Filter out default agents
-  const filteredAgents = React.useMemo(() => {
-    return agents.filter(
-      (agent) =>
-        !isDefaultAssistant(agent) || isUserSpecifiedDefaultAgent(agent),
-    );
-  }, [agents]);
   const deployments = getDeployments();
 
   // Convert value to array for internal handling
@@ -189,8 +181,8 @@ export function AgentsCombobox({
           >
             {selectedValues.length > 0
               ? multiple
-                ? getMultipleSelectedAgentValues(selectedValues, filteredAgents)
-                : getSelectedAgentValue(selectedValues[0], filteredAgents)
+                ? getMultipleSelectedAgentValues(selectedValues, agents)
+                : getSelectedAgentValue(selectedValues[0], agents)
               : placeholder}
             <ChevronsUpDown className="opacity-50" />
           </Button>
@@ -199,7 +191,7 @@ export function AgentsCombobox({
       <PopoverContent className="min-w-[200px] p-0">
         <Command
           filter={(value: string, search: string) => {
-            const name = getNameFromValue(value, filteredAgents);
+            const name = getNameFromValue(value, agents);
             if (!name) return 0;
             if (name.toLowerCase().includes(search.toLowerCase())) {
               return 1;
@@ -221,7 +213,7 @@ export function AgentsCombobox({
             </CommandEmpty>
             {deployments.map((deployment) => {
               // Filter agents for the current deployment (excluding default agents)
-              const deploymentAgents = filteredAgents.filter(
+              const deploymentAgents = agents.filter(
                 (agent) => agent.deploymentId === deployment.id,
               );
               // Group filtered agents by graph (still needed for sorting/grouping logic)

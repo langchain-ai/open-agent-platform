@@ -29,7 +29,8 @@ export function ToolListCommand({
   className,
 }: ToolListCommandProps) {
   const [open, setOpen] = useState(false);
-  const { tools, loading } = useMCPContext();
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { tools, loading, getTools, setTools, cursor } = useMCPContext();
 
   return (
     <Popover
@@ -84,6 +85,35 @@ export function ToolListCommand({
                 {_.startCase(tool.name)}
               </CommandItem>
             ))}
+            {cursor && (
+              <div className="border-t p-1">
+                <Button
+                  variant="outline"
+                  className="w-full justify-center"
+                  disabled={loadingMore}
+                  onClick={async () => {
+                    setLoadingMore(true);
+                    try {
+                      const moreTool = await getTools(cursor);
+                      setTools((prevTools) => [...prevTools, ...moreTool]);
+                    } catch (error) {
+                      console.error("Failed to load more tools:", error);
+                    } finally {
+                      setLoadingMore(false);
+                    }
+                  }}
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </Button>
+              </div>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

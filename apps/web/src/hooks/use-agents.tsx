@@ -2,14 +2,23 @@ import { createClient } from "@/lib/client";
 import { Agent } from "@/types/agent";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
 
 export function useAgents() {
+  const { session } = useAuthContext();
+
   const getAgent = async (
     agentId: string,
     deploymentId: string,
   ): Promise<Agent | undefined> => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     try {
-      const client = createClient(deploymentId);
+      const client = createClient(deploymentId, session.accessToken);
       const agent = await client.assistants.get(agentId);
       return {
         ...agent,
@@ -26,8 +35,14 @@ export function useAgents() {
     agentId: string,
     deploymentId: string,
   ) => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     try {
-      const client = createClient(deploymentId);
+      const client = createClient(deploymentId, session.accessToken);
       const schemas = await client.assistants.getSchemas(agentId);
 
       return schemas.config_schema ?? undefined;
@@ -60,8 +75,14 @@ export function useAgents() {
       config: Record<string, any>;
     },
   ): Promise<Assistant | undefined> => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     try {
-      const client = createClient(deploymentId);
+      const client = createClient(deploymentId, session.accessToken);
       const agent = await client.assistants.create({
         graphId,
         metadata: {
@@ -91,8 +112,14 @@ export function useAgents() {
       config?: Record<string, any>;
     },
   ): Promise<Assistant | undefined> => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     try {
-      const client = createClient(deploymentId);
+      const client = createClient(deploymentId, session.accessToken);
       const agent = await client.assistants.update(agentId, {
         metadata: {
           ...(args.description && { description: args.description }),
@@ -112,8 +139,14 @@ export function useAgents() {
     deploymentId: string,
     agentId: string,
   ): Promise<boolean> => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return false;
+    }
     try {
-      const client = createClient(deploymentId);
+      const client = createClient(deploymentId, session.accessToken);
       await client.assistants.delete(agentId);
       return true;
     } catch (e) {

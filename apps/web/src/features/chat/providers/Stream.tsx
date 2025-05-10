@@ -21,6 +21,8 @@ import { useAgentsContext } from "@/providers/Agents";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { useAuthContext } from "@/providers/Auth";
+import { getDeployments } from "@/lib/environment/deployments";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -47,11 +49,15 @@ const StreamSession = ({
   agentId: string;
   deploymentId: string;
 }) => {
-  const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
+  const { session } = useAuthContext();
 
+  const deployment = getDeployments().find((d) => d.id === deploymentId);
+  if (!deployment) {
+    throw new Error(`Deployment ${deploymentId} not found`);
+  }
   const [threadId, setThreadId] = useQueryState("threadId");
   const streamValue = useTypedStream({
-    apiUrl: `${baseApiUrl}/langgraph/${deploymentId}`,
+    apiUrl: deployment.deploymentUrl,
     assistantId: agentId,
     threadId: threadId ?? null,
     onCustomEvent: (event, options) => {
@@ -62,6 +68,10 @@ const StreamSession = ({
     },
     onThreadId: (id) => {
       setThreadId(id);
+    },
+    defaultHeaders: {
+      Authorization: `Bearer ${session?.accessToken}`,
+      "x-supabase-access-token": session?.accessToken,
     },
   });
 

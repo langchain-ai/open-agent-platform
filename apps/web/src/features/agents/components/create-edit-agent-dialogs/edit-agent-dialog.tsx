@@ -33,7 +33,6 @@ export function EditAgentDialog({
   const {
     getSchemaAndUpdateConfig,
     configurations,
-    setConfigurations,
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
@@ -45,6 +44,7 @@ export function EditAgentDialog({
     setName,
     description,
     setDescription,
+    clearState: clearAgentConfigState,
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
 
@@ -117,10 +117,7 @@ export function EditAgentDialog({
   };
 
   const clearState = () => {
-    setConfig({});
-    setName("");
-    setDescription("");
-    setConfigurations([]);
+    clearAgentConfigState();
     setLoading(false);
     setSubmitting(false);
   };

@@ -11,14 +11,20 @@ interface ResponseViewerProps {
   response: any;
   isLoading: boolean;
   errorMessage?: string;
+  authRequiredMessage?: React.ReactNode;
 }
 
 export function ResponseViewer({
   response,
   isLoading,
   errorMessage,
+  authRequiredMessage,
 }: ResponseViewerProps) {
   const [viewMode, setViewMode] = useState<"pretty" | "raw">("pretty");
+
+  if (authRequiredMessage) {
+    return authRequiredMessage;
+  }
 
   if (errorMessage) {
     return (

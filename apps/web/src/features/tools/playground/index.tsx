@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { SchemaForm } from "./components/schema-form";
 import { ResponseViewer } from "./components/response-viewer";
 import { Button } from "@/components/ui/button";
-import { CirclePlay, Loader2 } from "lucide-react";
+import { AlertTriangle, CirclePlay, Loader2 } from "lucide-react";
 import { useMCPContext } from "@/providers/MCP";
 import { Tool } from "@/types/tool";
 import { ToolListCommand } from "../components/tool-list-command";
@@ -23,6 +23,8 @@ export default function ToolsPlaygroundInterface() {
   const [response, setResponse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [authRequiredMessage, setAuthRequiredMessage] =
+    useState<ReactNode>(null);
 
   const resetState = () => {
     setInputValues({});
@@ -60,6 +62,7 @@ export default function ToolsPlaygroundInterface() {
     setIsLoading(true);
     setResponse(null);
     setErrorMessage("");
+    setAuthRequiredMessage(null);
 
     try {
       const toolRes = await callTool({
@@ -69,9 +72,36 @@ export default function ToolsPlaygroundInterface() {
       setResponse(toolRes);
       setInputValues({});
     } catch (e: any) {
-      console.error("Error calling tool", e);
-      setErrorMessage(e.message);
-      toast.error("Tool call failed. Please try again.", { richColors: true });
+      if (!("code" in e) || !("data" in e)) {
+        console.error("Error calling tool", e);
+        setErrorMessage(e.message);
+        toast.error("Tool call failed. Please try again.", {
+          richColors: true,
+        });
+        return;
+      }
+
+      if (e.code === -32003 && e.data) {
+        setAuthRequiredMessage(
+          <div className="flex flex-col items-center justify-center rounded-md border border-blue-200 bg-blue-50 p-6 text-blue-700">
+            <AlertTriangle className="mb-3 h-8 w-8 text-blue-500" />
+            <p className="mb-1 text-center text-lg font-semibold">
+              {e.data?.message?.text}
+            </p>
+            <p className="mb-2 text-center">
+              After authenticating, please run the tool again.
+            </p>
+            <a
+              href={e.data?.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm break-all underline underline-offset-2"
+            >
+              {e.data?.url}
+            </a>
+          </div>,
+        );
+      }
     }
 
     setIsLoading(false);
@@ -139,6 +169,7 @@ export default function ToolsPlaygroundInterface() {
             response={response}
             isLoading={isLoading}
             errorMessage={errorMessage}
+            authRequiredMessage={authRequiredMessage}
           />
         </div>
       </div>

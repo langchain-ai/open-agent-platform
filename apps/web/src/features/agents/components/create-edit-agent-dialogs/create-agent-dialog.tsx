@@ -40,9 +40,7 @@ export function CreateAgentDialog({
   const {
     getSchemaAndUpdateConfig,
     configurations,
-    setConfigurations,
     toolConfigurations,
-    setToolConfigurations,
     ragConfigurations,
     agentsConfigurations,
     config,
@@ -52,6 +50,7 @@ export function CreateAgentDialog({
     setName,
     description,
     setDescription,
+    clearState: clearAgentConfigState,
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
   const [selectedDeployment, setSelectedDeployment] = useState<Deployment>();
@@ -88,7 +87,9 @@ export function CreateAgentDialog({
     )
       return;
 
-    getSchemaAndUpdateConfig(selectedGraph);
+    getSchemaAndUpdateConfig(selectedGraph, {
+      isCreate: true,
+    });
   }, [selectedGraph, selectedDeployment, open]);
 
   const handleSubmit = async (
@@ -140,13 +141,9 @@ export function CreateAgentDialog({
   };
 
   const clearState = () => {
-    setConfig({});
-    setName("");
-    setDescription("");
+    clearAgentConfigState();
     setSelectedDeployment(undefined);
     setSelectedGraph(undefined);
-    setToolConfigurations([]);
-    setConfigurations([]);
   };
 
   return (

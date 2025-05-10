@@ -20,7 +20,7 @@ import {
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
-import { useState } from "react";
+import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -66,9 +66,19 @@ export function AgentFieldsForm({
   agentsConfigurations,
 }: AgentFieldsFormProps) {
   const { tools, setTools, getTools, cursor, loading } = useMCPContext();
-  const [loadingMore, setLoadingMore] = useState(false);
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
-    useSearchTools(tools);
+  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
+    useSearchTools(tools, {
+      preSelectedTools: toolConfigurations[0]?.default?.tools,
+    });
+
+  const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
+    tools,
+    setTools,
+    getTools,
+    cursor,
+    toolConfigurations,
+    searchTerm: toolSearchTerm,
+  });
 
   return (
     <div className="flex flex-col gap-8 overflow-y-auto py-4">
@@ -137,9 +147,9 @@ export function AgentFieldsForm({
             />
             <div className="max-h-[500px] w-full flex-1 overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
               {toolConfigurations[0]?.label
-                ? filteredTools.map((c, index) => (
+                ? displayTools.map((c) => (
                     <ConfigFieldTool
-                      key={`${c.name}-${index}`}
+                      key={`tool-${c.name}`}
                       id={c.name}
                       label={c.name}
                       description={c.description}
@@ -156,7 +166,7 @@ export function AgentFieldsForm({
                     />
                   ))
                 : null}
-              {filteredTools.length === 0 && toolSearchTerm && (
+              {displayTools.length === 0 && toolSearchTerm && (
                 <p className="my-4 w-full text-center text-sm text-slate-500">
                   No tools found matching "{toolSearchTerm}".
                 </p>
@@ -172,10 +182,10 @@ export function AgentFieldsForm({
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      setLoadingMore(true);
                       try {
+                        setLoadingMore(true);
                         const moreTool = await getTools(cursor);
-                        setTools([...tools, ...moreTool]);
+                        setTools((prevTools) => [...prevTools, ...moreTool]);
                       } catch (error) {
                         console.error("Failed to load more tools:", error);
                       } finally {

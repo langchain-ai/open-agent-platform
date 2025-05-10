@@ -6,7 +6,7 @@ import { Agent } from "@/types/agent";
  * @returns True if the agent is the default, false otherwise.
  */
 export function isDefaultAssistant(agent: Agent): boolean {
-  return agent.metadata?.created_by === "system";
+  return agent.metadata?._x_oap_is_default === true;
 }
 
 export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {

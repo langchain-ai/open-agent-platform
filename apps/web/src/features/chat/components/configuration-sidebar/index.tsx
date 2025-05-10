@@ -28,6 +28,7 @@ import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
+import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { useAgentsContext } from "@/providers/Agents";
 import {
@@ -119,7 +120,7 @@ export const ConfigurationSidebar = forwardRef<
   AIConfigPanelProps
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
-  const { tools } = useMCPContext();
+  const { tools, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId] = useQueryState("threadId");
@@ -133,8 +134,6 @@ export const ConfigurationSidebar = forwardRef<
     loading,
     supportedConfigs,
   } = useAgentConfig();
-  const { toolSearchTerm, debouncedSetSearchTerm, filteredTools } =
-    useSearchTools(tools);
   const { updateAgent, createAgent } = useAgents();
 
   const [newName, setNewName] = useState("");
@@ -143,6 +142,19 @@ export const ConfigurationSidebar = forwardRef<
     openNameAndDescriptionAlertDialog,
     setOpenNameAndDescriptionAlertDialog,
   ] = useState(false);
+
+  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
+    useSearchTools(tools, {
+      preSelectedTools: toolConfigurations[0]?.default?.tools,
+    });
+  const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
+    tools,
+    setTools,
+    getTools,
+    cursor,
+    toolConfigurations,
+    searchTerm: toolSearchTerm,
+  });
 
   useEffect(() => {
     if (
@@ -158,12 +170,12 @@ export const ConfigurationSidebar = forwardRef<
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
     );
     if (!selectedAgent) {
-      toast.error("Failed to get agent", { richColors: true });
+      toast.error("Failed to get agent config.", { richColors: true });
       return;
     }
 
     getSchemaAndUpdateConfig(selectedAgent);
-  }, [agentId, deploymentId, agents]);
+  }, [agentId, deploymentId, agents, refreshAgentsLoading]);
 
   const handleSave = async () => {
     if (!agentId || !deploymentId || !agents?.length) return;
@@ -171,7 +183,10 @@ export const ConfigurationSidebar = forwardRef<
       (a) => a.assistant_id === agentId && a.deploymentId === deploymentId,
     );
     if (!selectedAgent) {
-      toast.error("Failed to get agent", { richColors: true });
+      toast.error("Failed to save config.", {
+        richColors: true,
+        description: "Unable to find selected agent.",
+      });
       return;
     }
     if (isDefaultAssistant(selectedAgent) && !newName) {
@@ -321,35 +336,65 @@ export const ConfigurationSidebar = forwardRef<
                       onSearchChange={debouncedSetSearchTerm}
                       placeholder="Search tools..."
                     />
-                    {agentId &&
-                      filteredTools.length > 0 &&
-                      filteredTools.map((c, index) => (
-                        <ConfigFieldTool
-                          key={`${c.name}-${index}`}
-                          id={c.name}
-                          label={c.name}
-                          description={c.description}
-                          agentId={agentId}
-                          toolId={toolConfigurations[0]?.label}
-                        />
-                      ))}
-                    {agentId &&
-                      filteredTools.length === 0 &&
-                      toolSearchTerm && (
+                    <div className="flex-1 space-y-4 overflow-y-auto rounded-md">
+                      {agentId &&
+                        displayTools.length > 0 &&
+                        displayTools.map((c, index) => (
+                          <ConfigFieldTool
+                            key={`${c.name}-${index}`}
+                            id={c.name}
+                            label={c.name}
+                            description={c.description}
+                            agentId={agentId}
+                            toolId={toolConfigurations[0]?.label}
+                          />
+                        ))}
+                      {agentId &&
+                        displayTools.length === 0 &&
+                        toolSearchTerm && (
+                          <p className="mt-4 text-center text-sm text-slate-500">
+                            No tools found matching "{toolSearchTerm}".
+                          </p>
+                        )}
+                      {!agentId && (
                         <p className="mt-4 text-center text-sm text-slate-500">
-                          No tools found matching "{toolSearchTerm}".
+                          Select an agent to see tools.
                         </p>
                       )}
-                    {!agentId && (
-                      <p className="mt-4 text-center text-sm text-slate-500">
-                        Select an agent to see tools.
-                      </p>
-                    )}
-                    {agentId && tools.length === 0 && !toolSearchTerm && (
-                      <p className="mt-4 text-center text-sm text-slate-500">
-                        No tools available for this agent.
-                      </p>
-                    )}
+                      {agentId && tools.length === 0 && !toolSearchTerm && (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          No tools available for this agent.
+                        </p>
+                      )}
+                      {cursor && !toolSearchTerm && (
+                        <div className="flex justify-center py-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                setLoadingMore(true);
+                                const moreTool = await getTools(cursor);
+                                setTools((prevTools) => [
+                                  ...prevTools,
+                                  ...moreTool,
+                                ]);
+                              } catch (error) {
+                                console.error(
+                                  "Failed to load more tools:",
+                                  error,
+                                );
+                              } finally {
+                                setLoadingMore(false);
+                              }
+                            }}
+                            disabled={loadingMore || loading}
+                          >
+                            {loadingMore ? "Loading..." : "Load More Tools"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </ConfigSection>
                 </TabsContent>
               )}

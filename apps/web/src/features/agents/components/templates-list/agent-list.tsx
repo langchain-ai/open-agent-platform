@@ -25,10 +25,8 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
   // to fetch the config schema for a specific graph
   const agentId = defaultAgent.assistant_id;
 
-  const filteredAgents = agents.filter(
-    (agent) =>
-      !isDefaultAssistant(agent) &&
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredAgents = agents.filter((agent) =>
+    agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (

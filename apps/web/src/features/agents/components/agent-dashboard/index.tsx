@@ -16,7 +16,7 @@ import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dia
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphGroup } from "../../types";
-import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import _ from "lodash";
 
 export function AgentDashboard() {
@@ -31,8 +31,7 @@ export function AgentDashboard() {
     const groups: GraphGroup[] = [];
     deployments.forEach((deployment) => {
       const agentsInDeployment = agents.filter(
-        (agent) =>
-          agent.deploymentId === deployment.id && !isDefaultAssistant(agent),
+        (agent) => agent.deploymentId === deployment.id,
       );
       const agentsGroupedByGraphs = groupAgentsByGraphs(agentsInDeployment);
       agentsGroupedByGraphs.forEach((agentGroup) => {

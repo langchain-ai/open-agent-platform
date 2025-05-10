@@ -16,7 +16,6 @@ import { Deployment } from "@/types/deployment";
 import { TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Tooltip, TooltipTrigger } from "@radix-ui/react-tooltip";
 import _ from "lodash";
-import { isDefaultAssistant } from "@/lib/agent-utils";
 
 interface TemplateCardProps {
   deployment: Deployment;
@@ -33,9 +32,7 @@ export function TemplateCard({
 }: TemplateCardProps) {
   const graphId = agents[0].graph_id;
   const graphDeploymentId = `${deployment.id}:${graphId}`;
-  const agentsCount = agents.filter(
-    (agent) => !isDefaultAssistant(agent),
-  ).length;
+  const agentsCount = agents.length;
   return (
     <Card
       className={cn(

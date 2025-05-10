@@ -14,11 +14,12 @@ interface SidebarButtonsProps {
   setHistoryOpen: (open: boolean) => void;
   configOpen: boolean;
   setConfigOpen: (open: boolean) => void;
+  className?: string;
 }
 
 export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
   (
-    { historyOpen, setHistoryOpen, configOpen, setConfigOpen },
+    { historyOpen, setHistoryOpen, configOpen, setConfigOpen, className },
     ref: ForwardedRef<HTMLDivElement>,
   ) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -48,6 +49,7 @@ export const SidebarButtons = forwardRef<HTMLDivElement, SidebarButtonsProps>(
         className={cn(
           "fixed top-4 z-50 transition-all duration-300 ease-in-out",
           isOpen ? "right-[theme(spacing.80)] md:right-[37rem]" : "right-4",
+          className,
         )}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}

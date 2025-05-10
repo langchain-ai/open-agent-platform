@@ -8,6 +8,7 @@ import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useAuthContext } from "@/providers/Auth";
 
 /**
  * Returns the first human message from a thread
@@ -56,6 +57,7 @@ export const ThreadHistorySidebar = forwardRef<
   HTMLDivElement,
   ThreadHistorySidebarProps
 >(({ className, open, setOpen }, ref: ForwardedRef<HTMLDivElement>) => {
+  const { session } = useAuthContext();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId] = useQueryState("agentId");
@@ -63,13 +65,17 @@ export const ThreadHistorySidebar = forwardRef<
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!agentId || !deploymentId) return;
+    if (!agentId || !deploymentId || !session?.accessToken) return;
 
-    const getAgentThreads = async (_agentId: string, _deploymentId: string) => {
+    const getAgentThreads = async (
+      _agentId: string,
+      _deploymentId: string,
+      accessToken: string,
+    ) => {
       setLoading(true);
 
       try {
-        const client = createClient(_deploymentId);
+        const client = createClient(_deploymentId, accessToken);
 
         const threads = await client.threads.search({
           limit: 100,
@@ -86,8 +92,8 @@ export const ThreadHistorySidebar = forwardRef<
       }
     };
 
-    getAgentThreads(agentId, deploymentId);
-  }, [agentId, deploymentId]);
+    getAgentThreads(agentId, deploymentId, session.accessToken);
+  }, [agentId, deploymentId, session?.accessToken]);
 
   const handleChangeThread = (id: string) => {
     if (threadId === id) return;
