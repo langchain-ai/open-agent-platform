@@ -10,6 +10,7 @@ import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
 import { useQueryState, parseAsBoolean } from "nuqs";
+import { useArtifact } from "../../artifact/artifact";
 
 function CustomComponent({
   message,
@@ -19,6 +20,7 @@ function CustomComponent({
   thread: ReturnType<typeof useStreamContext>;
 }) {
   const { values } = useStreamContext();
+  const artifact = useArtifact();
   const customComponents = values.ui?.filter(
     (ui) => ui.metadata?.message_id === message.id,
   );
@@ -31,7 +33,7 @@ function CustomComponent({
           key={customComponent.id}
           stream={thread}
           message={customComponent}
-          meta={{ ui: customComponent }}
+          meta={{ ui: customComponent, artifact }}
         />
       ))}
     </Fragment>
