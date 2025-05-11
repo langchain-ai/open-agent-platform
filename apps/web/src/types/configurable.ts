@@ -26,7 +26,7 @@ export type ConfigurableFieldUIMetadata = {
    */
   label: string;
   /**
-   * The default value to render in the UI.
+   * The default value to render in the UI component.
    *
    * @default undefined
    */
@@ -37,28 +37,33 @@ export type ConfigurableFieldUIMetadata = {
    */
   type?: ConfigurableFieldUIType;
   /**
-   * The description of the field.
+   * The description of the field. This will be rendered below the UI component.
    */
   description?: string;
   /**
-   * The placeholder of the field.
+   * The placeholder of the field. This will be rendered inside the UI component.
+   * This is only applicable for text, textarea, number, json, and select fields.
    */
   placeholder?: string;
   /**
-   * The options of the field.
+   * The options of the field. These will be the options rendered in the select UI component.
+   * This is only applicable for select fields.
    */
   options?: ConfigurableFieldOption[];
   /**
    * The minimum value of the field.
+   * This is only applicable for number fields.
    */
   min?: number;
   /**
    * The maximum value of the field.
+   * This is only applicable for number fields.
    */
   max?: number;
   /**
    * The step value of the field. E.g if using a slider, where you want
    * people to be able to increment by 0.1, you would set this field to 0.1
+   * This is only applicable for number fields.
    */
   step?: number;
 };
