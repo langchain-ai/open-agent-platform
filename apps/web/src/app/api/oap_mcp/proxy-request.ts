@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
+const MCP_AUTH_REQUIRED = process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true";
 
 async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -105,10 +106,8 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // Construct the target URL
   const targetUrlObj = new URL(MCP_SERVER_URL);
-  targetUrlObj.pathname = `${targetUrlObj.pathname}/mcp${path}${url.search}`;
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path}${url.search}`;
   const targetUrl = targetUrlObj.toString();
-
-  const supabaseToken = await getSupabaseToken(req);
 
   // Prepare headers, forwarding original headers except Host
   // and adding Authorization
@@ -120,6 +119,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     }
   });
 
+  const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
   // Authentication priority:
   // 1. X-MCP-Access-Token header
   // 2. X-MCP-Access-Token cookie
@@ -127,44 +127,46 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   // 4. Supabase-JWT token exchange
   let accessToken: string | null = null;
 
-  // If not in header, check for cookie
-  const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
+  if (MCP_AUTH_REQUIRED) {
+    const supabaseToken = await getSupabaseToken(req);
 
-  if (mcpAccessTokenCookie) {
-    accessToken = mcpAccessTokenCookie;
-  } else if (MCP_TOKENS) {
-    // Try to use MCP_TOKENS environment variable
-    try {
-      const { access_token } = JSON.parse(MCP_TOKENS);
-      if (access_token) {
-        accessToken = access_token;
+    if (mcpAccessTokenCookie) {
+      accessToken = mcpAccessTokenCookie;
+    } else if (MCP_TOKENS) {
+      // Try to use MCP_TOKENS environment variable
+      try {
+        const { access_token } = JSON.parse(MCP_TOKENS);
+        if (access_token) {
+          accessToken = access_token;
+        }
+      } catch (e) {
+        console.error("Failed to parse MCP_TOKENS env variable", e);
       }
-    } catch (e) {
-      console.error("Failed to parse MCP_TOKENS env variable", e);
     }
+
+    // If no token yet, try Supabase-JWT token exchange
+    if (!accessToken && supabaseToken && MCP_SERVER_URL) {
+      accessToken = await getMcpAccessToken(
+        supabaseToken,
+        new URL(MCP_SERVER_URL),
+      );
+    }
+
+    // If we still don't have a token, return an error
+    if (!accessToken) {
+      return new Response(
+        JSON.stringify({
+          message: "Failed to obtain access token from any source.",
+        }),
+        { status: 401, headers: { "Content-Type": "application/json" } },
+      );
+    }
+
+    // Set the Authorization header with the token
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  // If no token yet, try Supabase-JWT token exchange
-  if (!accessToken && supabaseToken && MCP_SERVER_URL) {
-    accessToken = await getMcpAccessToken(
-      supabaseToken,
-      new URL(MCP_SERVER_URL),
-    );
-  }
-
-  // If we still don't have a token, return an error
-  if (!accessToken) {
-    return new Response(
-      JSON.stringify({
-        message: "Failed to obtain access token from any source.",
-      }),
-      { status: 401, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
-  // Set the Authorization header with the token
-  headers.set("Authorization", `Bearer ${accessToken}`);
-  headers.set("Accept", "application/json");
+  headers.set("Accept", "application/json, text/event-stream");
 
   // Determine body based on method
   let body: BodyInit | null | undefined = undefined;
@@ -207,18 +209,20 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       newResponse.headers.set(key, value);
     });
 
-    // If we used the Supabase token exchange, add the access token to the response
-    // so it can be used in future requests
-    if (!mcpAccessTokenCookie && !MCP_TOKENS) {
-      // Set a cookie with the access token that will be included in future requests
-      newResponse.cookies.set({
-        name: "X-MCP-Access-Token",
-        value: accessToken,
-        httpOnly: false, // Allow JavaScript access so it can be read for headers
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 3600, // 1 hour expiration
-      });
+    if (MCP_AUTH_REQUIRED) {
+      // If we used the Supabase token exchange, add the access token to the response
+      // so it can be used in future requests
+      if (!mcpAccessTokenCookie && !MCP_TOKENS && accessToken) {
+        // Set a cookie with the access token that will be included in future requests
+        newResponse.cookies.set({
+          name: "X-MCP-Access-Token",
+          value: accessToken,
+          httpOnly: false, // Allow JavaScript access so it can be read for headers
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 3600, // 1 hour expiration
+        });
+      }
     }
 
     return newResponse;

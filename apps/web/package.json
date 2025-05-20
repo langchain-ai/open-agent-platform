@@ -16,7 +16,7 @@
   "dependencies": {
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph-sdk": "^0.0.76",
-    "@modelcontextprotocol/sdk": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.11.4",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-avatar": "^1.1.4",
     "@radix-ui/react-checkbox": "1.1.2",
@@ -44,7 +44,6 @@
     "cmdk": "^1.1.1",
     "date-fns": "4.1.0",
     "framer-motion": "^12.7.3",
-    "js-cookie": "3.0.5",
     "katex": "latest",
     "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
@@ -71,7 +70,6 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@tailwindcss/postcss": "^4.0.13",
-    "@types/js-cookie": "^3.0.6",
     "@types/lodash": "^4.17.16",
     "@types/node": "22.15.2",
     "@types/react": "^19.0.8",
