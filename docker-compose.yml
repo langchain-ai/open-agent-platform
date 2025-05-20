@@ -1,9 +1,11 @@
 version: '3'
 services:
   web:
+services:
+  web:
     build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+      context: apps/web
+      dockerfile: Dockerfile
     env_file:
       - apps/web/.env
     ports:
