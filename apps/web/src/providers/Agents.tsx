@@ -157,7 +157,7 @@ type AgentsContextType = {
    */
   loading: boolean;
   /**
-   * Whether the agents list is currently loading.
+   * Whether the agents list is currently refreshing.
    */
   refreshAgentsLoading: boolean;
 };

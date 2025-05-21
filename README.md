@@ -60,8 +60,45 @@ Yes! It requires some modifications to be made to the code, but we've implemente
 
 No. All agents you intend to use with OAP must be LangGraph agents, deployed on LangGraph Platform.
 
-### Why is my agent's config is only showing string inputs, and not custom fields?
+### Why is my agent's config only showing string inputs, and not custom fields?
 
 First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
 
 If it's still not working, confirm your `x_oap_ui_config` metadata has the proper fields set.
+
+## Docker Compose Deployment
+
+The repository includes a `Dockerfile` and `docker-compose.yml` to run the web application and a DragonflyDB (Redis-compatible in-memory database) service in containers.
+
+### Local Development
+
+For local development using Docker Compose:
+
+1.  **Copy Environment File:** Create a local environment file by copying `apps/web/.env.example` to `apps/web/.env`.
+    ```bash
+    cp apps/web/.env.example apps/web/.env
+    ```
+2.  **Configure Variables:** Edit `apps/web/.env` and fill in your local development values. Key variables include:
+    *   `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL.
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase project anon key.
+    *   `NEXT_PUBLIC_DEPLOYMENTS`: Configuration for your LangGraph deployments (see example in `.env.example`).
+    *   `DRAGONFLYDB_HOST`: For local Docker Compose, this should be `dragonflydb` (the service name defined in `docker-compose.yml`).
+    *   `DRAGONFLYDB_PORT`: Defaults to `6379`.
+3.  **Start Services:**
+    ```bash
+    docker-compose up --build
+    ```
+    The web application will be available at [http://localhost:3000](http://localhost:3000).
+
+### Deployment with Coolify (or similar platforms)
+
+When deploying to a platform like Coolify:
+
+*   **Environment Variables:** Configure the environment variables directly in your Coolify project's settings/dashboard. Refer to `apps/web/.env.example` for the full list of required variables and their purpose. Essential variables include:
+    *   `NEXT_PUBLIC_SUPABASE_URL`
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+    *   `NEXT_PUBLIC_DEPLOYMENTS`
+    *   `DRAGONFLYDB_HOST` (Coolify will typically make the DragonflyDB service available via its service name, e.g., `dragonflydb`, or provide a specific connection string)
+    *   `DRAGONFLYDB_PORT` (usually `6379`)
+    *   `DRAGONFLYDB_PASSWORD` (if you've configured one for DragonflyDB)
+*   **Service Discovery:** Coolify will manage the Docker Compose services, including networking between the `web` app and `dragonflydb`. You generally do not need to manually create the `.env` file on the server if using a platform like Coolify that injects environment variables.
