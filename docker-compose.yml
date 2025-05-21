@@ -1,6 +1,4 @@
-version: '3'
-services:
-  web:
+version: '3.8' # Using a slightly newer version, 3.8 is common
 services:
   web:
     build:
@@ -11,3 +9,16 @@ services:
     ports:
       - "3000:3000"
     restart: unless-stopped
+    depends_on:
+      - dragonflydb
+  dragonflydb:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:latest # Added :latest tag
+    ports:
+      - "6379" # Internal port, no host mapping
+    volumes:
+      - dragonflydb_data:/data
+    restart: unless-stopped
+    # command: ["--logtostderr"] # Example command, if needed
+
+volumes:
+  dragonflydb_data: {}
