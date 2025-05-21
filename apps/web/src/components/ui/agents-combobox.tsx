@@ -22,7 +22,7 @@ import {
 import { Agent } from "@/types/agent";
 import {
   groupAgentsByGraphs,
-  isDefaultAssistant,
+  isUserCreatedDefaultAssistant,
   sortAgentGroup,
 } from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -270,7 +270,7 @@ export function AgentsCombobox({
                             {item.name}
                           </p>
                           <div className="flex flex-shrink-0 items-center justify-end gap-2">
-                            {isDefaultAssistant(item) && (
+                            {isUserCreatedDefaultAssistant(item) && (
                               <span className="text-muted-foreground flex items-center gap-2 text-xs">
                                 <Star />
                                 <p>Default</p>

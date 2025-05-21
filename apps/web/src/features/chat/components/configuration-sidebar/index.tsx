@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isDefaultAssistant } from "@/lib/agent-utils";
+import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 
@@ -196,10 +196,10 @@ export const ConfigurationSidebar = forwardRef<
       });
       return;
     }
-    if (isDefaultAssistant(selectedAgent) && !newName) {
+    if (isUserCreatedDefaultAssistant(selectedAgent) && !newName) {
       setOpenNameAndDescriptionAlertDialog(true);
       return;
-    } else if (isDefaultAssistant(selectedAgent) && newName) {
+    } else if (isUserCreatedDefaultAssistant(selectedAgent) && newName) {
       const newAgent = await createAgent(deploymentId, selectedAgent.graph_id, {
         name: newName,
         description: newDescription,

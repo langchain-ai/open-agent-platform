@@ -3,14 +3,51 @@ import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
 
 /**
- * Checks if an agent is the system-defined default assistant.
- * @param agent The agent to check.
- * @returns True if the agent is the default, false otherwise.
+ * Determines if an agent is the user's default agent.
+ *
+ * Each user gets their own default agent in a deployment since they cannot
+ * access the system-created default agent. This function checks if the given
+ * agent has been marked as a user's default. This is NOT the primary agent
+ * for the entire OAP deployment, but rather the default agent for a given graph.
+ *
+ * @param agent The agent to check
+ * @returns True if the agent is a user's default agent
  */
-export function isDefaultAssistant(agent: Agent | Assistant): boolean {
+export function isUserCreatedDefaultAssistant(
+  agent: Agent | Assistant,
+): boolean {
   return agent.metadata?._x_oap_is_default === true;
 }
 
+/**
+ * Determines if an agent is a system-created default assistant.
+ *
+ * System-created default assistants are created by the platform itself
+ * rather than by users. Each graph on a deployment will always have a single
+ * default assistant, created by the platform. This function checks the agent's
+ * metadata to determine its origin. These agents will only be accessible if using
+ * admin auth (NEXT_PUBLIC_USE_LANGSMITH_AUTH="true").
+ *
+ * @param agent The agent to check
+ * @returns True if the agent was created by the system
+ */
+export function isSystemCreatedDefaultAssistant(
+  agent: Agent | Assistant,
+): boolean {
+  return agent.metadata?.created_by === "system";
+}
+
+/**
+ * Determines if an agent is the primary assistant for a graph.
+ *
+ * A primary assistant is the default assistant for all graphs provided
+ * to OAP. This can only be one agent, across all graphs & deployments,
+ * and is specified by setting `isDefault: true` and `defaultGraphId`
+ * on a deployment in the `NEXT_PUBLIC_DEPLOYMENTS` environment variable.
+ *
+ * @param agent The agent to check
+ * @returns True if the agent is the primary assistant for a graph
+ */
 export function isPrimaryAssistant(agent: Agent | Assistant): boolean {
   return agent.metadata?._x_oap_is_primary === true;
 }
@@ -22,7 +59,7 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
     return false;
   }
   return (
-    isDefaultAssistant(agent) &&
+    isUserCreatedDefaultAssistant(agent) &&
     agent.graph_id === defaultDeployment.defaultGraphId &&
     agent.deploymentId === defaultDeployment.id
   );
@@ -36,8 +73,8 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
  */
 export function sortAgentGroup(agentGroup: Agent[]): Agent[] {
   return [...agentGroup].sort((a, b) => {
-    const aIsDefault = isDefaultAssistant(a);
-    const bIsDefault = isDefaultAssistant(b);
+    const aIsDefault = isUserCreatedDefaultAssistant(a);
+    const bIsDefault = isUserCreatedDefaultAssistant(b);
 
     if (aIsDefault && !bIsDefault) {
       return -1; // a comes first

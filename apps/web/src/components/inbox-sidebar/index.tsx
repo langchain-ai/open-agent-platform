@@ -21,7 +21,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import {
+  groupAgentsByGraphs,
+  isUserCreatedDefaultAssistant,
+} from "@/lib/agent-utils";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
 import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
@@ -131,7 +134,8 @@ function InboxSidebarInternal() {
                                   );
                                   const label =
                                     agent.name || prettifyText(agent.graph_id);
-                                  const isDefault = isDefaultAssistant(agent);
+                                  const isDefault =
+                                    isUserCreatedDefaultAssistant(agent);
                                   // Check if this agent is selected
                                   const agentId = `${agent.assistant_id}:${agent.deploymentId}`;
                                   const isSelected = agentInboxId === agentId;

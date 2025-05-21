@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { Agent } from "@/types/agent";
-import { isDefaultAssistant } from "@/lib/agent-utils";
+import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 import _ from "lodash";
 import { AgentCard } from "../agent-card";
 
@@ -19,7 +19,7 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const defaultAgent = agents.find(isDefaultAssistant) ?? agents[0];
+  const defaultAgent = agents.find(isUserCreatedDefaultAssistant) ?? agents[0];
   const graphId = defaultAgent.graph_id;
   // Agent ID in this context is the default assistant ID since it's used
   // to fetch the config schema for a specific graph

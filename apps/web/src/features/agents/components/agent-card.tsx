@@ -24,7 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { isDefaultAssistant } from "@/lib/agent-utils";
+import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 
 function SupportedConfigBadge({
   type,
@@ -72,7 +72,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     (d) => d.id === agent.deploymentId,
   );
 
-  const isDefaultAgent = isDefaultAssistant(agent);
+  const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
 
   return (
     <>

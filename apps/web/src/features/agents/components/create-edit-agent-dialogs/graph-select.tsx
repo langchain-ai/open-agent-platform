@@ -7,7 +7,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Agent } from "@/types/agent";
-import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import {
+  groupAgentsByGraphs,
+  isUserCreatedDefaultAssistant,
+} from "@/lib/agent-utils";
 import _ from "lodash";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Deployment } from "@/types/deployment";
@@ -38,7 +41,7 @@ export function GraphSelect({
     // Group filtered agents by graph (still needed for sorting/grouping logic)
     const agentsGroupedByGraphs = groupAgentsByGraphs(deploymentAgents);
     return agentsGroupedByGraphs.flatMap(
-      (group) => group.find((g) => isDefaultAssistant(g)) ?? [],
+      (group) => group.find((g) => isUserCreatedDefaultAssistant(g)) ?? [],
     );
   });
 

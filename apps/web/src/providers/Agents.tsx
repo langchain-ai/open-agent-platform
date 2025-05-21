@@ -11,7 +11,11 @@ import React, {
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
 import { Deployment } from "@/types/deployment";
-import { groupAgentsByGraphs, isDefaultAssistant } from "@/lib/agent-utils";
+import {
+  groupAgentsByGraphs,
+  isSystemCreatedDefaultAssistant,
+  isUserCreatedDefaultAssistant,
+} from "@/lib/agent-utils";
 import { useAgents } from "@/hooks/use-agents";
 import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import { createClient } from "@/lib/client";
@@ -101,7 +105,7 @@ async function getAgents(
           // not just for each deployment, as a deployment can have multiple graphs
           // each with their own unique config schema.
           const defaultAssistant =
-            group.find((a) => isDefaultAssistant(a)) ?? group[0];
+            group.find((a) => isUserCreatedDefaultAssistant(a)) ?? group[0];
           const schema = await getAgentConfigSchema(
             defaultAssistant.assistant_id,
             deployment.id,
@@ -185,7 +189,10 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       session.accessToken,
       agentsState.getAgentConfigSchema,
     )
-      .then(setAgents)
+      // Never expose the system created default assistants to the user
+      .then((a) =>
+        setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a))),
+      )
       .finally(() => setLoading(false));
   }, [session?.accessToken]);
 
@@ -203,7 +210,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
         session.accessToken,
         agentsState.getAgentConfigSchema,
       );
-      setAgents(newAgents);
+      setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
     } catch (e) {
       console.error("Failed to refresh agents", e);
     } finally {

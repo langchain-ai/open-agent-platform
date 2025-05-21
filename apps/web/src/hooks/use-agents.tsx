@@ -4,6 +4,7 @@ import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
 import { useCallback } from "react";
+import { isSystemCreatedDefaultAssistant } from "@/lib/agent-utils";
 
 export function useAgents() {
   const { session } = useAuthContext();
@@ -22,6 +23,10 @@ export function useAgents() {
       try {
         const client = createClient(deploymentId, session.accessToken);
         const agent = await client.assistants.get(agentId);
+        // Never expose the system created default assistants to the user
+        if (isSystemCreatedDefaultAssistant(agent)) {
+          return undefined;
+        }
         return { ...agent, deploymentId };
       } catch (e) {
         console.error("Failed to get agent", e);
