@@ -90,7 +90,7 @@ export function baseMessageObject(item: unknown): string {
 export function unknownToPrettyDate(input: unknown): string | undefined {
   try {
     const date = new Date(input as string);
-    if (!isNaN(date.getTime())) {
+    if (!Number.isNaN(date.getTime())) {
       return format(date, "MM/dd/yyyy hh:mm a");
     }
   } catch (_) {
