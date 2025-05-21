@@ -60,7 +60,7 @@ Yes! It requires some modifications to be made to the code, but we've implemente
 
 No. All agents you intend to use with OAP must be LangGraph agents, deployed on LangGraph Platform.
 
-### Why is my agent's config is only showing string inputs, and not custom fields?
+### Why is my agent's config only showing string inputs, and not custom fields?
 
 First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
 

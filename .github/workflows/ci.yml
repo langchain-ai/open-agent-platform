@@ -71,4 +71,4 @@ jobs:
       - uses: codespell-project/actions-codespell@v2
         with:
           ignore_words_file: .codespellignore
-          path: apps/src
+          path: apps/web/src
