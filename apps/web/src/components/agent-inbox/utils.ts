@@ -89,11 +89,9 @@ export function baseMessageObject(item: unknown): string {
 
 export function unknownToPrettyDate(input: unknown): string | undefined {
   try {
-    if (
-      Object.prototype.toString.call(input) === "[object Date]" ||
-      new Date(input as string)
-    ) {
-      return format(new Date(input as string), "MM/dd/yyyy hh:mm a");
+    const date = new Date(input as string);
+    if (!isNaN(date.getTime())) {
+      return format(date, "MM/dd/yyyy hh:mm a");
     }
   } catch (_) {
     // failed to parse date. no-op
