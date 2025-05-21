@@ -25,6 +25,56 @@ For detailed setup instructions, guides, and API references, please visit our **
 
 To quickly get started with Open Agent Platform, check out the [Quickstart Guide](https://docs.oap.langchain.com/quickstart) in our documentation.
 
+### Running the Application
+
+```bash
+# Install dependencies
+yarn install
+
+# Start the development server
+yarn dev
+
+# Build for production
+yarn build
+
+# Start the production server
+yarn start
+```
+
+### Type Checking and Testing
+
+```bash
+# Run linting
+yarn lint
+
+# Fix linting issues
+yarn lint:fix
+
+# Format code
+yarn format
+
+# Run type checking
+tsc --noEmit
+```
+
+### Quick Setup for Linux Web Development
+
+For Linux environments, we provide an automated setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/langchain-ai/open-agent-platform.git
+cd open-agent-platform
+
+# Make the setup script executable
+chmod +x setup-linux.sh
+
+# Run the setup script
+./setup-linux.sh
+```
+
+The script will install dependencies, set up environment files, and offer to start the development server.
+
 ## Community and Support
 
 - **GitHub Issues**: Report bugs or request features [here](https://github.com/langchain-ai/open-agent-platform/issues).
