@@ -6,6 +6,7 @@ import React, {
   ReactNode,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
@@ -37,7 +38,10 @@ const useTypedStream = useStream<
   }
 >;
 
-type StreamContextType = ReturnType<typeof useTypedStream>;
+type StreamContextType = ReturnType<typeof useTypedStream> & {
+  firstTokenReceived: boolean;
+  setFirstTokenReceived: React.Dispatch<React.SetStateAction<boolean>>;
+};
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 const StreamSession = ({
@@ -99,8 +103,24 @@ const StreamSession = ({
     },
   });
 
+  const [firstTokenReceived, setFirstTokenReceived] = useState(false);
+  const prevMessageLength = useRef(0);
+  useEffect(() => {
+    if (
+      streamValue.messages.length !== prevMessageLength.current &&
+      streamValue.messages.length &&
+      streamValue.messages[streamValue.messages.length - 1].type === "ai"
+    ) {
+      setFirstTokenReceived(true);
+    }
+
+    prevMessageLength.current = streamValue.messages.length;
+  }, [streamValue.messages]);
+
   return (
-    <StreamContext.Provider value={streamValue}>
+    <StreamContext.Provider
+      value={{ ...streamValue, firstTokenReceived, setFirstTokenReceived }}
+    >
       {children}
     </StreamContext.Provider>
   );

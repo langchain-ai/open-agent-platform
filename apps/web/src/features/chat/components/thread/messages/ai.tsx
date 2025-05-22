@@ -10,6 +10,7 @@ import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
 import { useQueryState, parseAsBoolean } from "nuqs";
+import { GenericInterruptValue } from "@/components/agent-inbox/components/generic-interrupt-value";
 
 function CustomComponent({
   message,
@@ -103,6 +104,13 @@ export function AssistantMessage({
     );
   const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message?.type === "tool";
+  const messages = thread.messages;
+  const threadInterrupt = thread.interrupt;
+  const isLastMessage =
+    messages.length > 0 && messages[messages.length - 1] === message;
+  const hasNoAIOrToolMessages = !messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
 
   if (isToolResult && hideToolCalls) {
     return null;
@@ -138,19 +146,13 @@ export function AssistantMessage({
               thread={thread}
             />
           )}
-          {/**
-           * TODO: Support rendering interrupts.
-           * Tracking issue: https://github.com/langchain-ai/open-agent-platform/issues/22
-           */}
-          {/* {isAgentInboxInterruptSchema(threadInterrupt?.value) &&
-            (isLastMessage || hasNoAIOrToolMessages) && (
-              <ThreadView interrupt={threadInterrupt.value} />
-            )}
           {threadInterrupt?.value &&
-          !isAgentInboxInterruptSchema(threadInterrupt.value) &&
-          isLastMessage ? (
-            <GenericInterruptView interrupt={threadInterrupt.value} />
-          ) : null} */}
+            (isLastMessage || hasNoAIOrToolMessages) && (
+              <GenericInterruptValue
+                interrupt={threadInterrupt.value}
+                id={threadInterrupt.when ?? "interrupt"}
+              />
+            )}
           <div
             className={cn(
               "mr-auto flex items-center gap-2 transition-opacity",

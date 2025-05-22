@@ -153,7 +153,6 @@ export const ThreadHistorySidebar = forwardRef<
                         </p>
                       </div>
                     </div>
-                    {/* TODO: Add save/delete buttons back if needed */}
                   </div>
                 );
               })}
