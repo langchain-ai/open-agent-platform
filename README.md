@@ -43,9 +43,15 @@ yarn start
 
 ### Type Checking and Testing
 
+The repository uses a GitHub Actions workflow (`.github/workflows/ci.yml`) to
+automatically run linting and tests on each push and pull request.
+
 ```bash
 # Run linting
 yarn lint
+
+# Run tests
+yarn test
 
 # Fix linting issues
 yarn lint:fix

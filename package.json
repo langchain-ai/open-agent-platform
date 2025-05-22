@@ -11,7 +11,8 @@
     "turbo:command": "turbo",
     "format": "turbo format",
     "lint": "turbo lint",
-    "lint:fix": "turbo lint:fix"
+    "lint:fix": "turbo lint:fix",
+    "test": "node scripts/test.js"
   },
   "devDependencies": {
     "turbo": "^2.5.0",
