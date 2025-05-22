@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AgentCard } from "../agent-card";
-import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
+import { EditAgentDialog } from "../create-edit-agent-dialogs/edit-agent-dialog";
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphGroup } from "../../types";
@@ -159,8 +159,8 @@ export function AgentDashboard() {
         </div>
       )}
 
-      {/* TODO: Replace with EditAgentDialog */}
-      <CreateAgentDialog
+      <EditAgentDialog
+        agent={filteredAgents.length > 0 ? filteredAgents[0] : undefined}
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />

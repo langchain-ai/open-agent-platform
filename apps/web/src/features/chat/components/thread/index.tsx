@@ -219,11 +219,10 @@ export function Thread() {
     dragOver,
     handlePaste,
   } = useFileUpload();
-  const [firstTokenReceived, setFirstTokenReceived] = useState(false);
-
   const { session } = useAuthContext();
 
   const stream = useStreamContext();
+  const { firstTokenReceived, setFirstTokenReceived } = stream;
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
@@ -260,19 +259,6 @@ export function Thread() {
     }
   }, [stream.error]);
 
-  // TODO: this should be part of the useStream hook
-  const prevMessageLength = useRef(0);
-  useEffect(() => {
-    if (
-      messages.length !== prevMessageLength.current &&
-      messages?.length &&
-      messages[messages.length - 1].type === "ai"
-    ) {
-      setFirstTokenReceived(true);
-    }
-
-    prevMessageLength.current = messages.length;
-  }, [messages]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -337,8 +323,6 @@ export function Thread() {
     if (!agentId) return;
     const { getAgentConfig } = useConfigStore.getState();
 
-    // Do this so the loading state is correct
-    prevMessageLength.current = prevMessageLength.current - 1;
     setFirstTokenReceived(false);
     stream.submit(undefined, {
       checkpoint: parentCheckpoint,

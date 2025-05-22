@@ -2,18 +2,6 @@ import { Thread, ThreadState } from "@langchain/langgraph-sdk";
 import { HumanInterrupt, ThreadData } from "../types";
 import { IMPROPER_SCHEMA } from "../constants";
 
-// TODO: Delete this once interrupt issue fixed.
-export const tmpCleanInterrupts = (interrupts: Record<string, any[]>) => {
-  return Object.fromEntries(
-    Object.entries(interrupts).map(([k, v]) => {
-      if (Array.isArray(v[0] && v[0]?.[1])) {
-        return [k, v?.[0][1]];
-      }
-      return [k, v];
-    }),
-  );
-};
-
 export function getInterruptFromThread(
   thread: Thread,
 ): HumanInterrupt[] | undefined {
