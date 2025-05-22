@@ -160,7 +160,7 @@ export function AgentDashboard() {
       )}
 
       <EditAgentDialog
-        agent={filteredAgents[0]}
+        agent={filteredAgents.length > 0 ? filteredAgents[0] : undefined}
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />
