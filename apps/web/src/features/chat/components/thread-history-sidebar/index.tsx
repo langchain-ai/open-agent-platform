@@ -9,6 +9,19 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useAuthContext } from "@/providers/Auth";
+import { MessageContent } from "@langchain/core/messages";
+import { AlertCircle, FileClock } from "lucide-react";
+
+const getMessageStringContent = (
+  content: MessageContent | undefined,
+): string => {
+  if (!content) return "";
+  if (typeof content === "string") return content;
+  const texts = content
+    .filter((c): c is { type: "text"; text: string } => c.type === "text")
+    .map((c) => c.text);
+  return texts.join(" ");
+};
 
 /**
  * Returns the first human message from a thread
@@ -28,7 +41,7 @@ function getFirstHumanMessageContent(thread: Thread) {
     const castMessages = thread.values.messages as Message[];
 
     const firstHumanMsg = castMessages.find((msg) => msg.type === "human");
-    return (firstHumanMsg?.content ?? "") as string;
+    return getMessageStringContent(firstHumanMsg?.content);
   } catch (e) {
     console.error("Failed to get human message from thread", {
       thread,
@@ -127,6 +140,12 @@ export const ThreadHistorySidebar = forwardRef<
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto">
+              {threads.length === 0 && (
+                <div className="flex h-full flex-1 items-center justify-center gap-2">
+                  <FileClock className="size-6" />
+                  <p>No threads found</p>
+                </div>
+              )}
               {threads.map((thread) => {
                 const isSelected = thread.thread_id === threadId;
                 return (

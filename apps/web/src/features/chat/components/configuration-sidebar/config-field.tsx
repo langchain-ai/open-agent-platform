@@ -99,8 +99,8 @@ export function ConfigField({
 
   const handleChange = (newValue: any) => {
     setJsonError(null); // Clear JSON error on any change
-    if (isExternallyManaged) {
-      externalSetValue!(newValue); // Use non-null assertion as we checked existence
+    if (isExternallyManaged && externalSetValue) {
+      externalSetValue(newValue); // Use non-null assertion as we checked existence
     } else {
       store.updateConfig(agentId, id, newValue);
     }
@@ -115,15 +115,15 @@ export function ConfigField({
       }
 
       // Attempt to parse for validation first
-      JSON.parse(jsonString);
+      const parsedJson = JSON.parse(jsonString);
       // If parsing succeeds, call handleChange with the raw string and clear error
-      handleChange(jsonString); // Use the unified handleChange
+      handleChange(parsedJson); // Use the unified handleChange
       setJsonError(null);
     } catch (_) {
       // If parsing fails, update state with invalid string but set error
       // This allows the user to see their invalid input and the error message
-      if (isExternallyManaged) {
-        externalSetValue!(jsonString);
+      if (isExternallyManaged && externalSetValue) {
+        externalSetValue(jsonString);
       } else {
         store.updateConfig(agentId, id, jsonString);
       }
@@ -136,7 +136,7 @@ export function ConfigField({
       const parsed = JSON.parse(jsonString);
       const formatted = JSON.stringify(parsed, null, 2);
       // Directly use handleChange to update with the formatted string
-      handleChange(formatted);
+      handleChange(parsed);
       setJsonError(null); // Clear error on successful format
     } catch (_) {
       // If formatting fails (because input is not valid JSON), set the error state
@@ -281,7 +281,11 @@ export function ConfigField({
         <>
           <Textarea
             id={id}
-            value={currentValue ?? ""} // Use currentValue
+            value={
+              typeof currentValue === "string"
+                ? currentValue
+                : (JSON.stringify(currentValue, null, 2) ?? "")
+            } // Use currentValue
             onChange={(e) => handleJsonChange(e.target.value)}
             placeholder={placeholder || '{\n  "key": "value"\n}'}
             className={cn(
