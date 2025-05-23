@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useAuthContext } from "@/providers/Auth";
 import { MessageContent } from "@langchain/core/messages";
-import { AlertCircle, FileClock } from "lucide-react";
+import { FileClock } from "lucide-react";
 
 const getMessageStringContent = (
   content: MessageContent | undefined,

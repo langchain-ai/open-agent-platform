@@ -134,7 +134,6 @@ export function ConfigField({
   const handleFormatJson = (jsonString: string) => {
     try {
       const parsed = JSON.parse(jsonString);
-      const formatted = JSON.stringify(parsed, null, 2);
       // Directly use handleChange to update with the formatted string
       handleChange(parsed);
       setJsonError(null); // Clear error on successful format
