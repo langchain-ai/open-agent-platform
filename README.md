@@ -65,3 +65,16 @@ No. All agents you intend to use with OAP must be LangGraph agents, deployed on 
 First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
 
 If it's still not working, confirm your `x_oap_ui_config` metadata has the proper fields set.
+
+## Docker Compose Deployment
+
+The repository includes a `Dockerfile` and `docker-compose.yml` for running the web application in a container. To configure the container to use your Supabase project:
+
+1. Copy `apps/web/.env.example` to `apps/web/.env` and fill in your environment values, particularly `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+2. Start the application with Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+The app will be available on [http://localhost:3000](http://localhost:3000).
