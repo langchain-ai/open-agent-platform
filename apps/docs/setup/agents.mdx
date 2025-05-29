@@ -22,9 +22,9 @@ Once deployed or running locally, you can connect them to your instance of Open 
 
 ```json
 {
-  "id": "The project ID of the deployment. For locally running LangGraph servers, this can be any UUID.",
+  "id": "The project ID of the deployment. For locally running LangGraph servers, this can be any UUID Version 4.",
   "tenantId": "The tenant ID of your LangSmith account. For locally running LangGraph servers, this can be any UUID Version 4.",
-  "deploymentUrl": "The API URL to your deployment. For locally running LangGraph servers, this can be any valid UUID Version 4.",
+  "deploymentUrl": "The API URL to your deployment.",
   "name": "A custom name for your deployment",
   "isDefault": "Whether this deployment is the default deployment. Should only be set to true for one deployment.",
   "defaultGraphId": "The graph ID of the default graph for the entire OAP instance. We recommend this is set to the graph ID of a graph which supports RAG & MCP tools. This must be set in the same deployment which isDefault is set to true on. Optional, but required in at least one deployment.",
