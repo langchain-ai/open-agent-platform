@@ -74,6 +74,7 @@ export type ConfigurableFieldMCPMetadata = {
   default?: {
     tools?: string[];
     url?: string;
+    requires_auth?: boolean;
   };
 };
 

@@ -54,7 +54,7 @@ function getUiConfig(
  *          the UI configuration for fields found in the schema, or an empty
  *          array if the schema is invalid or contains no UI configurations.
  */
-export function configSchemaToConfigurableFields(
+function configSchemaToConfigurableFields(
   schema: GraphSchema["config_schema"],
 ): ConfigurableFieldUIMetadata[] {
   if (!schema || !schema.properties) {
@@ -86,7 +86,7 @@ export function configSchemaToConfigurableFields(
   return fields;
 }
 
-export function configSchemaToConfigurableTools(
+function configSchemaToToolsConfig(
   schema: GraphSchema["config_schema"],
 ): ConfigurableFieldMCPMetadata[] {
   if (!schema || !schema.properties) {
@@ -113,6 +113,7 @@ export function configSchemaToConfigurableTools(
       default: {
         url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
         tools: [],
+        requires_auth: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
         ...(uiConfig.default ?? {}),
       },
     });
@@ -120,7 +121,7 @@ export function configSchemaToConfigurableTools(
   return fields;
 }
 
-export function configSchemaToRagConfig(
+function configSchemaToRagConfig(
   schema: GraphSchema["config_schema"],
 ): ConfigurableFieldRAGMetadata | undefined {
   if (!schema || !schema.properties) {
@@ -144,7 +145,7 @@ export function configSchemaToRagConfig(
   return ragField;
 }
 
-export function configSchemaToAgentsConfig(
+function configSchemaToAgentsConfig(
   schema: GraphSchema["config_schema"],
 ): ConfigurableFieldAgentsMetadata | undefined {
   if (!schema || !schema.properties) {
@@ -183,7 +184,7 @@ export function extractConfigurationsFromAgent({
   schema: GraphSchema["config_schema"];
 }): ExtractedConfigs {
   const configFields = configSchemaToConfigurableFields(schema);
-  const toolConfig = configSchemaToConfigurableTools(schema);
+  const toolConfig = configSchemaToToolsConfig(schema);
   const ragConfig = configSchemaToRagConfig(schema);
   const agentsConfig = configSchemaToAgentsConfig(schema);
 
@@ -203,7 +204,12 @@ export function extractConfigurationsFromAgent({
       f.default) as ConfigurableFieldMCPMetadata["default"];
     return {
       ...f,
-      default: defaultConfig,
+      default: defaultConfig
+        ? {
+            ...defaultConfig,
+            requires_auth: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
+          }
+        : undefined,
     };
   });
 

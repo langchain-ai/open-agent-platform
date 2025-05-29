@@ -272,6 +272,15 @@ export const MCPConfig = z.object({
    * The list of tools to provide to the LLM.
    */
   tools: z.array(z.string()),
+  /**
+   * Whether or not the MCP server requires authentication.
+   * This is a field which is set on the client whenever a
+   * user creates a new agent. It will be set to true if the
+   * `NEXT_PUBLIC_MCP_AUTH_REQUIRED` environment variable is set to `true`,
+   * and false otherwise.
+   * @default false
+   */
+  auth_required: z.boolean().optional(),
 });
 
 export const GraphConfiguration = z.object({
@@ -309,6 +318,11 @@ class MCPConfig(BaseModel):
         optional=True,
     )
     """The tools to make available to the LLM"""
+    auth_required: Optional[bool] = Field(
+        default=False,
+        optional=True,
+    )
+    """Whether the MCP server requires authentication"""
 
 
 class GraphConfigPydantic(BaseModel):
