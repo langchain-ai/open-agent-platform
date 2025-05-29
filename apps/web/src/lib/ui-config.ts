@@ -113,7 +113,7 @@ function configSchemaToToolsConfig(
       default: {
         url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
         tools: [],
-        requires_auth: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
+        auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
         ...(uiConfig.default ?? {}),
       },
     });
@@ -207,7 +207,7 @@ export function extractConfigurationsFromAgent({
       default: defaultConfig
         ? {
             ...defaultConfig,
-            requires_auth: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
+            auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
           }
         : undefined,
     };
