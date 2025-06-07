@@ -136,6 +136,10 @@ export const GraphConfiguration = z.object({
             label: "o4",
             value: "openai/o4",
           },
+          {
+            label: "Google Gemini 1.5 Pro",
+            value: "google/gemini-1.5-pro",
+          },
         ],
       },
     }),
@@ -213,6 +217,10 @@ class GraphConfigPydantic(BaseModel):
                     {"label": "GPT 4o", "value": "openai:gpt-4o"},
                     {"label": "GPT 4o mini", "value": "openai:gpt-4o-mini"},
                     {"label": "GPT 4.1", "value": "openai:gpt-4.1"},
+                    {
+                        "label": "Google Gemini 1.5 Pro",
+                        "value": "google:gemini-1.5-pro",
+                    },
                 ],
             }
         }
@@ -255,6 +263,10 @@ class GraphConfigPydantic(BaseModel):
 # ENSURE YOU PASS THE GRAPH CONFIGURABLE SCHEMA TO THE StateGraph:
 workflow = StateGraph(State, config_schema=GraphConfigPydantic)
 ```
+
+You can also configure Google AI models, such as Google Gemini. To do this, include an option like `{ label: "Google Gemini 1.5 Pro", value: "google/gemini-1.5-pro" }` (for TypeScript) or `{ "label": "Google Gemini 1.5 Pro", "value": "google:gemini-1.5-pro" }` (for Python) in the `options` list for `modelName`.
+
+**Important:** When using Google AI models, ensure your agent's Python environment (on LangGraph Platform) has the `langchain-google-genai` package installed and the `GOOGLE_API_KEY` environment variable is set with your API key.
 
 ## MCP Tools Config
 

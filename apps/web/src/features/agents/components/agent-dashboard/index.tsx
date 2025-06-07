@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Filter, Search } from "lucide-react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react"; // Added useCallback
+import { Filter, Search, PlusCircle } from "lucide-react"; // Added PlusCircle
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,23 +11,98 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AgentCard } from "../agent-card";
-import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
+import { AgentCard } from "../agent-card"; // This is for LangGraph Agents
+import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog"; // For LangGraph Agents
+
+// ADK Agent Imports
+import { AdkAgentStoredData } from "@/types/adk-agent";
+import { RegisterAdkAgentDialog } from "../create-edit-agent-dialogs/register-adk-agent-dialog";
+import { AdkAgentCard } from "../adk-agent-card"; // Display component for ADK Agents
+import { useToast } from "@/components/ui/use-toast";
+
+
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphGroup } from "../../types";
 import { groupAgentsByGraphs } from "@/lib/agent-utils";
 import _ from "lodash";
 
+
 export function AgentDashboard() {
-  const { agents, loading: agentsLoading } = useAgentsContext();
+  const { agents, loading: langGraphAgentsLoading } = useAgentsContext(); // Renamed loading for clarity
   const deployments = getDeployments();
   const [searchQuery, setSearchQuery] = useState("");
-  const [graphFilter, setGraphFilter] = useState<string>("all");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [graphFilter, setGraphFilter] = useState<string>("all"); // This filter is for LangGraph agents
+  const [showCreateLangGraphDialog, setShowCreateLangGraphDialog] = useState(false);
 
+  // State for ADK Agents
+  const [adkAgents, setAdkAgents] = useState<AdkAgentStoredData[]>([]);
+  const [adkAgentsLoading, setAdkAgentsLoading] = useState(true);
+  const [showRegisterAdkDialog, setShowRegisterAdkDialog] = useState(false);
+  const [editingAdkAgent, setEditingAdkAgent] = useState<AdkAgentStoredData | null>(null);
+  // TODO: Add state for showing EditAdkAgentDialog, e.g., const [showEditAdkDialog, setShowEditAdkDialog] = useState(false);
+
+  const { toast } = useToast();
+
+  const fetchAdkAgents = useCallback(async () => {
+    setAdkAgentsLoading(true);
+    try {
+      const response = await fetch('/api/adk-agents');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ADK agents: ${response.statusText}`);
+      }
+      const data = await response.json();
+      setAdkAgents(data.agents || []);
+    } catch (error) {
+      console.error("Error fetching ADK agents:", error);
+      toast({ title: "Error", description: "Could not fetch ADK agents.", variant: "destructive" });
+      setAdkAgents([]); // Set to empty array on error
+    } finally {
+      setAdkAgentsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAdkAgents();
+  }, [fetchAdkAgents]);
+
+  const handleAdkAgentRegistered = useCallback((newAgent: AdkAgentStoredData) => {
+    // Option 1: Add to local state directly (if API returns the created object)
+    // setAdkAgents(prev => [...prev, newAgent]);
+    // Option 2: Re-fetch the list
+    fetchAdkAgents();
+    toast({ title: "Success", description: `ADK Agent "${newAgent.name}" registered.` });
+  }, [fetchAdkAgents, toast]);
+
+  const handleDeleteAdkAgent = useCallback(async (agentId: string, agentName?: string) => {
+    if (!window.confirm(`Are you sure you want to delete ADK agent "${agentName || agentId}"?`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/adk-agents/${agentId}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Failed to delete ADK agent" }));
+        throw new Error(errorData.error || `Failed to delete ADK agent: ${response.statusText}`);
+      }
+      setAdkAgents(prev => prev.filter(a => a.id !== agentId));
+      toast({ title: "Success", description: `ADK Agent "${agentName || agentId}" deleted.` });
+    } catch (error: any) {
+      console.error("Error deleting ADK agent:", error);
+      toast({ title: "Error", description: error.message || "Could not delete ADK agent.", variant: "destructive" });
+    }
+  }, [toast]);
+
+  const handleEditAdkAgent = useCallback((agent: AdkAgentStoredData) => {
+    console.log("Attempting to edit ADK agent (placeholder):", agent);
+    setEditingAdkAgent(agent);
+    // TODO: setShowEditAdkDialog(true);
+    toast({ title: "Edit Action", description: `Edit for "${agent.name}" clicked. Full dialog not yet implemented.`});
+  }, [toast]);
+
+
+  // This is for LangGraph agents
   const allGraphGroups: GraphGroup[] = useMemo(() => {
-    if (agentsLoading) return [];
+    if (langGraphAgentsLoading) return [];
     const groups: GraphGroup[] = [];
     deployments.forEach((deployment) => {
       const agentsInDeployment = agents.filter(
@@ -143,15 +218,93 @@ export function AgentDashboard() {
             We couldn't find any agents matching your search criteria. Try
             adjusting your filters or create a new agent.
           </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            Create Agent
+          <Button onClick={() => setShowCreateLangGraphDialog(true)}>
+            Create LangGraph Agent
+          </Button>
+          <Button variant="outline" onClick={() => setShowRegisterAdkDialog(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Register ADK Agent
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAgents.map((agent) => (
-            <AgentCard
-              key={`agent-dashboard-${agent.assistant_id}`}
+        <>
+          {/* LangGraph Agents Listing */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredAgents.map((agent) => (
+              <AgentCard
+                key={`langgraph-agent-${agent.assistant_id}`}
+                agent={agent}
+                showDeployment={true}
+              />
+            ))}
+          </div>
+
+          {/* ADK Agents Listing Section */}
+          <div className="mt-12"> {/* Added margin-top for separation */}
+            <h2 className="text-lg font-medium mb-4">
+              ADK Agents ({adkAgents.length})
+              {adkAgentsLoading && <LoaderCircle className="ml-2 h-4 w-4 animate-spin inline-block" />}
+            </h2>
+            {adkAgents.length === 0 && !adkAgentsLoading ? (
+              <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
+                  <Search className="text-muted-foreground h-10 w-10" />
+                </div>
+                <h2 className="mt-6 text-xl font-semibold">No ADK agents found</h2>
+                <p className="text-muted-foreground mt-2 mb-8 text-center">
+                  Register a new ADK agent to see it here.
+                </p>
+                <Button variant="outline" onClick={() => setShowRegisterAdkDialog(true)}>
+                   <PlusCircle className="mr-2 h-4 w-4" /> Register ADK Agent
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {adkAgents.map((adkAgent) => (
+                  <AdkAgentCard
+                    key={`adk-agent-${adkAgent.id}`}
+                    agent={adkAgent}
+                    onDelete={() => handleDeleteAdkAgent(adkAgent.id, adkAgent.name)}
+                    onEdit={() => handleEditAdkAgent(adkAgent)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* TODO: Replace with EditAgentDialog */}
+      <CreateAgentDialog
+        open={showCreateLangGraphDialog}
+        onOpenChange={setShowCreateLangGraphDialog}
+      />
+      <RegisterAdkAgentDialog
+        open={showRegisterAdkDialog}
+        onOpenChange={setShowRegisterAdkDialog}
+        onSuccess={handleAdkAgentRegistered} // Changed from onRegistered to onSuccess to match dialog
+      />
+      {/*
+      // TODO: Implement EditAdkAgentDialog
+      {editingAdkAgent && (
+        <EditAdkAgentDialog
+          agent={editingAdkAgent}
+          open={!!editingAdkAgent} // or showEditAdkDialog
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setEditingAdkAgent(null);
+            // else setShowEditAdkDialog(isOpen);
+          }}
+          onSuccess={() => {
+            setEditingAdkAgent(null);
+            // setShowEditAdkDialog(false);
+            fetchAdkAgents(); // Re-fetch or update local state
+            toast({ title: "Success", description: "ADK Agent updated." });
+          }}
+        />
+      )}
+      */}
+    </div>
+  );
+}
               agent={agent}
               showDeployment={true}
             />

@@ -1,0 +1,98 @@
+---
+title: 'Using Google ADK Agents with Open Agent Platform'
+description: 'Integrating and using Google ADK (Agent Development Kit) compatible agents within the Open Agent Platform.'
+---
+
+# Using Google ADK Agents with Open Agent Platform
+
+## Overview
+
+Open Agent Platform (OAP) now supports integration with agents built using the Google Agent Development Kit (ADK) or any agent that can expose an Agent-to-Agent (A2A) protocol compliant endpoint. This allows OAP users to leverage a wider range of specialized agents and enables ADK agent developers to utilize OAP as a testing and interaction platform.
+
+The integration primarily relies on two key aspects of the A2A protocol:
+1.  **Agent Card:** A JSON file (`agent.json`) discoverable at a well-known path (`/.well-known/agent.json`) on the ADK agent's server. This card describes the agent's capabilities, skills, security schemes, and service endpoints.
+2.  **A2A JSON-RPC API:** OAP interacts with ADK agents by sending JSON-RPC requests to the service endpoint(s) defined in the Agent Card, typically for methods like `message/send`.
+
+[Link to A2A Specification] - (TODO: Add actual link)
+[Link to Google ADK Documentation] - (TODO: Add actual link)
+
+## For ADK Agent Developers
+
+If you have an ADK agent and want to make it compatible with Open Agent Platform, here’s what you need to consider:
+
+### Exposing an A2A Endpoint
+
+Your agent must expose an HTTP endpoint that speaks the A2A JSON-RPC protocol.
+*   **Using ADK CLI:** The Google ADK typically provides tools like `adk api_server` which can wrap your agent logic and expose a compliant A2A server. This is the recommended approach for most ADK-based agents. [Link to ADK Docs on `api_server`] - (TODO: Add actual link)
+*   **Custom A2A Server:** If you have a custom agent implementation, you'll need to ensure it correctly implements the A2A protocol, including the Agent Card and the necessary RPC methods.
+
+### The Agent Card (`agent.json`)
+
+The Agent Card is crucial for OAP to understand and interact with your ADK agent.
+*   **Location:** It must be accessible at `/.well-known/agent.json` relative to the base URL you provide when registering the agent in OAP. For example, if your agent's base URL is `https://my-adk-agent.example.com`, the Agent Card must be available at `https://my-adk-agent.example.com/.well-known/agent.json`.
+*   **Key Fields OAP Uses:**
+    *   `name`, `description`, `iconUrl`: For displaying your agent in the OAP UI.
+    *   `url`: The primary A2A JSON-RPC service endpoint. OAP will send `message/send` requests here.
+    *   `capabilities`: (e.g., `streaming`) To understand how to interact.
+    *   `skills`: To potentially display available skills or understand agent functionality.
+    *   `securitySchemes` and `security`: For OAP to handle authentication. (See Authentication section below).
+    *   `defaultInputModes`, `defaultOutputModes`: To guide how OAP sends requests and prefers responses.
+
+### Runtime Configuration (ADK `RunConfig`)
+
+The Google ADK often uses a `RunConfig` object for parameters like speech synthesis options, output limits, and other runtime behaviors. The standard A2A protocol does not explicitly define `RunConfig`.
+*   **Recommendation:** To pass these parameters from OAP to your ADK agent, we recommend using A2A Extensions or leveraging the `metadata` field within the A2A `MessageSendParams`.
+*   **OAP Support:** OAP will provide a mechanism to send custom metadata as part of the `message/send` request. ADK agent developers should design their agents to look for these parameters in the request's `metadata` or via defined A2A extensions if specific `RunConfig`-like behavior is needed. Future OAP versions might offer more direct UI support for common ADK `RunConfig` parameters if they can be standardized or discovered via an extension.
+
+### Authentication
+
+OAP uses the `securitySchemes` and `security` fields in your Agent Card to understand how to authenticate.
+*   **Supported Schemes:** OAP currently supports API Key-based authentication (e.g., sending a key in an HTTP header like `X-API-Key` or as a Bearer token). Ensure your Agent Card correctly defines these schemes.
+    *   Example `securitySchemes` for an API key:
+        ```json
+        "securitySchemes": {
+          "ApiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-My-Agent-Key"
+          }
+        }
+        ```
+    *   And the corresponding `security` requirement:
+        ```json
+        "security": [
+          { "ApiKeyAuth": [] }
+        ]
+        ```
+*   When registering the agent in OAP, users will be prompted to provide the necessary token/key if your Agent Card indicates a security scheme. OAP will store this securely and use it for subsequent requests.
+
+## For OAP Users
+
+### Registering an ADK Agent
+
+You can register a new ADK-compatible agent through the OAP interface:
+1.  Navigate to the Agents section.
+2.  Look for an option like "Register ADK Agent" or "Add New Agent" (the exact UI may vary).
+3.  You will be prompted to provide:
+    *   **Agent Alias (OAP Name):** A friendly name for you to identify this agent within OAP.
+    *   **A2A Base URL:** The base HTTP(S) URL of your ADK agent (e.g., `https://my-adk-agent.example.com`). OAP will attempt to fetch the Agent Card from `/.well-known/agent.json` relative to this URL.
+    *   **Authentication Details (if required):** If the agent's Card specifies a security scheme, you'll need to provide the token/API key. OAP will indicate the type of token needed (e.g., API Key, Bearer Token) based on the Agent Card.
+4.  OAP will then attempt to fetch and validate the Agent Card. If successful, your agent will be registered.
+
+### Interacting with ADK Agents
+
+Once registered, your ADK agent will appear in your list of available agents.
+*   **Selection:** Select the ADK agent to start a chat session.
+*   **Chatting:** Interact with it by sending messages as you would with other agents. OAP translates your input into an A2A `message/send` request.
+*   **Runtime Configuration:** If the ADK agent exposes specific runtime configurations (e.g., via `metadata` as discussed for developers), the OAP UI for that agent *may* in the future provide options to set these. Currently, custom metadata can be sent via the API if not directly in the UI.
+
+### Troubleshooting
+
+*   **Agent Card Not Found:** Ensure the A2A Base URL is correct and the Agent Card is accessible at `/.well-known/agent.json`. Check for CORS issues if OAP is web-based and fetching client-side (though OAP typically fetches server-side).
+*   **Authentication Errors:** Double-check the authentication token provided during registration matches what the ADK agent expects and that the `securitySchemes` in the Agent Card are correctly defined.
+*   **Message Send Errors:** The ADK agent might return errors if the request is malformed or it encounters an internal issue. OAP will attempt to display these errors. Check the OAP server logs and, if possible, the ADK agent's logs.
+*   **Unexpected Behavior:** ADK agents might have specific input requirements or output formats defined by their skills. Refer to the ADK agent's documentation (if available via `documentationUrl` in its Agent Card).
+
+---
+
+For more detailed information on the A2A protocol or Google ADK, please refer to their respective official documentation.

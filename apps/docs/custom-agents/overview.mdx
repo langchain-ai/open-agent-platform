@@ -9,7 +9,10 @@ We built Open Agent Platform with custom agents in mind. Although we offer a few
 
 ## Platform Requirements
 
-OAP is built on top of LangGraph Platform, which means all agents which you build to be used in OAP must be LangGraph agents deployed on LangGraph Platform.
+Open Agent Platform (OAP) primarily supports agents built and deployed using the LangGraph Platform. However, OAP is expanding its compatibility:
+
+*   **LangGraph Agents:** These are the natively supported agents, expected to be deployed on LangGraph Platform.
+*   **Google ADK / A2A-Compliant Agents:** OAP can also integrate with external agents that comply with the Google Agent Development Kit (ADK) and Agent-to-Agent (A2A) protocol. These agents are typically hosted independently.
 
 ## Agent Types
 
@@ -18,6 +21,14 @@ When building custom agents, you can create three main types:
 1. **Standard Agents**: These are single-purpose agents that handle specific tasks.
 2. **Tools Agents**: Agents that can access external tools via the MCP protocol.
 3. **Supervisor Agents**: Agents that can orchestrate and coordinate multiple other agents.
+
+## Support for Google ADK Agents
+
+Open Agent Platform now also supports integration with agents developed using the Google Agent Development Kit (ADK) or any agent adhering to the Agent-to-Agent (A2A) communication protocol. This allows you to connect independently hosted, A2A-compliant agents to OAP, leveraging their specialized capabilities alongside your LangGraph agents.
+
+These agents are discovered and configured using their "Agent Card" (`/.well-known/agent.json`) and communicate via a standardized JSON-RPC interface.
+
+[Learn more about integrating Google ADK agents.](./adk-agents.mdx)
 
 ## Development Flow
 

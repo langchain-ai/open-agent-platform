@@ -33,7 +33,8 @@
             "group": "Custom Agents",
             "pages": [
               "custom-agents/overview",
-              "custom-agents/configuration"
+              "custom-agents/configuration",
+              "custom-agents/adk-agents"
             ]
           }
         ]
