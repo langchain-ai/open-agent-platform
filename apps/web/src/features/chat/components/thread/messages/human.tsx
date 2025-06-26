@@ -84,6 +84,7 @@ export function HumanMessage({
           supabaseAccessToken: session?.accessToken,
         },
         streamSubgraphs: true,
+        streamResumable: true,
       },
     );
   };

@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@langchain/core": "^0.3.44",
-    "@langchain/langgraph-sdk": "^0.0.76",
+    "@langchain/langgraph-sdk": "^0.0.85",
     "@modelcontextprotocol/sdk": "^1.11.4",
     "@radix-ui/react-alert-dialog": "^1.1.11",
     "@radix-ui/react-avatar": "^1.1.4",

@@ -321,6 +321,7 @@ export function Thread() {
           supabaseAccessToken: session?.accessToken,
         },
         streamSubgraphs: true,
+        streamResumable: true,
       },
     );
 
@@ -351,6 +352,7 @@ export function Thread() {
         supabaseAccessToken: session?.accessToken,
       },
       streamSubgraphs: true,
+      streamResumable: true,
     });
   };
 
