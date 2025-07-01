@@ -14,19 +14,19 @@ export default function SettingsInterface(): React.ReactNode {
   // Use localStorage hooks for each API key
   const [openaiApiKey, setOpenaiApiKey] = useLocalStorage<string>(
     "lg:settings:openaiApiKey",
-    ""
+    "",
   );
   const [anthropicApiKey, setAnthropicApiKey] = useLocalStorage<string>(
     "lg:settings:anthropicApiKey",
-    ""
+    "",
   );
   const [googleApiKey, setGoogleApiKey] = useLocalStorage<string>(
     "lg:settings:googleApiKey",
-    ""
+    "",
   );
   const [tavilyApiKey, setTavilyApiKey] = useLocalStorage<string>(
     "lg:settings:tavilyApiKey",
-    ""
+    "",
   );
 
   return (
@@ -38,7 +38,7 @@ export default function SettingsInterface(): React.ReactNode {
         </div>
       </div>
       <Separator />
-      
+
       {/* API Keys Section */}
       <div className="flex w-full flex-col gap-4">
         <h2 className="text-base font-semibold">API Keys</h2>
@@ -53,7 +53,7 @@ export default function SettingsInterface(): React.ReactNode {
               onChange={(e) => setOpenaiApiKey(e.target.value)}
             />
           </div>
-          
+
           {/* Anthropic API Key */}
           <div className="grid gap-2">
             <Label htmlFor="anthropic-api-key">Anthropic API Key</Label>
@@ -64,7 +64,7 @@ export default function SettingsInterface(): React.ReactNode {
               onChange={(e) => setAnthropicApiKey(e.target.value)}
             />
           </div>
-          
+
           {/* Google Gen AI API Key */}
           <div className="grid gap-2">
             <Label htmlFor="google-api-key">Google Gen AI API Key</Label>
@@ -75,7 +75,7 @@ export default function SettingsInterface(): React.ReactNode {
               onChange={(e) => setGoogleApiKey(e.target.value)}
             />
           </div>
-          
+
           {/* Tavily API Key */}
           <div className="grid gap-2">
             <Label htmlFor="tavily-api-key">Tavily API Key</Label>
@@ -91,4 +91,3 @@ export default function SettingsInterface(): React.ReactNode {
     </div>
   );
 }
-

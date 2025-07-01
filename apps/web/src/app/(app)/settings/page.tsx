@@ -35,4 +35,3 @@ export default function SettingsPage(): React.ReactNode {
     </React.Suspense>
   );
 }
-
