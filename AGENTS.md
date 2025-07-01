@@ -1,5 +1,5 @@
 <general_rules>
-Always format code using Prettier before committing by running `yarn format`. The project uses Prettier with Tailwind CSS plugin and single attribute per line configuration.
+Always format code using Prettier before opening a pull request by running `yarn format`. The project uses Prettier with Tailwind CSS plugin and single attribute per line configuration.
 
 Run ESLint to check for code quality issues using `yarn lint` or auto-fix issues with `yarn lint:fix`. The project enforces TypeScript strict rules, React hooks rules, and prohibits console.log (use console.warn or console.error instead).
 
@@ -9,11 +9,9 @@ Use shadcn/ui components for UI elements. The project is configured with the "ne
 
 Always use TypeScript with strict type checking. Define types in `src/types/` for shared interfaces or within feature directories for feature-specific types.
 
-Follow the established path alias conventions: `@/components` for components, `@/lib` for utilities, `@/hooks` for hooks, `@/ui` for UI components. These are configured in both TypeScript and shadcn/ui.
+Follow the established path alias conventions: `@/components` for UI components, `@/lib` for utilities, and `@/hooks` for hooks.
 
-When working with MCP (Model Context Protocol) agent configurations, use the provided scripts at `apps/web/scripts/update-agents-mcp-*.ts` to update agent configurations across deployments. These scripts handle URL updates and authentication status changes for MCP servers.
-
-Use Zustand for state management and follow the existing patterns in providers like `src/providers/Agents.tsx` and `src/providers/Auth.tsx`.
+Use Zustand for config state management (not all state should be managed by Zustand!) and follow the existing patterns in providers like `src/providers/Agents.tsx` and `src/providers/Auth.tsx`.
 
 When creating new API routes, place them in `src/app/api/` following Next.js App Router conventions.
 </general_rules>
@@ -64,10 +62,10 @@ The monorepo follows the `apps/*` workspace pattern. Dependencies are managed at
 Key dependencies include:
 - LangGraph SDK (`@langchain/langgraph-sdk`) for agent functionality
 - MCP SDK (`@modelcontextprotocol/sdk`) for Model Context Protocol integration
-- Radix UI components for accessible UI primitives
+- Shadcn UI (which wraps Radix UI) components for accessible UI primitives
 - Supabase for authentication and database
 - Tailwind CSS for styling
-- Zustand for state management
+- Zustand for custom configuration state management
 - Next.js 15.3.1 with App Router
 
 Development dependencies include TypeScript 5.7.2, ESLint with TypeScript rules, and Prettier with Tailwind plugin.
@@ -78,12 +76,6 @@ Currently, this repository does not have a testing framework configured. There a
 
 The CI pipeline (`.github/workflows/ci.yml`) includes code quality checks (formatting, linting, spell checking) but does not execute tests.
 
-If you need to add testing to this repository, you would need to:
-1. Choose and install a testing framework (Jest, Vitest recommended for this TypeScript/React setup)
-2. Configure the testing framework with appropriate TypeScript and path alias support
-3. Add test scripts to package.json files
-4. Update the CI pipeline to include test execution
-5. Create test files following the chosen framework's conventions
 
 Until testing is properly configured, rely on TypeScript type checking, ESLint rules, and manual testing for code quality assurance.
 </testing_instructions>
