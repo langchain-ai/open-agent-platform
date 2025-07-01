@@ -7,6 +7,7 @@ import {
   User,
   Loader2,
   TriangleAlert,
+  Settings,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -149,6 +150,11 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </DropdownMenuItem>
+
             {isAuthenticated ? (
               <DropdownMenuItem
                 onClick={handleSignOut}
@@ -184,3 +190,4 @@ export function NavUser() {
     </SidebarMenu>
   );
 }
+
