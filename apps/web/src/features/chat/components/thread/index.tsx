@@ -353,7 +353,7 @@ export function Thread() {
       config: {
         configurable: {
           ...getAgentConfig(agentId),
-          apiKeys: apiKeys,
+          apiKeys,
         },
       },
       optimisticValues,
