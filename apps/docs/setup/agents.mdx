@@ -17,6 +17,21 @@ To use these agents in your instance, you should:
 2. Follow the instructions in the READMEs
 3. Deploy the agents to LangGraph Platform, or run `langgraph dev` to run the agents locally.
 
+## API Keys
+
+These agents will require API keys for models and in some cases for other features (like search tools). 
+As a developer, you can expose these API keys in the settings page on Open Agent Platform. 
+We've exposed `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, and `TAVILY_API_KEY` for use in our demo agents, but this is easily extendable by you for any custom agents.
+
+
+The keys that users set in this page will be passed to any agents as part of the runtime config, under the "apiKeys" key.
+As a developer, you can choose to require users to bring their own API keys, or to fallback to the environment variables set in LangGraph Platform deployment itself.
+
+  <Tip>
+    When using the demo instance of OAP, the Tools Agent and Supervisor will first use any API keys set by the user in OAP, but will fall back to API Keys set by the LangChain team in the base deployments.
+    The Deep Researcher **requires** the user to set their own API keys in OAP on our demo instance. 
+  </Tip>
+
 ## Configuration
 
 Once deployed or running locally, you can connect them to your instance of Open Agent Platform by setting the configuration environment variables. The configuration object is as follows:
