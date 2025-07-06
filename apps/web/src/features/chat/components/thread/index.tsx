@@ -41,6 +41,7 @@ import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
+import { useApiKeys } from "@/hooks/use-api-keys";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -221,6 +222,8 @@ export function Thread() {
   } = useFileUpload();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
 
+  const { apiKeys } = useApiKeys();
+
   const { session } = useAuthContext();
 
   const stream = useStreamContext();
@@ -315,7 +318,10 @@ export function Thread() {
           ],
         }),
         config: {
-          configurable: getAgentConfig(agentId),
+          configurable: {
+            ...getAgentConfig(agentId),
+            apiKeys,
+          },
         },
         metadata: {
           supabaseAccessToken: session?.accessToken,
@@ -345,7 +351,10 @@ export function Thread() {
       checkpoint: parentCheckpoint,
       streamMode: ["values"],
       config: {
-        configurable: getAgentConfig(agentId),
+        configurable: {
+          ...getAgentConfig(agentId),
+          apiKeys,
+        },
       },
       optimisticValues,
       metadata: {
