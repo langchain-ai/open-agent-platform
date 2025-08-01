@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { CronDialog } from "@/features/crons/components/cron-dialog";
 
 function SupportedConfigBadge({
   type,
@@ -174,6 +175,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     </>
   );
 }
+
 
 
 
