@@ -139,11 +139,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              // Delete functionality will be implemented in task 5
-                              // For now, just log
-                              console.warn("Delete cron:", cron.cron_id);
-                            }}
+                            onClick={() => setDeletingCron(cron)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -181,6 +177,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
     </AlertDialog>
   );
 }
+
 
 
 
