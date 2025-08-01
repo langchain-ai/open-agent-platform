@@ -133,16 +133,28 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           </div>
         </CardHeader>
         <CardFooter className="mt-auto flex w-full justify-between pt-2">
-          {!isDefaultAgent && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditDialog(true)}
-            >
-              <Edit className="mr-2 h-3.5 w-3.5" />
-              Edit
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {!isDefaultAgent && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditDialog(true)}
+                >
+                  <Edit className="mr-2 h-3.5 w-3.5" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCronDialog(true)}
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  Crons
+                </Button>
+              </>
+            )}
+          </div>
           <NextLink
             href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
             className="ml-auto"
@@ -162,5 +174,6 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     </>
   );
 }
+
 
 
