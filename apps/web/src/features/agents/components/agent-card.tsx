@@ -68,6 +68,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCronDialog, setShowCronDialog] = useState(false);
   const deployments = getDeployments();
   const selectedDeployment = deployments.find(
     (d) => d.id === agent.deploymentId,
@@ -161,4 +162,5 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     </>
   );
 }
+
 
