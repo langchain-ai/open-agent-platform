@@ -20,6 +20,7 @@ import { Agent } from "@/types/agent";
 import { useCrons } from "@/hooks/use-crons";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Cron } from "@/types/cron";
+import { CronForm } from "./cron-form";
 
 interface CronDialogProps {
   agent: Agent;
@@ -174,3 +175,4 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
     </AlertDialog>
   );
 }
+
