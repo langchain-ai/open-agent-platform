@@ -152,27 +152,29 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
           </div>
         </div>
 
-        {/* Placeholder for form - will be implemented in task 4 */}
+        {/* Cron form for create/edit */}
         {(showCreateForm || editingCron) && (
-          <div className="mt-4 p-4 border rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">
-              Cron form will be implemented in the next task
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => {
+          <div className="mt-4 p-4 border rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">
+              {editingCron ? "Edit Cron Job" : "Create New Cron Job"}
+            </h3>
+            <CronForm
+              agent={agent}
+              cron={editingCron}
+              onSuccess={() => {
                 setShowCreateForm(false);
                 setEditingCron(null);
               }}
-            >
-              Cancel
-            </Button>
+              onCancel={() => {
+                setShowCreateForm(false);
+                setEditingCron(null);
+              }}
+            />
           </div>
         )}
       </AlertDialogContent>
     </AlertDialog>
   );
 }
+
 
