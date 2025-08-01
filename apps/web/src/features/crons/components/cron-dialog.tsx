@@ -33,9 +33,10 @@ interface CronDialogProps {
 }
 
 export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
-  const { crons, loading, listCrons } = useCrons();
+  const { crons, loading, listCrons, deleteCron } = useCrons();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingCron, setEditingCron] = useState<Cron | null>(null);
+  const [deletingCron, setDeletingCron] = useState<Cron | null>(null);
 
   // Fetch crons when dialog opens
   useEffect(() => {
@@ -180,6 +181,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
     </AlertDialog>
   );
 }
+
 
 
 
