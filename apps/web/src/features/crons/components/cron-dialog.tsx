@@ -174,9 +174,43 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
           </div>
         )}
       </AlertDialogContent>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deletingCron} onOpenChange={(open) => !open && setDeletingCron(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the cron job
+              <span className="font-semibold"> "{deletingCron?.metadata?.name || "Unnamed"}"</span>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingCron(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deletingCron) {
+                  await deleteCron(
+                    deletingCron.cron_id,
+                    agent.deploymentId,
+                    agent.assistant_id
+                  );
+                  setDeletingCron(null);
+                }
+              }}
+              className="bg-destructive hover:bg-destructive/90 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AlertDialog>
   );
 }
+
 
 
 
