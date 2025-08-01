@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Bot,
   Brain,
+  Clock,
   Cloud,
   Edit,
   MessageSquare,
@@ -160,3 +161,4 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     </>
   );
 }
+
