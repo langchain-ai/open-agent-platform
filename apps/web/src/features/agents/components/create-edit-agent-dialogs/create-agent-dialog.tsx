@@ -229,7 +229,7 @@ export function CreateAgentDialog({
 
         {selectedGraph && selectedDeployment ? (
           <CreateAgentFormContent
-            key={openCounter}
+            key={`${openCounter}-${selectedGraph.assistant_id}`}
             selectedGraph={selectedGraph}
             selectedDeployment={selectedDeployment}
             onClose={() => onOpenChange(false)}
