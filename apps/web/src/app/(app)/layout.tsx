@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {process.env.NODE_ENV !== "production" && (
+        {process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DISABLE_REACT_SCAN !== "true" && (
           <script
             crossOrigin="anonymous"
             src="//unpkg.com/react-scan/dist/auto.global.js"
