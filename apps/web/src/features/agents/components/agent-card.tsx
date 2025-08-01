@@ -180,8 +180,3 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
     </>
   );
 }
-
-
-
-
-

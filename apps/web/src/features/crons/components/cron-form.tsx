@@ -21,7 +21,7 @@ interface CronFormProps {
 
 export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
   const { createCron, updateCron, loading } = useCrons();
-  
+
   const form = useForm<CreateCronFormData>({
     defaultValues: {
       name: "",
@@ -59,7 +59,9 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
     // Validate cron expression format (basic validation)
     const cronParts = data.schedule.trim().split(" ");
     if (cronParts.length !== 5) {
-      toast.error("Invalid cron expression. Must have 5 parts (minute hour day month weekday)");
+      toast.error(
+        "Invalid cron expression. Must have 5 parts (minute hour day month weekday)",
+      );
       return;
     }
 
@@ -70,7 +72,7 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
           cron.cron_id,
           agent.deploymentId,
           agent.assistant_id,
-          data
+          data,
         );
         if (result) {
           onSuccess?.();
@@ -80,7 +82,7 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
         const result = await createCron(
           agent.assistant_id,
           agent.deploymentId,
-          data
+          data,
         );
         if (result) {
           form.reset();
@@ -94,7 +96,10 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+      >
         <div className="space-y-2">
           <Label htmlFor="name">
             Name <span className="text-red-500">*</span>
@@ -117,17 +122,16 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
             placeholder="0 9 * * *"
             disabled={loading}
           />
-          <p className="text-xs text-muted-foreground">
-            Use cron expression format: minute hour day month weekday.
-            Examples:
+          <p className="text-muted-foreground text-xs">
+            Use cron expression format: minute hour day month weekday. Examples:
           </p>
-          <ul className="text-xs text-muted-foreground ml-4 list-disc">
+          <ul className="text-muted-foreground ml-4 list-disc text-xs">
             <li>"0 9 * * *" - Daily at 9 AM</li>
             <li>"0 * * * *" - Every hour</li>
             <li>"*/15 * * * *" - Every 15 minutes</li>
             <li>"0 0 * * 0" - Weekly on Sunday at midnight</li>
           </ul>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             <a
               href="https://crontab.cronhub.io/"
               target="_blank"
@@ -150,7 +154,7 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
             rows={4}
             disabled={loading}
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             This message will be sent to the agent when the cron job runs
           </p>
         </div>
@@ -164,7 +168,10 @@ export function CronForm({ agent, cron, onSuccess, onCancel }: CronFormProps) {
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={loading}>
+          <Button
+            type="submit"
+            disabled={loading}
+          >
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {cron ? "Update" : "Create"} Cron Job
           </Button>

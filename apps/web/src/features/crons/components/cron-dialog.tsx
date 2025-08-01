@@ -70,8 +70,11 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+    <AlertDialog
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      <AlertDialogContent className="flex max-h-[80vh] max-w-4xl flex-col overflow-hidden">
         <AlertDialogHeader>
           <AlertDialogTitle>Cron Jobs for {agent.name}</AlertDialogTitle>
         </AlertDialogHeader>
@@ -95,7 +98,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : crons.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-muted-foreground py-8 text-center">
                 No cron jobs found. Create one to get started.
               </div>
             ) : (
@@ -119,7 +122,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
                           <div className="font-mono text-sm">
                             {cron.schedule}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-muted-foreground text-xs">
                             {formatSchedule(cron.schedule)}
                           </div>
                         </div>
@@ -155,8 +158,8 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
 
         {/* Cron form for create/edit */}
         {(showCreateForm || editingCron) && (
-          <div className="mt-4 p-4 border rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="mt-4 rounded-lg border p-4">
+            <h3 className="mb-4 text-lg font-semibold">
               {editingCron ? "Edit Cron Job" : "Create New Cron Job"}
             </h3>
             <CronForm
@@ -176,13 +179,21 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
       </AlertDialogContent>
 
       {/* Delete confirmation dialog */}
-      <AlertDialog open={!!deletingCron} onOpenChange={(open) => !open && setDeletingCron(null)}>
+      <AlertDialog
+        open={!!deletingCron}
+        onOpenChange={(open) => !open && setDeletingCron(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the cron job
-              <span className="font-semibold"> "{deletingCron?.metadata?.name || "Unnamed"}"</span>.
+              This action cannot be undone. This will permanently delete the
+              cron job
+              <span className="font-semibold">
+                {" "}
+                "{deletingCron?.metadata?.name || "Unnamed"}"
+              </span>
+              .
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -195,7 +206,7 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
                   await deleteCron(
                     deletingCron.cron_id,
                     agent.deploymentId,
-                    agent.assistant_id
+                    agent.assistant_id,
                   );
                   setDeletingCron(null);
                 }
@@ -210,9 +221,3 @@ export function CronDialog({ agent, open, onOpenChange }: CronDialogProps) {
     </AlertDialog>
   );
 }
-
-
-
-
-
-

@@ -26,15 +26,15 @@ export function useCrons() {
       setLoading(true);
       try {
         const client = createClient(deploymentId, session.access_token);
-        
+
         // Get all crons and filter by assistant_id and owner
         const response = await client.crons.list();
         const userCrons = response.filter(
           (cron: Cron) =>
             cron.assistant_id === assistantId &&
-            cron.metadata?.owner === user?.id
+            cron.metadata?.owner === user?.id,
         );
-        
+
         setCrons(userCrons);
         return userCrons;
       } catch (error) {
@@ -45,7 +45,7 @@ export function useCrons() {
         setLoading(false);
       }
     },
-    [session, user]
+    [session, user],
   );
 
   /**
@@ -55,7 +55,7 @@ export function useCrons() {
     async (
       assistantId: string,
       deploymentId: string,
-      formData: CreateCronFormData
+      formData: CreateCronFormData,
     ) => {
       if (!session?.access_token || !user?.id) {
         toast.error("Authentication required");
@@ -83,12 +83,12 @@ export function useCrons() {
         };
 
         const newCron = await client.crons.create(assistantId, cronInput);
-        
+
         toast.success("Cron job created successfully");
-        
+
         // Refresh the crons list
         await listCrons(assistantId, deploymentId);
-        
+
         return newCron;
       } catch (error) {
         console.error("Failed to create cron:", error);
@@ -98,7 +98,7 @@ export function useCrons() {
         setLoading(false);
       }
     },
-    [session, user, listCrons]
+    [session, user, listCrons],
   );
 
   /**
@@ -109,7 +109,7 @@ export function useCrons() {
       cronId: string,
       deploymentId: string,
       assistantId: string,
-      formData: CreateCronFormData
+      formData: CreateCronFormData,
     ) => {
       if (!session?.access_token || !user?.id) {
         toast.error("Authentication required");
@@ -138,12 +138,12 @@ export function useCrons() {
         };
 
         const updatedCron = await client.crons.update(cronId, updateInput);
-        
+
         toast.success("Cron job updated successfully");
-        
+
         // Refresh the crons list
         await listCrons(assistantId, deploymentId);
-        
+
         return updatedCron;
       } catch (error) {
         console.error("Failed to update cron:", error);
@@ -153,7 +153,7 @@ export function useCrons() {
         setLoading(false);
       }
     },
-    [session, user, listCrons]
+    [session, user, listCrons],
   );
 
   /**
@@ -169,14 +169,14 @@ export function useCrons() {
       setLoading(true);
       try {
         const client = createClient(deploymentId, session.access_token);
-        
+
         await client.crons.delete(cronId);
-        
+
         toast.success("Cron job deleted successfully");
-        
+
         // Refresh the crons list
         await listCrons(assistantId, deploymentId);
-        
+
         return true;
       } catch (error) {
         console.error("Failed to delete cron:", error);
@@ -186,7 +186,7 @@ export function useCrons() {
         setLoading(false);
       }
     },
-    [session, listCrons]
+    [session, listCrons],
   );
 
   return {
