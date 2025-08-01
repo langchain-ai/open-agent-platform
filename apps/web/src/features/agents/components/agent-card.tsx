@@ -172,9 +172,15 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
         open={showEditDialog}
         onOpenChange={(c) => setShowEditDialog(c)}
       />
+      <CronDialog
+        agent={agent}
+        open={showCronDialog}
+        onOpenChange={(c) => setShowCronDialog(c)}
+      />
     </>
   );
 }
+
 
 
 
