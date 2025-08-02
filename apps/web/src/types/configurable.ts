@@ -72,6 +72,14 @@ export type ConfigurableFieldMCPMetadata = {
   label: string;
   type: "mcp";
   default?: {
+    // New multi-server configuration
+    servers?: {
+      [serverName: string]: {
+        tools?: string[];
+        enabled?: boolean;
+      };
+    };
+    // Deprecated fields for backward compatibility
     tools?: string[];
     url?: string;
     auth_required?: boolean;
@@ -99,3 +107,4 @@ export type ConfigurableFieldAgentsMetadata = {
     name?: string;
   }[];
 };
+
