@@ -47,17 +47,32 @@ export default function ToolsPlaygroundInterface() {
       return;
     }
 
-    const tool = tools.find((tool) => tool.name === selectedToolName);
+    // Find tool across all servers
+    let foundTool = null;
+    let foundServer = null;
+    
+    for (const [serverName, serverTools] of toolsByServer.entries()) {
+      const tool = serverTools.find((t) => t.name === selectedToolName);
+      if (tool) {
+        foundTool = tool;
+        foundServer = serverName;
+        break;
+      }
+    }
 
-    if (!tool) {
+    if (!foundTool) {
       toast.error("Tool not found", { richColors: true });
       setSelectedToolName(null);
       router.replace("/tools");
       return;
     }
+    
     resetState();
-    setSelectedTool(tool);
-  }, [tools, loading, selectedToolName]);
+    setSelectedTool(foundTool);
+    if (foundServer && foundServer !== selectedServerName) {
+      setSelectedServerName(foundServer);
+    }
+  }, [tools, toolsByServer, loading, selectedToolName, selectedServerName]);
 
   const handleInputChange = (newValues: any) => {
     setInputValues(newValues);
@@ -193,4 +208,5 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
 
