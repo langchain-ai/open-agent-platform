@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
+import { ToolSelectionByServer } from "@/features/agents/components/create-edit-agent-dialogs/tool-selection-by-server";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
@@ -478,3 +479,4 @@ export const ConfigurationSidebar = forwardRef<
 });
 
 ConfigurationSidebar.displayName = "ConfigurationSidebar";
+
