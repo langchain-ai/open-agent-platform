@@ -18,3 +18,7 @@ export interface Tool {
    */
   inputSchema: InputSchema;
 }
+
+// Re-export ToolWithServer from mcp.ts for convenience
+export type { ToolWithServer } from "./mcp";
+
