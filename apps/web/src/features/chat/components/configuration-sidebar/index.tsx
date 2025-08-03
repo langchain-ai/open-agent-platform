@@ -123,7 +123,7 @@ export const ConfigurationSidebar = forwardRef<
   AIConfigPanelProps
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
-  const { tools, setTools, getTools, cursor } = useMCPContext();
+  const { tools, toolsByServer, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId] = useQueryState("threadId");
@@ -479,4 +479,5 @@ export const ConfigurationSidebar = forwardRef<
 });
 
 ConfigurationSidebar.displayName = "ConfigurationSidebar";
+
 
