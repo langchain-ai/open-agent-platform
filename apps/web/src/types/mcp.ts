@@ -55,9 +55,7 @@ export interface MCPServerHTTPConfig extends MCPServerConfig {
   };
 }
 
-export type MCPServerConfiguration =
-  | MCPServerStdioConfig
-  | MCPServerHTTPConfig;
+export type MCPServerConfiguration = MCPServerStdioConfig | MCPServerHTTPConfig;
 
 export interface MCPServersConfig {
   [serverName: string]: MCPServerConfiguration;

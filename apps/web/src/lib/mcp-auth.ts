@@ -14,7 +14,7 @@ interface ServerAuthState {
  */
 export async function handleServerAuth(
   serverConfig: MCPServerHTTPConfig,
-  req: NextRequest
+  req: NextRequest,
 ): Promise<string | null> {
   if (!serverConfig.authProvider) {
     return null;
@@ -30,9 +30,7 @@ export async function handleServerAuth(
     case "api-key":
       return authProvider.apiKey || null;
     default:
-      console.warn(
-        `Unknown auth provider type: ${(authProvider as any).type}`
-      );
+      console.warn(`Unknown auth provider type: ${(authProvider as any).type}`);
       return null;
   }
 }
@@ -44,7 +42,7 @@ export async function handleServerAuth(
 async function handleOAuthFlow(
   serverConfig: MCPServerHTTPConfig,
   authProvider: any,
-  req: NextRequest
+  req: NextRequest,
 ): Promise<string | null> {
   // Check for existing valid token
   const existingToken = await getStoredToken(serverConfig.url);
@@ -62,7 +60,7 @@ async function handleOAuthFlow(
 
   // For now, return null as placeholder
   console.warn(
-    "OAuth flow not fully implemented. Returning null for OAuth authentication."
+    "OAuth flow not fully implemented. Returning null for OAuth authentication.",
   );
   return null;
 }
@@ -73,7 +71,7 @@ async function handleOAuthFlow(
  */
 async function handleBearerToken(
   serverConfig: MCPServerHTTPConfig,
-  req: NextRequest
+  req: NextRequest,
 ): Promise<string | null> {
   // Check for bearer token in various sources
   const authHeader = req.headers.get("Authorization");
@@ -106,7 +104,7 @@ async function handleBearerToken(
  * This is a placeholder implementation that should be replaced with actual token storage.
  */
 async function getStoredToken(
-  serverUrl: string
+  serverUrl: string,
 ): Promise<ServerAuthState | null> {
   // TODO: Implement actual token storage retrieval
   // This could use cookies, local storage, or a server-side session store

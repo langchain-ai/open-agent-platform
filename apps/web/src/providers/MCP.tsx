@@ -16,7 +16,7 @@ interface MCPContextType {
   loadingByServer: Map<string, boolean>;
   getToolsFromServer: (
     serverName: string,
-    cursor?: string
+    cursor?: string,
   ) => Promise<ToolWithServer[]>;
   getAllTools: () => Promise<ToolWithServer[]>;
   callTool: (params: any) => Promise<any>;
@@ -39,7 +39,7 @@ export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
   const [loadingByServer, setLoadingByServer] = useState<Map<string, boolean>>(
-    new Map()
+    new Map(),
   );
   const servers = getMCPServers();
 
@@ -91,4 +91,3 @@ export const useMCPContext = () => {
   }
   return context;
 };
-

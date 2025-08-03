@@ -57,7 +57,7 @@ export default function ToolsPlaygroundInterface() {
     // Find tool across all servers
     let foundTool = null;
     let foundServer = null;
-    
+
     for (const [serverName, serverTools] of toolsByServer.entries()) {
       const tool = serverTools.find((t) => t.name === selectedToolName);
       if (tool) {
@@ -73,7 +73,7 @@ export default function ToolsPlaygroundInterface() {
       router.replace("/tools");
       return;
     }
-    
+
     resetState();
     setSelectedTool(foundTool);
     if (foundServer && foundServer !== selectedServerName) {
@@ -156,7 +156,10 @@ export default function ToolsPlaygroundInterface() {
             <SelectContent>
               <SelectItem value="all">All servers</SelectItem>
               {Object.keys(servers).map((serverName) => (
-                <SelectItem key={serverName} value={serverName}>
+                <SelectItem
+                  key={serverName}
+                  value={serverName}
+                >
                   {serverName}
                 </SelectItem>
               ))}
@@ -169,7 +172,7 @@ export default function ToolsPlaygroundInterface() {
               setSelectedTool(t);
               setSelectedToolName(t.name);
               // Update server selection if tool is from different server
-              if ('serverName' in t) {
+              if ("serverName" in t) {
                 setSelectedServerName(t.serverName);
               }
             }}
@@ -239,7 +242,3 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
-
-
-
-

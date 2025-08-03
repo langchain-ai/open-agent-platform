@@ -2,18 +2,18 @@
 
 /**
  * Migration script to convert legacy single MCP server configuration to multi-server format
- * 
+ *
  * Usage:
  *   node scripts/migrate-single-to-multi-mcp.ts
- * 
+ *
  * This script reads the legacy environment variables:
  *   - NEXT_PUBLIC_MCP_SERVER_URL
  *   - NEXT_PUBLIC_MCP_AUTH_REQUIRED
- * 
+ *
  * And generates the new NEXT_PUBLIC_MCP_SERVERS JSON configuration.
- * 
+ *
  * The output can be copied to your .env file or environment configuration.
- * 
+ *
  * Example output:
  *   NEXT_PUBLIC_MCP_SERVERS='{"default":{"type":"http","url":"http://localhost:3001","authProvider":{"type":"bearer"}}}'
  */
@@ -85,7 +85,9 @@ function migrateSingleToMultiMCP(): void {
       args: ["./local-mcp-server.js"],
     },
   };
-  console.log(`NEXT_PUBLIC_MCP_SERVERS='${JSON.stringify(exampleConfig, null, 2)}'`);
+  console.log(
+    `NEXT_PUBLIC_MCP_SERVERS='${JSON.stringify(exampleConfig, null, 2)}'`,
+  );
 }
 
 // Run the migration

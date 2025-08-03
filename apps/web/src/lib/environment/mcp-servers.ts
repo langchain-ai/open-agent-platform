@@ -3,7 +3,7 @@ import { MCPServersConfig } from "@/types/mcp";
 /**
  * Get MCP servers configuration from environment variables.
  * Supports both new multi-server format and legacy single-server format.
- * 
+ *
  * @returns MCPServersConfig object with server configurations
  */
 export function getMCPServers(): MCPServersConfig {

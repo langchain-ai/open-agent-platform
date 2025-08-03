@@ -370,35 +370,42 @@ export const ConfigurationSidebar = forwardRef<
                         <ToolSelectionByServer
                           toolsByServer={toolsByServer}
                           selectedTools={
-                            configsByAgentId[agentId]?.[toolConfigurations[0]?.label]?.tools || []
+                            configsByAgentId[agentId]?.[
+                              toolConfigurations[0]?.label
+                            ]?.tools || []
                           }
                           onToolToggle={(toolName) => {
-                            const currentConfig = configsByAgentId[agentId]?.[toolConfigurations[0]?.label] || {};
+                            const currentConfig =
+                              configsByAgentId[agentId]?.[
+                                toolConfigurations[0]?.label
+                              ] || {};
                             const currentTools = currentConfig.tools || [];
                             const newTools = currentTools.includes(toolName)
-                              ? currentTools.filter((t: string) => t !== toolName)
+                              ? currentTools.filter(
+                                  (t: string) => t !== toolName,
+                                )
                               : [...currentTools, toolName];
-                            
+
                             // Update the config store
                             const newConfig = {
                               ...currentConfig,
-                              tools: newTools
+                              tools: newTools,
                             };
-                            useConfigStore.getState().setConfig(
-                              agentId,
-                              toolConfigurations[0]?.label,
-                              newConfig
-                            );
+                            useConfigStore
+                              .getState()
+                              .setConfig(
+                                agentId,
+                                toolConfigurations[0]?.label,
+                                newConfig,
+                              );
                           }}
                         />
                       )}
-                      {agentId &&
-                        tools.length === 0 &&
-                        toolSearchTerm && (
-                          <p className="mt-4 text-center text-sm text-slate-500">
-                            No tools found matching "{toolSearchTerm}".
-                          </p>
-                        )}
+                      {agentId && tools.length === 0 && toolSearchTerm && (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          No tools found matching "{toolSearchTerm}".
+                        </p>
+                      )}
                       {!agentId && (
                         <p className="mt-4 text-center text-sm text-slate-500">
                           Select an agent to see tools.
@@ -493,6 +500,3 @@ export const ConfigurationSidebar = forwardRef<
 });
 
 ConfigurationSidebar.displayName = "ConfigurationSidebar";
-
-
-

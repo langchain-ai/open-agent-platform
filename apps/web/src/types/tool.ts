@@ -21,4 +21,3 @@ export interface Tool {
 
 // Re-export ToolWithServer from mcp.ts for convenience
 export type { ToolWithServer } from "./mcp";
-

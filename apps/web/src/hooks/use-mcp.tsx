@@ -22,18 +22,18 @@ export interface MCPConnection {
  */
 export default function useMCP({ name, version, serverName }: UseMCPOptions) {
   const [connections, setConnections] = useState<Map<string, MCPConnection>>(
-    new Map()
+    new Map(),
   );
   const [toolsByServer, setToolsByServer] = useState<
     Map<string, ToolWithServer[]>
   >(new Map());
   const [cursorsByServer, setCursorsByServer] = useState<Map<string, string>>(
-    new Map()
+    new Map(),
   );
 
   const createAndConnectMCPClient = async (
     serverName: string,
-    serverConfig: MCPServerConfiguration
+    serverConfig: MCPServerConfiguration,
   ): Promise<Client> => {
     if (serverConfig.type === "stdio") {
       // Handle stdio transport (not supported in browser)
@@ -53,7 +53,7 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
 
   const getToolsFromServer = async (
     serverName: string,
-    nextCursor?: string
+    nextCursor?: string,
   ): Promise<ToolWithServer[]> => {
     const servers = getMCPServers();
     const serverConfig = servers[serverName];
@@ -73,7 +73,7 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
 
     if (tools.nextCursor) {
       setCursorsByServer((prev) =>
-        new Map(prev).set(serverName, tools.nextCursor!)
+        new Map(prev).set(serverName, tools.nextCursor!),
       );
     } else {
       setCursorsByServer((prev) => {
@@ -102,7 +102,7 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
         } catch (e) {
           console.error(`Failed to get tools from ${serverName}:`, e);
         }
-      })
+      }),
     );
 
     return allTools;
@@ -175,4 +175,3 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
     cursor,
   };
 }
-

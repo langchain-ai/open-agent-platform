@@ -107,4 +107,3 @@ export type ConfigurableFieldAgentsMetadata = {
     name?: string;
   }[];
 };
-

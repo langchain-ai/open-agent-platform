@@ -1,6 +1,10 @@
 import { ToolWithServer } from "@/types/mcp";
 import { ConfigFieldTool } from "@/features/chat/components/configuration-sidebar/config-field";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
@@ -16,7 +20,7 @@ export function ToolSelectionByServer({
   onToolToggle,
 }: ToolSelectionByServerProps) {
   const [expandedServers, setExpandedServers] = useState<Set<string>>(
-    new Set(Array.from(toolsByServer.keys()))
+    new Set(Array.from(toolsByServer.keys())),
   );
 
   const toggleServer = (serverName: string) => {
@@ -37,8 +41,10 @@ export function ToolSelectionByServer({
           open={expandedServers.has(serverName)}
           onOpenChange={() => toggleServer(serverName)}
         >
-          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm font-medium hover:bg-muted">
-            <span>{serverName} ({tools.length} tools)</span>
+          <CollapsibleTrigger className="bg-muted/50 hover:bg-muted flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium">
+            <span>
+              {serverName} ({tools.length} tools)
+            </span>
             {expandedServers.has(serverName) ? (
               <ChevronDown className="h-4 w-4" />
             ) : (

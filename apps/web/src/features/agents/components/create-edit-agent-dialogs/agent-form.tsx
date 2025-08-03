@@ -61,7 +61,8 @@ export function AgentFieldsForm({
     config: Record<string, any>;
   }>();
 
-  const { tools, toolsByServer, setTools, getTools, cursor, loading } = useMCPContext();
+  const { tools, toolsByServer, setTools, getTools, cursor, loading } =
+    useMCPContext();
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
     useSearchTools(tools, {
       preSelectedTools: toolConfigurations[0]?.default?.tools,
@@ -164,7 +165,9 @@ export function AgentFieldsForm({
                           onToolToggle={(toolName) => {
                             const currentTools = value?.tools || [];
                             const newTools = currentTools.includes(toolName)
-                              ? currentTools.filter((t: string) => t !== toolName)
+                              ? currentTools.filter(
+                                  (t: string) => t !== toolName,
+                                )
                               : [...currentTools, toolName];
                             onChange({ ...value, tools: newTools });
                           }}
@@ -260,6 +263,3 @@ export function AgentFieldsForm({
     </div>
   );
 }
-
-
-

@@ -6,7 +6,7 @@ export const runtime = "edge";
 
 export async function proxyRequest(
   req: NextRequest,
-  { params }: { params: { server: string; path: string[] } }
+  { params }: { params: { server: string; path: string[] } },
 ): Promise<Response> {
   const servers = getMCPServers();
   const serverConfig = servers[params.server];
@@ -14,14 +14,14 @@ export async function proxyRequest(
   if (!serverConfig) {
     return NextResponse.json(
       { message: `Server ${params.server} not found` },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (serverConfig.type === "stdio") {
     return NextResponse.json(
       { message: "STDIO transport not supported via proxy" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
