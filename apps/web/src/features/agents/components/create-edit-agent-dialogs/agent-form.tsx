@@ -153,28 +153,25 @@ export function AgentFieldsForm({
               />
               <div className="relative w-full flex-1 basis-[500px] rounded-md border-[1px] border-slate-200 px-4">
                 <div className="absolute inset-0 overflow-y-auto px-4">
-                  {toolConfigurations[0]?.label
-                    ? displayTools.map((c) => (
-                        <Controller
-                          key={`tool-${c.name}`}
-                          control={form.control}
-                          name={`config.${toolConfigurations[0].label}`}
-                          render={({ field: { value, onChange } }) => (
-                            <ConfigFieldTool
-                              key={`tool-${c.name}`}
-                              id={c.name}
-                              label={c.name}
-                              description={c.description}
-                              agentId={agentId}
-                              toolId={toolConfigurations[0].label}
-                              className="border-b-[1px] py-4"
-                              value={value}
-                              setValue={onChange}
-                            />
-                          )}
+                  {toolConfigurations[0]?.label && (
+                    <Controller
+                      control={form.control}
+                      name={`config.${toolConfigurations[0].label}`}
+                      render={({ field: { value, onChange } }) => (
+                        <ToolSelectionByServer
+                          toolsByServer={toolsByServer}
+                          selectedTools={value?.tools || []}
+                          onToolToggle={(toolName) => {
+                            const currentTools = value?.tools || [];
+                            const newTools = currentTools.includes(toolName)
+                              ? currentTools.filter((t: string) => t !== toolName)
+                              : [...currentTools, toolName];
+                            onChange({ ...value, tools: newTools });
+                          }}
                         />
-                      ))
-                    : null}
+                      )}
+                    />
+                  )}
                   {displayTools.length === 0 && toolSearchTerm && (
                     <p className="my-4 w-full text-center text-sm text-slate-500">
                       No tools found matching "{toolSearchTerm}".
@@ -263,5 +260,6 @@ export function AgentFieldsForm({
     </div>
   );
 }
+
 
 
