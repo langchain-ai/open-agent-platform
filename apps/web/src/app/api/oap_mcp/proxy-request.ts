@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { getMCPServers } from "@/lib/environment/mcp-servers";
 
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
@@ -239,3 +240,4 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     );
   }
 }
+
