@@ -90,6 +90,31 @@ async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: URL) {
  * @returns The response from the MCP server.
  */
 export async function proxyRequest(req: NextRequest): Promise<Response> {
+  // Extract the path after '/api/oap_mcp/'
+  // Example: /api/oap_mcp/foo/bar -> /foo/bar
+  const url = new URL(req.url);
+  const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
+  
+  // Check if the first path segment might be a server name
+  const pathSegments = path.split('/').filter(Boolean);
+  if (pathSegments.length > 0) {
+    const servers = getMCPServers();
+    const potentialServerName = pathSegments[0];
+    
+    // If the first segment matches a configured server, delegate to new proxy
+    if (servers[potentialServerName]) {
+      // Import and use the new per-server proxy handler
+      const { proxyRequest: newProxyRequest } = await import('./[server]/[...path]/route');
+      return newProxyRequest(req, {
+        params: {
+          server: potentialServerName,
+          path: pathSegments.slice(1)
+        }
+      });
+    }
+  }
+
+  // Legacy behavior - continue with single server logic
   if (!MCP_SERVER_URL) {
     return new Response(
       JSON.stringify({
@@ -99,11 +124,6 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
-
-  // Extract the path after '/api/oap_mcp/'
-  // Example: /api/oap_mcp/foo/bar -> /foo/bar
-  const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
 
   // Construct the target URL
   const targetUrlObj = new URL(MCP_SERVER_URL);
@@ -240,4 +260,5 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     );
   }
 }
+
 
