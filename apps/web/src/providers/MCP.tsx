@@ -38,7 +38,7 @@ export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [loadingByServer, setLoadingByServer] = useState<Map<string, boolean>>(
+  const [loadingByServer] = useState<Map<string, boolean>>(
     new Map(),
   );
   const servers = getMCPServers();
@@ -91,3 +91,4 @@ export const useMCPContext = () => {
   }
   return context;
 };
+
