@@ -22,6 +22,7 @@ import {
 import _ from "lodash";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { Controller, useFormContext } from "react-hook-form";
+import { ToolSelectionByServer } from "./tool-selection-by-server";
 
 export function AgentFieldsFormLoading() {
   return (
@@ -262,3 +263,4 @@ export function AgentFieldsForm({
     </div>
   );
 }
+
