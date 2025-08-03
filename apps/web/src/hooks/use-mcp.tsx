@@ -1,102 +1,178 @@
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { Tool } from "@/types/tool";
 import { useState } from "react";
+import { getMCPServers } from "@/lib/environment/mcp-servers";
+import { MCPServerConfiguration, ToolWithServer } from "@/types/mcp";
 
-function getMCPUrlOrThrow() {
-  if (!process.env.NEXT_PUBLIC_BASE_API_URL) {
-    throw new Error("NEXT_PUBLIC_BASE_API_URL is not defined");
-  }
+export interface UseMCPOptions {
+  name: string;
+  version: string;
+  serverName?: string; // Optional: connect to specific server
+}
 
-  const url = new URL(process.env.NEXT_PUBLIC_BASE_API_URL);
-  url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
-  return url;
+export interface MCPConnection {
+  serverName: string;
+  client: Client;
+  config: MCPServerConfiguration;
 }
 
 /**
- * Custom hook for interacting with the Model Context Protocol (MCP).
- * Provides functions to connect to an MCP server and list available tools.
+ * Custom hook for interacting with multiple Model Context Protocol (MCP) servers.
+ * Provides functions to connect to MCP servers and manage tools from multiple sources.
  */
-export default function useMCP({
-  name,
-  version,
-}: {
-  name: string;
-  version: string;
-}) {
-  const [tools, setTools] = useState<Tool[]>([]);
-  const [cursor, setCursor] = useState("");
+export default function useMCP({ name, version, serverName }: UseMCPOptions) {
+  const [connections, setConnections] = useState<Map<string, MCPConnection>>(
+    new Map()
+  );
+  const [toolsByServer, setToolsByServer] = useState<
+    Map<string, ToolWithServer[]>
+  >(new Map());
+  const [cursorsByServer, setCursorsByServer] = useState<Map<string, string>>(
+    new Map()
+  );
 
-  /**
-   * Creates an MCP client and connects it to the specified server URL.
-   * @param url - The URL of the MCP server.
-   * @param options - Client identification options.
-   * @param options.name - The name of the client.
-   * @param options.version - The version of the client.
-   * @returns A promise that resolves to the connected MCP client instance.
-   */
-  const createAndConnectMCPClient = async () => {
-    const url = getMCPUrlOrThrow();
-    const connectionClient = new StreamableHTTPClientTransport(new URL(url));
-    const mcp = new Client({
-      name,
-      version,
-    });
-
-    await mcp.connect(connectionClient);
-    return mcp;
-  };
-
-  /**
-   * Connects to an MCP server and retrieves the list of available tools.
-   * @param url - The URL of the MCP server.
-   * @param options - Client identification options.
-   * @param options.name - The name of the client.
-   * @param options.version - The version of the client.
-   * @returns A promise that resolves to an array of available tools.
-   */
-  const getTools = async (nextCursor?: string): Promise<Tool[]> => {
-    const mcp = await createAndConnectMCPClient();
-    const tools = await mcp.listTools({ cursor: nextCursor });
-    if (tools.nextCursor) {
-      setCursor(tools.nextCursor);
-    } else {
-      setCursor("");
+  const createAndConnectMCPClient = async (
+    serverName: string,
+    serverConfig: MCPServerConfiguration
+  ): Promise<Client> => {
+    if (serverConfig.type === "stdio") {
+      // Handle stdio transport (not supported in browser)
+      throw new Error("STDIO transport not supported in browser environment");
     }
-    return tools.tools;
+
+    // Handle HTTP/SSE transport - use proxy route for same-origin
+    const proxyUrl = new URL(window.location.origin);
+    proxyUrl.pathname = `/api/oap_mcp/${serverName}`;
+
+    const transport = new StreamableHTTPClientTransport(proxyUrl);
+    const client = new Client({ name, version });
+
+    await client.connect(transport);
+    return client;
   };
 
-  /**
-   * Calls a tool on the MCP server.
-   * @param name - The name of the tool.
-   * @param version - The version of the tool. Optional.
-   * @param args - The arguments to pass to the tool.
-   * @returns A promise that resolves to the response from the tool.
-   */
+  const getToolsFromServer = async (
+    serverName: string,
+    nextCursor?: string
+  ): Promise<ToolWithServer[]> => {
+    const servers = getMCPServers();
+    const serverConfig = servers[serverName];
+
+    if (!serverConfig) {
+      throw new Error(`Server ${serverName} not found in configuration`);
+    }
+
+    let connection = connections.get(serverName);
+    if (!connection) {
+      const client = await createAndConnectMCPClient(serverName, serverConfig);
+      connection = { serverName, client, config: serverConfig };
+      setConnections((prev) => new Map(prev).set(serverName, connection!));
+    }
+
+    const tools = await connection.client.listTools({ cursor: nextCursor });
+
+    if (tools.nextCursor) {
+      setCursorsByServer((prev) =>
+        new Map(prev).set(serverName, tools.nextCursor!)
+      );
+    } else {
+      setCursorsByServer((prev) => {
+        const next = new Map(prev);
+        next.delete(serverName);
+        return next;
+      });
+    }
+
+    return tools.tools.map((tool) => ({
+      ...tool,
+      serverName,
+      serverConfig,
+    }));
+  };
+
+  const getAllTools = async (): Promise<ToolWithServer[]> => {
+    const servers = getMCPServers();
+    const allTools: ToolWithServer[] = [];
+
+    await Promise.all(
+      Object.keys(servers).map(async (serverName) => {
+        try {
+          const tools = await getToolsFromServer(serverName);
+          allTools.push(...tools);
+        } catch (e) {
+          console.error(`Failed to get tools from ${serverName}:`, e);
+        }
+      })
+    );
+
+    return allTools;
+  };
+
   const callTool = async ({
     name,
     args,
     version,
+    serverName: specificServer,
   }: {
     name: string;
     args: Record<string, any>;
     version?: string;
+    serverName?: string;
   }) => {
-    const mcp = await createAndConnectMCPClient();
-    const response = await mcp.callTool({
-      name,
-      version,
-      arguments: args,
-    });
-    return response;
+    // Find which server has this tool
+    let targetServer = specificServer;
+
+    if (!targetServer) {
+      for (const [server, tools] of toolsByServer.entries()) {
+        if (tools.some((t) => t.name === name)) {
+          targetServer = server;
+          break;
+        }
+      }
+    }
+
+    if (!targetServer) {
+      throw new Error(`Tool ${name} not found in any server`);
+    }
+
+    const connection = connections.get(targetServer);
+    if (!connection) {
+      throw new Error(`Not connected to server ${targetServer}`);
+    }
+
+    return connection.client.callTool({ name, version, arguments: args });
   };
 
+  // Legacy compatibility - maintain old interface
+  const tools = Array.from(toolsByServer.values()).flat();
+  const setTools = (newTools: ToolWithServer[]) => {
+    const newMap = new Map<string, ToolWithServer[]>();
+    newTools.forEach((tool) => {
+      const serverTools = newMap.get(tool.serverName) || [];
+      serverTools.push(tool);
+      newMap.set(tool.serverName, serverTools);
+    });
+    setToolsByServer(newMap);
+  };
+
+  // Legacy single cursor - returns first server's cursor
+  const cursor = Array.from(cursorsByServer.values())[0] || "";
+
   return {
-    getTools,
+    getToolsFromServer,
+    getAllTools,
     callTool,
-    createAndConnectMCPClient,
+    toolsByServer,
+    setToolsByServer,
+    cursorsByServer,
+    connections,
+    // Legacy compatibility
+    getTools: getAllTools,
+    createAndConnectMCPClient: () =>
+      createAndConnectMCPClient("default", getMCPServers().default),
     tools,
     setTools,
     cursor,
   };
 }
+
