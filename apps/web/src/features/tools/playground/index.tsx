@@ -17,6 +17,13 @@ import _ from "lodash";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ToolsPlaygroundInterface() {
   const { tools, toolsByServer, servers, loading, callTool } = useMCPContext();
@@ -208,5 +215,6 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
 
 
