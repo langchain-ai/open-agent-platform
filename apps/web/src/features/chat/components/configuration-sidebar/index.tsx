@@ -366,20 +366,34 @@ export const ConfigurationSidebar = forwardRef<
                       placeholder="Search tools..."
                     />
                     <div className="flex-1 space-y-4 overflow-y-auto rounded-md">
+                      {agentId && toolsByServer.size > 0 && (
+                        <ToolSelectionByServer
+                          toolsByServer={toolsByServer}
+                          selectedTools={
+                            configsByAgentId[agentId]?.[toolConfigurations[0]?.label]?.tools || []
+                          }
+                          onToolToggle={(toolName) => {
+                            const currentConfig = configsByAgentId[agentId]?.[toolConfigurations[0]?.label] || {};
+                            const currentTools = currentConfig.tools || [];
+                            const newTools = currentTools.includes(toolName)
+                              ? currentTools.filter((t: string) => t !== toolName)
+                              : [...currentTools, toolName];
+                            
+                            // Update the config store
+                            const newConfig = {
+                              ...currentConfig,
+                              tools: newTools
+                            };
+                            useConfigStore.getState().setConfig(
+                              agentId,
+                              toolConfigurations[0]?.label,
+                              newConfig
+                            );
+                          }}
+                        />
+                      )}
                       {agentId &&
-                        displayTools.length > 0 &&
-                        displayTools.map((c, index) => (
-                          <ConfigFieldTool
-                            key={`${c.name}-${index}`}
-                            id={c.name}
-                            label={c.name}
-                            description={c.description}
-                            agentId={agentId}
-                            toolId={toolConfigurations[0]?.label}
-                          />
-                        ))}
-                      {agentId &&
-                        displayTools.length === 0 &&
+                        tools.length === 0 &&
                         toolSearchTerm && (
                           <p className="mt-4 text-center text-sm text-slate-500">
                             No tools found matching "{toolSearchTerm}".
@@ -479,5 +493,6 @@ export const ConfigurationSidebar = forwardRef<
 });
 
 ConfigurationSidebar.displayName = "ConfigurationSidebar";
+
 
 
