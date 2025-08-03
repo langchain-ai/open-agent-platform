@@ -61,7 +61,7 @@ export function AgentFieldsForm({
     config: Record<string, any>;
   }>();
 
-  const { tools, setTools, getTools, cursor, loading } = useMCPContext();
+  const { tools, toolsByServer, setTools, getTools, cursor, loading } = useMCPContext();
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
     useSearchTools(tools, {
       preSelectedTools: toolConfigurations[0]?.default?.tools,
@@ -263,4 +263,5 @@ export function AgentFieldsForm({
     </div>
   );
 }
+
 
