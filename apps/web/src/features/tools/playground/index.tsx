@@ -143,14 +143,38 @@ export default function ToolsPlaygroundInterface() {
     <div className="flex h-full w-full flex-col p-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tools Playground</h1>
-        <ToolListCommand
-          value={selectedTool}
-          setValue={(t) => {
-            resetState();
-            setSelectedTool(t);
-            setSelectedToolName(t.name);
-          }}
-        />
+        <div className="flex items-center gap-4">
+          <Select
+            value={selectedServerName || "all"}
+            onValueChange={(value) => {
+              setSelectedServerName(value === "all" ? null : value);
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select server" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All servers</SelectItem>
+              {Object.keys(servers).map((serverName) => (
+                <SelectItem key={serverName} value={serverName}>
+                  {serverName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <ToolListCommand
+            value={selectedTool}
+            setValue={(t) => {
+              resetState();
+              setSelectedTool(t);
+              setSelectedToolName(t.name);
+              // Update server selection if tool is from different server
+              if ('serverName' in t) {
+                setSelectedServerName(t.serverName);
+              }
+            }}
+          />
+        </div>
       </div>
       <div className="border-b py-6">
         <div className="flex items-start justify-between">
@@ -215,6 +239,7 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
 
 
 
