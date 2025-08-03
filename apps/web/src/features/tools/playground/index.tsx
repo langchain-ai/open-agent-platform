@@ -19,10 +19,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export default function ToolsPlaygroundInterface() {
-  const { tools, loading, callTool } = useMCPContext();
+  const { tools, toolsByServer, servers, loading, callTool } = useMCPContext();
   const router = useRouter();
 
   const [selectedToolName, setSelectedToolName] = useQueryState("tool");
+  const [selectedServerName, setSelectedServerName] = useQueryState("server");
   const [selectedTool, setSelectedTool] = useState<Tool>();
   const [inputValues, setInputValues] = useState({});
   const [response, setResponse] = useState<any>(null);
@@ -192,3 +193,4 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
