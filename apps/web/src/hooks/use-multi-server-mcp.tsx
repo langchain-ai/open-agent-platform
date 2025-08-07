@@ -339,10 +339,11 @@ export default function useMultiServerMCP() {
   const clearServerError = useCallback((serverName: string): void => {
     setState((prev) => ({
       ...prev,
-      errors: new Map(prev.errors).delete(serverName) as Map<
-        string,
-        ServerError
-      >,
+      errors: (() => {
+        const newErrors = new Map(prev.errors);
+        newErrors.delete(serverName);
+        return newErrors;
+      })(),
     }));
   }, []);
 
@@ -375,5 +376,6 @@ export default function useMultiServerMCP() {
     clearServerError,
   };
 }
+
 
 
