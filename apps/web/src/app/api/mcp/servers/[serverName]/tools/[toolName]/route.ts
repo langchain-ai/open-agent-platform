@@ -68,10 +68,10 @@ async function getAuthHeaders(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { serverName: string; toolName: string } },
+  { params }: { params: Promise<{ serverName: string; toolName: string }> },
 ) {
   try {
-    const { serverName, toolName } = params;
+    const { serverName, toolName } = await params;
 
     // Get server configuration
     const serverConfig = getMCPServer(serverName);
@@ -124,3 +124,4 @@ export async function POST(
     );
   }
 }
+
