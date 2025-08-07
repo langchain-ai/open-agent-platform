@@ -37,7 +37,7 @@ export function getMCPServers(): MCPServersConfig {
     
     try {
       // Parse the URL to ensure it's valid
-      const url = new URL(baseApiUrl);
+      new URL(baseApiUrl);
       
       // Check if authentication is required (from legacy env var if it exists)
       const authRequired = process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true";
@@ -145,3 +145,4 @@ export function validateMCPServers(servers: MCPServersConfig): string[] {
   
   return errors;
 }
+
