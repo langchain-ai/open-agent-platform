@@ -194,5 +194,3 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
-
-

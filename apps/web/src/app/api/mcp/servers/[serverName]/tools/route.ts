@@ -28,7 +28,7 @@ async function getSupabaseToken(req: NextRequest) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    
+
     return session?.access_token || null;
   } catch (error) {
     console.error("Error getting Supabase token:", error);
@@ -38,10 +38,10 @@ async function getSupabaseToken(req: NextRequest) {
 
 async function getAuthHeaders(
   serverConfig: any,
-  supabaseToken: string | null
+  supabaseToken: string | null,
 ): Promise<Headers> {
   const headers = new Headers();
-  
+
   if (!serverConfig.authProvider) {
     return headers;
   }
@@ -68,19 +68,19 @@ async function getAuthHeaders(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { serverName: string } }
+  { params }: { params: { serverName: string } },
 ) {
   try {
     const { serverName } = params;
     const { searchParams } = new URL(req.url);
     const cursor = searchParams.get("cursor") || undefined;
-    
+
     // Get server configuration
     const serverConfig = getMCPServer(serverName);
     if (!serverConfig) {
       return NextResponse.json(
         { error: `Server '${serverName}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -108,14 +108,14 @@ export async function GET(
     await client.close();
 
     // Add server information to each tool
-    const toolsWithServer = toolsResponse.tools.map(tool => ({
+    const toolsWithServer = toolsResponse.tools.map((tool) => ({
       ...tool,
       serverName,
       serverConfig: {
         type: serverConfig.type,
         transport: serverConfig.transport,
         url: serverConfig.url,
-      }
+      },
     }));
 
     return NextResponse.json({
@@ -124,10 +124,11 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error listing MCP tools:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { error: "Failed to list tools", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

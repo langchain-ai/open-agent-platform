@@ -28,7 +28,7 @@ async function getSupabaseToken(req: NextRequest) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    
+
     return session?.access_token || null;
   } catch (error) {
     console.error("Error getting Supabase token:", error);
@@ -38,10 +38,10 @@ async function getSupabaseToken(req: NextRequest) {
 
 async function getAuthHeaders(
   serverConfig: any,
-  supabaseToken: string | null
+  supabaseToken: string | null,
 ): Promise<Headers> {
   const headers = new Headers();
-  
+
   if (!serverConfig.authProvider) {
     return headers;
   }
@@ -68,17 +68,17 @@ async function getAuthHeaders(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { serverName: string; toolName: string } }
+  { params }: { params: { serverName: string; toolName: string } },
 ) {
   try {
     const { serverName, toolName } = params;
-    
+
     // Get server configuration
     const serverConfig = getMCPServer(serverName);
     if (!serverConfig) {
       return NextResponse.json(
         { error: `Server '${serverName}' not found` },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -116,10 +116,11 @@ export async function POST(
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error calling MCP tool:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
       { error: "Failed to call tool", details: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

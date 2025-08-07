@@ -20,7 +20,10 @@ export interface ApiKeyProvider {
   apiKey: string;
 }
 
-export type AuthProvider = OAuthClientProvider | BearerTokenProvider | ApiKeyProvider;
+export type AuthProvider =
+  | OAuthClientProvider
+  | BearerTokenProvider
+  | ApiKeyProvider;
 
 // Output handling configuration
 export type OutputHandlingConfig = {

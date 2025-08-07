@@ -51,7 +51,7 @@ export default function useMultiServerMCP() {
     (serverName: string): boolean => {
       return state.connections.has(serverName);
     },
-    [state.connections]
+    [state.connections],
   );
 
   /**
@@ -61,7 +61,7 @@ export default function useMultiServerMCP() {
     (serverName: string): boolean => {
       return state.loading.get(serverName) || false;
     },
-    [state.loading]
+    [state.loading],
   );
 
   /**
@@ -71,7 +71,7 @@ export default function useMultiServerMCP() {
     (serverName: string): ServerError | undefined => {
       return state.errors.get(serverName);
     },
-    [state.errors]
+    [state.errors],
   );
 
   /**
@@ -85,7 +85,9 @@ export default function useMultiServerMCP() {
           ...prev,
           errors: new Map(prev.errors).set(serverName, {
             serverName,
-            error: new Error(`Server configuration not found for ${serverName}`),
+            error: new Error(
+              `Server configuration not found for ${serverName}`,
+            ),
             retryable: false,
             lastAttempt: new Date(),
           }),
@@ -114,7 +116,10 @@ export default function useMultiServerMCP() {
           ...prev,
           connections: new Map(prev.connections).set(serverName, connection),
           loading: new Map(prev.loading).set(serverName, false),
-          errors: new Map(prev.errors).delete(serverName) as Map<string, ServerError>,
+          errors: new Map(prev.errors).delete(serverName) as Map<
+            string,
+            ServerError
+          >,
         }));
 
         return true;
@@ -132,7 +137,7 @@ export default function useMultiServerMCP() {
         return false;
       }
     },
-    []
+    [],
   );
 
   /**
@@ -142,10 +147,22 @@ export default function useMultiServerMCP() {
     connectionsRef.current.delete(serverName);
     setState((prev) => ({
       ...prev,
-      connections: new Map(prev.connections).delete(serverName) as Map<string, MCPConnection>,
-      tools: new Map(prev.tools).delete(serverName) as Map<string, ToolWithServer[]>,
-      errors: new Map(prev.errors).delete(serverName) as Map<string, ServerError>,
-      authStates: new Map(prev.authStates).delete(serverName) as Map<string, ServerAuthState>,
+      connections: new Map(prev.connections).delete(serverName) as Map<
+        string,
+        MCPConnection
+      >,
+      tools: new Map(prev.tools).delete(serverName) as Map<
+        string,
+        ToolWithServer[]
+      >,
+      errors: new Map(prev.errors).delete(serverName) as Map<
+        string,
+        ServerError
+      >,
+      authStates: new Map(prev.authStates).delete(serverName) as Map<
+        string,
+        ServerAuthState
+      >,
       loading: new Map(prev.loading).delete(serverName) as Map<string, boolean>,
     }));
   }, []);
@@ -179,7 +196,7 @@ export default function useMultiServerMCP() {
         const response = await fetch(
           `/api/mcp/servers/${encodeURIComponent(serverName)}/tools${
             cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""
-          }`
+          }`,
         );
 
         if (!response.ok) {
@@ -211,7 +228,7 @@ export default function useMultiServerMCP() {
         throw error;
       }
     },
-    [isServerConnected, connectToServer]
+    [isServerConnected, connectToServer],
   );
 
   /**
@@ -223,7 +240,7 @@ export default function useMultiServerMCP() {
       getToolsFromServer(name).catch((error) => {
         console.error(`Failed to get tools from server ${name}:`, error);
         return [];
-      })
+      }),
     );
 
     const toolsArrays = await Promise.all(toolsPromises);
@@ -255,7 +272,7 @@ export default function useMultiServerMCP() {
       try {
         const response = await fetch(
           `/api/mcp/servers/${encodeURIComponent(
-            serverName
+            serverName,
           )}/tools/${encodeURIComponent(toolName)}`,
           {
             method: "POST",
@@ -263,7 +280,7 @@ export default function useMultiServerMCP() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ args, version }),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -285,7 +302,7 @@ export default function useMultiServerMCP() {
         throw error;
       }
     },
-    [isServerConnected, connectToServer]
+    [isServerConnected, connectToServer],
   );
 
   /**
@@ -304,7 +321,7 @@ export default function useMultiServerMCP() {
         };
       });
     },
-    []
+    [],
   );
 
   /**
@@ -313,7 +330,10 @@ export default function useMultiServerMCP() {
   const clearServerError = useCallback((serverName: string): void => {
     setState((prev) => ({
       ...prev,
-      errors: new Map(prev.errors).delete(serverName) as Map<string, ServerError>,
+      errors: new Map(prev.errors).delete(serverName) as Map<
+        string,
+        ServerError
+      >,
     }));
   }, []);
 
