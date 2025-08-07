@@ -148,23 +148,31 @@ export default function useMultiServerMCP() {
     connectionsRef.current.delete(serverName);
     setState((prev) => ({
       ...prev,
-      connections: new Map(prev.connections).delete(serverName) as Map<
-        string,
-        MCPConnection
-      >,
-      tools: new Map(prev.tools).delete(serverName) as Map<
-        string,
-        ToolWithServer[]
-      >,
-      errors: new Map(prev.errors).delete(serverName) as Map<
-        string,
-        ServerError
-      >,
-      authStates: new Map(prev.authStates).delete(serverName) as Map<
-        string,
-        ServerAuthState
-      >,
-      loading: new Map(prev.loading).delete(serverName) as Map<string, boolean>,
+      connections: (() => {
+        const newConnections = new Map(prev.connections);
+        newConnections.delete(serverName);
+        return newConnections;
+      })(),
+      tools: (() => {
+        const newTools = new Map(prev.tools);
+        newTools.delete(serverName);
+        return newTools;
+      })(),
+      errors: (() => {
+        const newErrors = new Map(prev.errors);
+        newErrors.delete(serverName);
+        return newErrors;
+      })(),
+      authStates: (() => {
+        const newAuthStates = new Map(prev.authStates);
+        newAuthStates.delete(serverName);
+        return newAuthStates;
+      })(),
+      loading: (() => {
+        const newLoading = new Map(prev.loading);
+        newLoading.delete(serverName);
+        return newLoading;
+      })(),
     }));
   }, []);
 
@@ -367,4 +375,5 @@ export default function useMultiServerMCP() {
     clearServerError,
   };
 }
+
 
