@@ -116,10 +116,11 @@ export default function useMultiServerMCP() {
           ...prev,
           connections: new Map(prev.connections).set(serverName, connection),
           loading: new Map(prev.loading).set(serverName, false),
-          errors: new Map(prev.errors).delete(serverName) as Map<
-            string,
-            ServerError
-          >,
+          errors: (() => {
+            const newErrors = new Map(prev.errors);
+            newErrors.delete(serverName);
+            return newErrors;
+          })(),
         }));
 
         return true;
@@ -366,3 +367,4 @@ export default function useMultiServerMCP() {
     clearServerError,
   };
 }
+
