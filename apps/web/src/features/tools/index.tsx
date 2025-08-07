@@ -4,7 +4,7 @@ import React from "react";
 import { Wrench, ChevronRightIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ToolCard, ToolCardLoading } from "./components/tool-card";
-import { useMCPContext } from "@/providers/MCP";
+import { useMCPContext } from "@/providers/MultiServerMCP";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
@@ -129,3 +129,4 @@ export default function ToolsInterface(): React.ReactNode {
     </div>
   );
 }
+
