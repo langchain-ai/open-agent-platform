@@ -9,7 +9,6 @@ import {
   ConfigField,
   ConfigFieldAgents,
   ConfigFieldRAG,
-  ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";

@@ -8,7 +8,6 @@ import {
   ConfigField,
   ConfigFieldAgents,
   ConfigFieldRAG,
-  ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
@@ -146,10 +145,9 @@ export const ConfigurationSidebar = forwardRef<
     setOpenNameAndDescriptionAlertDialog,
   ] = useState(false);
 
-  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
-    useSearchTools(tools, {
-      preSelectedTools: toolConfigurations[0]?.default?.tools,
-    });
+  const { toolSearchTerm, debouncedSetSearchTerm } = useSearchTools(tools, {
+    preSelectedTools: toolConfigurations[0]?.default?.tools,
+  });
   const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
     tools,
     setTools,
