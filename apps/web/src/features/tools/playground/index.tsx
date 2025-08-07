@@ -25,6 +25,7 @@ export default function ToolsPlaygroundInterface() {
 
   const [selectedToolName, setSelectedToolName] = useQueryState("tool");
   const [selectedTool, setSelectedTool] = useState<Tool>();
+  const [selectedServerName, setSelectedServerName] = useState<string>();
   const [inputValues, setInputValues] = useState({});
   const [response, setResponse] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -193,4 +194,5 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
 
