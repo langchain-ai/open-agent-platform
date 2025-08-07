@@ -90,9 +90,7 @@ export async function GET(
 
     // Create MCP client with appropriate transport
     const url = new URL(serverConfig.url);
-    const transport = new StreamableHTTPClientTransport(url, {
-      headers: Object.fromEntries(authHeaders.entries()),
-    });
+    const transport = new StreamableHTTPClientTransport(url);
 
     const client = new Client({
       name: "Multi-Server MCP Client",
@@ -132,4 +130,5 @@ export async function GET(
     );
   }
 }
+
 
