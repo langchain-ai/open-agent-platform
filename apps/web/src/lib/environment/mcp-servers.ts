@@ -124,7 +124,7 @@ export function validateMCPServers(servers: MCPServersConfig): string[] {
       } else {
         try {
           new URL(config.url);
-        } catch (e) {
+        } catch (_e) {
           errors.push(`Server ${serverName}: Invalid URL '${config.url}'`);
         }
       }
@@ -145,4 +145,5 @@ export function validateMCPServers(servers: MCPServersConfig): string[] {
   
   return errors;
 }
+
 
