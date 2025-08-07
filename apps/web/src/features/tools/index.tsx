@@ -49,7 +49,7 @@ export default function ToolsInterface(): React.ReactNode {
     setLoadingMore(true);
     try {
       const newTools = await getTools(cursor);
-      setTools((prevTools) => [...prevTools, ...newTools]);
+      setTools((prevTools: Tool[]) => [...prevTools, ...newTools]);
     } catch (error) {
       console.error("Error loading more tools:", error);
     } finally {
@@ -129,3 +129,4 @@ export default function ToolsInterface(): React.ReactNode {
     </div>
   );
 }
+
