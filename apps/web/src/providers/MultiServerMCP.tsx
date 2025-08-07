@@ -39,7 +39,7 @@ export const MultiServerMCPProvider: React.FC<PropsWithChildren> = ({
   const firstRequestMade = useRef(false);
   const [allTools, setAllTools] = useState<ToolWithServer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [cursor, setCursor] = useState("");
+  const [cursor, _setCursor] = useState("");
 
   // Initialize connections to all configured servers on mount
   useEffect(() => {
@@ -191,3 +191,4 @@ export const useMCPContext = () => {
     },
   };
 };
+
