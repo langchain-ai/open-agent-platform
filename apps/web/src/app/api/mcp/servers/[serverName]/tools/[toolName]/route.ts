@@ -122,5 +122,3 @@ export async function POST(
     );
   }
 }
-
-

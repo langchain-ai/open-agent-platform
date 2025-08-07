@@ -130,5 +130,3 @@ export async function GET(
     );
   }
 }
-
-
