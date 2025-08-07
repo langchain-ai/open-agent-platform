@@ -68,10 +68,10 @@ async function getAuthHeaders(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { serverName: string } },
+  { params }: { params: Promise<{ serverName: string }> },
 ) {
   try {
-    const { serverName } = params;
+    const { serverName } = await params;
     const { searchParams } = new URL(req.url);
     const cursor = searchParams.get("cursor") || undefined;
 
@@ -132,3 +132,4 @@ export async function GET(
     );
   }
 }
+
