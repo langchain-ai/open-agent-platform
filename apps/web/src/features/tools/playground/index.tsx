@@ -10,8 +10,9 @@ import { SchemaForm } from "./components/schema-form";
 import { ResponseViewer } from "./components/response-viewer";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CirclePlay, Loader2 } from "lucide-react";
-import { useMCPContext } from "@/providers/MCP";
+import { useMCPContext } from "@/providers/MultiServerMCP";
 import { Tool } from "@/types/tool";
+import { ToolWithServer } from "@/types/mcp";
 import { ToolListCommand } from "../components/tool-list-command";
 import _ from "lodash";
 import { useQueryState } from "nuqs";
@@ -192,3 +193,4 @@ export default function ToolsPlaygroundInterface() {
     </div>
   );
 }
+
