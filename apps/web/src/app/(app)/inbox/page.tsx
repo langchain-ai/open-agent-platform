@@ -5,6 +5,7 @@ import React from "react";
 import { ThreadsProvider } from "@/components/agent-inbox/contexts/ThreadContext";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { Header } from "@/components/ui/header";
 import { InboxSidebar, InboxSidebarTrigger } from "@/components/inbox-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import {
@@ -22,19 +23,16 @@ export default function InboxPage(): React.ReactNode {
         <div className="flex min-h-full w-full flex-row">
           {/* Header */}
           <div className="w-full">
-            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>Inbox</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
-            </header>
+            <Header>
+              <SidebarTrigger className="-ml-1" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Inbox</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </Header>
 
             {/* Main content */}
             <div className="flex h-full w-full flex-col">
