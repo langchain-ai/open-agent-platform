@@ -4,6 +4,8 @@ import React, {
   PropsWithChildren,
   useEffect,
   useState,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import useMCP from "../hooks/use-mcp";
 import { getMCPServers } from "@/lib/environment/mcp-servers";
@@ -23,9 +25,10 @@ interface MCPContextType {
   cursorsByServer: Map<string, string>;
   // Legacy compatibility
   tools: ToolWithServer[];
-  setTools: (tools: ToolWithServer[]) => void;
+  setTools: Dispatch<SetStateAction<ToolWithServer[]>>;
   cursor: string;
   getTools: () => Promise<ToolWithServer[]>;
+  getToolsByServer: (serverName: string, cursor?: string) => Promise<ToolWithServer[]>;
   createAndConnectMCPClient: () => Promise<any>;
 }
 
@@ -74,6 +77,7 @@ export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
         setTools: mcpState.setTools,
         cursor: mcpState.cursor,
         getTools: mcpState.getTools,
+        getToolsByServer: mcpState.getToolsByServer,
         createAndConnectMCPClient: mcpState.createAndConnectMCPClient,
       }}
     >

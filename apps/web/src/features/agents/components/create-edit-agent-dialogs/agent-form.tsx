@@ -60,7 +60,7 @@ export function AgentFieldsForm({
     config: Record<string, any>;
   }>();
 
-  const { tools, toolsByServer, setTools, getTools, cursor, loading } =
+  const { tools, toolsByServer, setTools, getTools, getToolsByServer, cursor, loading } =
     useMCPContext();
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
     useSearchTools(tools, {
@@ -192,7 +192,7 @@ export function AgentFieldsForm({
                         onClick={async () => {
                           try {
                             setLoadingMore(true);
-                            const moreTool = await getTools(cursor);
+                            const moreTool = await getToolsByServer(cursor, cursor);
                             setTools((prevTools) => [
                               ...prevTools,
                               ...moreTool,

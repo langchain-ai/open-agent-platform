@@ -38,6 +38,7 @@ function migrateSingleToMultiMCP(): void {
   // Create the new multi-server configuration
   const serverConfig: MCPServerHTTPConfig = {
     type: "http",
+    transport: "http",
     url: legacyUrl,
   };
 
@@ -73,6 +74,7 @@ function migrateSingleToMultiMCP(): void {
     default: serverConfig,
     "github-tools": {
       type: "http",
+      transport: "http",
       url: "https://api.github.com/mcp",
       authProvider: {
         type: "api-key",
@@ -81,6 +83,7 @@ function migrateSingleToMultiMCP(): void {
     },
     "local-stdio": {
       type: "stdio",
+      transport: "stdio",
       command: "node",
       args: ["./local-mcp-server.js"],
     },

@@ -1,6 +1,6 @@
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { getMCPServers } from "@/lib/environment/mcp-servers";
 import { MCPServerConfiguration, ToolWithServer } from "@/types/mcp";
 
@@ -108,6 +108,11 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
     return allTools;
   };
 
+  const getToolsByServer = async (serverName: string, cursor?: string): Promise<ToolWithServer[]> => {
+    const tools = await getToolsFromServer(serverName, cursor);
+    return tools;
+  };
+
   const callTool = async ({
     name,
     args,
@@ -145,14 +150,24 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
 
   // Legacy compatibility - maintain old interface
   const tools = Array.from(toolsByServer.values()).flat();
-  const setTools = (newTools: ToolWithServer[]) => {
-    const newMap = new Map<string, ToolWithServer[]>();
-    newTools.forEach((tool) => {
-      const serverTools = newMap.get(tool.serverName) || [];
-      serverTools.push(tool);
-      newMap.set(tool.serverName, serverTools);
+  const setTools: Dispatch<SetStateAction<ToolWithServer[]>> = (value) => {
+    setToolsByServer((prevMap) => {
+      const prevTools = Array.from(prevMap.values()).flat();
+      const nextTools =
+        typeof value === "function"
+          ? (value as (prevState: ToolWithServer[]) => ToolWithServer[])(
+            prevTools,
+          )
+          : value;
+
+      const newMap = new Map<string, ToolWithServer[]>();
+      nextTools.forEach((tool) => {
+        const serverTools = newMap.get(tool.serverName) || [];
+        serverTools.push(tool);
+        newMap.set(tool.serverName, serverTools);
+      });
+      return newMap;
     });
-    setToolsByServer(newMap);
   };
 
   // Legacy single cursor - returns first server's cursor
@@ -166,6 +181,7 @@ export default function useMCP({ name, version, serverName }: UseMCPOptions) {
     setToolsByServer,
     cursorsByServer,
     connections,
+    getToolsByServer,
     // Legacy compatibility
     getTools: getAllTools,
     createAndConnectMCPClient: () =>

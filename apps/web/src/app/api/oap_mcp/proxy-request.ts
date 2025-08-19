@@ -1,6 +1,71 @@
+import { getMCPServers } from "@/lib/environment/mcp-servers";
+import { handleServerAuth } from "@/lib/mcp-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { getMCPServers } from "@/lib/environment/mcp-servers";
+
+export async function proxyMultiServerRequest(
+  req: NextRequest,
+  { params }: { params: { server: string; path: string[] } },
+): Promise<Response> {
+  const servers = getMCPServers();
+  const serverConfig = servers[params.server];
+
+  if (!serverConfig) {
+    return NextResponse.json(
+      { message: `Server ${params.server} not found` },
+      { status: 404 },
+    );
+  }
+
+  if (serverConfig.type === "stdio") {
+    return NextResponse.json(
+      { message: "STDIO transport not supported via proxy" },
+      { status: 400 },
+    );
+  }
+
+  // Construct target URL
+  const path = params.path.join("/");
+  const targetUrl = new URL(serverConfig.url);
+  targetUrl.pathname = `${targetUrl.pathname}/mcp/${path}`;
+
+  // Handle authentication based on server config
+  const headers = new Headers();
+  req.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "host") {
+      headers.append(key, value);
+    }
+  });
+
+  // Apply server-specific auth
+  if (serverConfig.authProvider) {
+    const accessToken = await handleServerAuth(serverConfig, req);
+    if (accessToken) {
+      headers.set("Authorization", `Bearer ${accessToken}`);
+    }
+  }
+
+  // Apply custom headers
+  if (serverConfig.headers) {
+    Object.entries(serverConfig.headers).forEach(([key, value]) => {
+      headers.set(key, value);
+    });
+  }
+
+  // Make the proxied request
+  const response = await fetch(targetUrl.toString(), {
+    method: req.method,
+    headers,
+    body: req.body,
+  });
+
+  // Return the response
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
 
 // This will contain the object which contains the access token
 const MCP_TOKENS = process.env.MCP_TOKENS;
@@ -103,11 +168,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
     // If the first segment matches a configured server, delegate to new proxy
     if (servers[potentialServerName]) {
-      // Import and use the new per-server proxy handler
-      const { proxyRequest: newProxyRequest } = await import(
-        "./[server]/[...path]/route"
-      );
-      return newProxyRequest(req, {
+      return proxyMultiServerRequest(req, {
         params: {
           server: potentialServerName,
           path: pathSegments.slice(1),
