@@ -1433,6 +1433,7 @@ __metadata:
     clsx: ^2.1.1
     cmdk: ^1.1.1
     date-fns: 4.1.0
+    diff: ^8.0.2
     dotenv: ^16.5.0
     eslint: ^9.19.0
     eslint-config-next: 15.2.2
@@ -5589,6 +5590,13 @@ __metadata:
   version: 0.0.1312386
   resolution: "devtools-protocol@npm:0.0.1312386"
   checksum: c6f68bce3257a6f4c832d2063fddf23b76d45f5cdaace83786c24802e12eeead3613abb54e3422e6fa95cab431fdff65ba7caf3665f7f22676df06a206b49e45
+  languageName: node
+  linkType: hard
+
+"diff@npm:^8.0.2":
+  version: 8.0.2
+  resolution: "diff@npm:8.0.2"
+  checksum: 0d5556beff9aa688117ef79b1c88eb663df9959bc59946122330932c01e8db5529f914dcc87bf00fd1fecbca75731e6be7c8fabe1e34e10d6557e0536b7c856c
   languageName: node
   linkType: hard
 
