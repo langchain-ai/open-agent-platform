@@ -334,14 +334,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             </Button>
           </div>
         </div>
-        <div className="relative flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden">
           <ThreadHistorySidebar
             open={isThreadHistoryOpen}
             setOpen={setIsThreadHistoryOpen}
             currentThreadId={threadId}
             onThreadSelect={handleThreadSelect}
           />
-          <div className="relative flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden">
             {!hasMessages && !isLoading && !isLoadingThreadState && (
               <div className="flex h-full flex-col items-center justify-center p-12 text-center">
                 <Bot
@@ -435,103 +435,87 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             </div>
           </div>
         </div>
-        <div
-          className="pointer-events-none fixed bottom-0 z-10 flex justify-center bg-transparent"
-          style={{
-            left: "25vw",
-            right: "0",
-            padding: "1.5rem",
-          }}
+        <form
+          onSubmit={handleSubmit}
+          className="mx-auto flex w-full max-w-[700px] items-center gap-3 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-background)] px-3 py-4 shadow-lg transition-all duration-200 focus-within:border-[var(--color-primary)] focus-within:shadow-xl"
         >
-          <form
-            onSubmit={handleSubmit}
-            className="pointer-events-auto w-full max-w-[900px]"
-          >
-            <div
-              className="flex items-center rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-background)] shadow-lg transition-all duration-200 focus-within:border-[var(--color-primary)] focus-within:shadow-xl"
-              style={{ gap: "0.75rem", padding: "0.75rem 1rem" }}
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              isLoading || !!interrupt ? "Running..." : "Type your message..."
+            }
+            disabled={isLoading || !!interrupt || !!assistantError}
+            className="font-inherit h-6 flex-1 border-0 bg-transparent px-2 py-1.5 text-sm leading-6 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+            rows={1}
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex shrink-0 cursor-pointer items-center"
+                  style={{ gap: "0.25rem", padding: "4px" }}
+                >
+                  <label
+                    htmlFor="debug-mode"
+                    className="cursor-pointer text-xs whitespace-nowrap text-[var(--color-text-secondary)] select-none"
+                  >
+                    Debug Mode
+                  </label>
+                  <Switch
+                    id="debug-mode"
+                    checked={debugMode}
+                    onCheckedChange={setDebugMode}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipPrimitive.Portal>
+                <TooltipPrimitive.Content
+                  side="top"
+                  sideOffset={5}
+                  style={{
+                    backgroundColor: "var(--color-primary)",
+                    color: "white",
+                    border: "none",
+                    fontSize: "12px",
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    zIndex: 50,
+                  }}
+                >
+                  <p style={{ margin: 0 }}>Run the agent step-by-step</p>
+                  <TooltipPrimitive.Arrow
+                    style={{
+                      fill: "var(--color-primary)",
+                      color: "var(--color-primary)",
+                    }}
+                  />
+                </TooltipPrimitive.Content>
+              </TooltipPrimitive.Portal>
+            </Tooltip>
+          </TooltipProvider>
+          {isLoading ? (
+            <button
+              type="button"
+              onClick={stopStream}
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none !bg-[var(--color-error)] text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95"
             >
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={
-                  isLoading || !!interrupt
-                    ? "Running..."
-                    : "Type your message..."
-                }
-                disabled={isLoading || !!interrupt || !!assistantError}
-                className="font-inherit h-6 flex-1 border-0 bg-transparent px-2 py-1.5 text-sm leading-6 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
-                rows={1}
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div
-                      className="flex shrink-0 cursor-pointer items-center"
-                      style={{ gap: "0.25rem", padding: "4px" }}
-                    >
-                      <label
-                        htmlFor="debug-mode"
-                        className="cursor-pointer text-xs whitespace-nowrap text-[var(--color-text-secondary)] select-none"
-                      >
-                        Debug Mode
-                      </label>
-                      <Switch
-                        id="debug-mode"
-                        checked={debugMode}
-                        onCheckedChange={setDebugMode}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipPrimitive.Portal>
-                    <TooltipPrimitive.Content
-                      side="top"
-                      sideOffset={5}
-                      style={{
-                        backgroundColor: "var(--color-primary)",
-                        color: "white",
-                        border: "none",
-                        fontSize: "12px",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                        zIndex: 50,
-                      }}
-                    >
-                      <p style={{ margin: 0 }}>Run the agent step-by-step</p>
-                      <TooltipPrimitive.Arrow
-                        style={{
-                          fill: "var(--color-primary)",
-                          color: "var(--color-primary)",
-                        }}
-                      />
-                    </TooltipPrimitive.Content>
-                  </TooltipPrimitive.Portal>
-                </Tooltip>
-              </TooltipProvider>
-              {isLoading ? (
-                <button
-                  type="button"
-                  onClick={stopStream}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none !bg-[var(--color-error)] text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95"
-                >
-                  <Square size={14} />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!input.trim() || !!assistantError}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none p-2 text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ backgroundColor: "var(--color-primary)" }}
-                >
-                  <Send size={16} />
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+              <Square size={14} />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!input.trim() || !!assistantError}
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none p-2 text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ backgroundColor: "var(--color-primary)" }}
+            >
+              <Send size={16} />
+            </button>
+          )}
+        </form>
       </div>
     );
   },
