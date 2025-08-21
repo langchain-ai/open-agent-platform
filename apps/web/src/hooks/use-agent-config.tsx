@@ -2,6 +2,7 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldSubAgentsMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { useCallback, useState } from "react";
@@ -35,6 +36,9 @@ export function useAgentConfig() {
   >([]);
   const [agentsConfigurations, setAgentsConfigurations] = useState<
     ConfigurableFieldAgentsMetadata[]
+  >([]);
+  const [subAgentsConfigurations, setSubAgentsConfigurations] = useState<
+    ConfigurableFieldSubAgentsMetadata[]
   >([]);
 
   const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
@@ -71,11 +75,16 @@ export function useAgentConfig() {
               (agent.metadata?.description as string | undefined) ?? "",
             config: {},
           };
-        const { configFields, toolConfig, ragConfig, agentsConfig } =
-          extractConfigurationsFromAgent({
-            agent,
-            schema,
-          });
+        const {
+          configFields,
+          toolConfig,
+          ragConfig,
+          agentsConfig,
+          subAgentsConfig,
+        } = extractConfigurationsFromAgent({
+          agent,
+          schema,
+        });
 
         const agentId = agent.assistant_id;
 
@@ -111,6 +120,11 @@ export function useAgentConfig() {
           setAgentsConfigurations(agentsConfig);
           supportedConfigs.push("supervisor");
         }
+        if (subAgentsConfig.length) {
+          setDefaultConfig(`${agentId}:sub_agents`, subAgentsConfig);
+          setSubAgentsConfigurations(subAgentsConfig);
+          supportedConfigs.push("deep_agent");
+        }
         setSupportedConfigs(supportedConfigs);
 
         const configurableDefaults = getConfigurableDefaults(
@@ -118,6 +132,7 @@ export function useAgentConfig() {
           toolConfig,
           ragConfig,
           agentsConfig,
+          subAgentsConfig,
         );
 
         return {
@@ -141,6 +156,7 @@ export function useAgentConfig() {
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
+    subAgentsConfigurations,
     supportedConfigs,
 
     loading,

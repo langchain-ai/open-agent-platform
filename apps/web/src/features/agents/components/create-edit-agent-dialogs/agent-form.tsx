@@ -9,6 +9,7 @@ import {
   ConfigField,
   ConfigFieldAgents,
   ConfigFieldRAG,
+  ConfigFieldSubAgents,
   ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
@@ -17,6 +18,7 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldSubAgentsMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
@@ -45,6 +47,7 @@ interface AgentFieldsFormProps {
   agentId: string;
   ragConfigurations: ConfigurableFieldRAGMetadata[];
   agentsConfigurations: ConfigurableFieldAgentsMetadata[];
+  subAgentsConfigurations: ConfigurableFieldSubAgentsMetadata[];
 }
 
 export function AgentFieldsForm({
@@ -53,6 +56,7 @@ export function AgentFieldsForm({
   agentId,
   ragConfigurations,
   agentsConfigurations,
+  subAgentsConfigurations,
 }: AgentFieldsFormProps) {
   const form = useFormContext<{
     name: string;
@@ -252,6 +256,47 @@ export function AgentFieldsForm({
                     agentId={agentId}
                     value={value}
                     setValue={onChange}
+                  />
+                )}
+              />
+            </div>
+          </>
+        )}
+        {subAgentsConfigurations.length > 0 && (
+          <>
+            <Separator />
+            <div className="flex w-full flex-col items-start justify-start gap-2">
+              <p className="text-lg font-semibold tracking-tight">Sub Agents</p>
+              <Controller
+                control={form.control}
+                name={`config.${subAgentsConfigurations[0].label}`}
+                render={({ field: { value, onChange } }) => (
+                  <ConfigFieldSubAgents
+                    id={subAgentsConfigurations[0].label}
+                    label={subAgentsConfigurations[0].label}
+                    agentId={agentId}
+                    value={value}
+                    setValue={onChange}
+                    availableTools={tools}
+                    toolsLoading={loading}
+                    displayTools={displayTools}
+                    toolSearchTerm={toolSearchTerm}
+                    debouncedSetSearchTerm={debouncedSetSearchTerm}
+                    loadingMore={loadingMore}
+                    hasMore={!!cursor}
+                    onLoadMore={() => {
+                      if (!loadingMore && cursor) {
+                        setLoadingMore(true);
+                        getTools(cursor)
+                          .then((newTools) => {
+                            setTools((prev) => [...prev, ...newTools]);
+                            setLoadingMore(false);
+                          })
+                          .catch(() => {
+                            setLoadingMore(false);
+                          });
+                      }
+                    }}
                   />
                 )}
               />

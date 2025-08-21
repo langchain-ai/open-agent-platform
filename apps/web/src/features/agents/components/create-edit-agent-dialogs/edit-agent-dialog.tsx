@@ -41,6 +41,7 @@ function EditAgentDialogContent({
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
+    subAgentsConfigurations,
   } = useAgentConfig();
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
@@ -125,6 +126,7 @@ function EditAgentDialogContent({
               agentId={agent.assistant_id}
               ragConfigurations={ragConfigurations}
               agentsConfigurations={agentsConfigurations}
+              subAgentsConfigurations={subAgentsConfigurations}
             />
           </FormProvider>
         )}

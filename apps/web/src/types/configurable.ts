@@ -99,3 +99,16 @@ export type ConfigurableFieldAgentsMetadata = {
     name?: string;
   }[];
 };
+
+export type ConfigurableFieldSubAgentsMetadata = {
+  label: string;
+  type: "sub_agents";
+  default?: {
+    agent_id?: string;
+    deployment_url?: string;
+    name?: string;
+    description?: string;
+    prompt?: string;
+    tools?: string[];
+  }[];
+};

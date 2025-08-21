@@ -2,6 +2,7 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldSubAgentsMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
@@ -64,7 +65,10 @@ function configSchemaToConfigurableFields(
   const fields: ConfigurableFieldUIMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
     const uiConfig = getUiConfig(value);
-    if (uiConfig && ["mcp", "rag", "hidden"].includes(uiConfig.type)) {
+    if (
+      uiConfig &&
+      ["mcp", "rag", "hidden", "sub_agents"].includes(uiConfig.type)
+    ) {
       continue;
     }
 
@@ -169,11 +173,36 @@ function configSchemaToAgentsConfig(
   return agentsField;
 }
 
+function configSchemaToSubAgentsConfig(
+  schema: GraphSchema["config_schema"],
+): ConfigurableFieldSubAgentsMetadata | undefined {
+  if (!schema || !schema.properties) {
+    return undefined;
+  }
+
+  let subAgentsField: ConfigurableFieldSubAgentsMetadata | undefined;
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const uiConfig = getUiConfig(value);
+    if (!uiConfig || uiConfig.type !== "sub_agents") {
+      continue;
+    }
+
+    subAgentsField = {
+      label: key,
+      type: uiConfig.type,
+      default: uiConfig.default,
+    };
+    break;
+  }
+  return subAgentsField;
+}
+
 type ExtractedConfigs = {
   configFields: ConfigurableFieldUIMetadata[];
   toolConfig: ConfigurableFieldMCPMetadata[];
   ragConfig: ConfigurableFieldRAGMetadata[];
   agentsConfig: ConfigurableFieldAgentsMetadata[];
+  subAgentsConfig: ConfigurableFieldSubAgentsMetadata[];
 };
 
 export function extractConfigurationsFromAgent({
@@ -187,6 +216,7 @@ export function extractConfigurationsFromAgent({
   const toolConfig = configSchemaToToolsConfig(schema);
   const ragConfig = configSchemaToRagConfig(schema);
   const agentsConfig = configSchemaToAgentsConfig(schema);
+  const subAgentsConfig = configSchemaToSubAgentsConfig(schema);
 
   const configFieldsWithDefaults = configFields.map((f) => {
     const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
@@ -249,12 +279,35 @@ export function extractConfigurationsFromAgent({
       }
     : undefined;
 
+  const configurableSubAgentsWithDefaults = subAgentsConfig
+    ? {
+        ...subAgentsConfig,
+        default:
+          Array.isArray(configurable[subAgentsConfig.label]) &&
+          (configurable[subAgentsConfig.label] as any[]).length > 0
+            ? (configurable[subAgentsConfig.label] as {
+                agent_id?: string;
+                deployment_url?: string;
+                name?: string;
+                description?: string;
+                prompt?: string;
+                tools?: string[];
+              }[])
+            : Array.isArray(subAgentsConfig.default)
+              ? subAgentsConfig.default
+              : [],
+      }
+    : undefined;
+
   return {
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
     ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
     agentsConfig: configurableAgentsWithDefaults
       ? [configurableAgentsWithDefaults]
+      : [],
+    subAgentsConfig: configurableSubAgentsWithDefaults
+      ? [configurableSubAgentsWithDefaults]
       : [],
   };
 }
@@ -264,6 +317,7 @@ export function getConfigurableDefaults(
   toolConfig: ConfigurableFieldMCPMetadata[],
   ragConfig: ConfigurableFieldRAGMetadata[],
   agentsConfig: ConfigurableFieldAgentsMetadata[],
+  subAgentsConfig: ConfigurableFieldSubAgentsMetadata[],
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
@@ -276,6 +330,9 @@ export function getConfigurableDefaults(
     defaults[field.label] = field.default;
   });
   agentsConfig.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
+  subAgentsConfig.forEach((field) => {
     defaults[field.label] = field.default;
   });
   return defaults;

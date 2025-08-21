@@ -100,13 +100,13 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   }
 
   // Extract the path after '/api/oap_mcp/'
-  // Example: /api/oap_mcp/foo/bar -> /foo/bar
+  // Example: /api/oap_mcp/foo/bar -> foo/bar
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
+  const path = url.pathname.replace(/^\/api\/oap_mcp\/?/, "");
 
   // Construct the target URL
   const targetUrlObj = new URL(MCP_SERVER_URL);
-  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path}${url.search}`;
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp/${path}${url.search}`;
   const targetUrl = targetUrlObj.toString();
 
   // Prepare headers, forwarding original headers except Host
