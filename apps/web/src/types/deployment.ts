@@ -35,4 +35,8 @@ export interface Deployment {
    * Custom message to display when API keys are required but not set.
    */
   apiKeysRequiredMessage?: string;
+  /**
+   * Whether or not the agent supports the Deep Agents spec
+   */
+  supportsDeepAgents?: boolean;
 }

@@ -15,9 +15,21 @@ import { useAgentsContext } from "@/providers/Agents";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
+import { Deployment } from "@/types/deployment";
+import { getDeployments } from "@/lib/environment/deployments";
+
+function deploymentSupportsDeepAgents(deployment: Deployment | undefined) {
+  return deployment?.supportsDeepAgents ?? false;
+}
 
 export default function DeepAgentsInterface() {
   const { agents, loading } = useAgentsContext();
+  const deployments = getDeployments();
+  const filteredAgents = agents.filter((agent) =>
+    deploymentSupportsDeepAgents(
+      deployments.find((d) => d.id === agent.deploymentId),
+    ),
+  );
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [threadId, setThreadId] = useQueryState("threadId");
@@ -164,7 +176,7 @@ export default function DeepAgentsInterface() {
           <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
             <AgentsCombobox
               disableDeselect
-              agents={agents}
+              agents={filteredAgents}
               agentsLoading={loading}
               value={value}
               setValue={(v) =>
