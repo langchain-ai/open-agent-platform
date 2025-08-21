@@ -24,10 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const isDemoApp = process.env.NEXT_PUBLIC_DEMO_APP === "true";
+  const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
   return (
     <html lang="en">
       <head>
-        {process.env.NODE_ENV !== "production" && (
+        {process.env.NODE_ENV !== "production" && isDebugMode && (
           <script
             crossOrigin="anonymous"
             src="//unpkg.com/react-scan/dist/auto.global.js"
