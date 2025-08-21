@@ -86,6 +86,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
           height: "100%",
           position: "relative",
           flexShrink: 0,
+          paddingTop: "2rem",
         }}
       >
         <div

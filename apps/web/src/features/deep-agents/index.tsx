@@ -183,15 +183,7 @@ export default function DeepAgentsInterface() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        width: "100vw",
-        backgroundColor: "var(--color-surface)",
-        overflow: "hidden",
-      }}
-    >
+    <div className="absolute inset-0 flex h-full overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
       <TasksFilesSidebar
         threadId={threadId}
         messages={messages}
@@ -202,14 +194,7 @@ export default function DeepAgentsInterface() {
         onAssistantUpdate={refreshActiveAssistant}
         assistantError={assistantError}
       />
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          minWidth: 0,
-          position: "relative",
-        }}
-      >
+      <div className="flex-1">
         <ChatInterface
           threadId={threadId}
           messages={messages}

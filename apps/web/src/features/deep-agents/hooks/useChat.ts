@@ -41,14 +41,10 @@ export function useChat(
   );
 
   // Create client with configVersion as dependency to force recreation when config changes
-  const client = useMemo(
-    () => {
-      if (!deploymentId) return null;
-      return createClient(deploymentId);
-    },
-     
-    [deploymentId],
-  );
+  const client = useMemo(() => {
+    if (!deploymentId) return null;
+    return createClient(deploymentId);
+  }, [deploymentId]);
 
   const stream = useStream<StateType>({
     assistantId: activeAssistant?.assistant_id || agentId || "",
