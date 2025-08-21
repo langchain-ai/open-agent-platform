@@ -72,8 +72,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             !showAvatar
               ? "bg-transparent"
               : isUser
-                ? "bg-[var(--color-user-message)]"
-                : "bg-[var(--color-avatar-bg)]",
+                ? "bg-user-message"
+                : "bg-avatar-bg",
           )}
           style={{ marginTop: "1rem" }}
         >
@@ -90,7 +90,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               className={cn(
                 "w-fit max-w-full overflow-hidden rounded-lg break-words",
                 isUser
-                  ? "ml-auto bg-[var(--color-user-message)] text-white"
+                  ? "bg-user-message ml-auto text-white"
                   : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)]",
               )}
               style={{ padding: "0.5rem", marginTop: "1rem" }}

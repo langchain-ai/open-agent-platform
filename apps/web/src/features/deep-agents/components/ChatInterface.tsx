@@ -358,7 +358,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             )}
             <div
               className="flex-1 overflow-y-auto"
-              style={{ padding: "1.5rem", paddingBottom: "100px" }}
+              style={{ padding: "1.5rem", paddingBottom: "50px" }}
             >
               {processedMessages.map((data) => (
                 <ChatMessage
@@ -437,7 +437,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         </div>
         <form
           onSubmit={handleSubmit}
-          className="mx-auto flex w-full max-w-[700px] items-center gap-3 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-background)] px-3 py-4 shadow-lg transition-all duration-200 focus-within:border-[var(--color-primary)] focus-within:shadow-xl"
+          className="mx-auto mb-4 flex w-full max-w-[700px] items-center gap-3 rounded-xl border-2 border-[var(--color-border)] bg-[var(--color-background)] px-3 py-4 shadow-lg transition-all duration-200 focus-within:border-[var(--color-primary)] focus-within:shadow-xl"
         >
           <textarea
             ref={textareaRef}
