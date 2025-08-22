@@ -62,7 +62,6 @@
     "remark-math": "^6.0.0",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.0.2",
-    "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.1.0",
     "uuid": "^11.1.0",
     "zod": "3.23.8",
@@ -90,6 +89,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwind-scrollbar": "3.1.0",
     "tailwindcss": "^4.0.13",
+    "tailwindcss-animate": "^1.0.7",
     "turbo": "^2.5.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0"

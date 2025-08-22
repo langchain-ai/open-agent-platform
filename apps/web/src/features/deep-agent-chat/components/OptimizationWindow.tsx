@@ -82,7 +82,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       if (!deploymentId || !session?.accessToken) return null;
       return createClient(deploymentId, session.accessToken);
     }, [deploymentId, session]);
-    const optimizerClient = useMemo(() => getOptimizerClient(), []);
+
+    const optimizerClient = useMemo(() => {
+      if (!session?.accessToken) return null;
+      return getOptimizerClient(session.accessToken);
+    }, [session]);
 
     const onFinish = useCallback(
       (state: { values: { files: { [key: string]: string } } }) => {
@@ -99,14 +103,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     );
 
     const stream = useStream<StateType>({
-      client: optimizerClient,
+      client: optimizerClient ?? undefined,
       threadId: optimizerThreadId ?? null,
       assistantId: "optimizer", // TODO: change to the optimizer assistant id
       onFinish: onFinish,
       onThreadId: setOptimizerThreadId,
-      defaultHeaders: {
-        "x-auth-scheme": "langsmith",
-      },
     });
 
     const isLoading = stream.isLoading;
