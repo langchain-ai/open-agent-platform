@@ -3,36 +3,84 @@ import React, {
   useContext,
   PropsWithChildren,
   useEffect,
-  useRef,
   useState,
+  Dispatch,
+  SetStateAction,
 } from "react";
 import useMCP from "../hooks/use-mcp";
+import { getMCPServers } from "@/lib/environment/mcp-servers";
+import { MCPServersConfig, ToolWithServer } from "@/types/mcp";
 
-type MCPContextType = ReturnType<typeof useMCP> & { loading: boolean };
+interface MCPContextType {
+  servers: MCPServersConfig;
+  toolsByServer: Map<string, ToolWithServer[]>;
+  loading: boolean;
+  loadingByServer: Map<string, boolean>;
+  getToolsFromServer: (
+    serverName: string,
+    cursor?: string,
+  ) => Promise<ToolWithServer[]>;
+  getAllTools: () => Promise<ToolWithServer[]>;
+  callTool: (params: any) => Promise<any>;
+  cursorsByServer: Map<string, string>;
+  // Legacy compatibility
+  tools: ToolWithServer[];
+  setTools: Dispatch<SetStateAction<ToolWithServer[]>>;
+  cursor: string;
+  getTools: () => Promise<ToolWithServer[]>;
+  getToolsByServer: (serverName: string, cursor?: string) => Promise<ToolWithServer[]>;
+  createAndConnectMCPClient: () => Promise<any>;
+}
 
 const MCPContext = createContext<MCPContextType | null>(null);
 
 export const MCPProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const mcpState = useMCP({
-    name: "Tools Interface",
+    name: "Open Agent Platform",
     version: "1.0.0",
   });
-  const firstRequestMade = useRef(false);
+
   const [loading, setLoading] = useState(false);
+  const [loadingByServer] = useState<Map<string, boolean>>(new Map());
+  const servers = getMCPServers();
 
   useEffect(() => {
-    if (mcpState.tools.length || firstRequestMade.current) return;
-
-    firstRequestMade.current = true;
+    // Initial load of tools from all servers
     setLoading(true);
     mcpState
-      .getTools()
-      .then((tools) => mcpState.setTools(tools))
+      .getAllTools()
+      .then((tools) => {
+        const toolsMap = new Map<string, ToolWithServer[]>();
+        tools.forEach((tool) => {
+          const serverTools = toolsMap.get(tool.serverName) || [];
+          serverTools.push(tool);
+          toolsMap.set(tool.serverName, serverTools);
+        });
+        mcpState.setToolsByServer(toolsMap);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <MCPContext.Provider value={{ ...mcpState, loading }}>
+    <MCPContext.Provider
+      value={{
+        servers,
+        toolsByServer: mcpState.toolsByServer,
+        loading,
+        loadingByServer,
+        getToolsFromServer: mcpState.getToolsFromServer,
+        getAllTools: mcpState.getAllTools,
+        callTool: mcpState.callTool,
+        cursorsByServer: mcpState.cursorsByServer,
+        // Legacy compatibility
+        tools: mcpState.tools,
+        setTools: mcpState.setTools,
+        cursor: mcpState.cursor,
+        getTools: mcpState.getTools,
+        getToolsByServer: mcpState.getToolsByServer,
+        createAndConnectMCPClient: mcpState.createAndConnectMCPClient,
+      }}
+    >
       {children}
     </MCPContext.Provider>
   );
