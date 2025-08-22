@@ -188,20 +188,24 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     // Create a new response with the same status, headers, and body
     let newResponse: NextResponse;
 
-    try {
-      // Try to parse as JSON first
-      const responseData = await responseClone.json();
-      newResponse = NextResponse.json(responseData, {
-        status: response.status,
-        statusText: response.statusText,
-      });
-    } catch (_) {
-      // If not JSON, use the raw response body
-      const responseBody = await response.text();
-      newResponse = new NextResponse(responseBody, {
-        status: response.status,
-        statusText: response.statusText,
-      });
+    if (response.status === 204) {
+      newResponse = new NextResponse(null, { status: 204 });
+    } else {
+      try {
+        // Try to parse as JSON first
+        const responseData = await responseClone.json();
+        newResponse = NextResponse.json(responseData, {
+          status: response.status,
+          statusText: response.statusText,
+        });
+      } catch (_) {
+        // If not JSON, use the raw response body
+        const responseBody = await response.text();
+        newResponse = new NextResponse(responseBody, {
+          status: response.status,
+          statusText: response.statusText,
+        });
+      }
     }
 
     // Copy all headers from the original response
