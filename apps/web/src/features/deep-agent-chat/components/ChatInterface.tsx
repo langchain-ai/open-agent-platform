@@ -108,11 +108,15 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       }
     }, [input]);
 
+    const submitDisabled = isLoading || !!interrupt || !!assistantError;
+
     const handleSubmit = useCallback(
       (e?: FormEvent) => {
         if (e) {
           e.preventDefault();
         }
+        if (submitDisabled) return;
+
         const messageText = input.trim();
         if (!messageText || isLoading) return;
         if (debugMode) {
@@ -133,6 +137,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (submitDisabled) return;
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           handleSubmit();
@@ -447,7 +452,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             placeholder={
               isLoading || !!interrupt ? "Running..." : "Type your message..."
             }
-            disabled={isLoading || !!interrupt || !!assistantError}
             className="font-inherit h-6 flex-1 border-0 bg-transparent px-2 py-1.5 text-sm leading-6 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
             rows={1}
           />
@@ -508,7 +512,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           ) : (
             <button
               type="submit"
-              disabled={!input.trim() || !!assistantError}
+              disabled={!input.trim() || submitDisabled}
               className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-none p-2 text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
               style={{ backgroundColor: "var(--color-primary)" }}
             >
