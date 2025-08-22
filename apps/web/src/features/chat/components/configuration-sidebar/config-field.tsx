@@ -697,6 +697,7 @@ interface ConfigFieldSubAgentsProps
   loadingMore?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  selectedMainTools?: string[];
 }
 
 export function ConfigFieldSubAgents({
@@ -713,6 +714,7 @@ export function ConfigFieldSubAgents({
   loadingMore,
   onLoadMore,
   hasMore,
+  selectedMainTools = [],
 }: ConfigFieldSubAgentsProps) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:sub_agents`;
@@ -736,7 +738,8 @@ export function ConfigFieldSubAgents({
       name: "",
       description: "",
       prompt: "",
-      tools: [],
+      tools: [...selectedMainTools], // Pre-populate with selected main tools
+      mcp_server: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
     };
 
     const newSubAgents = [...subAgents, newSubAgent];

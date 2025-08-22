@@ -40,7 +40,7 @@ export default function DeepAgentChatInterface() {
   const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
     null,
   );
-  const [debugMode, setDebugMode] = useState(true);
+  const [debugMode, setDebugMode] = useState(false);
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
     null,
   );
