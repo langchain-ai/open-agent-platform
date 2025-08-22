@@ -8,6 +8,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { TodoItem } from "../types";
 import { createClient } from "@/lib/client";
+import { useAuthContext } from "@/providers/Auth";
 
 type StateType = {
   messages: Message[];
@@ -26,6 +27,8 @@ export function useChat(
   deploymentId: string | null,
   agentId: string | null,
 ) {
+  const { session } = useAuthContext();
+
   const handleUpdateEvent = useCallback(
     (data: { [node: string]: Partial<StateType> }) => {
       Object.values(data).forEach((nodeData) => {
@@ -42,9 +45,9 @@ export function useChat(
 
   // Create client with configVersion as dependency to force recreation when config changes
   const client = useMemo(() => {
-    if (!deploymentId) return null;
-    return createClient(deploymentId);
-  }, [deploymentId]);
+    if (!deploymentId || !session?.accessToken) return null;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session]);
 
   const stream = useStream<StateType>({
     assistantId: activeAssistant?.assistant_id || agentId || "",

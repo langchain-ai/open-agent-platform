@@ -17,6 +17,7 @@ import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
 import { Deployment } from "@/types/deployment";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useAuthContext } from "@/providers/Auth";
 
 function deploymentSupportsDeepAgents(deployment: Deployment | undefined) {
   return deployment?.supportsDeepAgents ?? false;
@@ -24,6 +25,8 @@ function deploymentSupportsDeepAgents(deployment: Deployment | undefined) {
 
 export default function DeepAgentChatInterface() {
   const { agents, loading } = useAgentsContext();
+  const { session } = useAuthContext();
+
   const deployments = getDeployments();
   const filteredAgents = agents.filter((agent) =>
     deploymentSupportsDeepAgents(
@@ -51,9 +54,9 @@ export default function DeepAgentChatInterface() {
   const [assistantError, setAssistantError] = useState<string | null>(null);
 
   const client = useMemo(() => {
-    if (!deploymentId) return null;
-    return createClient(deploymentId);
-  }, [deploymentId]);
+    if (!deploymentId || !session?.accessToken) return null;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session]);
 
   const refreshActiveAssistant = useCallback(async () => {
     if (!agentId || !deploymentId || !client) {

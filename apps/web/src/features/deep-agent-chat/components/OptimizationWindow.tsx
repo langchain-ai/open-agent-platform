@@ -22,6 +22,7 @@ import { v4 as uuidv4 } from "uuid";
 import { prepareOptimizerMessage } from "../utils";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
+import { useAuthContext } from "@/providers/Auth";
 
 type StateType = {
   messages: Message[];
@@ -62,6 +63,8 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     activeAssistant,
     onAssistantUpdate,
   }) => {
+    const { session } = useAuthContext();
+
     const [deploymentId] = useQueryState("deploymentId");
     const [optimizerThreadId, setOptimizerThreadId] = useState<string | null>(
       null,
@@ -76,9 +79,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     );
 
     const deploymentClient = useMemo(() => {
-      if (!deploymentId) return null;
-      return createClient(deploymentId);
-    }, [deploymentId]);
+      if (!deploymentId || !session?.accessToken) return null;
+      return createClient(deploymentId, session.accessToken);
+    }, [deploymentId, session]);
     const optimizerClient = useMemo(() => getOptimizerClient(), []);
 
     const onFinish = useCallback(

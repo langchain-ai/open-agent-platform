@@ -9,6 +9,7 @@ import type { Thread } from "../types";
 import { extractStringFromMessageContent } from "../utils";
 import { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
+import { useAuthContext } from "@/providers/Auth";
 
 interface ThreadHistorySidebarProps {
   open: boolean;
@@ -19,14 +20,15 @@ interface ThreadHistorySidebarProps {
 
 export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
   ({ open, setOpen, currentThreadId, onThreadSelect }) => {
+    const { session } = useAuthContext();
     const [threads, setThreads] = useState<Thread[]>([]);
     const [isLoadingThreadHistory, setIsLoadingThreadHistory] = useState(true);
     const [deploymentId] = useQueryState("deploymentId");
 
     const client = useMemo(() => {
-      if (!deploymentId) return null;
-      return createClient(deploymentId);
-    }, [deploymentId]);
+      if (!deploymentId || !session?.accessToken) return null;
+      return createClient(deploymentId, session.accessToken);
+    }, [deploymentId, session]);
 
     const fetchThreads = useCallback(async () => {
       if (!client) return;
