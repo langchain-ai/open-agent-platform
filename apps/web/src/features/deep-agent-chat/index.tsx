@@ -22,7 +22,7 @@ function deploymentSupportsDeepAgents(deployment: Deployment | undefined) {
   return deployment?.supportsDeepAgents ?? false;
 }
 
-export default function DeepAgentsInterface() {
+export default function DeepAgentChatInterface() {
   const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
   const filteredAgents = agents.filter((agent) =>
@@ -165,7 +165,7 @@ export default function DeepAgentsInterface() {
             <div className="flex flex-col items-start gap-2">
               <LangGraphLogoSVG className="h-7" />
               <h1 className="text-xl font-semibold tracking-tight">
-                Deep Agents
+                Deep Agent Chat
               </h1>
             </div>
             <p className="text-muted-foreground">
@@ -175,6 +175,7 @@ export default function DeepAgentsInterface() {
           </div>
           <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
             <AgentsCombobox
+              placeholder="Select a deep agent..."
               disableDeselect
               agents={filteredAgents}
               agentsLoading={loading}

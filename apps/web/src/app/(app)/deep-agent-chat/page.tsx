@@ -4,13 +4,13 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { ChatBreadcrumb } from "@/features/chat/components/chat-breadcrumb";
-import DeepAgentsInterface from "@/features/deep-agents";
+import DeepAgentChatInterface from "@/features/deep-agent-chat";
 
 /**
- * Deep Agents page (/deep-agents).
- * Contains the deep agents interface.
+ * Deep Agent Chat page (/deep-agent-chat).
+ * Contains the deep agent chat interface.
  */
-export default function DeepAgentsPage(): React.ReactNode {
+export default function DeepAgentChatPage(): React.ReactNode {
   return (
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
@@ -20,7 +20,7 @@ export default function DeepAgentsPage(): React.ReactNode {
           <ChatBreadcrumb />
         </div>
       </header>
-      <DeepAgentsInterface />
+      <DeepAgentChatInterface />
     </React.Suspense>
   );
 }

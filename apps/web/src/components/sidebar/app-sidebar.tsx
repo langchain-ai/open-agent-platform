@@ -22,8 +22,8 @@ const data = {
       icon: MessageCircle,
     },
     {
-      title: "Deep Agents",
-      url: "/deep-agents",
+      title: "Deep Agent Chat",
+      url: "/deep-agent-chat",
       icon: BrainCircuit,
     },
     {
