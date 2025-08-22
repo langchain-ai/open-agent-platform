@@ -149,21 +149,6 @@ const getMultipleSelectedToolCards = (
   );
 };
 
-/**
- * Returns a formatted display string for multiple selected tools
- * @param values Array of selected tool values
- * @param tools The array of tools
- * @returns Formatted string for display
- */
-const getMultipleSelectedToolValues = (
-  values: string[],
-  tools: Tool[],
-): React.ReactNode => {
-  if (values.length === 0) return "";
-  if (values.length === 1) return getSelectedToolValue(values[0], tools);
-  return `${values.length} tools selected`;
-};
-
 const getNameFromValue = (value: string, tools: Tool[]) => {
   const selectedTool = tools.find((tool) => tool.name === value);
   return selectedTool?.name || "";
