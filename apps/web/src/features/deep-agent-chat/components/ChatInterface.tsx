@@ -26,14 +26,8 @@ import {
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
-import type { FileItem, SubAgent, TodoItem, ToolCall } from "../types";
-import {
-  AIMessage,
-  Assistant,
-  Checkpoint,
-  Message,
-  type Interrupt,
-} from "@langchain/langgraph-sdk";
+import type { SubAgent, TodoItem, ToolCall } from "../types";
+import { AIMessage, Assistant, Message } from "@langchain/langgraph-sdk";
 import {
   extractStringFromMessageContent,
   isPreparingToCallTaskTool,
@@ -43,10 +37,6 @@ import { v4 as uuidv4 } from "uuid";
 import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
-import { useAuthContext } from "@/providers/Auth";
-import { useAgentsContext } from "@/providers/Agents";
-import { getDeployments } from "@/lib/environment/deployments";
-import { Deployment } from "@/types/deployment";
 import { useChat } from "../hooks/useChat";
 import { Session } from "@/lib/auth/types";
 

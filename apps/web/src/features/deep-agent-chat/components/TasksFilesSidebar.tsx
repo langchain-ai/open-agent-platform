@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { OptimizationWindow } from "./OptimizationWindow";
 import type { TodoItem, FileItem } from "../types";
-import { Assistant, Message } from "@langchain/langgraph-sdk";
+import { Assistant } from "@langchain/langgraph-sdk";
 import { useChat } from "../hooks/useChat";
 import { useQueryState } from "nuqs";
 

@@ -1,21 +1,18 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { useQueryState } from "nuqs";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
 import { SubAgentPanel } from "./components/SubAgentPanel";
 import { FileViewDialog } from "./components/FileViewDialog";
-import { createClient } from "@/lib/client";
 import type { SubAgent, FileItem, TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { useChat } from "./hooks/useChat";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
-import { Deployment } from "@/types/deployment";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useAuthContext } from "@/providers/Auth";
 import { deploymentSupportsDeepAgents } from "./utils";
@@ -30,7 +27,7 @@ export default function DeepAgentChatInterface() {
       deployments.find((d) => d.id === agent.deploymentId),
     ),
   );
-  const [threadId, setThreadId] = useQueryState("threadId");
+  const [_, setThreadId] = useQueryState("threadId");
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
 
