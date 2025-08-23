@@ -533,7 +533,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     id="debug-mode"
                     checked={debugMode}
                     onCheckedChange={setDebugMode}
-                    disabled={!!threadId}
                   />
                 </div>
               </TooltipTrigger>
