@@ -26,9 +26,10 @@ import {
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
-import type { SubAgent, ToolCall } from "../types";
+import type { FileItem, SubAgent, TodoItem, ToolCall } from "../types";
 import {
   AIMessage,
+  Assistant,
   Checkpoint,
   Message,
   type Interrupt,
@@ -39,62 +40,142 @@ import {
   justCalledTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
+import { useQueryState } from "nuqs";
+import { toast } from "sonner";
+import { createClient } from "@/lib/client";
+import { useAuthContext } from "@/providers/Auth";
+import { useAgentsContext } from "@/providers/Agents";
+import { getDeployments } from "@/lib/environment/deployments";
+import { Deployment } from "@/types/deployment";
+import { useChat } from "../hooks/useChat";
+import { Session } from "@/lib/auth/types";
 
 interface ChatInterfaceProps {
-  threadId: string | null;
-  messages: Message[];
-  isLoading: boolean;
+  agentId: string;
+  deploymentId: string;
+  session: Session;
   selectedSubAgent: SubAgent | null;
-  sendMessage: (message: string) => void;
-  stopStream: () => void;
-  getMessagesMetadata: (
-    message: Message,
-    index?: number,
-  ) =>
-    | { firstSeenState?: { parent_checkpoint?: Checkpoint | null } }
-    | undefined;
-  setThreadId: (
-    value: string | ((old: string | null) => string | null) | null,
-  ) => void;
   onSelectSubAgent: (subAgent: SubAgent | null) => void;
   onNewThread: () => void;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
-  runSingleStep: (
-    messages: Message[],
-    checkpoint?: Checkpoint,
-    isRerunningSubagent?: boolean,
-  ) => void;
-  continueStream: (hasTaskToolCall?: boolean) => void;
-  interrupt: Interrupt | undefined;
-  isLoadingThreadState: boolean;
   assistantError: string | null;
+  setAssistantError: (error: string | null) => void;
+  activeAssistant: Assistant | null;
+  setActiveAssistant: (assistant: Assistant | null) => void;
+  setTodos: (todos: TodoItem[]) => void;
+  setFiles: (files: Record<string, string>) => void;
 }
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(
   ({
-    threadId,
-    messages,
-    isLoading,
+    agentId,
+    deploymentId,
+    session,
     selectedSubAgent,
-    sendMessage,
-    stopStream,
-    getMessagesMetadata,
-    setThreadId,
     onSelectSubAgent,
     onNewThread,
     debugMode,
     setDebugMode,
-    runSingleStep,
-    continueStream,
-    isLoadingThreadState,
-    interrupt,
     assistantError,
+    setAssistantError,
+    activeAssistant,
+    setActiveAssistant,
+    setTodos,
+    setFiles,
   }) => {
+    const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
+
+    const client = useMemo(() => {
+      if (!deploymentId || !session?.accessToken) return null;
+      return createClient(deploymentId, session.accessToken);
+    }, [deploymentId, session]);
+
+    const [threadId, setThreadId] = useQueryState("threadId");
+
     const [input, setInput] = useState("");
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const refreshActiveAssistant = useCallback(async () => {
+      if (!agentId || !deploymentId || !client) {
+        setActiveAssistant(null);
+        setAssistantError(null);
+        return;
+      }
+      setAssistantError(null);
+      try {
+        const assistant = await client.assistants.get(agentId);
+        setActiveAssistant(assistant);
+        setAssistantError(null);
+        toast.dismiss();
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        setActiveAssistant(null);
+        setAssistantError(errorMessage);
+        toast.dismiss();
+        toast.error("Failed to load assistant", {
+          description: `Could not connect to assistant: ${errorMessage}`,
+          duration: 50000,
+        });
+      }
+    }, [client, agentId, deploymentId]);
+
+    useEffect(() => {
+      refreshActiveAssistant();
+    }, [refreshActiveAssistant]);
+
+    // When the threadId changes, grab the thread state from the graph server
+    useEffect(() => {
+      const fetchThreadState = async () => {
+        if (!threadId || !client) {
+          setTodos([]);
+          setFiles({});
+          setIsLoadingThreadState(false);
+          return;
+        }
+        setIsLoadingThreadState(true);
+        try {
+          const state = await client.threads.getState(threadId);
+          if (state.values) {
+            const currentState = state.values as {
+              todos?: TodoItem[];
+              files?: Record<string, string>;
+            };
+            setTodos(currentState.todos || []);
+            setFiles(currentState.files || {});
+          }
+        } catch (error) {
+          console.error("Failed to fetch thread state:", error);
+          setTodos([]);
+          setFiles({});
+        } finally {
+          setIsLoadingThreadState(false);
+        }
+      };
+      fetchThreadState();
+    }, [threadId, client]);
+
+    const {
+      messages,
+      isLoading,
+      interrupt,
+      getMessagesMetadata,
+      sendMessage,
+      runSingleStep,
+      continueStream,
+      stopStream,
+    } = useChat(
+      threadId,
+      setThreadId,
+      setTodos,
+      setFiles,
+      activeAssistant,
+      deploymentId,
+      agentId,
+    );
 
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -399,12 +480,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   >
                     <Button
                       onClick={handleContinue}
-                      className="rounded-sm bg-transparent text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        border: "1px solid var(--color-success)",
-                        color: "var(--color-success)",
-                        padding: "0.25rem 1rem",
-                      }}
+                      className="rounded-sm border-[1px] border-[var(--color-success)] bg-transparent p-2 text-sm font-medium text-[var(--color-success)] transition-all duration-200 hover:scale-105 active:scale-95"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor =
                           "rgba(16, 185, 129, 0.1)";
@@ -417,12 +493,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     </Button>
                     <Button
                       onClick={handleRerunStep}
-                      className="rounded-sm bg-transparent text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-                      style={{
-                        border: "1px solid var(--color-warning)",
-                        color: "var(--color-warning)",
-                        padding: "0.25rem 1rem",
-                      }}
+                      className="rounded-sm border-[1px] border-[var(--color-warning)] bg-transparent p-2 text-sm font-medium text-[var(--color-warning)] transition-all duration-200 hover:scale-105 active:scale-95"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor =
                           "rgba(245, 158, 11, 0.1)";
@@ -472,6 +543,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     id="debug-mode"
                     checked={debugMode}
                     onCheckedChange={setDebugMode}
+                    disabled={!!threadId}
                   />
                 </div>
               </TooltipTrigger>

@@ -7,12 +7,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { OptimizationWindow } from "./OptimizationWindow";
 import type { TodoItem, FileItem } from "../types";
 import { Assistant, Message } from "@langchain/langgraph-sdk";
+import { useChat } from "../hooks/useChat";
+import { useQueryState } from "nuqs";
 
 interface TasksFilesSidebarProps {
-  threadId: string | null;
-  messages: Message[];
+  agentId: string;
+  deploymentId: string;
   todos: TodoItem[];
+  setTodos: (todos: TodoItem[]) => void;
   files: Record<string, string>;
+  setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
   onFileClick: (file: FileItem) => void;
   onAssistantUpdate: () => void;
@@ -21,15 +25,28 @@ interface TasksFilesSidebarProps {
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
   ({
-    threadId,
-    messages,
+    agentId,
+    deploymentId,
     todos,
+    setTodos,
     files,
+    setFiles,
     activeAssistant,
     onFileClick,
     onAssistantUpdate,
     assistantError,
   }) => {
+    const [threadId, setThreadId] = useQueryState("threadId");
+
+    const { messages } = useChat(
+      threadId,
+      setThreadId,
+      setTodos,
+      setFiles,
+      activeAssistant,
+      deploymentId,
+      agentId,
+    );
     const [isTrainingModeExpanded, setIsTrainingModeExpanded] = useState(false);
 
     const handleToggleTrainingMode = useCallback(() => {

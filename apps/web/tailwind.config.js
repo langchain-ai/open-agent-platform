@@ -28,6 +28,14 @@ module.exports = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
+        success: {
+          DEFAULT: "var(--color-success)",
+          dark: "var(--color-success-dark)",
+        },
+        warning: {
+          DEFAULT: "var(--color-warning)",
+          dark: "var(--color-warning-dark)",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

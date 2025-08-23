@@ -18,24 +18,21 @@ import { Button } from "@/components/ui/button";
 import { Deployment } from "@/types/deployment";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useAuthContext } from "@/providers/Auth";
-
-function deploymentSupportsDeepAgents(deployment: Deployment | undefined) {
-  return deployment?.supportsDeepAgents ?? false;
-}
+import { deploymentSupportsDeepAgents } from "./utils";
 
 export default function DeepAgentChatInterface() {
-  const { agents, loading } = useAgentsContext();
   const { session } = useAuthContext();
 
+  const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
   const filteredAgents = agents.filter((agent) =>
     deploymentSupportsDeepAgents(
       deployments.find((d) => d.id === agent.deploymentId),
     ),
   );
+  const [threadId, setThreadId] = useQueryState("threadId");
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [threadId, setThreadId] = useQueryState("threadId");
 
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
@@ -43,87 +40,14 @@ export default function DeepAgentChatInterface() {
   const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
     null,
   );
-  const [debugMode, setDebugMode] = useState(false);
-  const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
-    null,
-  );
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
-  const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
+  const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
+    null,
+  );
   const [assistantError, setAssistantError] = useState<string | null>(null);
-
-  const client = useMemo(() => {
-    if (!deploymentId || !session?.accessToken) return null;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session]);
-
-  const refreshActiveAssistant = useCallback(async () => {
-    if (!agentId || !deploymentId || !client) {
-      setActiveAssistant(null);
-      setAssistantError(null);
-      return;
-    }
-    setAssistantError(null);
-    try {
-      const assistant = await client.assistants.get(agentId);
-      setActiveAssistant(assistant);
-      setAssistantError(null);
-      toast.dismiss();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      setActiveAssistant(null);
-      setAssistantError(errorMessage);
-      toast.dismiss();
-      toast.error("Failed to load assistant", {
-        description: `Could not connect to assistant: ${errorMessage}`,
-        duration: 50000,
-      });
-    }
-  }, [client, agentId, deploymentId]);
-
-  useEffect(() => {
-    refreshActiveAssistant();
-  }, [refreshActiveAssistant]);
-
-  // When the threadId changes, grab the thread state from the graph server
-  useEffect(() => {
-    const fetchThreadState = async () => {
-      if (!threadId || !client) {
-        setTodos([]);
-        setFiles({});
-        setIsLoadingThreadState(false);
-        return;
-      }
-      setIsLoadingThreadState(true);
-      try {
-        const state = await client.threads.getState(threadId);
-        if (state.values) {
-          const currentState = state.values as {
-            todos?: TodoItem[];
-            files?: Record<string, string>;
-          };
-          setTodos(currentState.todos || []);
-          setFiles(currentState.files || {});
-        }
-      } catch (error) {
-        console.error("Failed to fetch thread state:", error);
-        setTodos([]);
-        setFiles({});
-      } finally {
-        setIsLoadingThreadState(false);
-      }
-    };
-    fetchThreadState();
-  }, [threadId, client]);
-
-  const handleNewThread = useCallback(() => {
-    setThreadId(null);
-    setSelectedSubAgent(null);
-    setTodos([]);
-    setFiles({});
-  }, [setThreadId]);
+  const [debugMode, setDebugMode] = useState(false);
 
   const handleValueChange = (v: string) => {
     setValue(v);
@@ -140,24 +64,12 @@ export default function DeepAgentChatInterface() {
     setDeploymentId(deploymentId_);
   };
 
-  const {
-    messages,
-    isLoading,
-    interrupt,
-    getMessagesMetadata,
-    sendMessage,
-    runSingleStep,
-    continueStream,
-    stopStream,
-  } = useChat(
-    threadId,
-    setThreadId,
-    setTodos,
-    setFiles,
-    activeAssistant,
-    deploymentId,
-    agentId,
-  );
+  const onNewThread = useCallback(() => {
+    setThreadId(null);
+    setSelectedSubAgent(null);
+    setTodos([]);
+    setFiles({});
+  }, [setThreadId]);
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
   if (!agentId || !deploymentId) {
@@ -198,37 +110,47 @@ export default function DeepAgentChatInterface() {
     );
   }
 
+  if (!session) {
+    return (
+      <div>
+        <p>Please sign in to continue</p>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 flex h-full overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
       <TasksFilesSidebar
-        threadId={threadId}
-        messages={messages}
+        agentId={agentId}
+        deploymentId={deploymentId}
         todos={todos}
+        setTodos={setTodos}
         files={files}
+        setFiles={setFiles}
         activeAssistant={activeAssistant}
         onFileClick={setSelectedFile}
-        onAssistantUpdate={refreshActiveAssistant}
+        // onAssistantUpdate={refreshActiveAssistant}
+        onAssistantUpdate={() => {
+          throw new Error("Not implemented");
+        }}
         assistantError={assistantError}
       />
       <div className="flex-1">
         <ChatInterface
-          threadId={threadId}
-          messages={messages}
-          isLoading={isLoading}
-          sendMessage={sendMessage}
-          stopStream={stopStream}
-          getMessagesMetadata={getMessagesMetadata}
-          selectedSubAgent={selectedSubAgent}
-          setThreadId={setThreadId}
-          onSelectSubAgent={setSelectedSubAgent}
-          onNewThread={handleNewThread}
-          isLoadingThreadState={isLoadingThreadState}
+          agentId={agentId}
+          deploymentId={deploymentId}
+          session={session}
           debugMode={debugMode}
           setDebugMode={setDebugMode}
-          runSingleStep={runSingleStep}
-          continueStream={continueStream}
-          interrupt={interrupt}
           assistantError={assistantError}
+          setAssistantError={setAssistantError}
+          activeAssistant={activeAssistant}
+          setActiveAssistant={setActiveAssistant}
+          setTodos={setTodos}
+          setFiles={setFiles}
+          selectedSubAgent={selectedSubAgent}
+          onSelectSubAgent={setSelectedSubAgent}
+          onNewThread={onNewThread}
         />
         {selectedSubAgent && (
           <SubAgentPanel

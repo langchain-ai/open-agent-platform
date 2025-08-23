@@ -1,3 +1,4 @@
+import { Deployment } from "@/types/deployment";
 import { Message } from "@langchain/langgraph-sdk";
 
 export function extractStringFromMessageContent(message: Message): string {
@@ -60,4 +61,10 @@ ${feedback}
 
 Use the above feedback to update the config.json file.
 `;
+}
+
+export function deploymentSupportsDeepAgents(
+  deployment: Deployment | undefined,
+) {
+  return deployment?.supportsDeepAgents ?? false;
 }
