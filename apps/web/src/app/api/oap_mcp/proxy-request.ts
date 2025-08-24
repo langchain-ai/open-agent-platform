@@ -6,7 +6,7 @@ const MCP_TOKENS = process.env.MCP_TOKENS;
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 const MCP_AUTH_REQUIRED = process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true";
 
-async function getSupabaseToken(req: NextRequest) {
+async function getSupabaseSessionInfo(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -26,7 +26,7 @@ async function getSupabaseToken(req: NextRequest) {
       },
     });
 
-    // Get the session which contains the access token
+    // Get the session which contains the access token and user info
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -34,9 +34,12 @@ async function getSupabaseToken(req: NextRequest) {
       return null;
     }
 
-    return session.access_token;
+    return {
+      accessToken: session.access_token,
+      userId: session.user.id,
+    };
   } catch (error) {
-    console.error("Error getting Supabase token:", error);
+    console.error("Error getting Supabase session info:", error);
     return null;
   }
 }
@@ -106,7 +109,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // Construct the target URL
   const targetUrlObj = new URL(MCP_SERVER_URL);
-  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp/${path}${url.search}`;
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path ? "/" + path : ""}${url.search}`;
   const targetUrl = targetUrlObj.toString();
 
   // Prepare headers, forwarding original headers except Host
@@ -120,6 +123,13 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   });
 
   const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
+
+  const sessionInfo = await getSupabaseSessionInfo(req);
+  const userId = sessionInfo?.userId;
+  if (userId) {
+    headers.set("X-User-ID", userId);
+  }
+
   // Authentication priority:
   // 1. X-MCP-Access-Token header
   // 2. X-MCP-Access-Token cookie
@@ -128,7 +138,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
   let accessToken: string | null = null;
 
   if (MCP_AUTH_REQUIRED) {
-    const supabaseToken = await getSupabaseToken(req);
+    const supabaseToken = sessionInfo?.accessToken;
 
     if (mcpAccessTokenCookie) {
       accessToken = mcpAccessTokenCookie;
