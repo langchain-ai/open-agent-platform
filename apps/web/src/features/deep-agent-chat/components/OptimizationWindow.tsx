@@ -360,14 +360,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
             )}
           >
             <div className="flex flex-1 flex-col overflow-hidden bg-inherit">
-              <div
-                className="flex-1 overflow-hidden"
-                style={{
-                  margin: 0,
-                  backgroundColor: "var(--color-background)",
-                  border: "none",
-                }}
-              >
+              <div className="flex-1 overflow-hidden">
                 <div className="flex h-full flex-col gap-3 overflow-y-auto p-4">
                   {displayMessages.map((message, index) => {
                     if (isUserMessage(message)) {
@@ -461,7 +454,6 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           >
             <div
               className="flex max-h-[85vh] w-[95%] max-w-[1200px] animate-[slideIn_0.3s_cubic-bezier(0.4,0,0.2,1)] flex-col rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
-              style={{ backgroundColor: "var(--color-background)" }}
               onClick={(e) => e.stopPropagation()}
             >
               <div

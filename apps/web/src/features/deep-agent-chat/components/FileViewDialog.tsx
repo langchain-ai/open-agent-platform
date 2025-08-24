@@ -89,7 +89,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
         onOpenChange={onClose}
       >
         <DialogContent
-          className="flex max-h-[80vh] flex-col bg-[var(--color-background)]"
+          className="flex max-h-[80vh] flex-col"
           style={{
             padding: "1.5rem",
             width: "60vw",
@@ -98,15 +98,15 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
         >
           <DialogTitle className="sr-only">{file.path}</DialogTitle>
           <div
-            className="flex items-center justify-between border-b border-[var(--color-border)]"
+            className="border-border flex items-center justify-between border-b"
             style={{ gap: "1rem", paddingBottom: "1rem", marginBottom: "1rem" }}
           >
             <div
               className="flex min-w-0 items-center"
               style={{ gap: "0.5rem" }}
             >
-              <FileText className="h-5 w-5 shrink-0 text-[var(--color-text-secondary)]" />
-              <span className="overflow-hidden text-base font-medium text-ellipsis whitespace-nowrap text-[var(--color-text-primary)]">
+              <FileText className="text-primary/50 h-5 w-5 shrink-0" />
+              <span className="text-primary overflow-hidden text-base font-medium text-ellipsis whitespace-nowrap">
                 {file.path}
               </span>
             </div>
@@ -182,13 +182,13 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
           </div>
 
           <ScrollArea
-            className="max-h-[60vh] flex-1 overflow-auto rounded-md bg-[var(--color-surface)]"
+            className="bg-surface max-h-[60vh] flex-1 overflow-auto rounded-md"
             style={{ padding: "1rem" }}
           >
             {file.content ? (
               isMarkdown ? (
                 <div
-                  className="rounded-md bg-[var(--color-background)]"
+                  className="rounded-md"
                   style={{ padding: "1.5rem" }}
                 >
                   <MarkdownContent content={file.content} />
@@ -208,10 +208,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                 </SyntaxHighlighter>
               )
             ) : (
-              <div
-                className="flex items-center justify-center text-[var(--color-text-tertiary)]"
-                style={{ padding: "3rem" }}
-              >
+              <div className="flex items-center justify-center p-12">
                 <p className="m-0 text-sm">File is empty</p>
               </div>
             )}

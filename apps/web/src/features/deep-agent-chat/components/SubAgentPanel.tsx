@@ -56,53 +56,15 @@ const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
   }, [subAgent.status]);
 
   return (
-    <div
-      className="absolute top-0 right-0 z-10 flex h-full flex-col"
-      style={{
-        width: "40vw",
-        backgroundColor: "var(--color-background)",
-        borderLeft: "1px solid var(--color-border)",
-        boxShadow:
-          "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-      }}
-    >
-      <div
-        className="flex items-start justify-between border-b"
-        style={{
-          padding: "1rem",
-          borderBottomColor: "var(--color-border)",
-          backgroundColor: "var(--color-surface)",
-        }}
-      >
-        <div
-          className="flex flex-1"
-          style={{ gap: "0.5rem" }}
-        >
-          <Bot
-            className="shrink-0"
-            style={{
-              width: "32px",
-              height: "32px",
-              color: "var(--color-secondary)",
-            }}
-          />
+    <div className="bg-background border-border absolute top-0 right-0 z-10 flex h-full w-[40vw] flex-col border-l shadow-lg">
+      <div className="border-border bg-surface flex items-start justify-between border-b p-4">
+        <div className="flex flex-1 gap-2">
+          <Bot className="text-primary size-8 shrink-0" />
           <div>
-            <h3
-              className="text-lg font-semibold"
-              style={{
-                margin: "0 0 0.25rem 0",
-                color: "var(--color-text-primary)",
-              }}
-            >
+            <h3 className="text-primary mb-2 text-lg font-semibold">
               {subAgent.subAgentName}
             </h3>
-            <div
-              className="flex items-center text-sm"
-              style={{
-                gap: "0.25rem",
-                color: "var(--color-text-secondary)",
-              }}
-            >
+            <div className="text-primary/80 flex items-center gap-1 text-sm">
               {statusIcon}
               <span>{statusText}</span>
             </div>
@@ -110,93 +72,54 @@ const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
         </div>
         <Button
           variant="ghost"
-          size="sm"
+          size="icon"
           onClick={onClose}
-          className="transition-colors duration-200"
-          style={{
-            padding: "0.25rem",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--color-border-light)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
-          }}
+          className="hover:bg-border-light transition-colors duration-200"
         >
           <X size={20} />
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 overflow-y-auto">
-        <div style={{ padding: "1.5rem" }}>
-          <div style={{ marginBottom: "2rem" }}>
-            <h4
-              className="text-xs font-semibold tracking-wider uppercase"
-              style={{
-                color: "var(--color-text-secondary)",
-                letterSpacing: "0.05em",
-                marginBottom: "0.5rem",
-              }}
-            >
-              Input
+      <ScrollArea className="flex-1 overflow-y-auto p-6">
+        <div style={{ marginBottom: "2rem" }}>
+          <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+            Input
+          </h4>
+          <div className="bg-surface border-border-light rounded-md border p-4">
+            <MarkdownContent
+              content={
+                typeof subAgent.input === "string"
+                  ? subAgent.input
+                  : subAgent.input.description &&
+                      typeof subAgent.input.description === "string"
+                    ? subAgent.input.description
+                    : subAgent.input.prompt &&
+                        typeof subAgent.input.prompt === "string"
+                      ? subAgent.input.prompt
+                      : JSON.stringify(subAgent.input, null, 2)
+              }
+            />
+          </div>
+        </div>
+        {subAgent.output && (
+          <div>
+            <h4 className="text-primary/70 mb-2 font-semibold tracking-wider uppercase">
+              Output
             </h4>
-            <div
-              className="rounded-md border"
-              style={{
-                padding: "1rem",
-                backgroundColor: "var(--color-surface)",
-                borderColor: "var(--color-border-light)",
-              }}
-            >
+            <div className="bg-surface border-border-light rounded-md border p-4">
               <MarkdownContent
                 content={
-                  typeof subAgent.input === "string"
-                    ? subAgent.input
-                    : subAgent.input.description &&
-                        typeof subAgent.input.description === "string"
-                      ? subAgent.input.description
-                      : subAgent.input.prompt &&
-                          typeof subAgent.input.prompt === "string"
-                        ? subAgent.input.prompt
-                        : JSON.stringify(subAgent.input, null, 2)
+                  typeof subAgent.output === "string"
+                    ? subAgent.output
+                    : subAgent.output.result &&
+                        typeof subAgent.output.result === "string"
+                      ? subAgent.output.result
+                      : JSON.stringify(subAgent.output, null, 2)
                 }
               />
             </div>
           </div>
-          {subAgent.output && (
-            <div style={{ marginBottom: "0" }}>
-              <h4
-                className="font-semibold tracking-wider uppercase"
-                style={{
-                  color: "var(--color-text-secondary)",
-                  letterSpacing: "0.05em",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                Output
-              </h4>
-              <div
-                className="rounded-md border"
-                style={{
-                  padding: "1rem",
-                  backgroundColor: "var(--color-surface)",
-                  borderColor: "var(--color-border-light)",
-                }}
-              >
-                <MarkdownContent
-                  content={
-                    typeof subAgent.output === "string"
-                      ? subAgent.output
-                      : subAgent.output.result &&
-                          typeof subAgent.output.result === "string"
-                        ? subAgent.output.result
-                        : JSON.stringify(subAgent.output, null, 2)
-                  }
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </ScrollArea>
     </div>
   );

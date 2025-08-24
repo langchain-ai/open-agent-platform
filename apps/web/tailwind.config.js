@@ -29,12 +29,12 @@ module.exports = {
           foreground: "hsl(var(--popover-foreground))",
         },
         success: {
-          DEFAULT: "var(--color-success)",
-          dark: "var(--color-success-dark)",
+          DEFAULT: "hsl(var(--color-success))",
+          dark: "hsl(var(--color-success-dark))",
         },
         warning: {
-          DEFAULT: "var(--color-warning)",
-          dark: "var(--color-warning-dark)",
+          DEFAULT: "hsl(var(--color-warning))",
+          dark: "hsl(var(--color-warning-dark))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -59,6 +59,8 @@ module.exports = {
         "user-message": "hsl(var(--user-message))",
         "avatar-bg": "hsl(var(--avatar-bg))",
         "subagent-hover": "hsl(var(--subagent-hover))",
+        "border-light": "hsl(var(--border-light))",
+        surface: "hsl(var(--surface))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

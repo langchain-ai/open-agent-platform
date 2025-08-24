@@ -61,39 +61,36 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     return (
       <div
         className={cn(
-          "flex w-full max-w-full overflow-x-hidden",
-          isUser ? "flex-row-reverse" : "",
+          "flex w-full max-w-full gap-2 overflow-x-hidden",
+          isUser && "flex-row-reverse",
         )}
-        style={{ gap: "0.5rem" }}
       >
         <div
           className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
+            "mt-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
             !showAvatar
               ? "bg-transparent"
               : isUser
                 ? "bg-user-message"
                 : "bg-avatar-bg",
           )}
-          style={{ marginTop: "1rem" }}
         >
           {showAvatar &&
             (isUser ? (
               <User className="h-4 w-4 text-white" />
             ) : (
-              <Bot className="h-4 w-4 text-[var(--color-secondary)]" />
+              <Bot className="h-4 w-4 text-gray-500" />
             ))}
         </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
           {hasContent && (
             <div
               className={cn(
-                "w-fit max-w-full overflow-hidden rounded-lg break-words",
+                "mt-4 w-fit max-w-full overflow-hidden rounded-lg p-2 break-words",
                 isUser
                   ? "bg-user-message ml-auto text-white"
-                  : "border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)]",
+                  : "border-border bg-surface text-primary border",
               )}
-              style={{ padding: "0.5rem", marginTop: "1rem" }}
             >
               {isUser ? (
                 <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
@@ -105,10 +102,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             </div>
           )}
           {hasToolCalls && (
-            <div
-              className="flex w-fit max-w-full flex-col"
-              style={{ marginTop: "1rem" }}
-            >
+            <div className="mt-4 flex w-fit max-w-full flex-col">
               {toolCalls.map((toolCall: ToolCall) => {
                 if (toolCall.name === "task") return null;
                 return (
@@ -121,10 +115,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             </div>
           )}
           {!isUser && subAgents.length > 0 && (
-            <div
-              className="flex w-fit max-w-full flex-col"
-              style={{ gap: "1rem" }}
-            >
+            <div className="flex w-fit max-w-full flex-col gap-4">
               {subAgents.map((subAgent) => (
                 <SubAgentIndicator
                   key={subAgent.id}

@@ -144,7 +144,6 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             style={{
               width: "100%",
               maxWidth: "100%",
-              backgroundColor: "var(--color-background)",
               borderLeftColor: "var(--color-border)",
               boxShadow:
                 "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",

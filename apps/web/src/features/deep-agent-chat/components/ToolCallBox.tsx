@@ -154,7 +154,6 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 style={{
                   fontSize: "12px",
                   padding: "0.5rem",
-                  backgroundColor: "var(--color-background)",
                   borderColor: "var(--color-border-light)",
                   lineHeight: "1.75",
                   margin: "0",
@@ -184,7 +183,6 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 style={{
                   fontSize: "12px",
                   padding: "0.5rem",
-                  backgroundColor: "var(--color-background)",
                   borderColor: "var(--color-border-light)",
                   lineHeight: "1.75",
                   margin: "0",
