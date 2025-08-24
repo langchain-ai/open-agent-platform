@@ -16,6 +16,22 @@ module.exports = {
       components: {
         ".scrollbar-pretty":
           "overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
+        ".word-added": {
+          backgroundColor: "rgba(46, 160, 67, 0.4)",
+          color: "#ffffff",
+          padding: "2px 4px",
+          borderRadius: "3px",
+          fontWeight: "600",
+        },
+        ".word-removed": {
+          backgroundColor: "rgba(248, 81, 73, 0.4)",
+          color: "#ffffff",
+          padding: "2px 4px",
+          borderRadius: "3px",
+          fontWeight: "600",
+          textDecoration: "line-through",
+          textDecorationColor: "#f85149",
+        },
       },
       colors: {
         background: "hsl(var(--background))",

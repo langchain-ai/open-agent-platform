@@ -479,7 +479,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 </button>
               </div>
               <div
-                className="flex-1 overflow-y-auto p-6 leading-relaxed"
+                className="flex-1 overflow-y-auto bg-white p-6 leading-relaxed"
                 style={{ color: "var(--color-text-primary)" }}
               >
                 <div className="grid h-full grid-cols-2 gap-6">
