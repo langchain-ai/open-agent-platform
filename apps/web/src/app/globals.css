@@ -41,7 +41,8 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.87 0 0);
   --user-message: oklch(0.4 0.12 240);
-  --avatar-bg: #ebe8fe;
+  --avatar-bg: oklch(0.9399 0.0297 292.08);
+  --subagent-hover: oklch(0.8591 0.0733 290.82);
 }
 
 .dark {
@@ -80,7 +81,8 @@
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
   --user-message: oklch(0.4 0.12 240);
-  --avatar-bg: #bcb2fd;
+  --avatar-bg: oklch(0.7991 0.1054 289.9);
+  --subagent-hover: oklch(0.8591 0.0733 290.82);
 }
 
 @theme inline {
@@ -121,6 +123,8 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-user-message: var(--user-message);
+  --color-avatar-bg: var(--avatar-bg);
+  --color-subagent-hover: var(--subagent-hover);
 }
 
 @layer base {

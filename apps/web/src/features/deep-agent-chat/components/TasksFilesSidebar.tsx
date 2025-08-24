@@ -9,6 +9,7 @@ import type { TodoItem, FileItem } from "../types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { useChat } from "../hooks/useChat";
 import { useQueryState } from "nuqs";
+import { cn } from "@/lib/utils";
 
 interface TasksFilesSidebarProps {
   agentId: string;
@@ -59,30 +60,21 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
           return (
             <CheckCircle
               size={16}
-              style={{
-                color: "var(--color-success)",
-                flexShrink: 0,
-              }}
+              className="text-success"
             />
           );
         case "in_progress":
           return (
             <Clock
               size={16}
-              style={{
-                color: "var(--color-warning)",
-                flexShrink: 0,
-              }}
+              className="text-warning"
             />
           );
         default:
           return (
             <Circle
               size={16}
-              style={{
-                color: "var(--color-text-tertiary)",
-                flexShrink: 0,
-              }}
+              className="text-tertiary"
             />
           );
       }
@@ -96,80 +88,27 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       };
     }, [todos]);
 
+    const tabTriggerStyles =
+      "h-10 p-1 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:hover:bg-black/5 data-[state=inactive]:hover:text-primary transition-colors duration-200 ease-in-out";
+
     return (
-      <div
-        style={{
-          width: "25vw", // $sidebar-width
-          height: "100%",
-          position: "relative",
-          flexShrink: 0,
-          paddingTop: "2rem",
-        }}
-      >
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            backgroundColor: "var(--color-surface)",
-            borderRight: "1px solid var(--color-border)",
-            display: "flex",
-            flexDirection: "column",
-            position: "relative",
-          }}
-        >
+      <div className="h-full w-[25vw] pt-10">
+        <div className="bg-background border-border flex h-full w-full flex-col border-r">
           <Tabs
             defaultValue="tasks"
-            style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
+            className="mb-auto flex h-full flex-col overflow-hidden"
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "0.25rem 1rem",
-              }}
-            >
-              <TabsList
-                style={{
-                  margin: "1rem",
-                  backgroundColor: "var(--color-border-light)",
-                  display: "flex",
-                  gap: "0.5rem",
-                  padding: "0.25rem",
-                  borderRadius: "0.375rem",
-                  width: "calc(100% - 2rem)",
-                  height: "auto",
-                  justifyContent: "stretch",
-                }}
-              >
+            <div className="flex items-center justify-between px-4 py-2">
+              <TabsList className="bg-background m-4 flex h-full w-full justify-stretch gap-2 rounded-md p-1">
                 <TabsTrigger
                   value="tasks"
-                  style={{
-                    flex: 1,
-                    fontSize: "0.875rem",
-                    padding: "0.5rem 1rem",
-                    borderRadius: "0.25rem",
-                    transition: "all 200ms ease",
-                  }}
-                  className="data-[state=active]:!bg-[var(--color-primary)] data-[state=active]:!text-white data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-[var(--color-text-secondary)] data-[state=inactive]:hover:bg-black/5 data-[state=inactive]:hover:text-[var(--color-text-primary)]"
+                  className={cn(tabTriggerStyles)}
                 >
                   Tasks ({todos.length})
                 </TabsTrigger>
                 <TabsTrigger
                   value="files"
-                  style={{
-                    flex: 1,
-                    fontSize: "0.875rem",
-                    padding: "0.5rem 1rem",
-                    borderRadius: "0.25rem",
-                    transition: "all 200ms ease",
-                  }}
-                  className="data-[state=active]:!bg-[var(--color-primary)] data-[state=active]:!text-white data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:text-[var(--color-text-secondary)] data-[state=inactive]:hover:bg-black/5 data-[state=inactive]:hover:text-[var(--color-text-primary)]"
+                  className={cn(tabTriggerStyles)}
                 >
                   Files ({Object.keys(files).length})
                 </TabsTrigger>
@@ -178,62 +117,27 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
             <TabsContent
               value="tasks"
-              style={{
-                flex: 1,
-                padding: 0,
-                overflow: "hidden",
-              }}
+              className="flex-1 overflow-hidden"
             >
-              <ScrollArea style={{ height: "100%" }}>
+              <ScrollArea className="h-full">
                 {todos.length === 0 ? (
-                  <div
-                    style={{
-                      padding: "2rem",
-                      textAlign: "center",
-                      color: "var(--color-text-tertiary)",
-                    }}
-                  >
-                    <p style={{ margin: 0, fontSize: "0.875rem" }}>
-                      No tasks yet
-                    </p>
+                  <div className="flex h-full items-center justify-center p-12 text-center">
+                    <p className="text-tertiary">No tasks yet</p>
                   </div>
                 ) : (
-                  <div style={{ padding: "1rem" }}>
+                  <div className="p-1">
                     {groupedTodos.in_progress.length > 0 && (
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <h3
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: "var(--color-text-secondary)",
-                            textTransform: "uppercase",
-                            marginBottom: "0.5rem",
-                          }}
-                        >
+                      <div className="mb-4">
+                        <h3 className="text-tertiary mb-1 text-xs font-semibold uppercase">
                           In Progress
                         </h3>
                         {groupedTodos.in_progress.map((todo, index) => (
                           <div
                             key={`in_progress_${todo.id}_${index}`}
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: "0.5rem",
-                              padding: "0.5rem",
-                              borderRadius: "0.375rem",
-                              marginBottom: "0.25rem",
-                              transition: "background-color 200ms ease",
-                            }}
+                            className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span
-                              style={{
-                                flex: 1,
-                                fontSize: "0.875rem",
-                                lineHeight: 1.5,
-                                color: "var(--color-text-primary)",
-                              }}
-                            >
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -242,40 +146,17 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                     )}
 
                     {groupedTodos.pending.length > 0 && (
-                      <div style={{ marginBottom: "1.5rem" }}>
-                        <h3
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: "var(--color-text-secondary)",
-                            textTransform: "uppercase",
-                            marginBottom: "0.5rem",
-                          }}
-                        >
+                      <div className="mb-4">
+                        <h3 className="text-tertiary mb-1 text-xs font-semibold uppercase">
                           Pending
                         </h3>
                         {groupedTodos.pending.map((todo, index) => (
                           <div
                             key={`pending_${todo.id}_${index}`}
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: "0.5rem",
-                              padding: "0.5rem",
-                              borderRadius: "0.375rem",
-                              marginBottom: "0.25rem",
-                              transition: "background-color 200ms ease",
-                            }}
+                            className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span
-                              style={{
-                                flex: 1,
-                                fontSize: "0.875rem",
-                                lineHeight: 1.5,
-                                color: "var(--color-text-primary)",
-                              }}
-                            >
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -284,43 +165,17 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                     )}
 
                     {groupedTodos.completed.length > 0 && (
-                      <div style={{ marginBottom: 0 }}>
-                        <h3
-                          style={{
-                            fontSize: "0.75rem",
-                            fontWeight: 600,
-                            color: "var(--color-text-secondary)",
-                            textTransform: "uppercase",
-                            marginBottom: "0.5rem",
-                          }}
-                        >
+                      <div className="mb-0">
+                        <h3 className="text-tertiary mb-1 text-xs font-semibold uppercase">
                           Completed
                         </h3>
                         {groupedTodos.completed.map((todo, index) => (
                           <div
                             key={`completed_${todo.id}_${index}`}
-                            style={{
-                              display: "flex",
-                              alignItems: "flex-start",
-                              gap: "0.5rem",
-                              padding: "0.5rem",
-                              borderRadius: "0.375rem",
-                              marginBottom:
-                                index === groupedTodos.completed.length - 1
-                                  ? 0
-                                  : "0.25rem",
-                              transition: "background-color 200ms ease",
-                            }}
+                            className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span
-                              style={{
-                                flex: 1,
-                                fontSize: "0.875rem",
-                                lineHeight: 1.5,
-                                color: "var(--color-text-primary)",
-                              }}
-                            >
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -334,47 +189,22 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
             <TabsContent
               value="files"
-              style={{
-                flex: 1,
-                padding: 0,
-                overflow: "hidden",
-              }}
+              className="flex-1 overflow-hidden"
             >
-              <ScrollArea style={{ height: "100%" }}>
+              <ScrollArea className="h-full">
                 {Object.keys(files).length === 0 ? (
-                  <div
-                    style={{
-                      padding: "2rem",
-                      textAlign: "center",
-                      color: "var(--color-text-tertiary)",
-                    }}
-                  >
-                    <p style={{ margin: 0, fontSize: "0.875rem" }}>
-                      No files yet
-                    </p>
+                  <div className="flex h-full items-center justify-center p-12 text-center">
+                    <p className="text-tertiary">No files yet</p>
                   </div>
                 ) : (
-                  <div style={{ padding: "1rem" }}>
+                  <div className="p-1">
                     {Object.keys(files).map((file, index) => (
                       <div
                         key={file}
-                        style={{
-                          width: "100%",
-                          marginBottom:
-                            index === Object.keys(files).length - 1
-                              ? 0
-                              : "0.25rem",
-                        }}
+                        className="mb-1"
                       >
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            padding: "0.25rem 0.5rem",
-                            cursor: "pointer",
-                            transition: "background-color 200ms ease",
-                          }}
+                          className="flex cursor-pointer items-center gap-1.5 p-1.5 transition-colors"
                           onClick={() =>
                             onFileClick({ path: file, content: files[file] })
                           }
@@ -389,21 +219,9 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                         >
                           <FileText
                             size={16}
-                            style={{
-                              flexShrink: 0,
-                              color: "var(--color-text-secondary)",
-                            }}
+                            className="text-tertiary flex-shrink-0"
                           />
-                          <span
-                            style={{
-                              flex: 1,
-                              fontSize: "0.875rem",
-                              color: "var(--color-text-primary)",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
+                          <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                             {file}
                           </span>
                         </div>

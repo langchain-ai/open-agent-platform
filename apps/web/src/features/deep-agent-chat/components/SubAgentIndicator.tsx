@@ -35,16 +35,7 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
     return (
       <button
         onClick={onClick}
-        className="flex w-full cursor-pointer items-start gap-4 rounded-md !px-6 !py-4 text-left transition-all duration-200 ease-in-out hover:translate-x-0.5 active:translate-x-0"
-        style={{
-          backgroundColor: "var(--color-avatar-bg)",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--color-subagent-hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--color-avatar-bg)";
-        }}
+        className="bg-avatar-bg hover:bg-subagent-hover flex w-full cursor-pointer items-start gap-4 rounded-md !px-6 !py-4 text-left transition-all duration-200 ease-in-out hover:translate-x-0.5 active:translate-x-0"
         aria-label={`View ${subAgent.name} details`}
       >
         <div className="min-w-0 flex-1">

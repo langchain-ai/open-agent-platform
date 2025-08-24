@@ -566,7 +566,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             <button
               type="button"
               onClick={stopStream}
-              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none !bg-[var(--color-error)] text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95"
+              className="bg-error flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none text-white transition-all duration-200 hover:scale-105 hover:opacity-90 active:scale-95"
             >
               <Square size={14} />
             </button>
