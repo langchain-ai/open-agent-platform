@@ -935,9 +935,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:^0.0.85":
-  version: 0.0.85
-  resolution: "@langchain/langgraph-sdk@npm:0.0.85"
+"@langchain/langgraph-sdk@npm:^0.0.109":
+  version: 0.0.109
+  resolution: "@langchain/langgraph-sdk@npm:0.0.109"
   dependencies:
     "@types/json-schema": ^7.0.15
     p-queue: ^6.6.2
@@ -946,12 +946,15 @@ __metadata:
   peerDependencies:
     "@langchain/core": ">=0.2.31 <0.4.0"
     react: ^18 || ^19
+    react-dom: ^18 || ^19
   peerDependenciesMeta:
     "@langchain/core":
       optional: true
     react:
       optional: true
-  checksum: f6d206c718cf4cb5d69dd677f2afa38325fdd69b485310a6beb61f06f24b2b4a8c0446eacbe7911c02cedc8bd4b719e22894c6f9b93572e6665c6a609cc9f511
+    react-dom:
+      optional: true
+  checksum: 1cbba4b42c6498b28c2ded6afdc7ffc638b48e6c7aa034451c2c88640a4f9e1389e3cf81bc97971902857a09c465f9d4307d2e1851f23b877668e84e5f648194
   languageName: node
   linkType: hard
 
@@ -1397,7 +1400,7 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.0.85
+    "@langchain/langgraph-sdk": ^0.0.109
     "@modelcontextprotocol/sdk": ^1.11.4
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4
@@ -1433,6 +1436,7 @@ __metadata:
     clsx: ^2.1.1
     cmdk: ^1.1.1
     date-fns: 4.1.0
+    diff: ^8.0.2
     dotenv: ^16.5.0
     eslint: ^9.19.0
     eslint-config-next: 15.2.2
@@ -5589,6 +5593,13 @@ __metadata:
   version: 0.0.1312386
   resolution: "devtools-protocol@npm:0.0.1312386"
   checksum: c6f68bce3257a6f4c832d2063fddf23b76d45f5cdaace83786c24802e12eeead3613abb54e3422e6fa95cab431fdff65ba7caf3665f7f22676df06a206b49e45
+  languageName: node
+  linkType: hard
+
+"diff@npm:^8.0.2":
+  version: 8.0.2
+  resolution: "diff@npm:8.0.2"
+  checksum: 0d5556beff9aa688117ef79b1c88eb663df9959bc59946122330932c01e8db5529f914dcc87bf00fd1fecbca75731e6be7c8fabe1e34e10d6557e0536b7c856c
   languageName: node
   linkType: hard
 

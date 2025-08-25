@@ -113,7 +113,7 @@ async function getAgents(
 
           const supportedConfigs: string[] = [];
           if (schema) {
-            const { toolConfig, ragConfig, agentsConfig } =
+            const { toolConfig, ragConfig, agentsConfig, subAgentsConfig } =
               extractConfigurationsFromAgent({
                 agent: defaultAssistant,
                 schema,
@@ -127,13 +127,16 @@ async function getAgents(
             if (agentsConfig.length) {
               supportedConfigs.push("supervisor");
             }
+            if (subAgentsConfig.length) {
+              supportedConfigs.push("deep_agent");
+            }
           }
 
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
             supportedConfigs: supportedConfigs as [
-              "tools" | "rag" | "supervisor",
+              "tools" | "rag" | "supervisor" | "deep_agent",
             ],
           }));
         });

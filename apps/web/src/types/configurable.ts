@@ -99,3 +99,15 @@ export type ConfigurableFieldAgentsMetadata = {
     name?: string;
   }[];
 };
+
+export type ConfigurableFieldSubAgentsMetadata = {
+  label: string;
+  type: "sub_agents";
+  default?: {
+    name?: string;
+    description?: string;
+    prompt?: string;
+    tools?: string[];
+    mcp_server?: string;
+  }[];
+};
