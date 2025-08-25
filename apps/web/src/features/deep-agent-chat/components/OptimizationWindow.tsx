@@ -9,12 +9,6 @@ import React, {
 } from "react";
 import { Expand, X, Send, RotateCcw, Loader2 } from "lucide-react";
 import * as Diff from "diff";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipProvider,
-  TooltipContent,
-} from "@/components/ui/tooltip";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { createClient, getOptimizerClient } from "@/lib/client";
 import { Assistant, type Message } from "@langchain/langgraph-sdk";
