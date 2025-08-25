@@ -20,8 +20,9 @@ interface TasksFilesSidebarProps {
   setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
   onFileClick: (file: FileItem) => void;
-  onAssistantUpdate: () => void;
   assistantError: string | null;
+  setAssistantError: (error: string | null) => void;
+  setActiveAssistant: (assistant: Assistant | null) => void;
 }
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
@@ -34,8 +35,9 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     setFiles,
     activeAssistant,
     onFileClick,
-    onAssistantUpdate,
     assistantError,
+    setAssistantError,
+    setActiveAssistant,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
 
@@ -239,7 +241,8 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
               isExpanded={isTrainingModeExpanded}
               onToggle={handleToggleTrainingMode}
               activeAssistant={activeAssistant}
-              onAssistantUpdate={onAssistantUpdate}
+              setActiveAssistant={setActiveAssistant}
+              setAssistantError={setAssistantError}
             />
           )}
         </div>

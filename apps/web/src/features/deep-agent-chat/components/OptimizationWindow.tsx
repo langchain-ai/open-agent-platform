@@ -25,6 +25,7 @@ import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { toast } from "sonner";
 
 type StateType = {
   messages: Message[];
@@ -51,7 +52,8 @@ interface OptimizationWindowProps {
   isExpanded: boolean;
   onToggle: () => void;
   activeAssistant: Assistant | null;
-  onAssistantUpdate: () => void;
+  setActiveAssistant: (assistant: Assistant | null) => void;
+  setAssistantError: (error: string | null) => void;
 }
 
 type DisplayMessage = UserMessage | OptimizerMessage;
@@ -63,7 +65,8 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     isExpanded,
     onToggle,
     activeAssistant,
-    onAssistantUpdate,
+    setActiveAssistant,
+    setAssistantError,
   }) => {
     const { session } = useAuthContext();
 
@@ -199,7 +202,37 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       [],
     );
 
-    const handleApprove = useCallback(() => {
+    const refreshActiveAssistant = useCallback(async () => {
+      setAssistantError(null);
+
+      if (!activeAssistant || !deploymentClient) {
+        setActiveAssistant(null);
+        return;
+      }
+
+      try {
+        const assistant = await deploymentClient.assistants.get(
+          activeAssistant.assistant_id,
+        );
+
+        setActiveAssistant(assistant);
+        toast.dismiss();
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+
+        setActiveAssistant(null);
+        setAssistantError(errorMessage);
+
+        toast.dismiss();
+        toast.error("Failed to load assistant", {
+          description: `Could not connect to assistant: ${errorMessage}`,
+          duration: 50000,
+        });
+      }
+    }, [deploymentClient, activeAssistant]);
+
+    const handleApprove = useCallback(async () => {
       if (selectedOptimizerMessage) {
         setDisplayMessages((prev) =>
           prev.map((msg) =>
@@ -208,21 +241,22 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               : msg,
           ),
         );
+
         handleClear();
+
         if (activeAssistant && deploymentClient) {
-          deploymentClient.assistants
-            .update(activeAssistant.assistant_id, {
+          await deploymentClient.assistants.update(
+            activeAssistant.assistant_id,
+            {
+              metadata: activeAssistant.metadata,
               config: {
                 configurable: selectedOptimizerMessage.new_config,
               },
-            })
-            .then(() => {
-              // Wait a bit for the update to propagate
-              setTimeout(() => {
-                onAssistantUpdate();
-              }, 500);
-            });
+            },
+          );
+          await refreshActiveAssistant();
         }
+
         setIsDiffDialogOpen(false);
         setSelectedOptimizerMessage(null);
       }
@@ -230,7 +264,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       selectedOptimizerMessage,
       handleClear,
       activeAssistant,
-      onAssistantUpdate,
+      refreshActiveAssistant,
       deploymentClient,
     ]);
 
@@ -380,7 +414,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                         >
                           <button
                             className={cn(
-                              "hover:bg-primary hover:text-primary-foreground flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
+                              "flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
                               message.status === "pending" &&
                                 "border-[#fbbf244d] bg-[#fbbf241a] text-[#d97706]",
                               message.status === "approved" &&

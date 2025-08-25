@@ -126,10 +126,8 @@ export default function DeepAgentChatInterface() {
         setFiles={setFiles}
         activeAssistant={activeAssistant}
         onFileClick={setSelectedFile}
-        // onAssistantUpdate={refreshActiveAssistant}
-        onAssistantUpdate={() => {
-          throw new Error("Not implemented");
-        }}
+        setActiveAssistant={setActiveAssistant}
+        setAssistantError={setAssistantError}
         assistantError={assistantError}
       />
       <div className="flex-1">
