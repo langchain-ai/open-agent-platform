@@ -20,6 +20,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { toast } from "sonner";
+import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
 
 type StateType = {
   messages: Message[];
@@ -72,10 +73,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     const [isDiffDialogOpen, setIsDiffDialogOpen] = useState(false);
     const [selectedOptimizerMessage, setSelectedOptimizerMessage] =
       useState<OptimizerMessage | null>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [displayMessages, setDisplayMessages] = useState<DisplayMessage[]>(
       [],
     );
+
+    const optimizerMessagesEndRef = useRef<HTMLDivElement>(null);
 
     const deploymentClient = useMemo(() => {
       if (!deploymentId || !session?.accessToken) return null;
@@ -116,16 +118,20 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         if (e) {
           e.preventDefault();
         }
+        if (isLoading) return;
+
         setFeedbackInput("");
         setDisplayMessages((prev) => [
           ...prev,
           { type: "user", content: feedbackInput },
         ]);
+
         const humanMessage: Message = {
           id: uuidv4(),
           type: "human",
           content: prepareOptimizerMessage(feedbackInput),
         };
+
         stream.submit({
           messages: [humanMessage],
           files: {
@@ -141,22 +147,15 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       [feedbackInput, stream, activeAssistant, deepAgentMessages],
     );
 
-    useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height =
-          Math.min(textareaRef.current.scrollHeight, 112) + "px";
-      }
-    }, [feedbackInput]);
-
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
+          if (isLoading) return;
           e.preventDefault();
           handleSubmitFeedback();
         }
       },
-      [handleSubmitFeedback],
+      [handleSubmitFeedback, isLoading],
     );
 
     const handleClear = useCallback(() => {
@@ -333,15 +332,20 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       [],
     );
 
+    useEffect(() => {
+      if (!isExpanded || !displayMessages.length) return;
+      optimizerMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [displayMessages, isExpanded]);
+
     return (
       <>
         <div
           className={cn(
             "flex flex-col overflow-hidden rounded-t-[10px] transition-[height] duration-400 ease-out",
-            isExpanded ? "h-1/2" : "h-12",
+            isExpanded ? "h-full" : "h-12",
           )}
         >
-          <div className="bg-primary relative flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">
+          <div className="bg-primary flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">
             <Button
               onClick={onToggle}
               disabled={!optimizerClient}
@@ -383,92 +387,91 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
 
           <div
             className={cn(
-              "flex flex-1 flex-col transition-opacity delay-100 duration-300 ease-in-out",
+              "flex min-h-0 flex-1 flex-col transition-opacity delay-100 duration-300 ease-in-out",
               isExpanded ? "opacity-100" : "opacity-0",
             )}
           >
-            <div className="flex flex-1 flex-col overflow-hidden bg-inherit">
-              <div className="flex-1 overflow-hidden">
-                <div className="flex h-full flex-col gap-3 overflow-y-auto p-4">
-                  {displayMessages.map((message, index) => {
-                    if (isUserMessage(message)) {
-                      return (
-                        <div
-                          key={`user-${index}`}
-                          className="bg-user-message mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
+            <div className="scrollbar-pretty-auto min-h-0 flex-1">
+              <div className="flex flex-col gap-3 bg-inherit p-4">
+                {displayMessages.map((message, index) => {
+                  if (isUserMessage(message)) {
+                    return (
+                      <div
+                        key={`user-${index}`}
+                        className="bg-user-message mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
+                      >
+                        {message.content}
+                      </div>
+                    );
+                  } else if (isOptimizerMessage(message)) {
+                    return (
+                      <div
+                        key={message.id}
+                        className="mr-auto mb-2 flex justify-start"
+                      >
+                        <button
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
+                            message.status === "pending" &&
+                              "border-[#fbbf244d] bg-[#fbbf241a] text-[#d97706]",
+                            message.status === "approved" &&
+                              "border-[#22c55e4d] bg-[#22c55e1a] text-[#059669]",
+                            !["pending", "approved"].includes(message.status) &&
+                              "border-[#ef44444d] bg-[#ef44441a] text-[#dc2626]",
+                          )}
+                          onClick={() => handleOptimizerMessageClick(message)}
+                          disabled={message.status !== "pending"}
                         >
-                          {message.content}
-                        </div>
-                      );
-                    } else if (isOptimizerMessage(message)) {
-                      return (
-                        <div
-                          key={message.id}
-                          className="mr-auto mb-2 flex justify-start"
-                        >
-                          <button
-                            className={cn(
-                              "flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
-                              message.status === "pending" &&
-                                "border-[#fbbf244d] bg-[#fbbf241a] text-[#d97706]",
-                              message.status === "approved" &&
-                                "border-[#22c55e4d] bg-[#22c55e1a] text-[#059669]",
-                              !["pending", "approved"].includes(
-                                message.status,
-                              ) &&
-                                "border-[#ef44444d] bg-[#ef44441a] text-[#dc2626]",
-                            )}
-                            onClick={() => handleOptimizerMessageClick(message)}
-                            disabled={message.status !== "pending"}
-                          >
-                            <p className="text-lg font-bold">
-                              {message.status === "approved" && "✓"}
-                              {message.status === "rejected" && "✗"}
-                              {message.status === "pending" && ""}
-                            </p>
-                            <p>
-                              {message.status === "approved" &&
-                                "Configuration Approved"}
-                              {message.status === "rejected" &&
-                                "Configuration Rejected"}
-                              {message.status === "pending" &&
-                                "Configuration Pending Review"}
-                            </p>
-                          </button>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                  {isLoading && (
-                    <div className="border-border mb-2 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm text-black/80 italic">
-                      <Loader2
-                        size={16}
-                        className="animate-spin"
-                      />
-                      <p>Analyzing feedback...</p>
-                    </div>
-                  )}
-                </div>
+                          <p className="text-lg font-bold">
+                            {message.status === "approved" && "✓"}
+                            {message.status === "rejected" && "✗"}
+                            {message.status === "pending" && ""}
+                          </p>
+                          <p>
+                            {message.status === "approved" &&
+                              "Configuration Approved"}
+                            {message.status === "rejected" &&
+                              "Configuration Rejected"}
+                            {message.status === "pending" &&
+                              "Configuration Pending Review"}
+                          </p>
+                        </button>
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+                {isLoading && (
+                  <div className="border-border mb-2 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm text-black/80 italic">
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                    />
+                    <p>Analyzing feedback...</p>
+                  </div>
+                )}
+                <div ref={optimizerMessagesEndRef} />
               </div>
             </div>
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-32 min-h-[44px] items-end gap-3 rounded-2xl border px-3 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-38 items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
-              <textarea
-                ref={textareaRef}
-                className="max-h-28 min-h-[28px] flex-1 resize-none overflow-y-auto text-sm outline-none"
+              <AutoGrowTextarea
                 value={feedbackInput}
                 onChange={(e) => setFeedbackInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Enter your feedback..."
                 aria-label="Feedback input"
+                excludeDefaultStyles
+                className="w-full text-sm outline-none"
+                maxRows={6}
               />
               <Button
                 type="submit"
                 size="icon"
                 className="flex-shrink-0"
+                disabled={isLoading}
               >
                 <Send size={14} />
               </Button>

@@ -14,8 +14,6 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       components: {
-        ".scrollbar-pretty":
-          "overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
         ".word-added": {
           backgroundColor: "rgba(46, 160, 67, 0.4)",
           color: "#ffffff",
