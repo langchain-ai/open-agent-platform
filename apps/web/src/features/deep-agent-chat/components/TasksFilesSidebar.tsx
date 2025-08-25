@@ -94,7 +94,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       "h-10 p-1 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:hover:bg-black/5 data-[state=inactive]:hover:text-primary transition-colors duration-200 ease-in-out";
 
     return (
-      <div className="h-full w-[25vw] pt-10">
+      <div className="h-full w-[25vw]">
         <div className="bg-background border-border flex h-full w-full flex-col border-r">
           <Tabs
             defaultValue="tasks"
