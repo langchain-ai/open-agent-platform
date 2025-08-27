@@ -41,13 +41,15 @@ export function createTrigger<P extends z.ZodTypeAny>(
 // -- Config loader ------------------------------------------------------------
 
 export type TriggerConfigEntry = {
-  /** stable id, used in URLs unless path is provided */
-  id?: string;
-  /** optional URL path override, e.g., "/github" */
-  path?: string;
   /** dynamic import returning a module exporting default TriggerDefinition */
   module: () => Promise<{ default: TriggerDefinition<any> }>;
-};
+} & (
+  | {
+      /** stable id, used in URLs unless path is provided */ id: string;
+      path?: string;
+    }
+  | { /** URL path override, e.g., "/github" */ path: string; id?: string }
+);
 
 export type TriggerConfig = {
   basePath?: string; // defaults to "/triggers"
@@ -72,6 +74,32 @@ export async function loadTriggers(
     });
   }
   return defs;
+}
+
+/**
+ * Lists the paths that triggers will be mounted at based on the configuration.
+ * This is useful for introspection without loading the actual trigger modules.
+ */
+export function listTriggerPaths(cfg: TriggerConfig): string[] {
+  const basePath = cfg.basePath ?? "/triggers";
+  const paths: string[] = [];
+
+  for (const entry of cfg.entries) {
+    if (entry.path) {
+      // Use explicit path override
+      paths.push(nodePath.join(basePath, entry.path));
+    } else if (entry.id) {
+      // Use entry id
+      paths.push(nodePath.join(basePath, entry.id));
+    } else {
+      // This should never happen due to our type constraint, but TypeScript needs this
+      throw new Error(
+        "TriggerConfigEntry must have either 'id' or 'path' defined",
+      );
+    }
+  }
+
+  return paths;
 }
 
 // -- Hono route mounting ---------------------------------------------------
