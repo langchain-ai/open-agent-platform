@@ -243,21 +243,41 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       continueStream(preparingToCallTaskTool);
     }, [continueStream, messages]);
 
-    const handleRestartFromAIMessage = useCallback((message: Message) => {
-      if (!debugMode) return;
-      const meta = getMessagesMetadata(message);
-      const { parent_checkpoint: parentCheckpoint } = meta?.firstSeenState ?? {};
-      const msgIndex = messages.findIndex((m) => m.id === message.id);
-      runSingleStep([], parentCheckpoint ?? undefined, false, messages.slice(0, msgIndex));
-    }, [debugMode, runSingleStep, messages]);
+    const handleRestartFromAIMessage = useCallback(
+      (message: Message) => {
+        if (!debugMode) return;
+        const meta = getMessagesMetadata(message);
+        const { parent_checkpoint: parentCheckpoint } =
+          meta?.firstSeenState ?? {};
+        const msgIndex = messages.findIndex((m) => m.id === message.id);
+        runSingleStep(
+          [],
+          parentCheckpoint ?? undefined,
+          false,
+          messages.slice(0, msgIndex),
+        );
+      },
+      [debugMode, runSingleStep, messages],
+    );
 
-    const handleRestartFromSubTask = useCallback((toolCallId: string) => {
-      if (!debugMode) return;
-      const msgIndex = messages.findIndex((m) => m.type === "tool" && m.tool_call_id === toolCallId);
-      const meta = getMessagesMetadata(messages[msgIndex]);
-      const { parent_checkpoint: parentCheckpoint } = meta?.firstSeenState ?? {};
-      runSingleStep([], parentCheckpoint ?? undefined, true, messages.slice(0, msgIndex));
-    }, [debugMode, runSingleStep, messages]);
+    const handleRestartFromSubTask = useCallback(
+      (toolCallId: string) => {
+        if (!debugMode) return;
+        const msgIndex = messages.findIndex(
+          (m) => m.type === "tool" && m.tool_call_id === toolCallId,
+        );
+        const meta = getMessagesMetadata(messages[msgIndex]);
+        const { parent_checkpoint: parentCheckpoint } =
+          meta?.firstSeenState ?? {};
+        runSingleStep(
+          [],
+          parentCheckpoint ?? undefined,
+          true,
+          messages.slice(0, msgIndex),
+        );
+      },
+      [debugMode, runSingleStep, messages],
+    );
 
     const hasMessages = messages.length > 0;
     const processedMessages = useMemo(() => {

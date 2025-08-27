@@ -95,7 +95,9 @@ export function useChat(
     ) => {
       if (checkpoint) {
         stream.submit(undefined, {
-          ...(optimisticMessages ? { optimisticValues: { messages: optimisticMessages } } : {}),
+          ...(optimisticMessages
+            ? { optimisticValues: { messages: optimisticMessages } }
+            : {}),
           config: {
             ...(activeAssistant?.config || {}),
           },

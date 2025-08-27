@@ -22,8 +22,17 @@ interface ChatMessageProps {
 }
 
 export const ChatMessage = React.memo<ChatMessageProps>(
-  ({ message, toolCalls, showAvatar, onSelectSubAgent, selectedSubAgent, onRestartFromAIMessage, onRestartFromSubTask, debugMode }) => {
-    const isUser = message.type === "human";  
+  ({
+    message,
+    toolCalls,
+    showAvatar,
+    onSelectSubAgent,
+    selectedSubAgent,
+    onRestartFromAIMessage,
+    onRestartFromSubTask,
+    debugMode,
+  }) => {
+    const isUser = message.type === "human";
     const isAIMessage = message.type === "ai";
     const messageContent = extractStringFromMessageContent(message);
     const hasContent = messageContent && messageContent.trim() !== "";
@@ -108,7 +117,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               {debugMode && isAIMessage && (
                 <button
                   onClick={() => onRestartFromAIMessage(message)}
-                  className="mt-4 text-xs text-gray-400 bg-transparent hover:text-gray-600 transition-colors duration-200 whitespace-nowrap"
+                  className="mt-4 bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
                 >
                   Regenerate
                 </button>
@@ -131,7 +140,10 @@ export const ChatMessage = React.memo<ChatMessageProps>(
           {!isUser && subAgents.length > 0 && (
             <div className="flex w-fit max-w-full flex-col gap-4">
               {subAgents.map((subAgent) => (
-                <div key={subAgent.id} className="flex items-center gap-2">
+                <div
+                  key={subAgent.id}
+                  className="flex items-center gap-2"
+                >
                   <SubAgentIndicator
                     subAgent={subAgent}
                     onClick={() => onSelectSubAgent(subAgent)}
@@ -139,7 +151,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   {debugMode && subAgent.status === "completed" && (
                     <button
                       onClick={() => onRestartFromSubTask(subAgent.id)}
-                      className="text-xs text-gray-400 bg-transparent hover:text-gray-600 transition-colors duration-200 whitespace-nowrap"
+                      className="bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
                     >
                       Regenerate
                     </button>
