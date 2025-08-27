@@ -1,32 +1,22 @@
-import { BaseMessage } from "@langchain/core/messages";
 import type { z } from "zod";
 import type { Context } from "hono";
 
-export type TriggerHttpResponse = {
+export interface TriggerHandlerResult {
   status?: number;
   headers?: Record<string, string>;
   body?: unknown;
-};
-
-/**
- * Return either:
- * - a raw list of messages, or
- * - an object with messages + a custom HTTP response (for providers that need it)
- */
-export type TriggerHandlerResult =
-  | BaseMessage[]
-  | { messages: BaseMessage[]; response?: TriggerHttpResponse };
+}
 
 export type Logger = Pick<Console, "info" | "warn" | "error" | "debug">;
 
-export type DedupeStore = {
+export interface DedupeStore {
   /** returns true if the key has been seen recently */
   has(key: string): Promise<boolean>;
   /** remember a key for ttlSeconds */
   set(key: string, ttlSeconds: number): Promise<void>;
-};
+}
 
-export type TriggerContext = {
+export interface TriggerContext {
   c: Context; // Hono context containing req, res, and other utilities
   rawBody: Buffer; // needed for HMAC verification
   headers: Record<string, string | string[] | undefined>;
@@ -35,11 +25,11 @@ export type TriggerContext = {
   env: Record<string, string | undefined>;
   log: Logger;
   dedupe?: DedupeStore; // optional, for idempotency
-};
+}
 
 export type VerifyFn = (ctx: TriggerContext) => Promise<void> | void;
 
-export type TriggerDefinition<P> = {
+export interface TriggerDefinition<P> {
   id: string; // globally unique
   displayName?: string;
   description?: string;
@@ -59,4 +49,4 @@ export type TriggerDefinition<P> = {
 
   /** Your business logic: turns a payload into HumanMessage[] (and optionally an HTTP response) */
   handler: (payload: P, ctx: TriggerContext) => Promise<TriggerHandlerResult>;
-};
+}

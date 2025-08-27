@@ -173,26 +173,18 @@ export function mountTriggers(
           : incoming;
 
         // 3) handler
-        const result = await def.handler(payload, ctx);
-        const { messages, response } = Array.isArray(result)
-          ? { messages: result, response: undefined }
-          : result;
+        const response = await def.handler(payload, ctx);
 
-        // 4) HTTP response back to provider (some services need a specific body)
-        if (response) {
-          if (response.headers) {
-            Object.entries(response.headers).forEach(([key, value]) => {
-              c.header(key, value);
-            });
-          }
-          return c.json(
-            response.body ?? { ok: true },
-            (response.status as any) ?? 200,
-          );
-        } else {
-          // Default: return the messages; your outer app can dispatch them to the agent
-          return c.json({ messages });
+        // 4) HTTP response back to provider
+        if (response.headers) {
+          Object.entries(response.headers).forEach(([key, value]) => {
+            c.header(key, String(value));
+          });
         }
+        return c.json(
+          response.body ?? { ok: true },
+          (response.status as any) ?? 200,
+        );
       } catch (err: any) {
         log.error?.(`[triggers] ${def.id} error:`, err?.stack ?? err);
         const status = err?.statusCode ?? 400;
