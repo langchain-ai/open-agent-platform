@@ -91,9 +91,11 @@ export function useChat(
       messages: Message[],
       checkpoint?: Checkpoint,
       isRerunningSubagent?: boolean,
+      optimisticMessages?: Message[],
     ) => {
       if (checkpoint) {
         stream.submit(undefined, {
+          ...(optimisticMessages ? { optimisticValues: { messages: optimisticMessages } } : {}),
           config: {
             ...(activeAssistant?.config || {}),
           },

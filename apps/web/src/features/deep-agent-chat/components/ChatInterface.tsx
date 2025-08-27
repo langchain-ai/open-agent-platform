@@ -243,36 +243,52 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       continueStream(preparingToCallTaskTool);
     }, [continueStream, messages]);
 
-    const handleRerunStep = useCallback(() => {
-      const hasTaskToolCall = justCalledTaskTool(messages);
-      let rewindIndex = messages.length - 1;
-      if (hasTaskToolCall) {
-        rewindIndex = messages.findLastIndex(
-          (message) => message.type === "ai",
-        );
-        // Clear selected subAgent when replaying deletes it
-        const aiMessageToUnwind = messages[rewindIndex] as AIMessage;
-        if (
-          aiMessageToUnwind &&
-          aiMessageToUnwind.tool_calls &&
-          aiMessageToUnwind.tool_calls.some(
-            (toolCall) => toolCall.id === selectedSubAgent?.id,
-          )
-        ) {
-          onSelectSubAgent(null);
-        }
-      }
-      const meta = getMessagesMetadata(messages[rewindIndex]);
-      const firstSeenState = meta?.firstSeenState;
-      const { parent_checkpoint: parentCheckpoint } = firstSeenState ?? {};
-      runSingleStep([], parentCheckpoint ?? undefined, hasTaskToolCall);
-    }, [
-      messages,
-      runSingleStep,
-      getMessagesMetadata,
-      onSelectSubAgent,
-      selectedSubAgent,
-    ]);
+    // const handleRerunLatestStep = useCallback(() => {
+    //   const hasTaskToolCall = justCalledTaskTool(messages);
+    //   let rewindIndex = messages.length - 1;
+    //   if (hasTaskToolCall) {
+    //     rewindIndex = messages.findLastIndex(
+    //       (message) => message.type === "ai",
+    //     );
+    //     // Clear selected subAgent when replaying deletes it
+    //     const aiMessageToUnwind = messages[rewindIndex] as AIMessage;
+    //     if (
+    //       aiMessageToUnwind &&
+    //       aiMessageToUnwind.tool_calls &&
+    //       aiMessageToUnwind.tool_calls.some(
+    //         (toolCall) => toolCall.id === selectedSubAgent?.id,
+    //       )
+    //     ) {
+    //       onSelectSubAgent(null);
+    //     }
+    //   }
+    //   const meta = getMessagesMetadata(messages[rewindIndex]);
+    //   const firstSeenState = meta?.firstSeenState;
+    //   const { parent_checkpoint: parentCheckpoint } = firstSeenState ?? {};
+    //   runSingleStep([], parentCheckpoint ?? undefined, hasTaskToolCall);
+    // }, [
+    //   messages,
+    //   runSingleStep,
+    //   getMessagesMetadata,
+    //   onSelectSubAgent,
+    //   selectedSubAgent,
+    // ]);
+
+    const handleRestartFromAIMessage = useCallback((message: Message) => {
+      if (!debugMode) return;
+      const meta = getMessagesMetadata(message);
+      const { parent_checkpoint: parentCheckpoint } = meta?.firstSeenState ?? {};
+      const msgIndex = messages.findIndex((m) => m.id === message.id);
+      runSingleStep([], parentCheckpoint ?? undefined, false, messages.slice(0, msgIndex));
+    }, [debugMode, runSingleStep, messages]);
+
+    const handleRestartFromSubTask = useCallback((toolCallId: string) => {
+      if (!debugMode) return;
+      const msgIndex = messages.findIndex((m) => m.type === "tool" && m.tool_call_id === toolCallId);
+      const meta = getMessagesMetadata(messages[msgIndex]);
+      const { parent_checkpoint: parentCheckpoint } = meta?.firstSeenState ?? {};
+      runSingleStep([], parentCheckpoint ?? undefined, true, messages.slice(0, msgIndex));
+    }, [debugMode, runSingleStep, messages]);
 
     const hasMessages = messages.length > 0;
     const processedMessages = useMemo(() => {
@@ -438,6 +454,9 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   showAvatar={data.showAvatar}
                   onSelectSubAgent={onSelectSubAgent}
                   selectedSubAgent={selectedSubAgent}
+                  onRestartFromAIMessage={handleRestartFromAIMessage}
+                  onRestartFromSubTask={handleRestartFromSubTask}
+                  debugMode={debugMode}
                 />
               ))}
               {isLoading && (
@@ -455,13 +474,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       className="border-success text-success rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-green-500/10 active:scale-95"
                     >
                       Continue
-                    </Button>
-                    <Button
-                      onClick={handleRerunStep}
-                      variant="destructive"
-                      className="border-warning text-warning rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-amber-500/10 active:scale-95"
-                    >
-                      Re-run step
                     </Button>
                   </div>
                 </div>

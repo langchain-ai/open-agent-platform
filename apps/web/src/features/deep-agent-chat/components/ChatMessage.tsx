@@ -16,11 +16,15 @@ interface ChatMessageProps {
   showAvatar: boolean;
   onSelectSubAgent: (subAgent: SubAgent | null) => void;
   selectedSubAgent: SubAgent | null;
+  onRestartFromAIMessage: (message: Message) => void;
+  onRestartFromSubTask: (toolCallId: string) => void;
+  debugMode?: boolean;
 }
 
 export const ChatMessage = React.memo<ChatMessageProps>(
-  ({ message, toolCalls, showAvatar, onSelectSubAgent, selectedSubAgent }) => {
-    const isUser = message.type === "human";
+  ({ message, toolCalls, showAvatar, onSelectSubAgent, selectedSubAgent, onRestartFromAIMessage, onRestartFromSubTask, debugMode }) => {
+    const isUser = message.type === "human";  
+    const isAIMessage = message.type === "ai";
     const messageContent = extractStringFromMessageContent(message);
     const hasContent = messageContent && messageContent.trim() !== "";
     const hasToolCalls = toolCalls.length > 0;
@@ -84,20 +88,30 @@ export const ChatMessage = React.memo<ChatMessageProps>(
         </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
           {hasContent && (
-            <div
-              className={cn(
-                "mt-4 w-fit max-w-full overflow-hidden rounded-lg p-2 break-words",
-                isUser
-                  ? "bg-user-message ml-auto text-white"
-                  : "border-border bg-surface text-primary border",
-              )}
-            >
-              {isUser ? (
-                <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
-                  {messageContent}
-                </p>
-              ) : (
-                <MarkdownContent content={messageContent} />
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "mt-4 w-fit max-w-full overflow-hidden rounded-lg p-2 break-words",
+                  isUser
+                    ? "bg-user-message ml-auto text-white"
+                    : "border-border bg-surface text-primary border",
+                )}
+              >
+                {isUser ? (
+                  <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
+                    {messageContent}
+                  </p>
+                ) : (
+                  <MarkdownContent content={messageContent} />
+                )}
+              </div>
+              {debugMode && isAIMessage && (
+                <button
+                  onClick={() => onRestartFromAIMessage(message)}
+                  className="mt-4 text-xs text-gray-400 bg-transparent hover:text-gray-600 transition-colors duration-200 whitespace-nowrap"
+                >
+                  Regenerate
+                </button>
               )}
             </div>
           )}
@@ -117,11 +131,20 @@ export const ChatMessage = React.memo<ChatMessageProps>(
           {!isUser && subAgents.length > 0 && (
             <div className="flex w-fit max-w-full flex-col gap-4">
               {subAgents.map((subAgent) => (
-                <SubAgentIndicator
-                  key={subAgent.id}
-                  subAgent={subAgent}
-                  onClick={() => onSelectSubAgent(subAgent)}
-                />
+                <div key={subAgent.id} className="flex items-center gap-2">
+                  <SubAgentIndicator
+                    subAgent={subAgent}
+                    onClick={() => onSelectSubAgent(subAgent)}
+                  />
+                  {debugMode && subAgent.status === "completed" && (
+                    <button
+                      onClick={() => onRestartFromSubTask(subAgent.id)}
+                      className="text-xs text-gray-400 bg-transparent hover:text-gray-600 transition-colors duration-200 whitespace-nowrap"
+                    >
+                      Regenerate
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
