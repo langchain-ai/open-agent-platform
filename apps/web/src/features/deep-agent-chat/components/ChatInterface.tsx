@@ -243,37 +243,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       continueStream(preparingToCallTaskTool);
     }, [continueStream, messages]);
 
-    // const handleRerunLatestStep = useCallback(() => {
-    //   const hasTaskToolCall = justCalledTaskTool(messages);
-    //   let rewindIndex = messages.length - 1;
-    //   if (hasTaskToolCall) {
-    //     rewindIndex = messages.findLastIndex(
-    //       (message) => message.type === "ai",
-    //     );
-    //     // Clear selected subAgent when replaying deletes it
-    //     const aiMessageToUnwind = messages[rewindIndex] as AIMessage;
-    //     if (
-    //       aiMessageToUnwind &&
-    //       aiMessageToUnwind.tool_calls &&
-    //       aiMessageToUnwind.tool_calls.some(
-    //         (toolCall) => toolCall.id === selectedSubAgent?.id,
-    //       )
-    //     ) {
-    //       onSelectSubAgent(null);
-    //     }
-    //   }
-    //   const meta = getMessagesMetadata(messages[rewindIndex]);
-    //   const firstSeenState = meta?.firstSeenState;
-    //   const { parent_checkpoint: parentCheckpoint } = firstSeenState ?? {};
-    //   runSingleStep([], parentCheckpoint ?? undefined, hasTaskToolCall);
-    // }, [
-    //   messages,
-    //   runSingleStep,
-    //   getMessagesMetadata,
-    //   onSelectSubAgent,
-    //   selectedSubAgent,
-    // ]);
-
     const handleRestartFromAIMessage = useCallback((message: Message) => {
       if (!debugMode) return;
       const meta = getMessagesMetadata(message);
