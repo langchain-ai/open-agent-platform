@@ -1,5 +1,5 @@
 {
-  "name": "@open-agent-platform/triggers-sdk",
+  "name": "oap-triggers",
   "homepage": "https://github.com/langchain-ai/open-agent-platform/blob/main/README.md",
   "repository": {
     "type": "git",
