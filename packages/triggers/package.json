@@ -5,7 +5,6 @@
     "type": "git",
     "url": "https://github.com/langchain-ai/open-agent-platform.git"
   },
-  "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {

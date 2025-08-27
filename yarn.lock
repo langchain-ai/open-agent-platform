@@ -12122,9 +12122,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oap-triggers@workspace:packages/triggers-sdk":
+"oap-triggers@workspace:packages/triggers":
   version: 0.0.0-use.local
-  resolution: "oap-triggers@workspace:packages/triggers-sdk"
+  resolution: "oap-triggers@workspace:packages/triggers"
   dependencies:
     "@eslint/eslintrc": ^3.1.0
     "@eslint/js": ^9.19.0
