@@ -30,13 +30,14 @@ export interface TriggerContext {
 export type VerifyFn = (ctx: TriggerContext) => Promise<void> | void;
 
 export interface TriggerDefinition<P> {
-  id: string; // globally unique
-  displayName?: string;
-  description?: string;
-
-  /** HTTP method & path for the webhook */
-  method?: "POST" | "GET";
-  path?: string; // if omitted, we’ll use /:id
+  /**
+   * The path to register the trigger at
+   */
+  path: string;
+  /**
+   * HTTP method & path for the webhook
+   */
+  method: "POST" | "GET";
 
   /**
    * zod schema for payload validation. If omitted, raw JSON body is used.

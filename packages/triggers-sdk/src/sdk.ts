@@ -10,27 +10,36 @@ import { BlankEnv, BlankSchema } from "hono/types";
 import nodePath from "path";
 
 type CreateTriggerArgs<P extends z.ZodTypeAny> = {
-  id: string;
-  displayName?: string;
-  description?: string;
-  method?: "POST" | "GET";
-  path?: string;
-  payload: P;
-  verify?: (ctx: TriggerContext) => Promise<void> | void;
+  /**
+   * HTTP method & path for the webhook
+   */
+  method: "POST" | "GET";
+  /**
+   * The path to register the trigger at
+   */
+  path: string;
+  /**
+   * The handler function for the trigger
+   */
   handler: (
     payload: z.infer<P>,
     ctx: TriggerContext,
   ) => Promise<TriggerHandlerResult>;
+  /**
+   * The payload schema for the trigger
+   */
+  payload?: P;
+  /**
+   * Optional signature verification, throws on failure
+   */
+  verify?: (ctx: TriggerContext) => Promise<void> | void;
 };
 
 export function createTrigger<P extends z.ZodTypeAny>(
   args: CreateTriggerArgs<P>,
 ): TriggerDefinition<z.infer<P>> {
   return {
-    id: args.id,
-    displayName: args.displayName,
-    description: args.description,
-    method: args.method ?? "POST",
+    method: args.method,
     path: args.path,
     payloadSchema: args.payload,
     verify: args.verify,
@@ -41,18 +50,22 @@ export function createTrigger<P extends z.ZodTypeAny>(
 // -- Config loader ------------------------------------------------------------
 
 export type TriggerConfigEntry = {
-  /** dynamic import returning a module exporting default TriggerDefinition */
+  /**
+   * Dynamic import returning a module exporting default TriggerDefinition
+   */
   module: () => Promise<{ default: TriggerDefinition<any> }>;
-} & (
-  | {
-      /** stable id, used in URLs unless path is provided */ id: string;
-      path?: string;
-    }
-  | { /** URL path override, e.g., "/github" */ path: string; id?: string }
-);
+  /**
+   * The path to register the trigger at
+   */
+  path: string;
+};
 
 export type TriggerConfig = {
-  basePath?: string; // defaults to "/triggers"
+  /**
+   * Base path to mount triggers under
+   * @default "/triggers"
+   */
+  basePath?: string;
   entries: TriggerConfigEntry[];
 };
 
@@ -69,8 +82,7 @@ export async function loadTriggers(
     const def = mod.default;
     defs.push({
       ...def,
-      id: entry.id ?? def.id,
-      path: entry.path ?? def.path,
+      path: entry.path,
     });
   }
   return defs;
@@ -85,18 +97,7 @@ export function listTriggerPaths(cfg: TriggerConfig): string[] {
   const paths: string[] = [];
 
   for (const entry of cfg.entries) {
-    if (entry.path) {
-      // Use explicit path override
-      paths.push(nodePath.join(basePath, entry.path));
-    } else if (entry.id) {
-      // Use entry id
-      paths.push(nodePath.join(basePath, entry.id));
-    } else {
-      // This should never happen due to our type constraint, but TypeScript needs this
-      throw new Error(
-        "TriggerConfigEntry must have either 'id' or 'path' defined",
-      );
-    }
+    paths.push(nodePath.join(basePath, entry.path));
   }
 
   return paths;
@@ -105,10 +106,14 @@ export function listTriggerPaths(cfg: TriggerConfig): string[] {
 // -- Hono route mounting ---------------------------------------------------
 
 export type MountOptions = {
-  basePath?: string; // default "/triggers"
+  /**
+   * Base path to mount triggers under
+   * @default "/triggers"
+   */
+  basePath?: string;
   logger?: Logger;
   env?: Record<string, string | undefined>;
-  dedupe?: TriggerContext["dedupe"]; // optional, for idempotency support
+  dedupe?: TriggerContext["dedupe"];
 };
 
 /**
@@ -124,13 +129,11 @@ export function mountTriggers(
   const log = opts.logger ?? console;
 
   for (const def of triggers) {
-    const path = def.path
-      ? nodePath.join(basePath, def.path)
-      : nodePath.join(basePath, def.id);
+    const path = nodePath.join(basePath, def.path);
     const method = (def.method ?? "POST").toLowerCase() as "post" | "get";
 
     log.info?.(
-      `[triggers] Mounting ${def.id} -> ${method.toUpperCase()} ${path}`,
+      `[triggers] Mounting ${def.path} -> ${method.toUpperCase()} ${path}`,
     );
 
     app[method](path, async (c) => {
@@ -186,7 +189,7 @@ export function mountTriggers(
           (response.status as any) ?? 200,
         );
       } catch (err: any) {
-        log.error?.(`[triggers] ${def.id} error:`, err?.stack ?? err);
+        log.error?.(`[triggers] ${def.path} error:`, err?.stack ?? err);
         const status = err?.statusCode ?? 400;
         return c.json(
           {
