@@ -31,6 +31,18 @@ export type VerifyFn = (ctx: TriggerContext) => Promise<void> | void;
 
 export interface TriggerDefinition<P> {
   /**
+   * The name of the trigger to display in the UI.
+   */
+  displayName: string;
+  /**
+   * A description of the trigger to display in the UI.
+   */
+  description?: string;
+  /**
+   * A unique ID to identify the trigger by
+   */
+  id: string;
+  /**
    * The path to register the trigger at
    */
   path: string;

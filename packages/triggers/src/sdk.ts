@@ -11,6 +11,18 @@ import nodePath from "path";
 
 type CreateTriggerArgs<P extends z.ZodTypeAny> = {
   /**
+   * The name of the trigger to display in the UI.
+   */
+  displayName: string;
+  /**
+   * A description of the trigger to display in the UI.
+   */
+  description?: string;
+  /**
+   * A unique ID to identify the trigger by
+   */
+  id: string;
+  /**
    * HTTP method & path for the webhook
    */
   method: "POST" | "GET";
@@ -39,6 +51,9 @@ export function createTrigger<P extends z.ZodTypeAny>(
   args: CreateTriggerArgs<P>,
 ): TriggerDefinition<z.infer<P>> {
   return {
+    displayName: args.displayName,
+    description: args.description,
+    id: args.id,
     method: args.method,
     path: args.path,
     payloadSchema: args.payload,
