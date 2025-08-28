@@ -18,6 +18,9 @@ import { generateFormFields } from "@/lib/environment/triggers";
 import { ExternalLink, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Trigger } from "@/types/triggers";
+import { useAuthContext } from "@/providers/Auth";
+import { useTriggers } from "@/hooks/use-triggers";
+import _ from "lodash";
 
 interface TriggerFormProps {
   trigger: Trigger;
@@ -25,22 +28,17 @@ interface TriggerFormProps {
 }
 
 export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
+  const auth = useAuthContext();
+  const { registerTrigger } = useTriggers();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  // Get empty query params that need user input
-  const emptyQueryParams = Object.entries(trigger.queryParams || {}).filter(
-    ([_, value]) => !value,
-  );
-
   // Generate form fields from payload schema
   const payloadFields = trigger.payloadSchema
     ? generateFormFields(trigger.payloadSchema)
     : [];
-
-  console.log("[v0] TriggerForm initialized for trigger:", trigger.name);
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({
@@ -51,35 +49,15 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
     setIsLoading(true);
 
-    console.log("[v0] Form submitted for trigger:", trigger.name);
-    console.log("[v0] Form data:", formData);
-
     try {
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-
-      // Add pre-filled query params
-      Object.entries(trigger.queryParams || {}).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
-      });
-
-      // Add user-filled query params
-      emptyQueryParams.forEach(([key]) => {
-        if (formData[key]) {
-          queryParams.append(key, formData[key]);
-        }
-      });
-
-      // Build request URL
-      const url = `${trigger.registerUrl}${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-
-      console.log("[v0] Making request to:", url);
-
-      // Build payload from schema fields
       const payload: Record<string, any> = {};
       payloadFields.forEach((field) => {
         if (formData[field.name] !== undefined) {
@@ -87,33 +65,27 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         }
       });
 
-      console.log("[v0] Request payload:", payload);
-
-      // Make the request
-      const response = await fetch(url, {
-        method: trigger.registerMethod || "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body:
-          Object.keys(payload).length > 0 ? JSON.stringify(payload) : undefined,
+      const registerResponse = await registerTrigger(auth.session.accessToken, {
+        id: trigger.id,
+        payload: payload,
+        method: trigger.method,
+        path: trigger.path,
       });
 
-      const responseData = await response.json();
-      console.log("[v0] Response data:", responseData);
-
-      if (!response.ok) {
-        throw new Error(responseData.message || "Failed to register trigger");
+      if (!registerResponse) {
+        toast.error("Failed to register trigger", {
+          richColors: true,
+        });
+        return;
       }
 
       // Check for auth URL in response
-      if (responseData.authUrl) {
-        setAuthUrl(responseData.authUrl);
+      if (!registerResponse.registered && registerResponse.authUrl) {
+        setAuthUrl(registerResponse.authUrl);
         setIsAuthenticating(true);
-        console.log("[v0] Auth URL received:", responseData.authUrl);
       } else {
         toast.success(
-          `${trigger.name} trigger has been registered successfully.`,
+          `${trigger.displayName} trigger has been registered successfully.`,
           {
             richColors: true,
           },
@@ -124,7 +96,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
       }
     } catch (error) {
       console.error("[v0] Error registering trigger:", error);
-      toast.error(`${trigger.name} trigger registration failed`, {
+      toast.error(`${trigger.displayName} trigger registration failed`, {
         description:
           error instanceof Error ? error.message : "Failed to register trigger",
         richColors: true,
@@ -132,20 +104,6 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleAuthComplete = () => {
-    setAuthUrl(null);
-    setIsAuthenticating(false);
-    toast.success(
-      `${trigger.name} trigger has been registered and authenticated successfully.`,
-      {
-        richColors: true,
-      },
-    );
-    // Reset form and go back
-    setFormData({});
-    onCancel?.();
   };
 
   const renderFormField = (field: {
@@ -171,7 +129,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
               htmlFor={field.name}
               className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              {field.name}
+              {_.startCase(field.name)}
               {field.required && (
                 <span className="text-destructive ml-1">*</span>
               )}
@@ -183,7 +141,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         return (
           <div className="space-y-2">
             <Label htmlFor={field.name}>
-              {field.name}
+              {_.startCase(field.name)}
               {field.required && (
                 <span className="text-destructive ml-1">*</span>
               )}
@@ -215,7 +173,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
           return (
             <div className="space-y-2">
               <Label htmlFor={field.name}>
-                {field.name}
+                {_.startCase(field.name)}
                 {field.required && (
                   <span className="text-destructive ml-1">*</span>
                 )}
@@ -239,7 +197,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         return (
           <div className="space-y-2">
             <Label htmlFor={field.name}>
-              {field.name}
+              {_.startCase(field.name)}
               {field.required && (
                 <span className="text-destructive ml-1">*</span>
               )}
@@ -276,7 +234,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
               </Button>
             )}
             <div>
-              <CardTitle>{trigger.name}</CardTitle>
+              <CardTitle>{trigger.displayName}</CardTitle>
               <CardDescription>Authentication Required</CardDescription>
             </div>
           </div>
@@ -284,7 +242,8 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         <CardContent className="space-y-4">
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
             <p className="mb-3 text-sm text-blue-800">
-              Please click the link below to authenticate with {trigger.name}:
+              Please click the link below to authenticate with{" "}
+              {trigger.displayName}:
             </p>
             <Button
               asChild
@@ -297,7 +256,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
                 rel="noopener noreferrer"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />
-                Authenticate with {trigger.name}
+                Authenticate with {trigger.displayName}
               </a>
             </Button>
           </div>
@@ -306,7 +265,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
               After completing authentication, click the button below:
             </p>
             <Button
-              onClick={handleAuthComplete}
+              onClick={handleSubmit}
               className="w-full"
             >
               I've completed authentication
@@ -331,7 +290,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
             </Button>
           )}
           <div>
-            <CardTitle>{trigger.name}</CardTitle>
+            <CardTitle>{trigger.displayName}</CardTitle>
             {trigger.description && (
               <CardDescription>{trigger.description}</CardDescription>
             )}
@@ -343,45 +302,10 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
           onSubmit={handleSubmit}
           className="space-y-4"
         >
-          {emptyQueryParams.length === 0 && payloadFields.length === 0 && (
-            <div className="rounded-lg border border-dashed p-6 text-center">
-              <p className="text-muted-foreground text-sm">
-                No additional configuration required. Click the button below to
-                register this trigger.
-              </p>
-            </div>
-          )}
-
-          {/* Query Parameters */}
-          {emptyQueryParams.length > 0 && (
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Configuration</h4>
-              {emptyQueryParams.map(([key]) => (
-                <div
-                  key={key}
-                  className="space-y-2"
-                >
-                  <Label htmlFor={key}>
-                    {key}
-                    <span className="text-destructive ml-1">*</span>
-                  </Label>
-                  <Input
-                    id={key}
-                    type="text"
-                    value={formData[key] || ""}
-                    onChange={(e) => handleInputChange(key, e.target.value)}
-                    required
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Payload Fields */}
           {payloadFields.length > 0 && (
             <div className="space-y-4">
-              {emptyQueryParams.length > 0 && <div className="border-t pt-4" />}
-              <h4 className="text-sm font-medium">Additional Settings</h4>
+              <h4 className="text-sm font-medium">Configuration</h4>
               {payloadFields.map((field) => (
                 <div key={field.name}>{renderFormField(field)}</div>
               ))}
@@ -405,7 +329,7 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
               className="flex-1"
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Register {trigger.name}
+              Register {trigger.displayName}
             </Button>
           </div>
         </form>

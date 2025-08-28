@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Wrench, Bot, MessageCircle, Brain, BrainCircuit, Webhook } from "lucide-react";
+import {
+  Wrench,
+  Bot,
+  MessageCircle,
+  Brain,
+  BrainCircuit,
+  Webhook,
+} from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";

@@ -1,34 +1,129 @@
-import { useAuthContext } from "@/providers/Auth";
+import { Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 
-export function useTriggers() {
-  const auth = useAuthContext();
+type RegisterTriggerResponse =
+  | {
+      authUrl: string;
+      registered: false;
+    }
+  | {
+      registered: true;
+    };
 
-  const listTriggers = async () => {};
+export interface ListUserTriggersData {
+  id: string;
+  user_id: string;
+  provider: string;
+  provider_user_id: string;
+  created_at: string;
+}
 
-  const listUserTriggers = async () => {};
-
-  const registerTrigger = async (args: {
-    triggerId: string;
-    payload: Record<string, any>;
-  }) => {
-    if (!auth.session?.accessToken) {
-      toast.error("No access token found", {
+const constructTriggerUrl = (
+  path: string,
+  queryParams?: Record<string, string>,
+) => {
+  try {
+    const triggerApiUrl = process.env.NEXT_PUBLIC_TRIGGERS_API_URL;
+    if (!triggerApiUrl) {
+      toast.error("No trigger API URL found", {
         richColors: true,
       });
       return;
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_API_URL}/triggers/${args.triggerId}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${auth.session.accessToken}`,
-        },
-        body: JSON.stringify(args.payload),
+    const url = new URL(triggerApiUrl);
+    url.pathname = path;
+
+    if (queryParams) {
+      Object.entries(queryParams).forEach(([k, v]) => {
+        url.searchParams.set(k, v);
+      });
+    }
+
+    return url.toString();
+  } catch {
+    toast.error("Failed to construct trigger URL", {
+      richColors: true,
+    });
+    return;
+  }
+};
+
+export function useTriggers() {
+  const listTriggers = async (
+    accessToken: string,
+  ): Promise<Trigger[] | undefined> => {
+    const triggerApiUrl = constructTriggerUrl("/api/triggers");
+    if (!triggerApiUrl) {
+      return;
+    }
+
+    const response = await fetch(triggerApiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
-    );
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to list triggers", {
+        richColors: true,
+      });
+      return;
+    }
+
+    const triggers = await response.json();
+    return triggers.data;
+  };
+
+  const listUserTriggers = async (
+    accessToken: string,
+  ): Promise<ListUserTriggersData[] | undefined> => {
+    const triggersApiUrl = constructTriggerUrl("/api/user-triggers");
+    if (!triggersApiUrl) {
+      return;
+    }
+
+    const response = await fetch(triggersApiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to list user triggers", {
+        richColors: true,
+      });
+      return;
+    }
+
+    const triggers = await response.json();
+    return triggers.data;
+  };
+
+  const registerTrigger = async (
+    accessToken: string,
+    args: {
+      id: string;
+      payload: Record<string, any>;
+      method: "POST" | "GET";
+      path: string;
+    },
+  ): Promise<RegisterTriggerResponse | undefined> => {
+    const triggerApiUrl = constructTriggerUrl(args.path);
+    if (!triggerApiUrl) {
+      return;
+    }
+
+    const response = await fetch(triggerApiUrl, {
+      method: args.method,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body:
+        Object.keys(args.payload).length > 0
+          ? JSON.stringify(args.payload)
+          : undefined,
+    });
 
     if (!response.ok) {
       toast.error("Failed to register trigger", {
@@ -37,8 +132,12 @@ export function useTriggers() {
       return;
     }
 
-    toast.success("Trigger registered successfully", {
-      richColors: true,
-    });
+    return response.json();
+  };
+
+  return {
+    listTriggers,
+    listUserTriggers,
+    registerTrigger,
   };
 }

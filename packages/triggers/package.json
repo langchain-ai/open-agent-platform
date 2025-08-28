@@ -5,7 +5,7 @@
     "type": "git",
     "url": "https://github.com/langchain-ai/open-agent-platform.git"
   },
-  "version": "0.0.1-rc.0",
+  "version": "0.0.1-rc.1",
   "type": "module",
   "scripts": {
     "clean": "rm -rf ./dist .turbo || true",

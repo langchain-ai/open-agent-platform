@@ -38,6 +38,10 @@ type CreateTriggerArgs<P extends z.ZodTypeAny> = {
    * The type of trigger endpoint.
    */
   type: "trigger_handler" | "trigger_register";
+  /**
+   * The provider ID of the trigger.
+   */
+  providerId: string;
 };
 
 export function createTrigger<P extends z.ZodTypeAny>(
@@ -46,6 +50,7 @@ export function createTrigger<P extends z.ZodTypeAny>(
   return {
     method: args.method,
     path: args.path,
+    providerId: args.providerId,
     payloadSchema: args.payload,
     verify: args.verify,
     handler: args.handler,
@@ -77,6 +82,7 @@ export async function loadTriggers(
     const triggerDef: TriggerDefinition<any> = {
       method: triggerHandlerModule.default.method,
       path: triggerHandlerModule.default.path,
+      providerId: triggerHandlerModule.default.providerId,
       payloadSchema: triggerHandlerModule.default.payloadSchema,
       verify: triggerHandlerModule.default.verify,
       handler: triggerHandlerModule.default.handler,
@@ -87,6 +93,7 @@ export async function loadTriggers(
     const triggerRegisterDef: TriggerDefinition<any> = {
       method: triggerRegisterHandlerModule.default.method,
       path: triggerRegisterHandlerModule.default.path,
+      providerId: triggerRegisterHandlerModule.default.providerId,
       payloadSchema: triggerRegisterHandlerModule.default.payloadSchema,
       verify: triggerRegisterHandlerModule.default.verify,
       handler: triggerRegisterHandlerModule.default.handler,

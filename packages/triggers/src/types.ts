@@ -39,6 +39,10 @@ export interface TriggerDefinition<P> {
    */
   path: string;
   /**
+   * The provider ID of the trigger.
+   */
+  providerId: string;
+  /**
    * zod schema for payload validation. If omitted, raw JSON body is used.
    * IMPORTANT: we parse AFTER verify() to ensure rawBody is untouched for signatures.
    */
@@ -60,6 +64,10 @@ export interface TriggerConfigEntry {
    * A unique ID to identify the trigger by
    */
   id: string;
+  /**
+   * The provider ID of the trigger.
+   */
+  providerId: string;
   /**
    * The name of the trigger to display in the UI.
    */
