@@ -26,9 +26,9 @@ async function getSupabaseSessionInfo(req: NextRequest) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    
+
     return session ? { accessToken: session.access_token } : null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -43,7 +43,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   const url = new URL(req.url);
   const path = url.pathname.replace(/^\/api\/oap_mcp\/?/, "");
-  const baseUrl = MCP_SERVER_URL.replace(/\/$/, '');
+  const baseUrl = MCP_SERVER_URL.replace(/\/$/, "");
   const targetUrl = `${baseUrl}/mcp${path ? "/" + path : ""}${url.search}`;
 
   const headers = new Headers();
@@ -69,7 +69,8 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   headers.set("Accept", "application/json, text/event-stream");
 
-  const body = req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined;
+  const body =
+    req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined;
 
   try {
     const response = await fetch(targetUrl, {
@@ -105,7 +106,8 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
     return newResponse;
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ message: "Proxy request failed", error: errorMessage }),
       { status: 502, headers: { "Content-Type": "application/json" } },

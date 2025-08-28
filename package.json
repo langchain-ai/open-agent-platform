@@ -3,13 +3,15 @@
   "author": "LangChain",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "turbo:command": "turbo",
     "format": "turbo format",
+    "format:check": "turbo format:check",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix"
   },
