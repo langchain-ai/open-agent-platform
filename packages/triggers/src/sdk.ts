@@ -4,6 +4,7 @@ import {
   TriggerContext,
   TriggerHandlerResult,
   Logger,
+  TriggerConfigEntry,
 } from "./types.js";
 import { Hono } from "hono";
 import { BlankEnv, BlankSchema } from "hono/types";
@@ -11,19 +12,7 @@ import nodePath from "path";
 
 type CreateTriggerArgs<P extends z.ZodTypeAny> = {
   /**
-   * The name of the trigger to display in the UI.
-   */
-  displayName: string;
-  /**
-   * A description of the trigger to display in the UI.
-   */
-  description?: string;
-  /**
-   * A unique ID to identify the trigger by
-   */
-  id: string;
-  /**
-   * HTTP method & path for the webhook
+   * The method the trigger handler endpoint accepts.
    */
   method: "POST" | "GET";
   /**
@@ -45,35 +34,26 @@ type CreateTriggerArgs<P extends z.ZodTypeAny> = {
    * Optional signature verification, throws on failure
    */
   verify?: (ctx: TriggerContext) => Promise<void> | void;
+  /**
+   * The type of trigger endpoint.
+   */
+  type: "trigger_handler" | "trigger_register";
 };
 
 export function createTrigger<P extends z.ZodTypeAny>(
   args: CreateTriggerArgs<P>,
 ): TriggerDefinition<z.infer<P>> {
   return {
-    displayName: args.displayName,
-    description: args.description,
-    id: args.id,
     method: args.method,
     path: args.path,
     payloadSchema: args.payload,
     verify: args.verify,
     handler: args.handler,
+    type: args.type,
   };
 }
 
 // -- Config loader ------------------------------------------------------------
-
-export type TriggerConfigEntry = {
-  /**
-   * Dynamic import returning a module exporting default TriggerDefinition
-   */
-  module: () => Promise<{ default: TriggerDefinition<any> }>;
-  /**
-   * The path to register the trigger at
-   */
-  path: string;
-};
 
 export type TriggerConfig = {
   /**
@@ -93,29 +73,29 @@ export async function loadTriggers(
 ): Promise<TriggerDefinition<any>[]> {
   const defs: TriggerDefinition<any>[] = [];
   for (const entry of cfg.entries) {
-    const mod = await entry.module();
-    const def = mod.default;
-    defs.push({
-      ...def,
-      path: entry.path,
-    });
+    const triggerHandlerModule = await entry.triggerHandler();
+    const triggerDef: TriggerDefinition<any> = {
+      method: triggerHandlerModule.default.method,
+      path: triggerHandlerModule.default.path,
+      payloadSchema: triggerHandlerModule.default.payloadSchema,
+      verify: triggerHandlerModule.default.verify,
+      handler: triggerHandlerModule.default.handler,
+      type: triggerHandlerModule.default.type,
+    };
+
+    const triggerRegisterHandlerModule = await entry.registerHandler();
+    const triggerRegisterDef: TriggerDefinition<any> = {
+      method: triggerRegisterHandlerModule.default.method,
+      path: triggerRegisterHandlerModule.default.path,
+      payloadSchema: triggerRegisterHandlerModule.default.payloadSchema,
+      verify: triggerRegisterHandlerModule.default.verify,
+      handler: triggerRegisterHandlerModule.default.handler,
+      type: triggerRegisterHandlerModule.default.type,
+    };
+
+    defs.push(...[triggerDef, triggerRegisterDef]);
   }
   return defs;
-}
-
-/**
- * Lists the paths that triggers will be mounted at based on the configuration.
- * This is useful for introspection without loading the actual trigger modules.
- */
-export function listTriggerPaths(cfg: TriggerConfig): string[] {
-  const basePath = cfg.basePath ?? "/triggers";
-  const paths: string[] = [];
-
-  for (const entry of cfg.entries) {
-    paths.push(nodePath.join(basePath, entry.path));
-  }
-
-  return paths;
 }
 
 // -- Hono route mounting ---------------------------------------------------
