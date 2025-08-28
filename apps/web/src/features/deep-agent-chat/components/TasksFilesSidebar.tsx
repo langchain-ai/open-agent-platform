@@ -7,49 +7,32 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { OptimizationWindow } from "./OptimizationWindow";
 import type { TodoItem, FileItem } from "../types";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { useChat } from "../hooks/useChat";
-import { useQueryState } from "nuqs";
+import { useChatContext } from "../providers/ChatProvider";
 import { cn } from "@/lib/utils";
 
 interface TasksFilesSidebarProps {
-  agentId: string;
-  deploymentId: string;
   todos: TodoItem[];
-  setTodos: (todos: TodoItem[]) => void;
   files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
   onFileClick: (file: FileItem) => void;
   assistantError: string | null;
   setAssistantError: (error: string | null) => void;
   setActiveAssistant: (assistant: Assistant | null) => void;
+  threadId: string | null;
 }
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
   ({
-    agentId,
-    deploymentId,
     todos,
-    setTodos,
     files,
-    setFiles,
     activeAssistant,
     onFileClick,
     assistantError,
     setAssistantError,
     setActiveAssistant,
+    threadId,
   }) => {
-    const [threadId, setThreadId] = useQueryState("threadId");
-
-    const { messages } = useChat(
-      threadId,
-      setThreadId,
-      setTodos,
-      setFiles,
-      activeAssistant,
-      deploymentId,
-      agentId,
-    );
+    const { messages } = useChatContext();
     const [isTrainingModeExpanded, setIsTrainingModeExpanded] = useState(false);
 
     const handleToggleTrainingMode = useCallback(() => {
