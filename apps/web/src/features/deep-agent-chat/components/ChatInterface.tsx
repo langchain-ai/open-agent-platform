@@ -27,11 +27,10 @@ import {
 import { ChatMessage } from "./ChatMessage";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import type { SubAgent, TodoItem, ToolCall } from "../types";
-import { AIMessage, Assistant, Message } from "@langchain/langgraph-sdk";
+import { Assistant, Message } from "@langchain/langgraph-sdk";
 import {
   extractStringFromMessageContent,
   isPreparingToCallTaskTool,
-  justCalledTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 import { useQueryState } from "nuqs";
