@@ -8,7 +8,6 @@ import {
   ConfigField,
   ConfigFieldAgents,
   ConfigFieldRAG,
-  ConfigFieldTool,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
@@ -26,6 +25,7 @@ import {
 import { toast } from "sonner";
 import _ from "lodash";
 import { useMCPContext } from "@/providers/MCP";
+import { ToolSelectionByServer } from "@/features/agents/components/create-edit-agent-dialogs/tool-selection-by-server";
 import { Search } from "@/components/ui/tool-search";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
@@ -122,7 +122,7 @@ export const ConfigurationSidebar = forwardRef<
   AIConfigPanelProps
 >(({ className, open }, ref: ForwardedRef<HTMLDivElement>) => {
   const { configsByAgentId, resetConfig } = useConfigStore();
-  const { tools, setTools, getTools, cursor } = useMCPContext();
+  const { tools, toolsByServer, setTools, getTools, cursor } = useMCPContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId] = useQueryState("threadId");
@@ -145,10 +145,9 @@ export const ConfigurationSidebar = forwardRef<
     setOpenNameAndDescriptionAlertDialog,
   ] = useState(false);
 
-  const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
-    useSearchTools(tools, {
-      preSelectedTools: toolConfigurations[0]?.default?.tools,
-    });
+  const { toolSearchTerm, debouncedSetSearchTerm } = useSearchTools(tools, {
+    preSelectedTools: toolConfigurations[0]?.default?.tools,
+  });
   const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
     tools,
     setTools,
@@ -365,25 +364,46 @@ export const ConfigurationSidebar = forwardRef<
                       placeholder="Search tools..."
                     />
                     <div className="flex-1 space-y-4 overflow-y-auto rounded-md">
-                      {agentId &&
-                        displayTools.length > 0 &&
-                        displayTools.map((c, index) => (
-                          <ConfigFieldTool
-                            key={`${c.name}-${index}`}
-                            id={c.name}
-                            label={c.name}
-                            description={c.description}
-                            agentId={agentId}
-                            toolId={toolConfigurations[0]?.label}
-                          />
-                        ))}
-                      {agentId &&
-                        displayTools.length === 0 &&
-                        toolSearchTerm && (
-                          <p className="mt-4 text-center text-sm text-slate-500">
-                            No tools found matching "{toolSearchTerm}".
-                          </p>
-                        )}
+                      {agentId && toolsByServer.size > 0 && (
+                        <ToolSelectionByServer
+                          toolsByServer={toolsByServer}
+                          selectedTools={
+                            configsByAgentId[agentId]?.[
+                              toolConfigurations[0]?.label
+                            ]?.tools || []
+                          }
+                          onToolToggle={(toolName) => {
+                            const currentConfig =
+                              configsByAgentId[agentId]?.[
+                                toolConfigurations[0]?.label
+                              ] || {};
+                            const currentTools = currentConfig.tools || [];
+                            const newTools = currentTools.includes(toolName)
+                              ? currentTools.filter(
+                                  (t: string) => t !== toolName,
+                                )
+                              : [...currentTools, toolName];
+
+                            // Update the config store
+                            const newConfig = {
+                              ...currentConfig,
+                              tools: newTools,
+                            };
+                            useConfigStore
+                              .getState()
+                              .setConfig(
+                                agentId,
+                                toolConfigurations[0]?.label,
+                                newConfig,
+                              );
+                          }}
+                        />
+                      )}
+                      {agentId && tools.length === 0 && toolSearchTerm && (
+                        <p className="mt-4 text-center text-sm text-slate-500">
+                          No tools found matching "{toolSearchTerm}".
+                        </p>
+                      )}
                       {!agentId && (
                         <p className="mt-4 text-center text-sm text-slate-500">
                           Select an agent to see tools.
