@@ -5,9 +5,10 @@ import { User, Bot } from "lucide-react";
 import { SubAgentIndicator } from "./SubAgentIndicator";
 import { ToolCallBox } from "./ToolCallBox";
 import { MarkdownContent } from "./MarkdownContent";
+import { Citations } from "./Citations";
 import type { SubAgent, ToolCall } from "../types";
 import { Message } from "@langchain/langgraph-sdk";
-import { extractStringFromMessageContent } from "../utils";
+import { extractStringFromMessageContent, extractCitationUrls } from "../utils";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -58,6 +59,10 @@ export const ChatMessage = React.memo<ChatMessageProps>(
       }
     }, [selectedSubAgent, onSelectSubAgent, subAgentsString, subAgents]);
 
+    const citations = useMemo(() => {
+      return extractCitationUrls(messageContent);
+    }, [messageContent]);
+
     return (
       <div
         className={cn(
@@ -97,7 +102,10 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   {messageContent}
                 </p>
               ) : (
-                <MarkdownContent content={messageContent} />
+                <>
+                  <MarkdownContent content={messageContent} />
+                  {citations.length > 0 && <Citations urls={citations} />}
+                </>
               )}
             </div>
           )}

@@ -68,3 +68,6 @@ export function deploymentSupportsDeepAgents(
 ) {
   return deployment?.supportsDeepAgents ?? false;
 }
+
+export const extractCitationUrls = (text: string): string[] => 
+  Array.from(text.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g), match => match[2]);
