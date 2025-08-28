@@ -79,7 +79,7 @@ export function extractCitationUrls(text: string): string[] {
   return Array.from(
     text.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g),
     (match) => match[2],
-  );
+  ).filter((url, index, self) => self.indexOf(url) === index);
 }
 
 export function extractDocumentsFromMessage(content: string): Document[] {
