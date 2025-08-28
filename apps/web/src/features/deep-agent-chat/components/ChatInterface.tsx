@@ -31,6 +31,8 @@ import { Assistant, Message } from "@langchain/langgraph-sdk";
 import {
   extractStringFromMessageContent,
   isPreparingToCallTaskTool,
+  extractDocumentsFromMessage,
+  Document,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 import { useQueryState } from "nuqs";
@@ -165,6 +167,27 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       deploymentId,
       agentId,
     );
+
+    const sourceToDocumentsMap = useMemo(() => {
+      const documents = messages
+        .filter(
+          (message) =>
+            message.type === "tool" && typeof message.content === "string",
+        )
+        .map((message) =>
+          extractDocumentsFromMessage(message.content as string),
+        )
+        .flat();
+      return documents.reduce(
+        (acc, document) => {
+          if (document.source) {
+            acc[document.source] = document;
+          }
+          return acc;
+        },
+        {} as Record<string, Document>,
+      );
+    }, [messages]);
 
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -444,6 +467,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   selectedSubAgent={selectedSubAgent}
                   onRestartFromAIMessage={handleRestartFromAIMessage}
                   onRestartFromSubTask={handleRestartFromSubTask}
+                  sourceToDocumentsMap={sourceToDocumentsMap}
                   debugMode={debugMode}
                   isLoading={isLoading}
                   isLastMessage={index === processedMessages.length - 1}

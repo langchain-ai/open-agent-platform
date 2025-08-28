@@ -8,9 +8,19 @@ import {
   CheckCircle,
   AlertCircle,
   Loader,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ToolCall } from "../types";
+import { extractDocumentsFromMessage, Document } from "../utils";
+import { MarkdownContent } from "./MarkdownContent";
+import { Citation } from "./Citations";
 
 interface ToolCallBoxProps {
   toolCall: ToolCall;
@@ -74,6 +84,13 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   }, []);
 
   const hasContent = result || Object.keys(args).length > 0;
+
+  const documents = useMemo(() => {
+    if (result && typeof result === "string") {
+      return extractDocumentsFromMessage(result);
+    }
+    return [];
+  }, [result]);
 
   return (
     <div
@@ -178,22 +195,33 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
               >
                 Result
               </h4>
-              <pre
-                className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
-                style={{
-                  fontSize: "12px",
-                  padding: "0.5rem",
-                  borderColor: "var(--color-border-light)",
-                  lineHeight: "1.75",
-                  margin: "0",
-                  fontFamily:
-                    '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
-                }}
-              >
-                {typeof result === "string"
-                  ? result
-                  : JSON.stringify(result, null, 2)}
-              </pre>
+              {documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((document, index) => (
+                    <DocumentView
+                      key={`${document.source}-${index}`}
+                      document={document}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <pre
+                  className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
+                  style={{
+                    fontSize: "12px",
+                    padding: "0.5rem",
+                    borderColor: "var(--color-border-light)",
+                    lineHeight: "1.75",
+                    margin: "0",
+                    fontFamily:
+                      '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+                  }}
+                >
+                  {typeof result === "string"
+                    ? result
+                    : JSON.stringify(result, null, 2)}
+                </pre>
+              )}
             </div>
           )}
         </div>
@@ -203,3 +231,62 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 });
 
 ToolCallBox.displayName = "ToolCallBox";
+
+interface DocumentViewProps {
+  document: Document;
+}
+
+const DocumentView = React.memo<DocumentViewProps>(({ document }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <div
+        className="cursor-pointer rounded-md border p-3 transition-colors hover:bg-gray-50"
+        style={{
+          borderColor: "var(--color-border-light)",
+        }}
+        onClick={() => setIsOpen(true)}
+      >
+        <div className="mb-1 text-sm font-medium">
+          {document.title || "Untitled Document"}
+        </div>
+        <div className="text-muted-foreground line-clamp-2 text-xs">
+          {document.content
+            ? document.content.substring(0, 150) + "..."
+            : "No content"}
+        </div>
+      </div>
+
+      <Dialog
+        open={isOpen}
+        onOpenChange={setIsOpen}
+      >
+        <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {document.title || "Document"}
+            </DialogTitle>
+            {document.source && (
+              <div className="pt-2">
+                <Citation
+                  url={document.source}
+                  document={document}
+                />
+              </div>
+            )}
+          </DialogHeader>
+          <div className="mt-4">
+            {document.content ? (
+              <MarkdownContent content={document.content} />
+            ) : (
+              <p className="text-muted-foreground">No content available</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+});
+
+DocumentView.displayName = "DocumentView";

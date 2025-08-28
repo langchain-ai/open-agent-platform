@@ -1,6 +1,12 @@
 import { Deployment } from "@/types/deployment";
 import { Message } from "@langchain/langgraph-sdk";
 
+export interface Document {
+  title: string | null;
+  content: string | null;
+  source: string | null;
+}
+
 export function extractStringFromMessageContent(message: Message): string {
   return typeof message.content === "string"
     ? message.content
@@ -69,5 +75,25 @@ export function deploymentSupportsDeepAgents(
   return deployment?.supportsDeepAgents ?? false;
 }
 
-export const extractCitationUrls = (text: string): string[] => 
-  Array.from(text.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g), match => match[2]);
+export function extractCitationUrls(text: string): string[] {
+  return Array.from(
+    text.matchAll(/\[([^\]]*)\]\(([^)]*)\)/g),
+    (match) => match[2],
+  );
+}
+
+export function extractDocumentsFromMessage(content: string): Document[] {
+  try {
+    const toolResultContent = JSON.parse(content);
+    return toolResultContent["documents"].map((document: any) => {
+      return {
+        title: document.title,
+        content: document.page_content,
+        source: document.source,
+      } as Document;
+    });
+  } catch (error) {
+    console.error("Failed to parse tool call result:", error);
+    return [];
+  }
+}

@@ -8,7 +8,11 @@ import { MarkdownContent } from "./MarkdownContent";
 import { Citations } from "./Citations";
 import type { SubAgent, ToolCall } from "../types";
 import { Message } from "@langchain/langgraph-sdk";
-import { extractStringFromMessageContent, extractCitationUrls } from "../utils";
+import {
+  extractStringFromMessageContent,
+  extractCitationUrls,
+  Document,
+} from "../utils";
 import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
@@ -19,6 +23,7 @@ interface ChatMessageProps {
   selectedSubAgent: SubAgent | null;
   onRestartFromAIMessage: (message: Message) => void;
   onRestartFromSubTask: (toolCallId: string) => void;
+  sourceToDocumentsMap: Record<string, Document>;
   debugMode?: boolean;
   isLastMessage?: boolean;
   isLoading?: boolean;
@@ -33,6 +38,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     selectedSubAgent,
     onRestartFromAIMessage,
     onRestartFromSubTask,
+    sourceToDocumentsMap,
     debugMode,
     isLastMessage,
     isLoading,
@@ -122,7 +128,12 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                 ) : (
                   <>
                     <MarkdownContent content={messageContent} />
-                    {citations.length > 0 && <Citations urls={citations} />}
+                    {citations.length > 0 && (
+                      <Citations
+                        urls={citations}
+                        sourceToDocumentsMap={sourceToDocumentsMap}
+                      />
+                    )}
                   </>
                 )}
               </div>
@@ -139,7 +150,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             </div>
           )}
           {hasToolCalls && (
-            <div className="mt-4 flex w-fit max-w-full flex-col">
+            <div className="mt-4 flex w-fit max-w-full flex-col gap-4">
               {toolCalls.map((toolCall: ToolCall) => {
                 if (toolCall.name === "task") return null;
                 return (
