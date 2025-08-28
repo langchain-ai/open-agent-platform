@@ -19,6 +19,8 @@ interface ChatMessageProps {
   onRestartFromAIMessage: (message: Message) => void;
   onRestartFromSubTask: (toolCallId: string) => void;
   debugMode?: boolean;
+  isLastMessage?: boolean;
+  isLoading?: boolean;
 }
 
 export const ChatMessage = React.memo<ChatMessageProps>(
@@ -31,6 +33,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     onRestartFromAIMessage,
     onRestartFromSubTask,
     debugMode,
+    isLastMessage,
+    isLoading,
   }) => {
     const isUser = message.type === "human";
     const isAIMessage = message.type === "ai";
@@ -97,10 +101,10 @@ export const ChatMessage = React.memo<ChatMessageProps>(
         </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
           {hasContent && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-end gap-2">
               <div
                 className={cn(
-                  "mt-4 w-fit max-w-full overflow-hidden rounded-lg p-2 break-words",
+                  "mt-4 w-[calc(100%-100px)] overflow-hidden rounded-lg p-2 break-words",
                   isUser
                     ? "bg-user-message ml-auto text-white"
                     : "border-border bg-surface text-primary border",
@@ -114,14 +118,16 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   <MarkdownContent content={messageContent} />
                 )}
               </div>
-              {debugMode && isAIMessage && (
-                <button
-                  onClick={() => onRestartFromAIMessage(message)}
-                  className="mt-4 bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
-                >
-                  Regenerate
-                </button>
-              )}
+              <div className="relative mt-4 w-[72px] flex-shrink-0">
+                {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
+                  <button
+                    onClick={() => onRestartFromAIMessage(message)}
+                    className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
+                  >
+                    Regenerate
+                  </button>
+                )}
+              </div>
             </div>
           )}
           {hasToolCalls && (
@@ -142,20 +148,24 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               {subAgents.map((subAgent) => (
                 <div
                   key={subAgent.id}
-                  className="flex items-center gap-2"
+                  className="flex items-end gap-2"
                 >
-                  <SubAgentIndicator
-                    subAgent={subAgent}
-                    onClick={() => onSelectSubAgent(subAgent)}
-                  />
-                  {debugMode && subAgent.status === "completed" && (
-                    <button
-                      onClick={() => onRestartFromSubTask(subAgent.id)}
-                      className="bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
-                    >
-                      Regenerate
-                    </button>
-                  )}
+                  <div className={"w-[calc(100%-100px)]"}>
+                    <SubAgentIndicator
+                      subAgent={subAgent}
+                      onClick={() => onSelectSubAgent(subAgent)}
+                    />
+                  </div>
+                  <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">
+                    {debugMode && subAgent.status === "completed" && (
+                      <button
+                        onClick={() => onRestartFromSubTask(subAgent.id)}
+                        className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
+                      >
+                        Regenerate
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

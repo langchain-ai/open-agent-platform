@@ -435,7 +435,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               </div>
             )}
             <div className="flex-1 overflow-y-auto p-6 pb-[50px]">
-              {processedMessages.map((data) => (
+              {processedMessages.map((data, index) => (
                 <ChatMessage
                   key={data.message.id}
                   message={data.message}
@@ -446,6 +446,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   onRestartFromAIMessage={handleRestartFromAIMessage}
                   onRestartFromSubTask={handleRestartFromSubTask}
                   debugMode={debugMode}
+                  isLoading={isLoading}
+                  isLastMessage={index === processedMessages.length - 1}
                 />
               ))}
               {isLoading && (
