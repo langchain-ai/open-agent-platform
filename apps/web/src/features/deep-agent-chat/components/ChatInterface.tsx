@@ -35,7 +35,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
-import { useChatContext } from "../providers/ChatProvider";
+import { useChatContext } from "../providers/ChatContext";
 import { Session } from "@/lib/auth/types";
 
 interface ChatInterfaceProps {
@@ -53,7 +53,9 @@ interface ChatInterfaceProps {
   setTodos: (todos: TodoItem[]) => void;
   setFiles: (files: Record<string, string>) => void;
   threadId: string | null;
-  setThreadId: (value: string | ((old: string | null) => string | null) | null) => void;
+  setThreadId: (
+    value: string | ((old: string | null) => string | null) | null,
+  ) => void;
 }
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(

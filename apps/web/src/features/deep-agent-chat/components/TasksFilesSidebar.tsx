@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { OptimizationWindow } from "./OptimizationWindow";
 import type { TodoItem, FileItem } from "../types";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { useChatContext } from "../providers/ChatProvider";
+import { useChatContext } from "../providers/ChatContext";
 import { cn } from "@/lib/utils";
 
 interface TasksFilesSidebarProps {
