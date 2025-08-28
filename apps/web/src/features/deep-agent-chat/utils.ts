@@ -92,8 +92,7 @@ export function extractDocumentsFromMessage(content: string): Document[] {
         source: document.source,
       } as Document;
     });
-  } catch (error) {
-    console.error("Failed to parse tool call result:", error);
+  } catch {
     return [];
   }
 }

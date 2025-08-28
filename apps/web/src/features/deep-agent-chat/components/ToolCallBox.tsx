@@ -8,7 +8,6 @@ import {
   CheckCircle,
   AlertCircle,
   Loader,
-  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -262,7 +261,7 @@ const DocumentView = React.memo<DocumentViewProps>(({ document }) => {
         open={isOpen}
         onOpenChange={setIsOpen}
       >
-        <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[60vw]">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               {document.title || "Document"}
