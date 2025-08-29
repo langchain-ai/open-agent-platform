@@ -208,7 +208,6 @@ export function GenericInterruptValue({
                     >
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="sticky top-0 z-10 bg-gray-50">
-                          {" "}
                           {/* Sticky header */}
                           <tr>
                             <th className="px-4 py-2 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
