@@ -84,7 +84,7 @@ export default function useInterruptedActions<
 
   const { fetchSingleThread, fetchThreads, sendHumanResponse, ignoreThread } =
     useThreadsContext<ThreadValues>();
-  
+
   const { session } = useAuthContext();
 
   const [humanResponse, setHumanResponse] = React.useState<

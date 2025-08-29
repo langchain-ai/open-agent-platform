@@ -27,7 +27,11 @@ type ThreadContentType<
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
   ignoreThread: (threadId: string) => Promise<void>;
-  fetchThreads: (agentId: string, deploymentId: string, sessionToUse: any) => Promise<void>;
+  fetchThreads: (
+    agentId: string,
+    deploymentId: string,
+    sessionToUse: any,
+  ) => Promise<void>;
   setThreadData: Dispatch<SetStateAction<ThreadData<Record<string, any>>[]>>;
   sendHumanResponse: <TStream extends boolean = false>(
     _threadId: string,
