@@ -183,11 +183,25 @@ export function useRag(): UseRagReturn {
     try {
       initCollections = await getCollections(accessToken);
     } catch (e: any) {
-      console.warn("RAG server not available:", e.message);
-      setCollectionsLoading(false);
-      setDocumentsLoading(false);
-      setInitialSearchExecuted(true);
-      return;
+      if (e.message.includes("Failed to fetch collections")) {
+        // Database likely not initialized yet. Let's try this then re-fetch.
+        try {
+          await initializeDatabase(accessToken);
+          initCollections = await getCollections(accessToken);
+        } catch (initError: any) {
+          console.warn("RAG server not available:", initError.message);
+          setCollectionsLoading(false);
+          setDocumentsLoading(false);
+          setInitialSearchExecuted(true);
+          return;
+        }
+      } else {
+        console.warn("RAG server not available:", e.message);
+        setCollectionsLoading(false);
+        setDocumentsLoading(false);
+        setInitialSearchExecuted(true);
+        return;
+      }
     }
 
     if (!initCollections.length) {

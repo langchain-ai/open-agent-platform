@@ -15,17 +15,17 @@ import EmptyCollectionsState from "./components/empty-collections";
 import { isRagAvailable } from "./hooks/use-rag";
 
 export default function RAGInterface() {
-  if (!isRagAvailable()) {
-    return null;
-  }
-
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     selectedCollection,
     setSelectedCollection,
     collections,
     initialSearchExecuted,
   } = useRagContext();
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  if (!isRagAvailable()) {
+    return null;
+  }
 
   if (initialSearchExecuted && !collections.length) {
     return <EmptyCollectionsState />;
