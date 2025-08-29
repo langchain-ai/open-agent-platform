@@ -171,6 +171,7 @@ export function useRag(): UseRagReturn {
       initCollections = await getCollections(accessToken);
     } catch (e: any) {
       if (e.message.includes("Failed to fetch collections")) {
+        // Database likely not initialized yet. Let's try this then re-fetch.
         await initializeDatabase(accessToken);
         initCollections = await getCollections(accessToken);
       }
