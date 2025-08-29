@@ -8,6 +8,7 @@ import {
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
 } from "@/types/configurable";
 
 interface ConfigState {
@@ -22,7 +23,8 @@ interface ConfigState {
       | ConfigurableFieldUIMetadata[]
       | ConfigurableFieldRAGMetadata[]
       | ConfigurableFieldAgentsMetadata[]
-      | ConfigurableFieldSubAgentsMetadata[],
+      | ConfigurableFieldSubAgentsMetadata[]
+      | ConfigurableFieldTriggersMetadata[],
   ) => void;
   resetStore: () => void;
 }

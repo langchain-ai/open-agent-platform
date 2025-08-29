@@ -17,6 +17,8 @@ import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
 import { FormProvider, useForm } from "react-hook-form";
+import { useAuthContext } from "@/providers/Auth";
+import { useTriggers } from "@/hooks/use-triggers";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -31,17 +33,19 @@ function EditAgentDialogContent({
   agent: Agent;
   onClose: () => void;
 }) {
+  const auth = useAuthContext();
+  const { updateAgentTriggers } = useTriggers();
   const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const {
     getSchemaAndUpdateConfig,
-
     loading,
     configurations,
     toolConfigurations,
     ragConfigurations,
     agentsConfigurations,
     subAgentsConfigurations,
+    triggersConfigurations,
   } = useAgentConfig();
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
@@ -56,6 +60,13 @@ function EditAgentDialogContent({
     description: string;
     config: Record<string, any>;
   }) => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+
     if (!data.name || !data.description) {
       toast.warning("Name and description are required");
       return;
@@ -67,20 +78,54 @@ function EditAgentDialogContent({
       data,
     );
 
+    if (
+      triggersConfigurations[0]?.default?.length &&
+      triggersConfigurations[0].default.some(
+        // Check if the trigger is not in the new config
+        (existingTrigger) =>
+          !data.config?.triggers?.some(
+            (newTrigger: string) => existingTrigger === newTrigger,
+          ),
+      )
+    ) {
+      const selectedTriggerIds = data.config?.triggers ?? [];
+
+      const success = await updateAgentTriggers(auth.session.accessToken, {
+        agentId: agent.assistant_id,
+        selectedTriggerIds: selectedTriggerIds,
+      });
+      if (!success) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
     if (!updatedAgent) {
       toast.error("Failed to update agent", {
         description: "Please try again",
+        richColors: true,
       });
       return;
     }
 
-    toast.success("Agent updated successfully!");
+    toast.success("Agent updated successfully!", {
+      richColors: true,
+    });
 
     onClose();
     refreshAgents();
   };
 
   const handleDelete = async () => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+
     setDeleteSubmitting(true);
     const deleted = await deleteAgent(agent.deploymentId, agent.assistant_id);
     setDeleteSubmitting(false);
@@ -88,11 +133,27 @@ function EditAgentDialogContent({
     if (!deleted) {
       toast.error("Failed to delete agent", {
         description: "Please try again",
+        richColors: true,
       });
       return;
     }
 
-    toast.success("Agent deleted successfully!");
+    if (triggersConfigurations[0]?.default?.length) {
+      const success = await updateAgentTriggers(auth.session.accessToken, {
+        agentId: agent.assistant_id,
+        selectedTriggerIds: [],
+      });
+      if (!success) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
+    toast.success("Agent deleted successfully!", {
+      richColors: true,
+    });
 
     onClose();
     refreshAgents();
@@ -127,6 +188,7 @@ function EditAgentDialogContent({
               ragConfigurations={ragConfigurations}
               agentsConfigurations={agentsConfigurations}
               subAgentsConfigurations={subAgentsConfigurations}
+              triggersConfigurations={triggersConfigurations}
             />
           </FormProvider>
         )}

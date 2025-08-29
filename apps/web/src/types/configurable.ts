@@ -111,3 +111,12 @@ export type ConfigurableFieldSubAgentsMetadata = {
     mcp_server?: string;
   }[];
 };
+
+export type ConfigurableFieldTriggersMetadata = {
+  label: string;
+  type: "triggers";
+  /**
+   * The list of trigger IDs attached to the agent.
+   */
+  default?: string[];
+};

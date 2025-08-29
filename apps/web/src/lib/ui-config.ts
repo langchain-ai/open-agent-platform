@@ -3,6 +3,7 @@ import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
@@ -67,7 +68,7 @@ function configSchemaToConfigurableFields(
     const uiConfig = getUiConfig(value);
     if (
       uiConfig &&
-      ["mcp", "rag", "hidden", "sub_agents"].includes(uiConfig.type)
+      ["mcp", "rag", "hidden", "sub_agents", "triggers"].includes(uiConfig.type)
     ) {
       continue;
     }
@@ -197,12 +198,37 @@ function configSchemaToSubAgentsConfig(
   return subAgentsField;
 }
 
+function configSchemaToTriggersConfig(
+  schema: GraphSchema["config_schema"],
+): ConfigurableFieldTriggersMetadata | undefined {
+  if (!schema || !schema.properties) {
+    return undefined;
+  }
+
+  let triggersField: ConfigurableFieldTriggersMetadata | undefined;
+  for (const [key, value] of Object.entries(schema.properties)) {
+    const uiConfig = getUiConfig(value);
+    if (!uiConfig || uiConfig.type !== "triggers") {
+      continue;
+    }
+
+    triggersField = {
+      label: key,
+      type: uiConfig.type,
+      default: uiConfig.default,
+    };
+    break;
+  }
+  return triggersField;
+}
+
 type ExtractedConfigs = {
   configFields: ConfigurableFieldUIMetadata[];
   toolConfig: ConfigurableFieldMCPMetadata[];
   ragConfig: ConfigurableFieldRAGMetadata[];
   agentsConfig: ConfigurableFieldAgentsMetadata[];
   subAgentsConfig: ConfigurableFieldSubAgentsMetadata[];
+  triggersConfig: ConfigurableFieldTriggersMetadata[];
 };
 
 export function extractConfigurationsFromAgent({
@@ -217,6 +243,7 @@ export function extractConfigurationsFromAgent({
   const ragConfig = configSchemaToRagConfig(schema);
   const agentsConfig = configSchemaToAgentsConfig(schema);
   const subAgentsConfig = configSchemaToSubAgentsConfig(schema);
+  const triggersConfig = configSchemaToTriggersConfig(schema);
 
   const configFieldsWithDefaults = configFields.map((f) => {
     const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
@@ -299,6 +326,19 @@ export function extractConfigurationsFromAgent({
       }
     : undefined;
 
+  const configurableTriggersWithDefaults = triggersConfig
+    ? {
+        ...triggersConfig,
+        default:
+          Array.isArray(configurable[triggersConfig.label]) &&
+          (configurable[triggersConfig.label] as any[]).length > 0
+            ? (configurable[triggersConfig.label] as string[])
+            : Array.isArray(triggersConfig.default)
+              ? triggersConfig.default
+              : [],
+      }
+    : undefined;
+
   return {
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
@@ -309,6 +349,9 @@ export function extractConfigurationsFromAgent({
     subAgentsConfig: configurableSubAgentsWithDefaults
       ? [configurableSubAgentsWithDefaults]
       : [],
+    triggersConfig: configurableTriggersWithDefaults
+      ? [configurableTriggersWithDefaults]
+      : [],
   };
 }
 
@@ -318,6 +361,7 @@ export function getConfigurableDefaults(
   ragConfig: ConfigurableFieldRAGMetadata[],
   agentsConfig: ConfigurableFieldAgentsMetadata[],
   subAgentsConfig: ConfigurableFieldSubAgentsMetadata[],
+  triggersConfig: ConfigurableFieldTriggersMetadata[],
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
@@ -333,6 +377,9 @@ export function getConfigurableDefaults(
     defaults[field.label] = field.default;
   });
   subAgentsConfig.forEach((field) => {
+    defaults[field.label] = field.default;
+  });
+  triggersConfig.forEach((field) => {
     defaults[field.label] = field.default;
   });
   return defaults;
