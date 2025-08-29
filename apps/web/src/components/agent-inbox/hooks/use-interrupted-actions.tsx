@@ -13,6 +13,7 @@ import { INBOX_PARAM, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
 
 import { useQueryState, parseAsString } from "nuqs";
 import { logger } from "../utils/logger";
+import { useAuthContext } from "@/providers/Auth";
 
 interface UseInterruptedActionsInput<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -83,6 +84,8 @@ export default function useInterruptedActions<
 
   const { fetchSingleThread, fetchThreads, sendHumanResponse, ignoreThread } =
     useThreadsContext<ThreadValues>();
+  
+  const { session } = useAuthContext();
 
   const [humanResponse, setHumanResponse] = React.useState<
     HumanResponseWithEdits[]
@@ -278,7 +281,7 @@ export default function useInterruptedActions<
         } else {
           const [assistantId, deploymentId] = agentInboxId.split(":");
           // Re-fetch threads before routing back so the inbox is up to date
-          await fetchThreads(assistantId, deploymentId);
+          await fetchThreads(assistantId, deploymentId, session);
           // Clear the selected thread ID to go back to inbox view
           await setSelectedThreadId(null);
         }
@@ -327,7 +330,7 @@ export default function useInterruptedActions<
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
     const [assistantId, deploymentId] = agentInboxId.split(":");
     // Re-fetch threads before routing back so the inbox is up to date
-    await fetchThreads(assistantId, deploymentId);
+    await fetchThreads(assistantId, deploymentId, session);
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -359,7 +362,7 @@ export default function useInterruptedActions<
 
     await ignoreThread(threadData.thread.thread_id);
     const [assistantId, deploymentId] = agentInboxId.split(":");
-    await fetchThreads(assistantId, deploymentId);
+    await fetchThreads(assistantId, deploymentId, session);
 
     setLoading(false);
     // Clear the selected thread ID to go back to inbox view
