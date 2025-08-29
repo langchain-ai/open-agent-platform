@@ -11,6 +11,7 @@ import {
   ConfigFieldRAG,
   ConfigFieldSubAgents,
   ConfigFieldTool,
+  ConfigFieldTriggers,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";
@@ -19,6 +20,7 @@ import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
@@ -48,6 +50,7 @@ interface AgentFieldsFormProps {
   ragConfigurations: ConfigurableFieldRAGMetadata[];
   agentsConfigurations: ConfigurableFieldAgentsMetadata[];
   subAgentsConfigurations: ConfigurableFieldSubAgentsMetadata[];
+  triggersConfigurations: ConfigurableFieldTriggersMetadata[];
 }
 
 export function AgentFieldsForm({
@@ -57,6 +60,7 @@ export function AgentFieldsForm({
   ragConfigurations,
   agentsConfigurations,
   subAgentsConfigurations,
+  triggersConfigurations,
 }: AgentFieldsFormProps) {
   const form = useFormContext<{
     name: string;
@@ -296,6 +300,29 @@ export function AgentFieldsForm({
                           });
                       }
                     }}
+                  />
+                )}
+              />
+            </div>
+          </>
+        )}
+        {triggersConfigurations.length > 0 && (
+          <>
+            <Separator />
+            <div className="flex w-full flex-col items-start justify-start gap-2">
+              <p className="text-lg font-semibold tracking-tight">
+                Agent Triggers
+              </p>
+              <Controller
+                control={form.control}
+                name="config.triggers"
+                render={({ field: { value, onChange } }) => (
+                  <ConfigFieldTriggers
+                    id="triggers"
+                    label="triggers"
+                    agentId={agentId}
+                    value={value}
+                    setValue={onChange}
                   />
                 )}
               />

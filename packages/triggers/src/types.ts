@@ -31,14 +31,17 @@ export type VerifyFn = (ctx: TriggerContext) => Promise<void> | void;
 
 export interface TriggerDefinition<P> {
   /**
+   * The method the trigger handler endpoint accepts.
+   */
+  method: "POST" | "GET";
+  /**
    * The path to register the trigger at
    */
   path: string;
   /**
-   * HTTP method & path for the webhook
+   * The provider ID of the trigger.
    */
-  method: "POST" | "GET";
-
+  providerId: string;
   /**
    * zod schema for payload validation. If omitted, raw JSON body is used.
    * IMPORTANT: we parse AFTER verify() to ensure rawBody is untouched for signatures.
@@ -50,4 +53,35 @@ export interface TriggerDefinition<P> {
 
   /** Your business logic: turns a payload into HumanMessage[] (and optionally an HTTP response) */
   handler: (payload: P, ctx: TriggerContext) => Promise<TriggerHandlerResult>;
+  /**
+   * The type of trigger endpoint.
+   */
+  type: "trigger_handler" | "trigger_register";
+}
+
+export interface TriggerConfigEntry {
+  /**
+   * A unique ID to identify the trigger by
+   */
+  id: string;
+  /**
+   * The provider ID of the trigger.
+   */
+  providerId: string;
+  /**
+   * The name of the trigger to display in the UI.
+   */
+  displayName: string;
+  /**
+   * A description of the trigger to display in the UI.
+   */
+  description?: string;
+  /**
+   * The endpoint and method for the trigger handler.
+   */
+  triggerHandler: () => Promise<{ default: TriggerDefinition<any> }>;
+  /**
+   * The endpoint and method for the trigger register handler.
+   */
+  registerHandler: () => Promise<{ default: TriggerDefinition<any> }>;
 }

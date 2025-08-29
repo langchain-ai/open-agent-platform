@@ -8,6 +8,7 @@ import {
   Brain,
   BrainCircuit,
   Inbox,
+  Webhook,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -47,6 +48,10 @@ const data = {
       title: "Inbox",
       url: "/inbox",
       icon: Inbox,
+    },
+      title: "Triggers",
+      url: "/triggers",
+      icon: Webhook,
     },
     {
       title: "RAG",

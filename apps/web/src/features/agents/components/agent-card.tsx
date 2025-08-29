@@ -9,6 +9,7 @@ import {
   Edit,
   MessageSquare,
   User,
+  Webhook,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 function SupportedConfigBadge({
   type,
 }: {
-  type: "rag" | "tools" | "supervisor" | "deep_agent";
+  type: "rag" | "tools" | "supervisor" | "deep_agent" | "triggers";
 }) {
   return (
     <TooltipProvider>
@@ -58,6 +59,12 @@ function SupportedConfigBadge({
             <Badge variant="secondary">
               <BrainCircuit />
               Deep Agent
+            </Badge>
+          )}
+          {type === "triggers" && (
+            <Badge variant="secondary">
+              <Webhook />
+              Triggers
             </Badge>
           )}
         </TooltipTrigger>

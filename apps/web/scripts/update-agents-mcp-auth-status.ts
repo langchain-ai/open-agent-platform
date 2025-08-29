@@ -76,6 +76,7 @@ async function main() {
         agentConfigs.ragConfig,
         agentConfigs.agentsConfig,
         agentConfigs.subAgentsConfig,
+        agentConfigs.triggersConfig,
       );
 
       await client.assistants.update(agent.assistant_id, {

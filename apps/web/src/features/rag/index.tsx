@@ -14,13 +14,13 @@ import { useRagContext } from "./providers/RAG";
 import EmptyCollectionsState from "./components/empty-collections";
 
 export default function RAGInterface() {
+  const [currentPage, setCurrentPage] = useState(1);
   const {
     selectedCollection,
     setSelectedCollection,
     collections,
     initialSearchExecuted,
   } = useRagContext();
-  const [currentPage, setCurrentPage] = useState(1);
 
   if (initialSearchExecuted && !collections.length) {
     return <EmptyCollectionsState />;
