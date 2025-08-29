@@ -22,7 +22,7 @@ export default function RAGInterface() {
     collections,
     initialSearchExecuted,
   } = useRagContext();
-  
+
   if (!isRagAvailable()) {
     return null;
   }
