@@ -14,13 +14,21 @@ export function getDefaultCollection(collections: Collection[]): Collection {
   );
 }
 
+export function isRagAvailable(): boolean {
+  return !!process.env.NEXT_PUBLIC_RAG_API_URL;
+}
+
 function getApiUrlOrThrow(): URL {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
     throw new Error(
-      "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
+      "RAG API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
     );
   }
   return new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
+}
+
+function isRagEnabled(): boolean {
+  return !!process.env.NEXT_PUBLIC_RAG_API_URL;
 }
 
 export function getCollectionName(name: string | undefined) {
@@ -163,6 +171,11 @@ export function useRag(): UseRagReturn {
 
   // --- Initial Fetch ---
   const initialFetch = useCallback(async (accessToken: string) => {
+    if (!isRagEnabled()) {
+      setInitialSearchExecuted(true);
+      return;
+    }
+
     setCollectionsLoading(true);
     setDocumentsLoading(true);
     let initCollections: Collection[] = [];
@@ -170,11 +183,11 @@ export function useRag(): UseRagReturn {
     try {
       initCollections = await getCollections(accessToken);
     } catch (e: any) {
-      if (e.message.includes("Failed to fetch collections")) {
-        // Database likely not initialized yet. Let's try this then re-fetch.
-        await initializeDatabase(accessToken);
-        initCollections = await getCollections(accessToken);
-      }
+      console.warn("RAG server not available:", e.message);
+      setCollectionsLoading(false);
+      setDocumentsLoading(false);
+      setInitialSearchExecuted(true);
+      return;
     }
 
     if (!initCollections.length) {

@@ -12,8 +12,13 @@ import {
 } from "./components/collections-card";
 import { useRagContext } from "./providers/RAG";
 import EmptyCollectionsState from "./components/empty-collections";
+import { isRagAvailable } from "./hooks/use-rag";
 
 export default function RAGInterface() {
+  if (!isRagAvailable()) {
+    return null;
+  }
+
   const {
     selectedCollection,
     setSelectedCollection,
