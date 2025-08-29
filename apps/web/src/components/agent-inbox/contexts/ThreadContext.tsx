@@ -130,7 +130,7 @@ function ThreadsProviderInternal<
           limit,
           ...statusInput,
           metadata: {
-            assistant_id: agentId, // Back to original
+            assistant_id: agentId,
           },
         };
 
@@ -244,7 +244,6 @@ function ThreadsProviderInternal<
       return;
     }
 
-    // Wait for auth to finish loading
     if (isLoading) {
       return;
     }
