@@ -17,7 +17,7 @@ export function getDefaultCollection(collections: Collection[]): Collection {
 function getApiUrlOrThrow(): URL {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
     throw new Error(
-      "Failed to upload documents: API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
+      "RAG API URL not configured. Please set NEXT_PUBLIC_RAG_API_URL",
     );
   }
   return new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
