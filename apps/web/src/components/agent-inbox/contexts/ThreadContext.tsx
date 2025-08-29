@@ -56,7 +56,7 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { session } = useAuthContext();
+  const { session, isLoading } = useAuthContext();
   const [agentInboxId] = useQueryState("agentInbox");
   const [isPending] = useTransition();
 
@@ -75,23 +75,30 @@ function ThreadsProviderInternal<
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
   const fetchThreads = React.useCallback(
-    async (agentId: string, deploymentId: string) => {
-      if (!session?.accessToken) {
+    async (agentId: string, deploymentId: string, sessionToUse: any) => {
+      console.log("fetchThreads called with:", { agentId, deploymentId });
+      console.log("Session passed to fetchThreads:", { hasSession: !!sessionToUse, hasAccessToken: !!sessionToUse?.accessToken });
+      
+      if (!sessionToUse?.accessToken) {
+        console.log("Early return: No access token");
         toast.error("No access token found", {
           richColors: true,
         });
         return;
       }
       if (!agentInboxId) {
+        console.log("Early return: No agentInboxId in fetchThreads");
         toast.error("No agent inbox ID found", {
           richColors: true,
         });
         return;
       }
+      
+      console.log("All checks passed, proceeding with API call");
 
       setLoading(true);
 
-      const client = createClient(deploymentId, session.accessToken);
+      const client = createClient(deploymentId, sessionToUse.accessToken);
 
       try {
         // Use the values from queryParams
@@ -120,17 +127,37 @@ function ThreadsProviderInternal<
         if (inboxParam !== "all" && inboxParam !== "human_response_needed") {
           statusInput = { status: inboxParam as ThreadStatus };
         }
-
+        console.log("THIS IS AGENT ID", agentId);
         const threadSearchArgs = {
           offset,
           limit,
           ...statusInput,
           metadata: {
-            assistant_id: agentId,
+            assistant_id: agentId, // Back to original
           },
         };
 
+        // First, fetch ALL threads to see what exists
+        console.log("=== FETCHING ALL THREADS (no filters) ===");
+        const allThreads = await client.threads.search({ limit: 100 });
+        console.log("All threads found:", allThreads.length);
+        allThreads.forEach((thread, index) => {
+          console.log(`Thread ${index + 1}:`, {
+            thread_id: thread.thread_id,
+            status: thread.status,
+            created_at: thread.created_at,
+            metadata: thread.metadata
+          });
+        });
+        
+        console.log("=== NOW FETCHING WITH FILTERS ===");
+        console.log("Thread search args:", threadSearchArgs);
+        console.log("Inbox param:", inboxParam);
+        
         const threads = await client.threads.search(threadSearchArgs);
+        
+        console.log("Filtered threads found:", threads.length);
+        console.log("Filtered threads data:", threads);
 
         const processedData: ThreadData<ThreadValues>[] = [];
 
@@ -231,30 +258,58 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [offsetParam, limitParam],
+    [offsetParam, limitParam, agentInboxId],
   );
 
   // Effect to fetch threads when parameters change
   React.useEffect(() => {
+    console.log("useEffect triggered with:", {
+      window: typeof window !== "undefined",
+      isLoading,
+      agentInboxId,
+      inboxParam,
+      offsetParam,
+      limitParam
+    });
+    
     if (typeof window === "undefined") {
+      console.log("Skipping: not in browser");
       return;
     }
+    
+    // Wait for auth to finish loading
+    if (isLoading) {
+      console.log("Skipping: auth still loading");
+      return;
+    }
+    
     if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
+      console.log("Skipping: missing required params");
+      return;
+    }
+    
+    if (!session?.accessToken) {
+      console.log("Skipping: no session or access token in useEffect", {
+        hasSession: !!session, 
+        hasAccessToken: !!session?.accessToken, 
+        sessionIsLoading: isLoading
+      });
       return;
     }
 
     const [assistantId, deploymentId] = agentInboxId.split(":");
+    console.log("Calling fetchThreads with:", { assistantId, deploymentId });
 
     try {
-      // Fetch threads
-      fetchThreads(assistantId, deploymentId);
+      // Fetch threads - pass the session directly
+      fetchThreads(assistantId, deploymentId, session);
     } catch (e) {
       logger.error("Error occurred while fetching threads", e);
       toast.error("Failed to load threads. Please try again.");
       // Always reset loading state in case of error
       setLoading(false);
     }
-  }, [agentInboxId, inboxParam, offsetParam, limitParam, fetchThreads]);
+  }, [agentInboxId, inboxParam, offsetParam, limitParam, fetchThreads, isLoading, session]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {

@@ -197,7 +197,8 @@ export function AgentInbox<
 >() {
   const { agents } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentInbox");
-
+  console.log("agentId", agentId);
+  console.log("agents", agents);
   useEffect(() => {
     if (!agents.length || agentId) return;
 

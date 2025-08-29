@@ -97,6 +97,8 @@ function InboxSidebarInternal() {
                   </div>
                 ) : (
                   <>
+                    {console.log("InboxSidebar - deployments:", deployments)}
+                    {console.log("InboxSidebar - agents:", agents)}
                     {deployments.map((deployment: Deployment) => {
                       // Filter agents for the current deployment
                       const deploymentAgents = agents.filter(
