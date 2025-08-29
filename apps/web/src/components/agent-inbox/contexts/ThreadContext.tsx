@@ -49,6 +49,7 @@ type ThreadContentType<
     : Promise<Run> | undefined;
   fetchSingleThread: (
     _threadId: string,
+    _agentInboxId?: string,
   ) => Promise<ThreadData<ThreadValues> | undefined>;
 };
 
@@ -278,21 +279,25 @@ function ThreadsProviderInternal<
   ]);
 
   const fetchSingleThread = React.useCallback(
-    async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
+    async (
+      threadId: string,
+      passedAgentInboxId?: string,
+    ): Promise<ThreadData<ThreadValues> | undefined> => {
+      const effectiveAgentInboxId = passedAgentInboxId || agentInboxId;
       if (!session?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
         });
         return;
       }
-      if (!agentInboxId) {
+      if (!effectiveAgentInboxId) {
         toast.error("No agent inbox ID found when fetching thread.", {
           richColors: true,
         });
-        return;
+        return undefined;
       }
 
-      const [_, deploymentId] = agentInboxId.split(":");
+      const [_, deploymentId] = effectiveAgentInboxId.split(":");
       const client = createClient(deploymentId, session.accessToken);
 
       try {

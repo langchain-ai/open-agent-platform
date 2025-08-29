@@ -243,7 +243,9 @@ export function ThreadActionsView<
     }
     return null;
   };
-
+  if (threadData.status === "interrupted") {
+    threadData.interrupts?.forEach((interrupt, index) => {});
+  }
   // Handle Invalid  Interrupt Threads
   /////////////////////////////////////
   if (threadData.invalidSchema) {
