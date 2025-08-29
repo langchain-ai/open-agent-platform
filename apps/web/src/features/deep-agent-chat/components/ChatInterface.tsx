@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useChatContext } from "../providers/ChatContext";
 import { Session } from "@/lib/auth/types";
+import { useQueryState } from "nuqs";
 
 interface ChatInterfaceProps {
   agentId: string;
@@ -52,10 +53,6 @@ interface ChatInterfaceProps {
   setActiveAssistant: (assistant: Assistant | null) => void;
   setTodos: (todos: TodoItem[]) => void;
   setFiles: (files: Record<string, string>) => void;
-  threadId: string | null;
-  setThreadId: (
-    value: string | ((old: string | null) => string | null) | null,
-  ) => void;
 }
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(
@@ -73,9 +70,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setActiveAssistant,
     setTodos,
     setFiles,
-    threadId,
-    setThreadId,
   }) => {
+    const [threadId, setThreadId] = useQueryState("threadId");
     const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
 
     const client = useMemo(() => {

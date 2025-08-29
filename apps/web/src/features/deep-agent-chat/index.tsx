@@ -30,7 +30,7 @@ export default function DeepAgentChatInterface() {
       deployments.find((d) => d.id === agent.deploymentId),
     ),
   );
-  const [threadId, setThreadId] = useQueryState("threadId");
+  const [_, setThreadId] = useQueryState("threadId");
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
 
@@ -120,8 +120,6 @@ export default function DeepAgentChatInterface() {
 
   return (
     <ChatProvider
-      threadId={threadId}
-      setThreadId={setThreadId}
       setTodos={setTodos}
       setFiles={setFiles}
       activeAssistant={activeAssistant}
@@ -144,7 +142,6 @@ export default function DeepAgentChatInterface() {
             setActiveAssistant={setActiveAssistant}
             setAssistantError={setAssistantError}
             assistantError={assistantError}
-            threadId={threadId}
           />
         </div>
 
@@ -163,8 +160,6 @@ export default function DeepAgentChatInterface() {
             selectedSubAgent={selectedSubAgent}
             onSelectSubAgent={setSelectedSubAgent}
             onNewThread={onNewThread}
-            threadId={threadId}
-            setThreadId={setThreadId}
           />
           {selectedSubAgent && (
             <SubAgentPanel

@@ -8,6 +8,7 @@ import { OptimizationWindow } from "./OptimizationWindow";
 import type { TodoItem, FileItem } from "../types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { useChatContext } from "../providers/ChatContext";
+import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
 
 interface TasksFilesSidebarProps {
@@ -18,7 +19,6 @@ interface TasksFilesSidebarProps {
   assistantError: string | null;
   setAssistantError: (error: string | null) => void;
   setActiveAssistant: (assistant: Assistant | null) => void;
-  threadId: string | null;
 }
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
@@ -30,8 +30,8 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     assistantError,
     setAssistantError,
     setActiveAssistant,
-    threadId,
   }) => {
+    const [threadId] = useQueryState("threadId");
     const { messages } = useChatContext();
     const [isTrainingModeExpanded, setIsTrainingModeExpanded] = useState(false);
 

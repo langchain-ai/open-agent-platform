@@ -2,16 +2,13 @@
 
 import React, { ReactNode } from "react";
 import { Assistant } from "@langchain/langgraph-sdk";
+import { useQueryState } from "nuqs";
 import { useChat } from "../hooks/useChat";
 import type { TodoItem } from "../types";
 import { ChatContext } from "./ChatContext";
 
 interface ChatProviderProps {
   children: ReactNode;
-  threadId: string | null;
-  setThreadId: (
-    value: string | ((old: string | null) => string | null) | null,
-  ) => void;
   setTodos: (todos: TodoItem[]) => void;
   setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
@@ -21,14 +18,14 @@ interface ChatProviderProps {
 
 export function ChatProvider({
   children,
-  threadId,
-  setThreadId,
   setTodos,
   setFiles,
   activeAssistant,
   deploymentId,
   agentId,
 }: ChatProviderProps) {
+  const [threadId, setThreadId] = useQueryState("threadId");
+
   const chat = useChat(
     threadId,
     setThreadId,
