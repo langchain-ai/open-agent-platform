@@ -9,7 +9,9 @@ import {
   ConfigField,
   ConfigFieldAgents,
   ConfigFieldRAG,
+  ConfigFieldSubAgents,
   ConfigFieldTool,
+  ConfigFieldTriggers,
 } from "@/features/chat/components/configuration-sidebar/config-field";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { useMCPContext } from "@/providers/MCP";
@@ -17,6 +19,8 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import _ from "lodash";
@@ -45,6 +49,8 @@ interface AgentFieldsFormProps {
   agentId: string;
   ragConfigurations: ConfigurableFieldRAGMetadata[];
   agentsConfigurations: ConfigurableFieldAgentsMetadata[];
+  subAgentsConfigurations: ConfigurableFieldSubAgentsMetadata[];
+  triggersConfigurations: ConfigurableFieldTriggersMetadata[];
 }
 
 export function AgentFieldsForm({
@@ -53,6 +59,8 @@ export function AgentFieldsForm({
   agentId,
   ragConfigurations,
   agentsConfigurations,
+  subAgentsConfigurations,
+  triggersConfigurations,
 }: AgentFieldsFormProps) {
   const form = useFormContext<{
     name: string;
@@ -150,66 +158,61 @@ export function AgentFieldsForm({
                 placeholder="Search tools..."
                 className="w-full"
               />
-              <div className="relative w-full flex-1 basis-[500px] rounded-md border-[1px] border-slate-200 px-4">
-                <div className="absolute inset-0 overflow-y-auto px-4">
-                  {toolConfigurations[0]?.label
-                    ? displayTools.map((c) => (
-                        <Controller
-                          key={`tool-${c.name}`}
-                          control={form.control}
-                          name={`config.${toolConfigurations[0].label}`}
-                          render={({ field: { value, onChange } }) => (
-                            <ConfigFieldTool
-                              key={`tool-${c.name}`}
-                              id={c.name}
-                              label={c.name}
-                              description={c.description}
-                              agentId={agentId}
-                              toolId={toolConfigurations[0].label}
-                              className="border-b-[1px] py-4"
-                              value={value}
-                              setValue={onChange}
-                            />
-                          )}
-                        />
-                      ))
-                    : null}
-                  {displayTools.length === 0 && toolSearchTerm && (
-                    <p className="my-4 w-full text-center text-sm text-slate-500">
-                      No tools found matching "{toolSearchTerm}".
-                    </p>
-                  )}
-                  {tools.length === 0 && !toolSearchTerm && (
-                    <p className="my-4 w-full text-center text-sm text-slate-500">
-                      No tools available for this agent.
-                    </p>
-                  )}
-                  {cursor && !toolSearchTerm && (
-                    <div className="flex justify-center py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={async () => {
-                          try {
-                            setLoadingMore(true);
-                            const moreTool = await getTools(cursor);
-                            setTools((prevTools) => [
-                              ...prevTools,
-                              ...moreTool,
-                            ]);
-                          } catch (error) {
-                            console.error("Failed to load more tools:", error);
-                          } finally {
-                            setLoadingMore(false);
-                          }
-                        }}
-                        disabled={loadingMore || loading}
-                      >
-                        {loadingMore ? "Loading..." : "Load More Tools"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
+              <div className="max-h-[500px] w-full overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
+                {toolConfigurations[0]?.label
+                  ? displayTools.map((c) => (
+                      <Controller
+                        key={`tool-${c.name}`}
+                        control={form.control}
+                        name={`config.${toolConfigurations[0].label}`}
+                        render={({ field: { value, onChange } }) => (
+                          <ConfigFieldTool
+                            key={`tool-${c.name}`}
+                            id={c.name}
+                            label={c.name}
+                            description={c.description}
+                            agentId={agentId}
+                            toolId={toolConfigurations[0].label}
+                            className="border-b-[1px] py-4"
+                            value={value}
+                            setValue={onChange}
+                          />
+                        )}
+                      />
+                    ))
+                  : null}
+                {displayTools.length === 0 && toolSearchTerm && (
+                  <p className="my-4 w-full text-center text-sm text-slate-500">
+                    No tools found matching "{toolSearchTerm}".
+                  </p>
+                )}
+                {tools.length === 0 && !toolSearchTerm && (
+                  <p className="my-4 w-full text-center text-sm text-slate-500">
+                    No tools available for this agent.
+                  </p>
+                )}
+                {cursor && !toolSearchTerm && (
+                  <div className="flex justify-center py-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          setLoadingMore(true);
+                          const moreTool = await getTools(cursor);
+                          setTools((prevTools) => [...prevTools, ...moreTool]);
+                        } catch (error) {
+                          console.error("Failed to load more tools:", error);
+                        } finally {
+                          setLoadingMore(false);
+                        }
+                      }}
+                      disabled={loadingMore || loading}
+                    >
+                      {loadingMore ? "Loading..." : "Load More Tools"}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </>
@@ -249,6 +252,74 @@ export function AgentFieldsForm({
                   <ConfigFieldAgents
                     id={agentsConfigurations[0].label}
                     label={agentsConfigurations[0].label}
+                    agentId={agentId}
+                    value={value}
+                    setValue={onChange}
+                  />
+                )}
+              />
+            </div>
+          </>
+        )}
+        {subAgentsConfigurations.length > 0 && (
+          <>
+            <Separator />
+            <div className="flex w-full flex-col items-start justify-start gap-2">
+              <p className="text-lg font-semibold tracking-tight">Sub Agents</p>
+              <Controller
+                control={form.control}
+                name={`config.${subAgentsConfigurations[0].label}`}
+                render={({ field: { value, onChange } }) => (
+                  <ConfigFieldSubAgents
+                    id={subAgentsConfigurations[0].label}
+                    label={subAgentsConfigurations[0].label}
+                    agentId={agentId}
+                    value={value}
+                    setValue={onChange}
+                    availableTools={tools}
+                    toolsLoading={loading}
+                    displayTools={displayTools}
+                    toolSearchTerm={toolSearchTerm}
+                    debouncedSetSearchTerm={debouncedSetSearchTerm}
+                    loadingMore={loadingMore}
+                    hasMore={!!cursor}
+                    selectedMainTools={
+                      form.watch(`config.${toolConfigurations[0]?.label}`)
+                        ?.tools || []
+                    }
+                    onLoadMore={() => {
+                      if (!loadingMore && cursor) {
+                        setLoadingMore(true);
+                        getTools(cursor)
+                          .then((newTools) => {
+                            setTools((prev) => [...prev, ...newTools]);
+                            setLoadingMore(false);
+                          })
+                          .catch(() => {
+                            setLoadingMore(false);
+                          });
+                      }
+                    }}
+                  />
+                )}
+              />
+            </div>
+          </>
+        )}
+        {triggersConfigurations.length > 0 && (
+          <>
+            <Separator />
+            <div className="flex w-full flex-col items-start justify-start gap-2">
+              <p className="text-lg font-semibold tracking-tight">
+                Agent Triggers
+              </p>
+              <Controller
+                control={form.control}
+                name="config.triggers"
+                render={({ field: { value, onChange } }) => (
+                  <ConfigFieldTriggers
+                    id="triggers"
+                    label="triggers"
                     agentId={agentId}
                     value={value}
                     setValue={onChange}

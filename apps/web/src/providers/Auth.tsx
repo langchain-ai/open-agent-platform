@@ -62,7 +62,7 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load initial session on mount
+  // Load initial session on mount and when window regains focus
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -82,7 +82,17 @@ export function AuthProvider({
     };
 
     initializeAuth();
-  }, [provider]);
+
+    // Re-check session when window regains focus (e.g., after OAuth redirect)
+    const handleFocus = () => {
+      if (!isLoading) {
+        initializeAuth();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [provider, isLoading]);
 
   // Set up auth state change listener
   useEffect(() => {

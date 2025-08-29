@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
-import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
+import { Check, ChevronsUpDown, AlertCircle, Plus, X } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -37,11 +37,20 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
+  ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { ToolsCombobox } from "@/components/ui/tools-combobox";
 import { useAgentsContext } from "@/providers/Agents";
+import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
+import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 interface Option {
   label: string;
@@ -616,6 +625,478 @@ export function ConfigFieldAgents({
 
       <p className="text-xs text-gray-500">
         The agents to make available to this supervisor.
+      </p>
+    </div>
+  );
+}
+
+interface ToolsFieldProps {
+  agentIndex: number;
+  tools: string[];
+  updateSubAgent: (index: number, field: string, value: any) => void;
+  toolsLoading: boolean;
+  displayTools: Tool[];
+  toolSearchTerm: string;
+  debouncedSetSearchTerm: (value: string) => void;
+  loadingMore: boolean;
+  onLoadMore?: () => void;
+  hasMore: boolean;
+}
+
+function ToolsField({
+  agentIndex,
+  tools,
+  updateSubAgent,
+  toolsLoading,
+  displayTools,
+  toolSearchTerm,
+  debouncedSetSearchTerm,
+  loadingMore,
+  onLoadMore,
+  hasMore,
+}: ToolsFieldProps) {
+  const handleToolsChange = (selectedTools: string | string[]) => {
+    const toolsArray = Array.isArray(selectedTools)
+      ? selectedTools
+      : [selectedTools];
+    updateSubAgent(agentIndex, "tools", toolsArray);
+  };
+
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs font-medium">Tools</Label>
+      <ToolsCombobox
+        tools={displayTools}
+        toolsLoading={toolsLoading}
+        value={tools}
+        setValue={handleToolsChange}
+        multiple={true}
+        placeholder="Select tools..."
+        className="text-sm"
+        searchTerm={toolSearchTerm}
+        onSearchChange={debouncedSetSearchTerm}
+        loadingMore={loadingMore}
+        onLoadMore={onLoadMore}
+        hasMore={hasMore}
+      />
+    </div>
+  );
+}
+
+interface ConfigFieldSubAgentsProps
+  extends Pick<
+    ConfigFieldProps,
+    | "id"
+    | "label"
+    | "description"
+    | "agentId"
+    | "className"
+    | "value"
+    | "setValue"
+  > {
+  // Pagination and tool management props
+  availableTools?: Tool[];
+  toolsLoading?: boolean;
+  displayTools?: Tool[];
+  toolSearchTerm?: string;
+  debouncedSetSearchTerm?: (value: string) => void;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  selectedMainTools?: string[];
+}
+
+export function ConfigFieldSubAgents({
+  label,
+  agentId,
+  className,
+  value: externalValue,
+  setValue: externalSetValue,
+  availableTools,
+  toolsLoading,
+  displayTools,
+  toolSearchTerm,
+  debouncedSetSearchTerm,
+  loadingMore,
+  onLoadMore,
+  hasMore,
+  selectedMainTools = [],
+}: ConfigFieldSubAgentsProps) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:sub_agents`;
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldSubAgentsMetadata["default"] | undefined;
+
+  if (!defaults) {
+    return null;
+  }
+
+  const subAgents = defaults || [];
+
+  const addSubAgent = () => {
+    const newSubAgent = {
+      name: "",
+      description: "",
+      prompt: "",
+      tools: [...selectedMainTools], // Pre-populate with selected main tools
+      mcp_server: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+    };
+
+    const newSubAgents = [...subAgents, newSubAgent];
+
+    if (isExternallyManaged) {
+      externalSetValue(newSubAgents);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, label, newSubAgents);
+  };
+
+  const removeSubAgent = (index: number) => {
+    const newSubAgents = subAgents.filter((_, i) => i !== index);
+
+    if (isExternallyManaged) {
+      externalSetValue(newSubAgents);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, label, newSubAgents);
+  };
+
+  const updateSubAgent = (index: number, field: string, value: any) => {
+    const newSubAgents = subAgents.map((agent, i) =>
+      i === index ? { ...agent, [field]: value } : agent,
+    );
+
+    if (isExternallyManaged) {
+      externalSetValue(newSubAgents);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, label, newSubAgents);
+  };
+
+  return (
+    <div className={cn("w-full space-y-4", className)}>
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-medium">Sub Agents</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={addSubAgent}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Agent
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {subAgents.map((subAgent, index) => (
+          <div
+            key={index}
+            className="space-y-3 rounded-lg border p-4"
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Agent {index + 1}</h4>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeSubAgent(index)}
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {/* Name Field */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Name</Label>
+                <Input
+                  value={subAgent.name || ""}
+                  onChange={(e) =>
+                    updateSubAgent(index, "name", e.target.value)
+                  }
+                  placeholder="Enter agent name"
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Description Field */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Description</Label>
+                <Textarea
+                  value={subAgent.description || ""}
+                  onChange={(e) =>
+                    updateSubAgent(index, "description", e.target.value)
+                  }
+                  placeholder="Enter agent description"
+                  className="min-h-[60px] text-sm"
+                />
+              </div>
+
+              {/* Prompt Field */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Prompt</Label>
+                <Textarea
+                  value={subAgent.prompt || ""}
+                  onChange={(e) =>
+                    updateSubAgent(index, "prompt", e.target.value)
+                  }
+                  placeholder="Enter agent prompt"
+                  className="min-h-[80px] text-sm"
+                />
+              </div>
+
+              {/* Tools Field */}
+              <ToolsField
+                agentIndex={index}
+                tools={subAgent.tools || []}
+                updateSubAgent={updateSubAgent}
+                toolsLoading={toolsLoading || false}
+                displayTools={displayTools || availableTools || []}
+                toolSearchTerm={toolSearchTerm || ""}
+                debouncedSetSearchTerm={debouncedSetSearchTerm || (() => {})}
+                loadingMore={loadingMore || false}
+                onLoadMore={onLoadMore}
+                hasMore={hasMore || false}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {subAgents.length === 0 && (
+        <div className="py-8 text-center text-gray-500">
+          <p className="text-sm">No sub agents configured</p>
+          <p className="text-xs">
+            Click "Add Agent" to create your first sub agent
+          </p>
+        </div>
+      )}
+
+      <p className="text-xs text-gray-500">
+        Create custom agents with specific prompts and tools for specialized
+        tasks.
+      </p>
+    </div>
+  );
+}
+
+type ConfigFieldTriggersProps = Pick<
+  ConfigFieldProps,
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
+>;
+
+export function ConfigFieldTriggers({
+  label,
+  agentId,
+  className,
+  value: externalValue,
+  setValue: externalSetValue,
+}: ConfigFieldTriggersProps) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:triggers`;
+  const auth = useAuthContext();
+  const { listUserTriggers } = useTriggers();
+
+  const [userTriggers, setUserTriggers] = React.useState<
+    ListUserTriggersData[]
+  >([]);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldTriggersMetadata["default"] | undefined;
+
+  const selectedTriggers = defaults || [];
+
+  // Fetch user triggers on mount
+  React.useEffect(() => {
+    if (!auth.session?.accessToken || loading || userTriggers.length > 0)
+      return;
+
+    const fetchTriggers = async (accessToken: string) => {
+      setLoading(true);
+      try {
+        const triggers = await listUserTriggers(accessToken);
+        if (triggers) {
+          setUserTriggers(triggers);
+        }
+      } catch (error) {
+        console.error("Failed to fetch triggers:", error);
+        toast.error("Failed to load triggers");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTriggers(auth.session.accessToken);
+  }, [auth.session?.accessToken, listUserTriggers]);
+
+  const groupedTriggers = React.useMemo(() => {
+    return groupUserRegisteredTriggersByProvider(userTriggers);
+  }, [userTriggers]);
+
+  const handleTriggerToggle = async (triggerId: string) => {
+    const isSelected = selectedTriggers.includes(triggerId);
+    const newSelectedTriggers = isSelected
+      ? selectedTriggers.filter((id) => id !== triggerId)
+      : [...selectedTriggers, triggerId];
+
+    if (isExternallyManaged) {
+      externalSetValue(newSelectedTriggers);
+    } else {
+      store.updateConfig(actualAgentId, label, newSelectedTriggers);
+    }
+  };
+
+  const getSelectedTriggersDisplay = () => {
+    if (selectedTriggers.length === 0) return "Select triggers...";
+
+    const selectedTriggerObjects = userTriggers.filter((trigger) =>
+      selectedTriggers.includes(trigger.id),
+    );
+
+    return (
+      <div className="flex max-w-full flex-wrap gap-1">
+        {selectedTriggerObjects.slice(0, 2).map((trigger) => (
+          <Badge
+            key={trigger.id}
+            variant="secondary"
+            className="text-xs"
+          >
+            {trigger.provider_id}:{trigger.resource_id}
+          </Badge>
+        ))}
+        {selectedTriggers.length > 2 && (
+          <Badge
+            variant="secondary"
+            className="text-xs"
+          >
+            +{selectedTriggers.length - 2} more
+          </Badge>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="h-auto min-h-[40px] w-full justify-between p-3"
+            disabled={loading}
+          >
+            <div className="flex flex-1 items-center gap-2">
+              {loading ? (
+                <span className="text-muted-foreground">
+                  Loading triggers...
+                </span>
+              ) : (
+                getSelectedTriggersDisplay()
+              )}
+            </div>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-full p-0"
+          align="start"
+        >
+          <Command>
+            <CommandInput placeholder="Search triggers..." />
+            <CommandList>
+              <CommandEmpty>No triggers found.</CommandEmpty>
+              {Object.entries(groupedTriggers).map(([provider, triggers]) => (
+                <CommandGroup
+                  key={provider}
+                  heading={provider}
+                >
+                  {triggers.map((trigger) => (
+                    <CommandItem
+                      key={trigger.id}
+                      onSelect={() => handleTriggerToggle(trigger.id)}
+                      className="flex items-center space-x-2"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedTriggers.includes(trigger.id)
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {trigger.resource_id}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {trigger.provider_id}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {selectedTriggers.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {userTriggers
+            .filter((trigger) => selectedTriggers.includes(trigger.id))
+            .map((trigger) => (
+              <Badge
+                key={trigger.id}
+                variant="secondary"
+                className="flex items-center gap-1 text-xs"
+              >
+                <>
+                  {trigger.provider_id}:{trigger.resource_id}
+                  <TooltipIconButton
+                    tooltip="Remove trigger"
+                    onClick={() => handleTriggerToggle(trigger.id)}
+                  >
+                    <X className="hover:text-destructive h-3 w-3 cursor-pointer" />
+                  </TooltipIconButton>
+                </>
+              </Badge>
+            ))}
+        </div>
+      )}
+
+      <p className="text-xs text-gray-500">
+        Select triggers to activate when this agent is used.
       </p>
     </div>
   );

@@ -23,6 +23,7 @@ const buttonVariants = cva(
         brand: "bg-[#2F6868] hover:bg-[#2F6868]/90 border-[#2F6868] text-white",
         default:
           "bg-[#2F6868] hover:bg-[#2F6868]/90 border-[#2F6868] text-white",
+        none: "",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

@@ -7,6 +7,8 @@ import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldAgentsMetadata,
+  ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
 } from "@/types/configurable";
 
 interface ConfigState {
@@ -20,7 +22,9 @@ interface ConfigState {
       | ConfigurableFieldMCPMetadata[]
       | ConfigurableFieldUIMetadata[]
       | ConfigurableFieldRAGMetadata[]
-      | ConfigurableFieldAgentsMetadata[],
+      | ConfigurableFieldAgentsMetadata[]
+      | ConfigurableFieldSubAgentsMetadata[]
+      | ConfigurableFieldTriggersMetadata[],
   ) => void;
   resetStore: () => void;
 }
@@ -36,11 +40,13 @@ export const useConfigStore = create<ConfigState>()(
         const toolsConfig = state.configsByAgentId[`${agentId}:selected-tools`];
         const ragConfig = state.configsByAgentId[`${agentId}:rag`];
         const agentsConfig = state.configsByAgentId[`${agentId}:agents`];
+        const subAgentsConfig = state.configsByAgentId[`${agentId}:sub_agents`];
         const configObj = {
           ...baseConfig,
           ...toolsConfig,
           ...ragConfig,
           ...agentsConfig,
+          ...subAgentsConfig,
         };
         delete configObj.__defaultValues;
         return configObj;

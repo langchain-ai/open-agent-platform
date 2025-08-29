@@ -73,6 +73,8 @@ async function main() {
         agentConfigs.toolConfig,
         agentConfigs.ragConfig,
         agentConfigs.agentsConfig,
+        agentConfigs.subAgentsConfig,
+        agentConfigs.triggersConfig,
       );
 
       await client.assistants.update(agent.assistant_id, {
