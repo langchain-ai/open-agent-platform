@@ -12,7 +12,6 @@ import {
 } from "./components/collections-card";
 import { useRagContext } from "./providers/RAG";
 import EmptyCollectionsState from "./components/empty-collections";
-import { isRagAvailable } from "./hooks/use-rag";
 
 export default function RAGInterface() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,10 +21,6 @@ export default function RAGInterface() {
     collections,
     initialSearchExecuted,
   } = useRagContext();
-
-  if (!isRagAvailable()) {
-    return null;
-  }
 
   if (initialSearchExecuted && !collections.length) {
     return <EmptyCollectionsState />;

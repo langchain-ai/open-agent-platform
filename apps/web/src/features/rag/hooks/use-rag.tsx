@@ -14,10 +14,6 @@ export function getDefaultCollection(collections: Collection[]): Collection {
   );
 }
 
-export function isRagAvailable(): boolean {
-  return !!process.env.NEXT_PUBLIC_RAG_API_URL;
-}
-
 function getApiUrlOrThrow(): URL {
   if (!process.env.NEXT_PUBLIC_RAG_API_URL) {
     throw new Error(
@@ -25,10 +21,6 @@ function getApiUrlOrThrow(): URL {
     );
   }
   return new URL(process.env.NEXT_PUBLIC_RAG_API_URL);
-}
-
-function isRagEnabled(): boolean {
-  return !!process.env.NEXT_PUBLIC_RAG_API_URL;
 }
 
 export function getCollectionName(name: string | undefined) {
@@ -171,11 +163,6 @@ export function useRag(): UseRagReturn {
 
   // --- Initial Fetch ---
   const initialFetch = useCallback(async (accessToken: string) => {
-    if (!isRagEnabled()) {
-      setInitialSearchExecuted(true);
-      return;
-    }
-
     setCollectionsLoading(true);
     setDocumentsLoading(true);
     let initCollections: Collection[] = [];
