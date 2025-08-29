@@ -88,7 +88,7 @@ function ThreadsProviderInternal<
         });
         return;
       }
-      
+
       setLoading(true);
 
       const client = createClient(deploymentId, sessionToUse.accessToken);
@@ -130,9 +130,6 @@ function ThreadsProviderInternal<
           },
         };
 
-        // First, fetch ALL threads to see what exists
-        const allThreads = await client.threads.search({ limit: 100 });
-        
         const threads = await client.threads.search(threadSearchArgs);
 
         const processedData: ThreadData<ThreadValues>[] = [];
@@ -239,21 +236,19 @@ function ThreadsProviderInternal<
 
   // Effect to fetch threads when parameters change
   React.useEffect(() => {
-    
-    
     if (typeof window === "undefined") {
       return;
     }
-    
+
     // Wait for auth to finish loading
     if (isLoading) {
       return;
     }
-    
+
     if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
       return;
     }
-    
+
     if (!session?.accessToken) {
       return;
     }
@@ -269,7 +264,15 @@ function ThreadsProviderInternal<
       // Always reset loading state in case of error
       setLoading(false);
     }
-  }, [agentInboxId, inboxParam, offsetParam, limitParam, fetchThreads, isLoading, session]);
+  }, [
+    agentInboxId,
+    inboxParam,
+    offsetParam,
+    limitParam,
+    fetchThreads,
+    isLoading,
+    session,
+  ]);
 
   const fetchSingleThread = React.useCallback(
     async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
