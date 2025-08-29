@@ -3,6 +3,7 @@ import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { useCallback, useState } from "react";
@@ -40,6 +41,9 @@ export function useAgentConfig() {
   const [subAgentsConfigurations, setSubAgentsConfigurations] = useState<
     ConfigurableFieldSubAgentsMetadata[]
   >([]);
+  const [triggersConfigurations, setTriggersConfigurations] = useState<
+    ConfigurableFieldTriggersMetadata[]
+  >([]);
 
   const [supportedConfigs, setSupportedConfigs] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +53,8 @@ export function useAgentConfig() {
     setToolConfigurations([]);
     setRagConfigurations([]);
     setAgentsConfigurations([]);
+    setSubAgentsConfigurations([]);
+    setTriggersConfigurations([]);
     setLoading(false);
   }, []);
 
@@ -81,6 +87,7 @@ export function useAgentConfig() {
           ragConfig,
           agentsConfig,
           subAgentsConfig,
+          triggersConfig,
         } = extractConfigurationsFromAgent({
           agent,
           schema,
@@ -125,6 +132,11 @@ export function useAgentConfig() {
           setSubAgentsConfigurations(subAgentsConfig);
           supportedConfigs.push("deep_agent");
         }
+        if (triggersConfig.length) {
+          setDefaultConfig(`${agentId}:triggers`, triggersConfig);
+          setTriggersConfigurations(triggersConfig);
+          supportedConfigs.push("triggers");
+        }
         setSupportedConfigs(supportedConfigs);
 
         const configurableDefaults = getConfigurableDefaults(
@@ -133,6 +145,7 @@ export function useAgentConfig() {
           ragConfig,
           agentsConfig,
           subAgentsConfig,
+          triggersConfig,
         );
 
         return {
@@ -157,6 +170,7 @@ export function useAgentConfig() {
     ragConfigurations,
     agentsConfigurations,
     subAgentsConfigurations,
+    triggersConfigurations,
     supportedConfigs,
 
     loading,

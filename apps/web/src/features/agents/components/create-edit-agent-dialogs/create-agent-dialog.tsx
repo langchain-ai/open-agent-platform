@@ -20,6 +20,8 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { FormProvider, useForm } from "react-hook-form";
+import { useAuthContext } from "@/providers/Auth";
+import { useTriggers } from "@/hooks/use-triggers";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -34,6 +36,8 @@ function CreateAgentFormContent(props: {
   selectedDeployment: Deployment;
   onClose: () => void;
 }) {
+  const auth = useAuthContext();
+  const { setupAgentTrigger } = useTriggers();
   const form = useForm<{
     name: string;
     description: string;
@@ -55,6 +59,7 @@ function CreateAgentFormContent(props: {
     ragConfigurations,
     agentsConfigurations,
     subAgentsConfigurations,
+    triggersConfigurations,
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
 
@@ -63,6 +68,13 @@ function CreateAgentFormContent(props: {
     description: string;
     config: Record<string, any>;
   }) => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+
     const { name, description, config } = data;
     if (!name || !description) {
       toast.warning("Name and description are required", {
@@ -81,7 +93,6 @@ function CreateAgentFormContent(props: {
         config,
       },
     );
-    setSubmitting(false);
 
     if (!newAgent) {
       toast.error("Failed to create agent", {
@@ -91,9 +102,28 @@ function CreateAgentFormContent(props: {
       return;
     }
 
-    toast.success("Agent created successfully!", {
-      richColors: true,
-    });
+    if (config.triggers?.length) {
+      const success = await setupAgentTrigger(auth.session.accessToken, {
+        selectedTriggerIds: config.triggers,
+        agentId: newAgent.assistant_id,
+      });
+
+      if (!success) {
+        toast.error("Failed to set up triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
+    setSubmitting(false);
+
+    toast.success(
+      `Agent${config?.triggers?.length ? " with triggers" : ""} created successfully!`,
+      {
+        richColors: true,
+      },
+    );
 
     props.onClose();
     // Do not await so that the refresh is non-blocking
@@ -113,6 +143,7 @@ function CreateAgentFormContent(props: {
             ragConfigurations={ragConfigurations}
             agentsConfigurations={agentsConfigurations}
             subAgentsConfigurations={subAgentsConfigurations}
+            triggersConfigurations={triggersConfigurations}
           />
         </FormProvider>
       )}

@@ -14,6 +14,7 @@ import { ListUserTriggersData, useTriggers } from "@/hooks/use-triggers";
 import { useEffect, useState } from "react";
 import type { Trigger } from "@/types/triggers";
 import { toast } from "sonner";
+import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -138,9 +139,11 @@ export default function TriggersInterface() {
           <TriggerCard
             key={trigger.id}
             trigger={trigger}
-            userTriggers={userTriggers.filter(
-              (t) => t.provider === trigger.providerId,
-            )}
+            userTriggers={
+              groupUserRegisteredTriggersByProvider(userTriggers)?.[
+                trigger.providerId
+              ] || []
+            }
           />
         ))}
       </div>

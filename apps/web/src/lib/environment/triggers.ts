@@ -1,3 +1,5 @@
+import { ListUserTriggersData } from "@/hooks/use-triggers";
+
 export function generateFormFields(schema: Record<string, any>) {
   const fields: Array<{
     name: string;
@@ -18,4 +20,19 @@ export function generateFormFields(schema: Record<string, any>) {
   }
 
   return fields;
+}
+
+export function groupUserRegisteredTriggersByProvider(
+  triggers: ListUserTriggersData[],
+): Record<string, ListUserTriggersData[]> {
+  const groupedTriggers: Record<string, ListUserTriggersData[]> = {};
+
+  triggers.forEach((trigger) => {
+    if (!groupedTriggers[trigger.provider_id]) {
+      groupedTriggers[trigger.provider_id] = [];
+    }
+    groupedTriggers[trigger.provider_id].push(trigger);
+  });
+
+  return groupedTriggers;
 }

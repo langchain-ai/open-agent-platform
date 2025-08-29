@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -38,13 +38,19 @@ import {
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
   ConfigurableFieldSubAgentsMetadata,
+  ConfigurableFieldTriggersMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { ToolsCombobox } from "@/components/ui/tools-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
+import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 
 interface Option {
   label: string;
@@ -881,6 +887,216 @@ export function ConfigFieldSubAgents({
       <p className="text-xs text-gray-500">
         Create custom agents with specific prompts and tools for specialized
         tasks.
+      </p>
+    </div>
+  );
+}
+
+type ConfigFieldTriggersProps = Pick<
+  ConfigFieldProps,
+  | "id"
+  | "label"
+  | "description"
+  | "agentId"
+  | "className"
+  | "value"
+  | "setValue"
+>;
+
+export function ConfigFieldTriggers({
+  label,
+  agentId,
+  className,
+  value: externalValue,
+  setValue: externalSetValue,
+}: ConfigFieldTriggersProps) {
+  const store = useConfigStore();
+  const actualAgentId = `${agentId}:triggers`;
+  const auth = useAuthContext();
+  const { listUserTriggers } = useTriggers();
+
+  const [userTriggers, setUserTriggers] = React.useState<
+    ListUserTriggersData[]
+  >([]);
+  const [loading, setLoading] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
+
+  const isExternallyManaged = externalSetValue !== undefined;
+
+  const defaults = (
+    isExternallyManaged
+      ? externalValue
+      : store.configsByAgentId[actualAgentId]?.[label]
+  ) as ConfigurableFieldTriggersMetadata["default"] | undefined;
+
+  const selectedTriggers = defaults || [];
+
+  // Fetch user triggers on mount
+  React.useEffect(() => {
+    if (!auth.session?.accessToken || loading || userTriggers.length > 0)
+      return;
+
+    const fetchTriggers = async (accessToken: string) => {
+      setLoading(true);
+      try {
+        const triggers = await listUserTriggers(accessToken);
+        if (triggers) {
+          setUserTriggers(triggers);
+        }
+      } catch (error) {
+        console.error("Failed to fetch triggers:", error);
+        toast.error("Failed to load triggers");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTriggers(auth.session.accessToken);
+  }, [auth.session?.accessToken, listUserTriggers]);
+
+  const groupedTriggers = React.useMemo(() => {
+    return groupUserRegisteredTriggersByProvider(userTriggers);
+  }, [userTriggers]);
+
+  const handleTriggerToggle = async (triggerId: string) => {
+    const isSelected = selectedTriggers.includes(triggerId);
+    const newSelectedTriggers = isSelected
+      ? selectedTriggers.filter((id) => id !== triggerId)
+      : [...selectedTriggers, triggerId];
+
+    if (isExternallyManaged) {
+      externalSetValue(newSelectedTriggers);
+    } else {
+      store.updateConfig(actualAgentId, label, newSelectedTriggers);
+    }
+  };
+
+  const getSelectedTriggersDisplay = () => {
+    if (selectedTriggers.length === 0) return "Select triggers...";
+
+    const selectedTriggerObjects = userTriggers.filter((trigger) =>
+      selectedTriggers.includes(trigger.id),
+    );
+
+    return (
+      <div className="flex max-w-full flex-wrap gap-1">
+        {selectedTriggerObjects.slice(0, 2).map((trigger) => (
+          <Badge
+            key={trigger.id}
+            variant="secondary"
+            className="text-xs"
+          >
+            {trigger.provider_id}:{trigger.resource_id}
+          </Badge>
+        ))}
+        {selectedTriggers.length > 2 && (
+          <Badge
+            variant="secondary"
+            className="text-xs"
+          >
+            +{selectedTriggers.length - 2} more
+          </Badge>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className={cn("w-full space-y-2", className)}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="h-auto min-h-[40px] w-full justify-between p-3"
+            disabled={loading}
+          >
+            <div className="flex flex-1 items-center gap-2">
+              {loading ? (
+                <span className="text-muted-foreground">
+                  Loading triggers...
+                </span>
+              ) : (
+                getSelectedTriggersDisplay()
+              )}
+            </div>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          className="w-full p-0"
+          align="start"
+        >
+          <Command>
+            <CommandInput placeholder="Search triggers..." />
+            <CommandList>
+              <CommandEmpty>No triggers found.</CommandEmpty>
+              {Object.entries(groupedTriggers).map(([provider, triggers]) => (
+                <CommandGroup
+                  key={provider}
+                  heading={provider}
+                >
+                  {triggers.map((trigger) => (
+                    <CommandItem
+                      key={trigger.id}
+                      onSelect={() => handleTriggerToggle(trigger.id)}
+                      className="flex items-center space-x-2"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedTriggers.includes(trigger.id)
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {trigger.resource_id}
+                        </span>
+                        <span className="text-muted-foreground text-xs">
+                          {trigger.provider_id}
+                        </span>
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              ))}
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+
+      {selectedTriggers.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {userTriggers
+            .filter((trigger) => selectedTriggers.includes(trigger.id))
+            .map((trigger) => (
+              <Badge
+                key={trigger.id}
+                variant="secondary"
+                className="flex items-center gap-1 text-xs"
+              >
+                <>
+                  {trigger.provider_id}:{trigger.resource_id}
+                  <TooltipIconButton
+                    tooltip="Remove trigger"
+                    onClick={() => handleTriggerToggle(trigger.id)}
+                  >
+                    <X className="hover:text-destructive h-3 w-3 cursor-pointer" />
+                  </TooltipIconButton>
+                </>
+              </Badge>
+            ))}
+        </div>
+      )}
+
+      <p className="text-xs text-gray-500">
+        Select triggers to activate when this agent is used.
       </p>
     </div>
   );

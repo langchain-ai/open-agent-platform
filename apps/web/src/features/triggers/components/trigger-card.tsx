@@ -48,7 +48,7 @@ function ConfiguredAccounts(props: { userTriggers: ListUserTriggersData[] }) {
               className="text-muted-foreground flex items-center gap-2 text-sm"
             >
               <div className="bg-muted-foreground h-1.5 w-1.5 flex-shrink-0 rounded-full" />
-              <span>{userTrigger.provider_user_id}</span>
+              <span>{userTrigger.resource_id}</span>
             </div>
           ))}
         </div>

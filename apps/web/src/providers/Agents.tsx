@@ -113,11 +113,16 @@ async function getAgents(
 
           const supportedConfigs: string[] = [];
           if (schema) {
-            const { toolConfig, ragConfig, agentsConfig, subAgentsConfig } =
-              extractConfigurationsFromAgent({
-                agent: defaultAssistant,
-                schema,
-              });
+            const {
+              toolConfig,
+              ragConfig,
+              agentsConfig,
+              subAgentsConfig,
+              triggersConfig,
+            } = extractConfigurationsFromAgent({
+              agent: defaultAssistant,
+              schema,
+            });
             if (toolConfig.length) {
               supportedConfigs.push("tools");
             }
@@ -130,13 +135,16 @@ async function getAgents(
             if (subAgentsConfig.length) {
               supportedConfigs.push("deep_agent");
             }
+            if (triggersConfig.length) {
+              supportedConfigs.push("triggers");
+            }
           }
 
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
             supportedConfigs: supportedConfigs as [
-              "tools" | "rag" | "supervisor" | "deep_agent",
+              "tools" | "rag" | "supervisor" | "deep_agent" | "triggers",
             ],
           }));
         });

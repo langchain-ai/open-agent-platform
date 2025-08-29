@@ -13,8 +13,9 @@ type RegisterTriggerResponse =
 export interface ListUserTriggersData {
   id: string;
   user_id: string;
-  provider: string;
-  provider_user_id: string;
+  provider_id: string;
+  resource_id: string;
+  linked_assistant_ids?: string[];
   created_at: string;
 }
 
@@ -135,9 +136,81 @@ export function useTriggers() {
     return response.json();
   };
 
+  const setupAgentTrigger = async (
+    accessToken: string,
+    args: {
+      selectedTriggerIds: string[];
+      agentId: string;
+    },
+  ): Promise<boolean> => {
+    const triggerApiUrl = constructTriggerUrl(
+      "/api/user-triggers/linked-assistants",
+    );
+    if (!triggerApiUrl) {
+      return false;
+    }
+
+    const response = await fetch(triggerApiUrl, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        trigger_ids: args.selectedTriggerIds,
+        assistant_id: args.agentId,
+      }),
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to setup agent trigger", {
+        richColors: true,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const updateAgentTriggers = async (
+    accessToken: string,
+    args: {
+      agentId: string;
+      selectedTriggerIds: string[];
+    },
+  ): Promise<boolean> => {
+    const triggerApiUrl = constructTriggerUrl(
+      "/api/user-triggers/edit-assistant",
+    );
+    if (!triggerApiUrl) {
+      return false;
+    }
+
+    const response = await fetch(triggerApiUrl, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        trigger_ids: args.selectedTriggerIds,
+        assistant_id: args.agentId,
+      }),
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to update agent triggers", {
+        richColors: true,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   return {
     listTriggers,
     listUserTriggers,
     registerTrigger,
+    setupAgentTrigger,
+    updateAgentTriggers,
   };
 }
