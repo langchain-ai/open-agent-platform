@@ -31,11 +31,13 @@ import { parseAsString, parseAsInteger, useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../agent-inbox/contexts/ThreadContext";
+import { useAuthContext } from "@/providers/Auth";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
   const { setThreadData, fetchThreads } = useThreadsContext();
   const { agents, loading } = useAgentsContext();
+  const { session } = useAuthContext();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
   const deployments = getDeployments();
 
@@ -72,7 +74,7 @@ function InboxSidebarInternal() {
     await setLimit(10);
     await setInbox("interrupted");
 
-    await fetchThreads(agent.assistant_id, agent.deploymentId);
+    await fetchThreads(agent.assistant_id, agent.deploymentId, session);
   };
 
   return (

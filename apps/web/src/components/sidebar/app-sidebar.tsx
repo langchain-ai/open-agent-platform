@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Brain,
   BrainCircuit,
+  Inbox,
   Webhook,
 } from "lucide-react";
 
@@ -44,15 +45,15 @@ const data = {
       icon: Wrench,
     },
     {
+      title: "Inbox",
+      url: "/inbox",
+      icon: Inbox,
+    },
+    {
       title: "Triggers",
       url: "/triggers",
       icon: Webhook,
     },
-    // {
-    //   title: "Inbox",
-    //   url: "/inbox",
-    //   icon: Inbox,
-    // },
     {
       title: "RAG",
       url: "/rag",

@@ -9,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 /**
@@ -20,9 +20,15 @@ export function AuthDebug() {
   const { user, session, isAuthenticated, isLoading, signOut } =
     useAuthContext();
   const [showDetails, setShowDetails] = useState(false);
+  const [isProduction, setIsProduction] = useState(true);
+
+  useEffect(() => {
+    // Check environment only on client side
+    setIsProduction(process.env.NODE_ENV === "production");
+  }, []);
 
   // Only enable in development mode
-  if (process.env.NODE_ENV === "production") {
+  if (isProduction) {
     return null;
   }
 
