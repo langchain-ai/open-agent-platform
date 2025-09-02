@@ -33,11 +33,11 @@ import {
   isPreparingToCallTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
-import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
-import { useChat } from "../hooks/useChat";
+import { useChatContext } from "../providers/ChatContext";
 import { Session } from "@/lib/auth/types";
+import { useQueryState } from "nuqs";
 
 interface ChatInterfaceProps {
   agentId: string;
@@ -50,7 +50,6 @@ interface ChatInterfaceProps {
   setDebugMode: (debugMode: boolean) => void;
   assistantError: string | null;
   setAssistantError: (error: string | null) => void;
-  activeAssistant: Assistant | null;
   setActiveAssistant: (assistant: Assistant | null) => void;
   setTodos: (todos: TodoItem[]) => void;
   setFiles: (files: Record<string, string>) => void;
@@ -68,19 +67,17 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setDebugMode,
     assistantError,
     setAssistantError,
-    activeAssistant,
     setActiveAssistant,
     setTodos,
     setFiles,
   }) => {
+    const [threadId, setThreadId] = useQueryState("threadId");
     const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
 
     const client = useMemo(() => {
       if (!deploymentId || !session?.accessToken) return null;
       return createClient(deploymentId, session.accessToken);
     }, [deploymentId, session]);
-
-    const [threadId, setThreadId] = useQueryState("threadId");
 
     const [input, setInput] = useState("");
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
@@ -110,7 +107,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           duration: 50000,
         });
       }
-    }, [client, agentId, deploymentId]);
+    }, [client, agentId, deploymentId, setActiveAssistant, setAssistantError]);
 
     useEffect(() => {
       refreshActiveAssistant();
@@ -145,7 +142,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         }
       };
       fetchThreadState();
-    }, [threadId, client]);
+    }, [threadId, client, setTodos, setFiles]);
 
     const {
       messages,
@@ -156,15 +153,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       runSingleStep,
       continueStream,
       stopStream,
-    } = useChat(
-      threadId,
-      setThreadId,
-      setTodos,
-      setFiles,
-      activeAssistant,
-      deploymentId,
-      agentId,
-    );
+    } = useChatContext();
 
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -202,7 +191,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         }
         setInput("");
       },
-      [input, isLoading, sendMessage, debugMode, runSingleStep],
+      [input, isLoading, sendMessage, debugMode, runSingleStep, submitDisabled],
     );
 
     const handleKeyDown = useCallback(
@@ -213,7 +202,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           handleSubmit();
         }
       },
-      [handleSubmit],
+      [handleSubmit, submitDisabled],
     );
 
     const handleNewThread = useCallback(() => {
@@ -256,7 +245,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           messages.slice(0, msgIndex),
         );
       },
-      [debugMode, runSingleStep, messages],
+      [debugMode, runSingleStep, messages, getMessagesMetadata],
     );
 
     const handleRestartFromSubTask = useCallback(
@@ -275,7 +264,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           messages.slice(0, msgIndex),
         );
       },
-      [debugMode, runSingleStep, messages],
+      [debugMode, runSingleStep, messages, getMessagesMetadata],
     );
 
     const hasMessages = messages.length > 0;

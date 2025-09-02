@@ -15,7 +15,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
-import { Check, ChevronsUpDown, AlertCircle, Plus, X } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  AlertCircle,
+  Plus,
+  X,
+  OctagonPause,
+} from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -51,6 +58,13 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HumanInterruptConfig } from "@/components/agent-inbox/types";
+import { InterruptConfigDialog } from "./interrupt-config-dialog";
 
 interface Option {
   label: string;
@@ -331,6 +345,31 @@ export function ConfigField({
   );
 }
 
+const getInterruptConfig = (
+  interruptConfig: Record<string, boolean | HumanInterruptConfig> | undefined,
+  label: string,
+): HumanInterruptConfig => {
+  if (!interruptConfig || !(label in interruptConfig)) {
+    return {
+      allow_accept: false,
+      allow_ignore: false,
+      allow_respond: false,
+      allow_edit: false,
+    };
+  }
+
+  if (typeof interruptConfig[label] === "boolean") {
+    return {
+      allow_accept: interruptConfig[label],
+      allow_ignore: interruptConfig[label],
+      allow_respond: interruptConfig[label],
+      allow_edit: interruptConfig[label],
+    };
+  }
+
+  return interruptConfig[label];
+};
+
 export function ConfigFieldTool({
   id,
   label,
@@ -352,6 +391,7 @@ export function ConfigFieldTool({
 > & { toolId: string }) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
+  const [interruptDialogOpen, setInterruptDialogOpen] = useState(false);
 
   const isExternallyManaged = externalSetValue !== undefined;
 
@@ -366,6 +406,14 @@ export function ConfigFieldTool({
   }
 
   const checked = defaults.tools?.some((t) => t === label);
+  const interruptConfig = {
+    ...(defaults.interrupt_config || {}),
+    [label]: getInterruptConfig(defaults.interrupt_config, label),
+  };
+
+  const interruptsConfigured = Object.values(
+    interruptConfig?.[label] || {},
+  ).some((v) => v);
 
   const handleCheckedChange = (checked: boolean) => {
     const newValue = checked
@@ -389,28 +437,75 @@ export function ConfigFieldTool({
     store.updateConfig(actualAgentId, toolId, newValue);
   };
 
+  const handleInterruptConfigChange = (newConfig: HumanInterruptConfig) => {
+    const newValue = {
+      ...defaults,
+      // Remove duplicates
+      interrupt_config: {
+        ...interruptConfig,
+        [label]: newConfig,
+      },
+    };
+
+    if (isExternallyManaged) {
+      externalSetValue(newValue);
+      return;
+    }
+
+    store.updateConfig(actualAgentId, toolId, newValue);
+  };
+
   return (
-    <div className={cn("w-full space-y-2", className)}>
-      <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          {_.startCase(label)}
-        </Label>
-        <Switch
-          id={id}
-          checked={checked} // Use currentValue
-          onCheckedChange={handleCheckedChange}
-        />
+    <>
+      <div className={cn("w-full space-y-2", className)}>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor={id}
+            className="text-sm font-medium"
+          >
+            {_.startCase(label)}
+          </Label>
+          <div className="flex items-center gap-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={interruptsConfigured ? "info" : "outline"}
+                    size="sm"
+                    onClick={() => setInterruptDialogOpen(true)}
+                    type="button"
+                    className="text-xs"
+                  >
+                    {interruptsConfigured
+                      ? "Edit interrupts"
+                      : "Configure interrupts"}
+                    <OctagonPause className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+              </Tooltip>
+            </TooltipProvider>
+            <Switch
+              id={id}
+              checked={checked} // Use currentValue
+              onCheckedChange={handleCheckedChange}
+            />
+          </div>
+        </div>
+
+        {description && (
+          <p className="text-xs whitespace-pre-line text-gray-500">
+            {description}
+          </p>
+        )}
       </div>
 
-      {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
-          {description}
-        </p>
-      )}
-    </div>
+      <InterruptConfigDialog
+        open={interruptDialogOpen}
+        onOpenChange={setInterruptDialogOpen}
+        config={getInterruptConfig(interruptConfig, label)}
+        onInterruptChange={handleInterruptConfigChange}
+      />
+    </>
   );
 }
 

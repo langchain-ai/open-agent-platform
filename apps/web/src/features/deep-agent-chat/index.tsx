@@ -18,6 +18,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { deploymentSupportsDeepAgents } from "./utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "./components/breadcrumb";
+import { ChatProvider } from "./providers/ChatProvider";
 
 export default function DeepAgentChatInterface() {
   const { session } = useAuthContext();
@@ -118,59 +119,62 @@ export default function DeepAgentChatInterface() {
   }
 
   return (
-    <div className="absolute inset-0 flex h-full overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
-      <div className="flex h-full flex-col">
-        <header className="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <DeepAgentChatBreadcrumb />
-          </div>
-        </header>
-        <TasksFilesSidebar
-          agentId={agentId}
-          deploymentId={deploymentId}
-          todos={todos}
-          setTodos={setTodos}
-          files={files}
-          setFiles={setFiles}
-          activeAssistant={activeAssistant}
-          onFileClick={setSelectedFile}
-          setActiveAssistant={setActiveAssistant}
-          setAssistantError={setAssistantError}
-          assistantError={assistantError}
-        />
-      </div>
+    <ChatProvider
+      setTodos={setTodos}
+      setFiles={setFiles}
+      activeAssistant={activeAssistant}
+      deploymentId={deploymentId}
+      agentId={agentId}
+    >
+      <div className="absolute inset-0 flex h-full overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="flex h-full flex-col">
+          <header className="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+              <DeepAgentChatBreadcrumb />
+            </div>
+          </header>
+          <TasksFilesSidebar
+            todos={todos}
+            files={files}
+            activeAssistant={activeAssistant}
+            onFileClick={setSelectedFile}
+            setActiveAssistant={setActiveAssistant}
+            setAssistantError={setAssistantError}
+            assistantError={assistantError}
+          />
+        </div>
 
-      <div className="flex-1">
-        <ChatInterface
-          agentId={agentId}
-          deploymentId={deploymentId}
-          session={session}
-          debugMode={debugMode}
-          setDebugMode={setDebugMode}
-          assistantError={assistantError}
-          setAssistantError={setAssistantError}
-          activeAssistant={activeAssistant}
-          setActiveAssistant={setActiveAssistant}
-          setTodos={setTodos}
-          setFiles={setFiles}
-          selectedSubAgent={selectedSubAgent}
-          onSelectSubAgent={setSelectedSubAgent}
-          onNewThread={onNewThread}
-        />
-        {selectedSubAgent && (
-          <SubAgentPanel
-            subAgent={selectedSubAgent}
-            onClose={() => setSelectedSubAgent(null)}
+        <div className="flex-1">
+          <ChatInterface
+            agentId={agentId}
+            deploymentId={deploymentId}
+            session={session}
+            debugMode={debugMode}
+            setDebugMode={setDebugMode}
+            assistantError={assistantError}
+            setAssistantError={setAssistantError}
+            setActiveAssistant={setActiveAssistant}
+            setTodos={setTodos}
+            setFiles={setFiles}
+            selectedSubAgent={selectedSubAgent}
+            onSelectSubAgent={setSelectedSubAgent}
+            onNewThread={onNewThread}
+          />
+          {selectedSubAgent && (
+            <SubAgentPanel
+              subAgent={selectedSubAgent}
+              onClose={() => setSelectedSubAgent(null)}
+            />
+          )}
+        </div>
+        {selectedFile && (
+          <FileViewDialog
+            file={selectedFile}
+            onClose={() => setSelectedFile(null)}
           />
         )}
       </div>
-      {selectedFile && (
-        <FileViewDialog
-          file={selectedFile}
-          onClose={() => setSelectedFile(null)}
-        />
-      )}
-    </div>
+    </ChatProvider>
   );
 }

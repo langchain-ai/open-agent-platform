@@ -144,7 +144,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           },
         });
       },
-      [feedbackInput, stream, activeAssistant, deepAgentMessages],
+      [feedbackInput, stream, activeAssistant, deepAgentMessages, isLoading],
     );
 
     const handleKeyDown = useCallback(
@@ -223,7 +223,12 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           duration: 50000,
         });
       }
-    }, [deploymentClient, activeAssistant]);
+    }, [
+      deploymentClient,
+      activeAssistant,
+      setActiveAssistant,
+      setAssistantError,
+    ]);
 
     const handleApprove = useCallback(async () => {
       if (selectedOptimizerMessage) {
