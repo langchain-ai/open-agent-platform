@@ -2,19 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/providers/Auth";
 import { z } from "zod";
+import "../signin/signin.css";
 
 // Form validation schema
 const resetPasswordSchema = z
@@ -96,64 +92,98 @@ export default function ResetPasswordInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Reset Password</CardTitle>
-          <CardDescription className="text-center">
-            Please enter your new password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
-              <PasswordInput
-                id="password"
-                placeholder="Create a new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                aria-invalid={!!errors.password}
-              />
-              {errors.password && (
-                <p className="text-destructive text-sm">{errors.password}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <PasswordInput
-                id="confirmPassword"
-                placeholder="Confirm your new password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                aria-invalid={!!errors.confirmPassword}
-              />
-              {errors.confirmPassword && (
-                <p className="text-destructive text-sm">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {authError && (
-              <Alert variant="destructive">
-                <AlertDescription>{authError}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
+      <div className="flex flex-col items-center">
+        <div className="platform-header">
+          <Image
+            src="/LangGraph-logo.svg"
+            alt="LangGraph"
+            width={66.667}
+            height={34}
+            className="platform-logo"
+          />
+          <span className="platform-text">Open Agent Platform</span>
+        </div>
+        <Card
+          className="signin-card flex flex-col"
+          style={{ marginTop: "36px" }}
+        >
+          <CardHeader className="p-0">
+            <CardTitle className="signin-title">Reset Password</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
             >
-              {isLoading ? "Resetting..." : "Reset Password"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-[456px]">
+                  <Label
+                    htmlFor="password"
+                    className="input-label"
+                  >
+                    New Password
+                  </Label>
+                </div>
+                <div style={{ width: "456px" }}>
+                  <PasswordInput
+                    id="password"
+                    placeholder="Create a new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    aria-invalid={!!errors.password}
+                    className="signin-input"
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-destructive text-sm">{errors.password}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-[456px]">
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="input-label"
+                  >
+                    Confirm Password
+                  </Label>
+                </div>
+                <div style={{ width: "456px" }}>
+                  <PasswordInput
+                    id="confirmPassword"
+                    placeholder="Confirm your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    aria-invalid={!!errors.confirmPassword}
+                    className="signin-input"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-destructive text-sm">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              {authError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{authError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex justify-center">
+                <Button
+                  type="submit"
+                  className="continue-btn"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Resetting..." : "Reset Password"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

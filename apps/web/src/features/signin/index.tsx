@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { z } from "zod";
 import "./signin.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +15,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -125,152 +123,170 @@ export default function SigninInterface() {
           />
           <span className="platform-text">Open Agent Platform</span>
         </div>
-        <Card className="signin-card flex flex-col" style={{marginTop: '36px'}}>
+        <Card
+          className="signin-card flex flex-col"
+          style={{ marginTop: "36px" }}
+        >
           <CardHeader className="p-0">
             <CardTitle className="signin-title">Sign In</CardTitle>
           </CardHeader>
-        <CardContent className="p-0">
-          {message && !isSuccess && (
-            <Alert className="mb-4 bg-blue-50 text-blue-800">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          )}
+          <CardContent className="p-0">
+            {message && !isSuccess && (
+              <Alert className="mb-4 bg-blue-50 text-blue-800">
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
 
-          {isSuccess && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
-              <AlertDescription className="flex flex-col gap-2">
-                <span>Success! We're redirecting you to the dashboard...</span>
-                {showManualRedirect && (
-                  <Button
-                    onClick={() => router.push("/")}
-                    variant="outline"
-                    className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+            {isSuccess && (
+              <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>
+                    Success! We're redirecting you to the dashboard...
+                  </span>
+                  {showManualRedirect && (
+                    <Button
+                      onClick={() => router.push("/")}
+                      variant="outline"
+                      className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                    >
+                      Go to Dashboard Now
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!googleAuthDisabled() && (
+              <div className="mb-6 flex justify-center">
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="google-signin-btn flex items-center justify-center"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading || isSuccess}
+                >
+                  <Image
+                    src="/google-logo.svg"
+                    alt="Google"
+                    width={27.44}
+                    height={28}
+                  />
+                </Button>
+              </div>
+            )}
+
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="flex items-center gap-4">
+                <div className="divider-line"></div>
+                <span className="text-muted-foreground text-xs uppercase">
+                  or
+                </span>
+                <div className="divider-line"></div>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-[456px]">
+                  <Label
+                    htmlFor="email"
+                    className="input-label"
                   >
-                    Go to Dashboard Now
-                  </Button>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {!googleAuthDisabled() && (
-            <div className="flex justify-center mb-6">
-              <Button
-                variant="outline"
-                type="button"
-                className="google-signin-btn flex items-center justify-center gap-2"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || isSuccess}
-              >
-                <Image
-                  src="/google-logo.svg"
-                  alt="Google"
-                  width={27.44}
-                  height={28}
-                />
-              </Button>
-            </div>
-          )}
-
-          <div className="relative my-6 flex items-center justify-center">
-            <div className="flex items-center gap-4">
-              <div className="divider-line"></div>
-              <span className="text-muted-foreground text-xs uppercase">
-                or
-              </span>
-              <div className="divider-line"></div>
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-          >
-            <div className="space-y-2 flex flex-col items-center">
-              <div className="w-[456px]">
-                <Label htmlFor="email" className="input-label">Email</Label>
-              </div>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="signin-input"
-              />
-            </div>
-
-            <div className="space-y-2 flex flex-col items-center">
-              <div className="w-[456px] flex justify-between items-center">
-                <Label htmlFor="password" className="input-label">Password</Label>
-                <Link href="/forgot-password" className="text-sm text-gray-600 hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
-              <div style={{width: '456px'}}>
-                <PasswordInput
-                  id="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                    Email
+                  </Label>
+                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="signin-input"
                 />
               </div>
-            </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="flex w-[456px] items-center justify-between">
+                  <Label
+                    htmlFor="password"
+                    className="input-label"
+                  >
+                    Password
+                  </Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-gray-600 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div style={{ width: "456px" }}>
+                  <PasswordInput
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="signin-input"
+                  />
+                </div>
+              </div>
 
-            <div className="flex justify-center">
-              <Button
-                type="submit"
-                className="continue-btn"
-                disabled={isLoading || isSuccess}
-              >
-                {isLoading
-                  ? "Signing in..."
-                  : isSuccess
-                    ? "Signed In Successfully"
-                    : "Sign In"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-        <CardFooter className="flex flex-col items-center p-0 gap-4">
-          <p className="account-link-text">
-            Don't have an account?{" "}
-            <Link
-              href="/signup"
-              className="terms-link"
-            >
-              Sign up
-            </Link>
-          </p>
-          <div className="terms-text">
-            <p>
-              By continuing, you agree to our{" "}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex justify-center">
+                <Button
+                  type="submit"
+                  className="continue-btn"
+                  disabled={isLoading || isSuccess}
+                >
+                  {isLoading
+                    ? "Signing in..."
+                    : isSuccess
+                      ? "Signed In Successfully"
+                      : "Sign In"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col items-center gap-4 p-0">
+            <p className="account-link-text">
+              Don't have an account?{" "}
               <Link
-                href="/terms"
+                href="/signup"
                 className="terms-link"
               >
-                Terms of Service.
-              </Link>{" "}
-              Data security is important to us. Please read our{" "}
-              <Link
-                href="/data-policy"
-                className="terms-link"
-              >
-                Data Security Policy
+                Sign up
               </Link>
             </p>
-          </div>
-        </CardFooter>
-      </Card>
+            <div className="terms-text">
+              <p>
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/terms"
+                  className="terms-link"
+                >
+                  Terms of Service.
+                </Link>{" "}
+                Data security is important to us. Please read our{" "}
+                <Link
+                  href="/data-policy"
+                  className="terms-link"
+                >
+                  Data Security Policy
+                </Link>
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

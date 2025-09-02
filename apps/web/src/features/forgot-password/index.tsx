@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,10 +12,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/providers/Auth";
+import "../signin/signin.css";
 
 export default function ForgotPasswordInterface() {
   const { resetPassword } = useAuthContext();
@@ -56,68 +57,89 @@ export default function ForgotPasswordInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Reset Password</CardTitle>
-          <CardDescription className="text-center">
-            Enter your email address and we'll send you a link to reset your
-            password
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {success ? (
-            <Alert className="mb-4">
-              <AlertDescription>
-                If your email address is associated with an account, you will
-                receive an email with instructions to reset your password
-                shortly.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
+      <div className="flex flex-col items-center">
+        <div className="platform-header">
+          <Image
+            src="/LangGraph-logo.svg"
+            alt="LangGraph"
+            width={66.667}
+            height={34}
+            className="platform-logo"
+          />
+          <span className="platform-text">Open Agent Platform</span>
+        </div>
+        <Card
+          className="forgot-password-card flex flex-col"
+          style={{ marginTop: "36px" }}
+        >
+          <CardHeader className="p-0">
+            <CardTitle className="signin-title">Reset Password</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {success ? (
+              <Alert className="mb-4">
+                <AlertDescription>
+                  If your email address is associated with an account, you will
+                  receive an email with instructions to reset your password
+                  shortly.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-6"
               >
-                {isLoading ? "Sending..." : "Send Reset Link"}
-              </Button>
-            </form>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Remember your password?{" "}
-            <Link
-              href="/signin"
-              className="text-primary font-medium hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-[456px]">
+                    <Label
+                      htmlFor="email"
+                      className="input-label"
+                    >
+                      Email
+                    </Label>
+                  </div>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="signin-input"
+                  />
+                </div>
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    className="continue-btn"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col items-center gap-4 p-0">
+            <p className="account-link-text">
+              Remember your password?{" "}
+              <Link
+                href="/signin"
+                className="terms-link"
+              >
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

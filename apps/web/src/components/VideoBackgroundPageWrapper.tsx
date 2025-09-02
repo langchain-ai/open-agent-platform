@@ -32,7 +32,7 @@ export default function VideoBackgroundPageWrapper({
   return (
     <div className={`relative min-h-screen overflow-hidden ${className || ""}`}>
       <VideoBackground />
-      <div className="absolute inset-0 bg-blue-600/20 z-5" />
+      <div className="absolute inset-0 z-5 bg-blue-600/20" />
       <div className="relative z-10 min-h-screen">{children}</div>
     </div>
   );
