@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,19 +17,16 @@ import { HumanInterruptConfig } from "@/components/agent-inbox/types";
 interface InterruptConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  config: HumanInterruptConfig;
+  onInterruptChange: (config: HumanInterruptConfig) => void;
 }
 
 export function InterruptConfigDialog({
   open,
   onOpenChange,
+  config,
+  onInterruptChange,
 }: InterruptConfigDialogProps) {
-  const [config, setConfig] = useState<HumanInterruptConfig>({
-    allow_accept: false,
-    allow_respond: false,
-    allow_edit: false,
-    allow_ignore: false,
-  });
-
   const handleSave = () => {
     onOpenChange(false);
   };
@@ -57,50 +54,70 @@ export function InterruptConfigDialog({
         <div className="space-y-6 py-4">
           {/* Action Switches */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor="allow-accept"
-                className="text-sm font-medium"
-              >
-                Allow accept
-              </Label>
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col items-start gap-1">
+                <Label
+                  htmlFor="allow-accept"
+                  className="text-sm font-medium"
+                >
+                  Allow accept
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  The user must accept the tool call before it is executed.
+                </p>
+              </div>
+
               <Switch
                 id="allow-accept"
                 checked={config.allow_accept}
                 onCheckedChange={(checked) =>
-                  setConfig((prev) => ({ ...prev, allow_accept: checked }))
+                  onInterruptChange({ ...config, allow_accept: checked })
                 }
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor="allow-respond"
-                className="text-sm font-medium"
-              >
-                Allow respond
-              </Label>
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col items-start gap-1">
+                <Label
+                  htmlFor="allow-respond"
+                  className="text-sm font-medium"
+                >
+                  Allow respond
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  The user may submit a response to the LLM before it is
+                  executed.
+                </p>
+              </div>
+
               <Switch
                 id="allow-respond"
                 checked={config.allow_respond}
                 onCheckedChange={(checked) =>
-                  setConfig((prev) => ({ ...prev, allow_respond: checked }))
+                  onInterruptChange({ ...config, allow_respond: checked })
                 }
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <Label
-                htmlFor="allow-edit"
-                className="text-sm font-medium"
-              >
-                Allow edit
-              </Label>
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col items-start gap-1">
+                <Label
+                  htmlFor="allow-edit"
+                  className="text-sm font-medium"
+                >
+                  Allow edit
+                </Label>
+                <p className="text-muted-foreground text-xs">
+                  Allow the user to edit the arguments of the tool call before
+                  executing it.
+                </p>
+              </div>
+
               <Switch
                 id="allow-edit"
                 checked={config.allow_edit}
                 onCheckedChange={(checked) =>
-                  setConfig((prev) => ({ ...prev, allow_edit: checked }))
+                  onInterruptChange({ ...config, allow_edit: checked })
                 }
               />
             </div>
