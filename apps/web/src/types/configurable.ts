@@ -77,7 +77,7 @@ export type ConfigurableFieldMCPMetadata = {
     tools?: string[];
     url?: string;
     auth_required?: boolean;
-    interrupt_config?: Record<string, boolean | HumanInterruptConfig>
+    interrupt_config?: Record<string, boolean | HumanInterruptConfig>;
   };
 };
 

@@ -15,7 +15,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
-import { Check, ChevronsUpDown, AlertCircle, Plus, X, OctagonPause } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  AlertCircle,
+  Plus,
+  X,
+  OctagonPause,
+} from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -62,13 +69,13 @@ interface ConfigFieldProps {
   id: string;
   label: string;
   type:
-  | "text"
-  | "textarea"
-  | "number"
-  | "switch"
-  | "slider"
-  | "select"
-  | "json";
+    | "text"
+    | "textarea"
+    | "number"
+    | "switch"
+    | "slider"
+    | "select"
+    | "json";
   description?: string;
   placeholder?: string;
   options?: Option[];
@@ -291,7 +298,7 @@ export function ConfigField({
             className={cn(
               "min-h-[120px] font-mono text-sm",
               jsonError &&
-              "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
+                "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
             )}
           />
           <div className="flex w-full items-start justify-between gap-2 pt-1">
@@ -372,16 +379,16 @@ export function ConfigFieldTool({
   const handleCheckedChange = (checked: boolean) => {
     const newValue = checked
       ? {
-        ...defaults,
-        // Remove duplicates
-        tools: Array.from(
-          new Set<string>([...(defaults.tools || []), label]),
-        ),
-      }
+          ...defaults,
+          // Remove duplicates
+          tools: Array.from(
+            new Set<string>([...(defaults.tools || []), label]),
+          ),
+        }
       : {
-        ...defaults,
-        tools: defaults.tools?.filter((t) => t !== label),
-      };
+          ...defaults,
+          tools: defaults.tools?.filter((t) => t !== label),
+        };
 
     if (isExternallyManaged) {
       externalSetValue(newValue);
@@ -425,7 +432,7 @@ export function ConfigFieldTool({
           </p>
         )}
       </div>
-      
+
       <InterruptConfigDialog
         open={interruptDialogOpen}
         onOpenChange={setInterruptDialogOpen}
@@ -885,7 +892,7 @@ export function ConfigFieldSubAgents({
                 toolsLoading={toolsLoading || false}
                 displayTools={displayTools || availableTools || []}
                 toolSearchTerm={toolSearchTerm || ""}
-                debouncedSetSearchTerm={debouncedSetSearchTerm || (() => { })}
+                debouncedSetSearchTerm={debouncedSetSearchTerm || (() => {})}
                 loadingMore={loadingMore || false}
                 onLoadMore={onLoadMore}
                 hasMore={hasMore || false}
