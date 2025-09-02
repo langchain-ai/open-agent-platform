@@ -49,6 +49,7 @@ const data = {
       url: "/inbox",
       icon: Inbox,
     },
+    {
       title: "Triggers",
       url: "/triggers",
       icon: Webhook,

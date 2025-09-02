@@ -18,6 +18,7 @@ import {
 } from "./utils";
 import { logger } from "../utils/logger";
 import { useAuthContext } from "@/providers/Auth";
+import { Session } from "@/lib/auth/types";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -30,7 +31,7 @@ type ThreadContentType<
   fetchThreads: (
     agentId: string,
     deploymentId: string,
-    sessionToUse: any,
+    sessionToUse: Session,
   ) => Promise<void>;
   setThreadData: Dispatch<SetStateAction<ThreadData<Record<string, any>>[]>>;
   sendHumanResponse: <TStream extends boolean = false>(
@@ -80,7 +81,7 @@ function ThreadsProviderInternal<
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
   const fetchThreads = React.useCallback(
-    async (agentId: string, deploymentId: string, sessionToUse: any) => {
+    async (agentId: string, deploymentId: string, sessionToUse: Session) => {
       if (!sessionToUse?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
@@ -245,15 +246,7 @@ function ThreadsProviderInternal<
       return;
     }
 
-    if (isLoading) {
-      return;
-    }
-
-    if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
-      return;
-    }
-
-    if (!session?.accessToken) {
+    if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam || isLoading || !session?.accessToken) {
       return;
     }
 
