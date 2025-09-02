@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { z } from "zod";
+import "../signin/signin.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -155,23 +157,60 @@ export default function SignupInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">
-            Create an Account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Sign up to get started with Open Agent Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="flex flex-col items-center">
+        <div className="platform-header">
+          <Image
+            src="/LangGraph-logo.svg"
+            alt="LangGraph"
+            width={66.667}
+            height={34}
+            className="platform-logo"
+          />
+          <span className="platform-text">Open Agent Platform</span>
+        </div>
+        <Card className="signup-card flex flex-col" style={{marginTop: '36px'}}>
+          <CardHeader className="p-0">
+            <CardTitle className="signin-title">Create an Account</CardTitle>
+          </CardHeader>
+        <CardContent className="p-0">
+          {!googleAuthDisabled() && (
+            <div className="flex justify-center mb-6">
+              <Button
+                variant="outline"
+                type="button"
+                className="google-signin-btn flex items-center justify-center gap-2"
+                onClick={handleGoogleSignup}
+                disabled={isLoading}
+              >
+                <Image
+                  src="/google-logo.svg"
+                  alt="Google"
+                  width={27.44}
+                  height={28}
+                />
+              </Button>
+            </div>
+          )}
+
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="flex items-center gap-4">
+              <div className="divider-line"></div>
+              <span className="text-muted-foreground text-xs uppercase">
+                or
+              </span>
+              <div className="divider-line"></div>
+            </div>
+          </div>
+
           <form
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+            <div className="space-y-4">
+              <div className="space-y-2 flex flex-col items-center">
+                <div className="w-[456px]">
+                  <Label htmlFor="firstName" className="input-label">First Name</Label>
+                </div>
                 <Input
                   id="firstName"
                   name="firstName"
@@ -180,14 +219,17 @@ export default function SignupInterface() {
                   value={formValues.firstName || ""}
                   onChange={handleInputChange}
                   aria-invalid={!!errors.firstName}
+                  className="signin-input"
                 />
                 {errors.firstName && (
                   <p className="text-destructive text-sm">{errors.firstName}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+              <div className="space-y-2 flex flex-col items-center">
+                <div className="w-[456px]">
+                  <Label htmlFor="lastName" className="input-label">Last Name</Label>
+                </div>
                 <Input
                   id="lastName"
                   name="lastName"
@@ -196,6 +238,7 @@ export default function SignupInterface() {
                   value={formValues.lastName || ""}
                   onChange={handleInputChange}
                   aria-invalid={!!errors.lastName}
+                  className="signin-input"
                 />
                 {errors.lastName && (
                   <p className="text-destructive text-sm">{errors.lastName}</p>
@@ -203,13 +246,15 @@ export default function SignupInterface() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="companyName">
-                Company Name{" "}
-                <span className="text-muted-foreground text-xs">
-                  (Optional)
-                </span>
-              </Label>
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="companyName" className="input-label">
+                  Company Name{" "}
+                  <span className="text-muted-foreground text-xs">
+                    (Optional)
+                  </span>
+                </Label>
+              </div>
               <Input
                 id="companyName"
                 name="companyName"
@@ -218,14 +263,17 @@ export default function SignupInterface() {
                 value={formValues.companyName || ""}
                 onChange={handleInputChange}
                 aria-invalid={!!errors.companyName}
+                className="signin-input"
               />
               {errors.companyName && (
                 <p className="text-destructive text-sm">{errors.companyName}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="email" className="input-label">Email</Label>
+              </div>
               <Input
                 id="email"
                 name="email"
@@ -234,37 +282,48 @@ export default function SignupInterface() {
                 value={formValues.email || ""}
                 onChange={handleInputChange}
                 aria-invalid={!!errors.email}
+                className="signin-input"
               />
               {errors.email && (
                 <p className="text-destructive text-sm">{errors.email}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <PasswordInput
-                id="password"
-                name="password"
-                placeholder="Create a password"
-                value={formValues.password || ""}
-                onChange={handleInputChange}
-                aria-invalid={!!errors.password}
-              />
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="password" className="input-label">Password</Label>
+              </div>
+              <div style={{width: '456px'}}>
+                <PasswordInput
+                  id="password"
+                  name="password"
+                  placeholder="Create a password"
+                  value={formValues.password || ""}
+                  onChange={handleInputChange}
+                  aria-invalid={!!errors.password}
+                  className="signin-input"
+                />
+              </div>
               {errors.password && (
                 <p className="text-destructive text-sm">{errors.password}</p>
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <PasswordInput
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="Confirm your password"
-                value={formValues.confirmPassword || ""}
-                onChange={handleInputChange}
-                aria-invalid={!!errors.confirmPassword}
-              />
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="confirmPassword" className="input-label">Confirm Password</Label>
+              </div>
+              <div style={{width: '456px'}}>
+                <PasswordInput
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="Confirm your password"
+                  value={formValues.confirmPassword || ""}
+                  onChange={handleInputChange}
+                  aria-invalid={!!errors.confirmPassword}
+                  className="signin-input"
+                />
+              </div>
               {errors.confirmPassword && (
                 <p className="text-destructive text-sm">
                   {errors.confirmPassword}
@@ -278,64 +337,49 @@ export default function SignupInterface() {
               </Alert>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
-          </form>
-
-          {!googleAuthDisabled() && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card text-muted-foreground px-2">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
+            <div className="flex justify-center">
               <Button
-                variant="outline"
-                type="button"
-                className="flex w-full items-center justify-center gap-2"
-                onClick={handleGoogleSignup}
+                type="submit"
+                className="continue-btn"
                 disabled={isLoading}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                </svg>
-                Sign up with Google
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
-            </>
-          )}
+            </div>
+          </form>
+
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
+        <CardFooter className="flex flex-col items-center p-0 gap-4">
+          <p className="account-link-text">
             Already have an account?{" "}
             <Link
               href="/signin"
-              className="text-primary font-medium hover:underline"
+              className="terms-link"
             >
               Sign in
             </Link>
           </p>
+          <div className="terms-text">
+            <p>
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="terms-link"
+              >
+                Terms of Service.
+              </Link>{" "}
+              Data security is important to us. Please read our{" "}
+              <Link
+                href="/data-policy"
+                className="terms-link"
+              >
+                Data Security Policy
+              </Link>
+            </p>
+          </div>
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }

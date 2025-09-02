@@ -66,10 +66,35 @@ export default function SigninInterface() {
       return;
     }
 
-    // Redirect to the proper signup page with the email pre-filled
-    const params = new URLSearchParams();
-    if (email) params.set('email', email);
-    router.push(`/signup?${params.toString()}`);
+    setIsLoading(true);
+
+    try {
+      const { error } = await signIn({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      setIsSuccess(true);
+      // Delay to show success state before redirect
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+
+      // Show manual redirect option after 3 seconds
+      setTimeout(() => {
+        setShowManualRedirect(true);
+      }, 3000);
+    } catch (error) {
+      console.error("Sign in error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
@@ -102,7 +127,7 @@ export default function SigninInterface() {
         </div>
         <Card className="signin-card flex flex-col" style={{marginTop: '36px'}}>
           <CardHeader className="p-0">
-            <CardTitle className="signin-title">Create an Account</CardTitle>
+            <CardTitle className="signin-title">Sign In</CardTitle>
           </CardHeader>
         <CardContent className="p-0">
           {message && !isSuccess && (
@@ -168,7 +193,7 @@ export default function SigninInterface() {
               <Input
                 id="email"
                 type="email"
-                placeholder=""
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -177,13 +202,16 @@ export default function SigninInterface() {
             </div>
 
             <div className="space-y-2 flex flex-col items-center">
-              <div className="w-[456px]">
+              <div className="w-[456px] flex justify-between items-center">
                 <Label htmlFor="password" className="input-label">Password</Label>
+                <Link href="/forgot-password" className="text-sm text-gray-600 hover:underline">
+                  Forgot password?
+                </Link>
               </div>
               <div style={{width: '456px'}}>
                 <PasswordInput
                   id="password"
-                  placeholder=""
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -208,19 +236,19 @@ export default function SigninInterface() {
                   ? "Signing in..."
                   : isSuccess
                     ? "Signed In Successfully"
-                    : "Continue"}
+                    : "Sign In"}
               </Button>
             </div>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center p-0 gap-4">
           <p className="account-link-text">
-            Already have an account?{" "}
+            Don't have an account?{" "}
             <Link
-              href="/signin"
+              href="/signup"
               className="terms-link"
             >
-              Log in
+              Sign up
             </Link>
           </p>
           <div className="terms-text">

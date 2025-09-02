@@ -116,3 +116,12 @@
   padding: 56px;
   gap: 32px;
 }
+
+/* Signup Card Container - taller to fit additional fields */
+.signup-card {
+  width: 628px;
+  min-height: 900px;
+  border-radius: 46px;
+  padding: 56px;
+  gap: 32px;
+}
