@@ -21,6 +21,8 @@
   },
   "packageManager": "yarn@3.5.1",
   "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "js-yaml": "^4.1.0",
     "react-hook-form": "^7.56.3"
   }
 }

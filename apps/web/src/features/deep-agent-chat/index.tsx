@@ -5,8 +5,7 @@ import { useQueryState } from "nuqs";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
 import { SubAgentPanel } from "./components/SubAgentPanel";
-import { FileViewDialog } from "./components/FileViewDialog";
-import type { SubAgent, FileItem, TodoItem } from "./types";
+import type { SubAgent, TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -40,7 +39,6 @@ export default function DeepAgentChatInterface() {
   const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
     null,
   );
-  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
@@ -121,12 +119,13 @@ export default function DeepAgentChatInterface() {
   return (
     <ChatProvider
       setTodos={setTodos}
+      files={files}
       setFiles={setFiles}
       activeAssistant={activeAssistant}
       deploymentId={deploymentId}
       agentId={agentId}
     >
-      <div className="absolute inset-0 flex h-full overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+      <div className="absolute inset-0 flex h-screen overflow-hidden">
         <div className="flex h-full flex-col">
           <header className="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
             <div className="flex items-center gap-2 px-4">
@@ -138,7 +137,7 @@ export default function DeepAgentChatInterface() {
             todos={todos}
             files={files}
             activeAssistant={activeAssistant}
-            onFileClick={setSelectedFile}
+            setFiles={setFiles}
             setActiveAssistant={setActiveAssistant}
             setAssistantError={setAssistantError}
             assistantError={assistantError}
@@ -168,12 +167,6 @@ export default function DeepAgentChatInterface() {
             />
           )}
         </div>
-        {selectedFile && (
-          <FileViewDialog
-            file={selectedFile}
-            onClose={() => setSelectedFile(null)}
-          />
-        )}
       </div>
     </ChatProvider>
   );
