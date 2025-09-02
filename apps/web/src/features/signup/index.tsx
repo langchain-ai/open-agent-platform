@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SignupInterface() {
   const { signUp, signInWithGoogle } = useAuthContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [formValues, setFormValues] = useState<Partial<SignupFormValues>>({
     firstName: "",
@@ -60,6 +61,14 @@ export default function SignupInterface() {
   >({});
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Pre-fill email from URL parameters
+  useEffect(() => {
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setFormValues(prev => ({ ...prev, email: emailParam }));
+    }
+  }, [searchParams]);
 
   const validateForm = () => {
     try {

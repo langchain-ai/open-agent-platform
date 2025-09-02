@@ -1,0 +1,118 @@
+/* Create an Account Title */
+.signin-title {
+  color: var(--colors-text-text-primary-900, #101828);
+  font-size: 40px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 120%; /* 48px */
+  letter-spacing: -2.0px;
+  text-align: center;
+  width: 305px;
+  height: 48px;
+  margin: 0 auto;
+}
+
+/* Google Sign-in Button */
+.google-signin-btn {
+  width: 144px;
+  height: 64px;
+  border-radius: 16px;
+  border: 1px solid #e5e5e5;
+}
+
+/* Divider Lines */
+.divider-line {
+  width: 196px;
+  height: 1px;
+  background-color: #70707B;
+}
+
+/* Input Fields */
+.signin-input {
+  font-size: 16px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 456px;
+  height: 64px;
+  border-radius: 64px;
+  border: 1px solid #e5e5e5;
+}
+
+/* Continue Button */
+.continue-btn {
+  background-color: #E9D7FE;
+  width: 456px;
+  height: 64px;
+  border-radius: 64px;
+  border: none;
+  font-weight: 400;
+  font-size: 20px;
+  color: black;
+}
+
+/* Account Link Text */
+.account-link-text {
+  color: black;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Terms and Policy Text */
+.terms-text {
+  color: black;
+  font-size: 16px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.terms-link {
+  color: black;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Input Labels */
+.input-label {
+  color: black;
+}
+
+/* Background Gradient */
+.langgraph-grad {
+  background: linear-gradient(180deg, #076699 0%, var(--Colors-Bahama-Blue-ARCHIVED-800, #0F496B) 100%);
+}
+
+/* Logo and Platform Text */
+.platform-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.platform-text {
+  color: #FFF;
+  text-align: center;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 100%; /* 36px */
+  letter-spacing: -1.44px;
+}
+
+.platform-logo {
+  width: 66.667px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+/* Main Card Container */
+.signin-card {
+  width: 628px;
+  height: 718px;
+  border-radius: 46px;
+  padding: 56px;
+  gap: 32px;
+}

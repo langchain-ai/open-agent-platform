@@ -1,17 +1,10 @@
 import type { Metadata } from "next";
 import "../globals.css";
-import { Inter } from "next/font/google";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { SidebarLayout } from "@/components/sidebar";
 import { AuthProvider } from "@/providers/Auth";
 import { DOCS_LINK } from "@/constants";
-
-const inter = Inter({
-  subsets: ["latin"],
-  preload: true,
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Open Agent Platform",
@@ -35,7 +28,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className={inter.className}>
+      <body>
         {isDemoApp && (
           <div className="fixed top-0 right-0 left-0 z-10 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
             You're currently using the demo application. To use your own agents,

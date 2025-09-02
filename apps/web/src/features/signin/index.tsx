@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { z } from "zod";
+import "./signin.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -63,32 +66,10 @@ export default function SigninInterface() {
       return;
     }
 
-    setIsLoading(true);
-
-    try {
-      const result = await signIn({
-        email,
-        password,
-      });
-
-      if (result.error) {
-        setError(result.error.message);
-        return;
-      }
-
-      // Show success message and set up manual redirect timer
-      setIsSuccess(true);
-
-      // Set a timer to show manual redirect button after 5 seconds
-      setTimeout(() => {
-        setShowManualRedirect(true);
-      }, 5000);
-    } catch (err) {
-      console.error("Sign in error:", err);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Redirect to the proper signup page with the email pre-filled
+    const params = new URLSearchParams();
+    if (email) params.set('email', email);
+    router.push(`/signup?${params.toString()}`);
   };
 
   const handleGoogleSignIn = async () => {
@@ -108,14 +89,22 @@ export default function SigninInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Welcome back to Open Agent Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="flex flex-col items-center">
+        <div className="platform-header">
+          <Image
+            src="/LangGraph-logo.svg"
+            alt="LangGraph"
+            width={66.667}
+            height={34}
+            className="platform-logo"
+          />
+          <span className="platform-text">Open Agent Platform</span>
+        </div>
+        <Card className="signin-card flex flex-col" style={{marginTop: '36px'}}>
+          <CardHeader className="p-0">
+            <CardTitle className="signin-title">Create an Account</CardTitle>
+          </CardHeader>
+        <CardContent className="p-0">
           {message && !isSuccess && (
             <Alert className="mb-4 bg-blue-50 text-blue-800">
               <AlertDescription>{message}</AlertDescription>
@@ -139,39 +128,68 @@ export default function SigninInterface() {
             </Alert>
           )}
 
+          {!googleAuthDisabled() && (
+            <div className="flex justify-center mb-6">
+              <Button
+                variant="outline"
+                type="button"
+                className="google-signin-btn flex items-center justify-center gap-2"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading || isSuccess}
+              >
+                <Image
+                  src="/google-logo.svg"
+                  alt="Google"
+                  width={27.44}
+                  height={28}
+                />
+              </Button>
+            </div>
+          )}
+
+          <div className="relative my-6 flex items-center justify-center">
+            <div className="flex items-center gap-4">
+              <div className="divider-line"></div>
+              <span className="text-muted-foreground text-xs uppercase">
+                or
+              </span>
+              <div className="divider-line"></div>
+            </div>
+          </div>
+
           <form
             onSubmit={handleSubmit}
-            className="space-y-4"
+            className="space-y-6"
           >
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="email" className="input-label">Email</Label>
+              </div>
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
+                placeholder=""
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="signin-input"
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-primary text-sm font-medium hover:underline"
-                >
-                  Forgot password?
-                </Link>
+            <div className="space-y-2 flex flex-col items-center">
+              <div className="w-[456px]">
+                <Label htmlFor="password" className="input-label">Password</Label>
               </div>
-              <PasswordInput
-                id="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div style={{width: '456px'}}>
+                <PasswordInput
+                  id="password"
+                  placeholder=""
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="signin-input"
+                />
+              </div>
             </div>
 
             {error && (
@@ -180,68 +198,52 @@ export default function SigninInterface() {
               </Alert>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || isSuccess}
-            >
-              {isLoading
-                ? "Signing in..."
-                : isSuccess
-                  ? "Signed In Successfully"
-                  : "Sign In"}
-            </Button>
-          </form>
-
-          {!googleAuthDisabled() && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card text-muted-foreground px-2">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-
+            <div className="flex justify-center">
               <Button
-                variant="outline"
-                type="button"
-                className="flex w-full items-center justify-center gap-2"
-                onClick={handleGoogleSignIn}
+                type="submit"
+                className="continue-btn"
                 disabled={isLoading || isSuccess}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                </svg>
-                Sign in with Google
+                {isLoading
+                  ? "Signing in..."
+                  : isSuccess
+                    ? "Signed In Successfully"
+                    : "Continue"}
               </Button>
-            </>
-          )}
+            </div>
+          </form>
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Don&apos;t have an account?{" "}
+        <CardFooter className="flex flex-col items-center p-0 gap-4">
+          <p className="account-link-text">
+            Already have an account?{" "}
             <Link
-              href="/signup"
-              className="text-primary font-medium hover:underline"
+              href="/signin"
+              className="terms-link"
             >
-              Sign up
+              Log in
             </Link>
           </p>
+          <div className="terms-text">
+            <p>
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="terms-link"
+              >
+                Terms of Service.
+              </Link>{" "}
+              Data security is important to us. Please read our{" "}
+              <Link
+                href="/data-policy"
+                className="terms-link"
+              >
+                Data Security Policy
+              </Link>
+            </p>
+          </div>
         </CardFooter>
       </Card>
+      </div>
     </div>
   );
 }
