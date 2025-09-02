@@ -246,7 +246,14 @@ function ThreadsProviderInternal<
       return;
     }
 
-    if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam || isLoading || !session?.accessToken) {
+    if (
+      !agentInboxId ||
+      !inboxParam ||
+      offsetParam == null ||
+      !limitParam ||
+      isLoading ||
+      !session?.accessToken
+    ) {
       return;
     }
 
