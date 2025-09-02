@@ -277,7 +277,7 @@ export default function useInterruptedActions<
           console.warn(
             "No agentInboxId found after successful submission, redirecting to inbox",
           );
-          await setSelectedThreadId(null);
+          setSelectedThreadId(null);
           setStreamFinished(false);
           return;
         }
@@ -294,7 +294,9 @@ export default function useInterruptedActions<
         } else {
           // Thread is resolved or no longer interrupted, redirect to inbox
           const [assistantId, deploymentId] = agentInboxId.split(":");
-          await fetchThreads(assistantId, deploymentId, session);
+          if (session) {
+            await fetchThreads(assistantId, deploymentId, session);
+          }
           await setSelectedThreadId(null);
         }
         setStreamFinished(false);
@@ -341,7 +343,9 @@ export default function useInterruptedActions<
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
     const [assistantId, deploymentId] = agentInboxId.split(":");
     // Re-fetch threads before routing back so the inbox is up to date
-    await fetchThreads(assistantId, deploymentId, session);
+    if (session) {
+      await fetchThreads(assistantId, deploymentId, session);
+    }
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -373,7 +377,9 @@ export default function useInterruptedActions<
 
     await ignoreThread(threadData.thread.thread_id);
     const [assistantId, deploymentId] = agentInboxId.split(":");
-    await fetchThreads(assistantId, deploymentId, session);
+    if (session) {
+      await fetchThreads(assistantId, deploymentId, session);
+    }
 
     setLoading(false);
     // Clear the selected thread ID to go back to inbox view
