@@ -271,14 +271,14 @@ export default function SigninInterface() {
               <p>
                 By continuing, you agree to our{" "}
                 <Link
-                  href="/terms"
+                  href="https://www.langchain.com/terms-of-service"
                   className="terms-link"
                 >
                   Terms of Service.
                 </Link>{" "}
                 Data security is important to us. Please read our{" "}
                 <Link
-                  href="/data-policy"
+                  href="https://smith.langchain.com/data-security-policy.pdf"
                   className="terms-link"
                 >
                   Data Security Policy
