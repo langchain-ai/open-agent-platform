@@ -15,7 +15,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
-import { Check, ChevronsUpDown, AlertCircle, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, AlertCircle, Plus, X, OctagonPause } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -51,6 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { InterruptConfigDialog } from "./interrupt-config-dialog";
 
 interface Option {
   label: string;
@@ -61,13 +62,13 @@ interface ConfigFieldProps {
   id: string;
   label: string;
   type:
-    | "text"
-    | "textarea"
-    | "number"
-    | "switch"
-    | "slider"
-    | "select"
-    | "json";
+  | "text"
+  | "textarea"
+  | "number"
+  | "switch"
+  | "slider"
+  | "select"
+  | "json";
   description?: string;
   placeholder?: string;
   options?: Option[];
@@ -290,7 +291,7 @@ export function ConfigField({
             className={cn(
               "min-h-[120px] font-mono text-sm",
               jsonError &&
-                "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
+              "border-red-500 focus:border-red-500 focus-visible:ring-red-500", // Add error styling
             )}
           />
           <div className="flex w-full items-start justify-between gap-2 pt-1">
@@ -352,6 +353,7 @@ export function ConfigFieldTool({
 > & { toolId: string }) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
+  const [interruptDialogOpen, setInterruptDialogOpen] = useState(false);
 
   const isExternallyManaged = externalSetValue !== undefined;
 
@@ -370,16 +372,16 @@ export function ConfigFieldTool({
   const handleCheckedChange = (checked: boolean) => {
     const newValue = checked
       ? {
-          ...defaults,
-          // Remove duplicates
-          tools: Array.from(
-            new Set<string>([...(defaults.tools || []), label]),
-          ),
-        }
+        ...defaults,
+        // Remove duplicates
+        tools: Array.from(
+          new Set<string>([...(defaults.tools || []), label]),
+        ),
+      }
       : {
-          ...defaults,
-          tools: defaults.tools?.filter((t) => t !== label),
-        };
+        ...defaults,
+        tools: defaults.tools?.filter((t) => t !== label),
+      };
 
     if (isExternallyManaged) {
       externalSetValue(newValue);
@@ -390,27 +392,45 @@ export function ConfigFieldTool({
   };
 
   return (
-    <div className={cn("w-full space-y-2", className)}>
-      <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          {_.startCase(label)}
-        </Label>
-        <Switch
-          id={id}
-          checked={checked} // Use currentValue
-          onCheckedChange={handleCheckedChange}
-        />
-      </div>
+    <>
+      <div className={cn("w-full space-y-2", className)}>
+        <div className="flex items-center justify-between">
+          <Label
+            htmlFor={id}
+            className="text-sm font-medium"
+          >
+            {_.startCase(label)}
+          </Label>
+          <div className="flex items-center gap-2">
+            <TooltipIconButton
+              tooltip="Configure interrupts"
+              onClick={() => setInterruptDialogOpen(true)}
+              disabled={!checked}
+              variant="ghost"
+              type="button"
+            >
+              <OctagonPause className="h-4 w-4" />
+            </TooltipIconButton>
+            <Switch
+              id={id}
+              checked={checked} // Use currentValue
+              onCheckedChange={handleCheckedChange}
+            />
+          </div>
+        </div>
 
-      {description && (
-        <p className="text-xs whitespace-pre-line text-gray-500">
-          {description}
-        </p>
-      )}
-    </div>
+        {description && (
+          <p className="text-xs whitespace-pre-line text-gray-500">
+            {description}
+          </p>
+        )}
+      </div>
+      
+      <InterruptConfigDialog
+        open={interruptDialogOpen}
+        onOpenChange={setInterruptDialogOpen}
+      />
+    </>
   );
 }
 
@@ -865,7 +885,7 @@ export function ConfigFieldSubAgents({
                 toolsLoading={toolsLoading || false}
                 displayTools={displayTools || availableTools || []}
                 toolSearchTerm={toolSearchTerm || ""}
-                debouncedSetSearchTerm={debouncedSetSearchTerm || (() => {})}
+                debouncedSetSearchTerm={debouncedSetSearchTerm || (() => { })}
                 loadingMore={loadingMore || false}
                 onLoadMore={onLoadMore}
                 hasMore={hasMore || false}

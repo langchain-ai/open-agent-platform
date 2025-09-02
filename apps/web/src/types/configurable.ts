@@ -1,5 +1,7 @@
 // The type interface for configuration fields
 
+import { HumanInterruptConfig } from "@/components/agent-inbox/types";
+
 export type ConfigurableFieldUIType =
   | "text"
   | "textarea"
@@ -75,6 +77,7 @@ export type ConfigurableFieldMCPMetadata = {
     tools?: string[];
     url?: string;
     auth_required?: boolean;
+    interrupt_config?: Record<string, boolean | HumanInterruptConfig>
   };
 };
 
