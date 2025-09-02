@@ -107,7 +107,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   "mt-4 overflow-hidden rounded-lg p-2 break-words",
                   isUser
                     ? "bg-user-message ml-auto text-white"
-                    : "border-border bg-surface text-primary border w-[calc(100%-100px)]",
+                    : "border-border bg-surface text-primary w-[calc(100%-100px)] border",
                 )}
               >
                 {isUser ? (
