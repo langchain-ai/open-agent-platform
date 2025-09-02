@@ -109,7 +109,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
       }
       onSaveFile(fileName, fileContent);
       setIsEditingMode(false);
-    }, [fileName, fileContent, onSaveFile, onClose]);
+    }, [fileName, fileContent, onSaveFile]);
 
     const handleCancel = useCallback(() => {
       if (file === null) {
@@ -122,18 +122,25 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
     }, [file, onClose]);
 
     const fileNameIsValid = useMemo(() => {
-      return fileName.trim() !== "" && !fileName.includes("/") && !fileName.includes(" ");
+      return (
+        fileName.trim() !== "" &&
+        !fileName.includes("/") &&
+        !fileName.includes(" ")
+      );
     }, [fileName]);
 
     return (
-      <Dialog open={true} onOpenChange={onClose}>
+      <Dialog
+        open={true}
+        onOpenChange={onClose}
+      >
         <DialogContent className="flex max-h-[80vh] min-w-[60vw] flex-col p-6">
           <DialogTitle className="sr-only">
             {file?.path || "New File"}
           </DialogTitle>
-          <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+          <div className="border-border mb-4 flex items-center justify-between border-b pb-4">
             <div className="flex min-w-0 items-center gap-2">
-              <FileText className="h-5 w-5 shrink-0 text-primary/50" />
+              <FileText className="text-primary/50 h-5 w-5 shrink-0" />
               {isEditingMode && file === null ? (
                 <Input
                   value={fileName}
@@ -143,7 +150,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                   aria-invalid={!fileNameIsValid}
                 />
               ) : (
-                <span className="overflow-hidden text-ellipsis whitespace-nowrap text-base font-medium text-primary">
+                <span className="text-primary overflow-hidden text-base font-medium text-ellipsis whitespace-nowrap">
                   {file?.path}
                 </span>
               )}
@@ -158,7 +165,10 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                     className="h-8 px-2"
                     disabled={editDisabled}
                   >
-                    <Edit size={16} className="mr-1" />
+                    <Edit
+                      size={16}
+                      className="mr-1"
+                    />
                     Edit
                   </Button>
                   <Button
@@ -167,7 +177,10 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                     size="sm"
                     className="h-8 px-2"
                   >
-                    <Copy size={16} className="mr-1" />
+                    <Copy
+                      size={16}
+                      className="mr-1"
+                    />
                     Copy
                   </Button>
                   <Button
@@ -176,14 +189,17 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                     size="sm"
                     className="h-8 px-2"
                   >
-                    <Download size={16} className="mr-1" />
+                    <Download
+                      size={16}
+                      className="mr-1"
+                    />
                     Download
                   </Button>
                 </>
               )}
             </div>
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="min-h-0 flex-1">
             {isEditingMode ? (
               <Textarea
                 value={fileContent}
@@ -192,7 +208,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                 className="h-full min-h-[400px] resize-none font-mono text-sm"
               />
             ) : (
-              <ScrollArea className="h-full max-h-[60vh] rounded-md bg-surface p-4">
+              <ScrollArea className="bg-surface h-full max-h-[60vh] rounded-md p-4">
                 {fileContent ? (
                   isMarkdown ? (
                     <div className="rounded-md p-6">
@@ -214,28 +230,38 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                   )
                 ) : (
                   <div className="flex items-center justify-center p-12">
-                    <p className="text-sm text-muted-foreground">File is empty</p>
+                    <p className="text-muted-foreground text-sm">
+                      File is empty
+                    </p>
                   </div>
                 )}
               </ScrollArea>
             )}
           </div>
           {isEditingMode && (
-            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border">
+            <div className="border-border mt-4 flex justify-end gap-2 border-t pt-4">
               <Button
                 onClick={handleCancel}
                 variant="outline"
                 size="sm"
               >
-                <X size={16} className="mr-1" />
+                <X
+                  size={16}
+                  className="mr-1"
+                />
                 Cancel
               </Button>
               <Button
                 onClick={handleSave}
                 size="sm"
-                disabled={!fileName.trim() || !fileContent.trim() || !fileNameIsValid}
+                disabled={
+                  !fileName.trim() || !fileContent.trim() || !fileNameIsValid
+                }
               >
-                <Save size={16} className="mr-1" />
+                <Save
+                  size={16}
+                  className="mr-1"
+                />
                 Save
               </Button>
             </div>

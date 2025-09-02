@@ -109,7 +109,12 @@ export function formatMessageForLLM(message: Message): string {
 
   // Handle tool calls from .tool_calls property (for AI messages)
   const toolCallsText: string[] = [];
-  if (message.type === "ai" && message.tool_calls && Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
+  if (
+    message.type === "ai" &&
+    message.tool_calls &&
+    Array.isArray(message.tool_calls) &&
+    message.tool_calls.length > 0
+  ) {
     message.tool_calls.forEach((call: any) => {
       const toolName = call.name || "unknown_tool";
       const toolArgs = call.args ? JSON.stringify(call.args, null, 2) : "{}";

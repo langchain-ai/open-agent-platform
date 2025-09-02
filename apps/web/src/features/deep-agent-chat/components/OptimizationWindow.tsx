@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
-import * as yaml from 'js-yaml';
+import * as yaml from "js-yaml";
 
 type StateType = {
   messages: Message[];
@@ -97,7 +97,10 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           id: uuidv4(),
           status: "pending",
           old_config: activeAssistant?.config.configurable || {},
-          new_config: yaml.load(state.values.files["config.yaml"]) as Record<string, unknown>,
+          new_config: yaml.load(state.values.files["config.yaml"]) as Record<
+            string,
+            unknown
+          >,
         };
         setDisplayMessages((prev) => [...prev, optimizerMessage]);
       },
@@ -136,7 +139,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         stream.submit({
           messages: [humanMessage],
           files: {
-            "config.yaml": yaml.dump(activeAssistant?.config.configurable || {}),
+            "config.yaml": yaml.dump(
+              activeAssistant?.config.configurable || {},
+            ),
             "conversation.txt": formatConversationForLLM(deepAgentMessages),
           },
         });
@@ -287,17 +292,17 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         oldConfig: Record<string, unknown>,
         newConfig: Record<string, unknown>,
       ) => {
-        const oldStr = yaml.dump(oldConfig, { 
+        const oldStr = yaml.dump(oldConfig, {
           indent: 2,
           lineWidth: -1,
           noRefs: true,
-          sortKeys: true 
+          sortKeys: true,
         });
         const newStr = yaml.dump(newConfig, {
           indent: 2,
           lineWidth: -1,
           noRefs: true,
-          sortKeys: true
+          sortKeys: true,
         });
 
         const oldLines = oldStr.split("\n");
@@ -305,20 +310,20 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
 
         // Use diff library to get line-level changes
         const lineDiff = Diff.diffLines(oldStr, newStr);
-        
+
         // Build arrays tracking which lines were added/removed/unchanged
-        const oldLineStatuses: ('removed' | 'unchanged')[] = [];
-        const newLineStatuses: ('added' | 'unchanged')[] = [];
-        
-        lineDiff.forEach(part => {
-          const lines = part.value.split('\n').filter(line => line !== '');
+        const oldLineStatuses: ("removed" | "unchanged")[] = [];
+        const newLineStatuses: ("added" | "unchanged")[] = [];
+
+        lineDiff.forEach((part) => {
+          const lines = part.value.split("\n").filter((line) => line !== "");
           if (part.removed) {
-            oldLineStatuses.push(...lines.map(() => 'removed' as const));
+            oldLineStatuses.push(...lines.map(() => "removed" as const));
           } else if (part.added) {
-            newLineStatuses.push(...lines.map(() => 'added' as const));
+            newLineStatuses.push(...lines.map(() => "added" as const));
           } else {
-            oldLineStatuses.push(...lines.map(() => 'unchanged' as const));
-            newLineStatuses.push(...lines.map(() => 'unchanged' as const));
+            oldLineStatuses.push(...lines.map(() => "unchanged" as const));
+            newLineStatuses.push(...lines.map(() => "unchanged" as const));
           }
         });
 
@@ -330,36 +335,36 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         while (oldIndex < oldLines.length || newIndex < newLines.length) {
           const oldLine = oldLines[oldIndex] || "";
           const newLine = newLines[newIndex] || "";
-          const oldStatus = oldLineStatuses[oldIndex] || 'unchanged';
-          const newStatus = newLineStatuses[newIndex] || 'unchanged';
+          const oldStatus = oldLineStatuses[oldIndex] || "unchanged";
+          const newStatus = newLineStatuses[newIndex] || "unchanged";
 
           let oldHighlighted = oldLine;
           let newHighlighted = newLine;
           let hasChanges = false;
 
           // Handle removed lines
-          if (oldStatus === 'removed' && newStatus !== 'added') {
+          if (oldStatus === "removed" && newStatus !== "added") {
             oldHighlighted = `<span class="word-removed">${oldLine}</span>`;
             newHighlighted = "";
             hasChanges = true;
             oldIndex++;
           }
           // Handle added lines
-          else if (newStatus === 'added' && oldStatus !== 'removed') {
+          else if (newStatus === "added" && oldStatus !== "removed") {
             oldHighlighted = "";
             newHighlighted = `<span class="word-added">${newLine}</span>`;
             hasChanges = true;
             newIndex++;
           }
           // Handle changed lines (both removed and added at same position)
-          else if (oldStatus === 'removed' && newStatus === 'added') {
+          else if (oldStatus === "removed" && newStatus === "added") {
             // For changed lines, highlight word-level differences
             const wordDiff = Diff.diffWords(oldLine.trim(), newLine.trim());
-            
+
             // Preserve indentation
-            const oldIndent = oldLine.match(/^(\s*)/)?.[1] || '';
-            const newIndent = newLine.match(/^(\s*)/)?.[1] || '';
-            
+            const oldIndent = oldLine.match(/^(\s*)/)?.[1] || "";
+            const newIndent = newLine.match(/^(\s*)/)?.[1] || "";
+
             oldHighlighted = oldIndent;
             newHighlighted = newIndent;
 
@@ -373,7 +378,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 newHighlighted += part.value;
               }
             });
-            
+
             hasChanges = true;
             oldIndex++;
             newIndex++;
