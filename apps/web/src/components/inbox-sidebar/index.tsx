@@ -74,7 +74,9 @@ function InboxSidebarInternal() {
     await setLimit(10);
     await setInbox("interrupted");
 
-    await fetchThreads(agent.assistant_id, agent.deploymentId, session);
+    if (session) {
+      await fetchThreads(agent.assistant_id, agent.deploymentId, session);
+    }
   };
 
   return (
