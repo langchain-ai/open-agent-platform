@@ -277,7 +277,7 @@ export default function useInterruptedActions<
           console.warn(
             "No agentInboxId found after successful submission, redirecting to inbox",
           );
-          setSelectedThreadId(null);
+          await setSelectedThreadId(null);
           setStreamFinished(false);
           return;
         }
