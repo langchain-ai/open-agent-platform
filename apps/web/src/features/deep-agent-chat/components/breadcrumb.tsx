@@ -10,9 +10,7 @@ export function DeepAgentChatBreadcrumb() {
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbLink href="/deep-agent-chat">
-            Deep Agent Chat
-          </BreadcrumbLink>
+          <BreadcrumbLink href="/chat">Deep Agent Chat</BreadcrumbLink>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

@@ -6,7 +6,7 @@ import {
   Bot,
   MessageCircle,
   Brain,
-  BrainCircuit,
+  Inbox,
   Webhook,
 } from "lucide-react";
 
@@ -25,13 +25,8 @@ const data = {
   navMain: [
     {
       title: "Chat",
-      url: "/",
+      url: "/chat",
       icon: MessageCircle,
-    },
-    {
-      title: "Deep Agent Chat",
-      url: "/deep-agent-chat",
-      icon: BrainCircuit,
     },
     {
       title: "Agents",
@@ -44,15 +39,15 @@ const data = {
       icon: Wrench,
     },
     {
+      title: "Inbox",
+      url: "/inbox",
+      icon: Inbox,
+    },
+    {
       title: "Triggers",
       url: "/triggers",
       icon: Webhook,
     },
-    // {
-    //   title: "Inbox",
-    //   url: "/inbox",
-    //   icon: Inbox,
-    // },
     {
       title: "RAG",
       url: "/rag",

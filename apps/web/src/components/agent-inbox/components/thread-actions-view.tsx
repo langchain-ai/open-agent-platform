@@ -243,7 +243,6 @@ export function ThreadActionsView<
     }
     return null;
   };
-
   // Handle Invalid  Interrupt Threads
   /////////////////////////////////////
   if (threadData.invalidSchema) {

@@ -13,7 +13,7 @@ import { useStream } from "@langchain/langgraph-sdk/react";
 import { createClient, getOptimizerClient } from "@/lib/client";
 import { Assistant, type Message } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
-import { prepareOptimizerMessage } from "../utils";
+import { prepareOptimizerMessage, formatConversationForLLM } from "../utils";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
+import * as yaml from "js-yaml";
 
 type StateType = {
   messages: Message[];
@@ -96,7 +97,10 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           id: uuidv4(),
           status: "pending",
           old_config: activeAssistant?.config.configurable || {},
-          new_config: JSON.parse(state.values.files["config.json"]),
+          new_config: yaml.load(state.values.files["config.yaml"]) as Record<
+            string,
+            unknown
+          >,
         };
         setDisplayMessages((prev) => [...prev, optimizerMessage]);
       },
@@ -135,12 +139,10 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         stream.submit({
           messages: [humanMessage],
           files: {
-            "config.json": JSON.stringify(
+            "config.yaml": yaml.dump(
               activeAssistant?.config.configurable || {},
-              null,
-              2,
             ),
-            "conversation.json": JSON.stringify(deepAgentMessages, null, 2),
+            "conversation.txt": formatConversationForLLM(deepAgentMessages),
           },
         });
       },
@@ -290,27 +292,81 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         oldConfig: Record<string, unknown>,
         newConfig: Record<string, unknown>,
       ) => {
-        const oldStr = JSON.stringify(oldConfig, null, 2);
-        const newStr = JSON.stringify(newConfig, null, 2);
+        const oldStr = yaml.dump(oldConfig, {
+          indent: 2,
+          lineWidth: -1,
+          noRefs: true,
+          sortKeys: true,
+        });
+        const newStr = yaml.dump(newConfig, {
+          indent: 2,
+          lineWidth: -1,
+          noRefs: true,
+          sortKeys: true,
+        });
 
         const oldLines = oldStr.split("\n");
         const newLines = newStr.split("\n");
 
-        const maxLines = Math.max(oldLines.length, newLines.length);
-        const result = [];
+        // Use diff library to get line-level changes
+        const lineDiff = Diff.diffLines(oldStr, newStr);
 
-        for (let i = 0; i < maxLines; i++) {
-          const oldLine = oldLines[i] || "";
-          const newLine = newLines[i] || "";
+        // Build arrays tracking which lines were added/removed/unchanged
+        const oldLineStatuses: ("removed" | "unchanged")[] = [];
+        const newLineStatuses: ("added" | "unchanged")[] = [];
+
+        lineDiff.forEach((part) => {
+          const lines = part.value.split("\n").filter((line) => line !== "");
+          if (part.removed) {
+            oldLineStatuses.push(...lines.map(() => "removed" as const));
+          } else if (part.added) {
+            newLineStatuses.push(...lines.map(() => "added" as const));
+          } else {
+            oldLineStatuses.push(...lines.map(() => "unchanged" as const));
+            newLineStatuses.push(...lines.map(() => "unchanged" as const));
+          }
+        });
+
+        // Create aligned arrays for side-by-side display
+        const result = [];
+        let oldIndex = 0;
+        let newIndex = 0;
+
+        while (oldIndex < oldLines.length || newIndex < newLines.length) {
+          const oldLine = oldLines[oldIndex] || "";
+          const newLine = newLines[newIndex] || "";
+          const oldStatus = oldLineStatuses[oldIndex] || "unchanged";
+          const newStatus = newLineStatuses[newIndex] || "unchanged";
 
           let oldHighlighted = oldLine;
           let newHighlighted = newLine;
+          let hasChanges = false;
 
-          if (oldLine !== newLine) {
-            const wordDiff = Diff.diffWords(oldLine, newLine);
-
-            oldHighlighted = "";
+          // Handle removed lines
+          if (oldStatus === "removed" && newStatus !== "added") {
+            oldHighlighted = `<span class="word-removed">${oldLine}</span>`;
             newHighlighted = "";
+            hasChanges = true;
+            oldIndex++;
+          }
+          // Handle added lines
+          else if (newStatus === "added" && oldStatus !== "removed") {
+            oldHighlighted = "";
+            newHighlighted = `<span class="word-added">${newLine}</span>`;
+            hasChanges = true;
+            newIndex++;
+          }
+          // Handle changed lines (both removed and added at same position)
+          else if (oldStatus === "removed" && newStatus === "added") {
+            // For changed lines, highlight word-level differences
+            const wordDiff = Diff.diffWords(oldLine.trim(), newLine.trim());
+
+            // Preserve indentation
+            const oldIndent = oldLine.match(/^(\s*)/)?.[1] || "";
+            const newIndent = newLine.match(/^(\s*)/)?.[1] || "";
+
+            oldHighlighted = oldIndent;
+            newHighlighted = newIndent;
 
             wordDiff.forEach((part) => {
               if (part.removed) {
@@ -322,13 +378,22 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 newHighlighted += part.value;
               }
             });
+
+            hasChanges = true;
+            oldIndex++;
+            newIndex++;
+          }
+          // Handle unchanged lines
+          else {
+            oldIndex++;
+            newIndex++;
           }
 
           result.push({
-            lineNumber: i + 1,
+            lineNumber: Math.max(oldIndex, newIndex),
             oldLine: oldHighlighted,
             newLine: newHighlighted,
-            hasChanges: oldLine !== newLine,
+            hasChanges,
           });
         }
 

@@ -2126,6 +2126,7 @@ __metadata:
     "@supabase/ssr": ^0.6.1
     "@supabase/supabase-js": ^2.49.4
     "@tailwindcss/postcss": ^4.0.13
+    "@types/js-yaml": ^4.0.9
     "@types/lodash": ^4.17.16
     "@types/node": 22.15.2
     "@types/react": ^19.0.8
@@ -2145,6 +2146,7 @@ __metadata:
     eslint-plugin-react-refresh: ^0.4.18
     framer-motion: ^12.7.3
     globals: ^15.14.0
+    js-yaml: ^4.1.0
     katex: latest
     langgraph-nextjs-api-passthrough: ^0.1.0
     lodash: ^4.17.21
@@ -2157,6 +2159,7 @@ __metadata:
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19.0.0
     react-dom: ^19.0.0
+    react-hook-form: ^7.56.3
     react-markdown: ^10.1.0
     react-resizable-panels: ^3.0.2
     react-syntax-highlighter: ^15.6.1
@@ -4446,6 +4449,13 @@ __metadata:
     expect: ^29.0.0
     pretty-format: ^29.0.0
   checksum: 18dba4623f26661641d757c63da2db45e9524c9be96a29ef713c703a9a53792df9ecee9f7365a0858ddbd6440d98fe6b65ca67895ca5884b73cbc7ffc11f3838
+  languageName: node
+  linkType: hard
+
+"@types/js-yaml@npm:^4.0.9":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: e5e5e49b5789a29fdb1f7d204f82de11cb9e8f6cb24ab064c616da5d6e1b3ccfbf95aa5d1498a9fbd3b9e745564e69b4a20b6c530b5a8bbb2d4eb830cda9bc69
   languageName: node
   linkType: hard
 
@@ -12311,7 +12321,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "open-agent-platform@workspace:."
   dependencies:
-    react-hook-form: ^7.56.3
     turbo: ^2.5.0
     typescript: ^5
   languageName: unknown

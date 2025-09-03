@@ -87,7 +87,6 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   );
 
   const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
-  const isDeepAgent = agent.supportedConfigs?.includes("deep_agent");
 
   return (
     <>
@@ -157,7 +156,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             </Button>
           )}
           <NextLink
-            href={`/${isDeepAgent ? "deep-agent-chat" : ""}?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+            href={`/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
             className="ml-auto"
           >
             <Button size="sm">

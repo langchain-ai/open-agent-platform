@@ -28,7 +28,7 @@ import {
 import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { useConfigStore } from "@/hooks/use-config-store";
 
 export function NavUser() {
   const { isMobile } = useSidebar();

@@ -18,6 +18,7 @@ import {
 } from "./utils";
 import { logger } from "../utils/logger";
 import { useAuthContext } from "@/providers/Auth";
+import { Session } from "@/lib/auth/types";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -27,7 +28,11 @@ type ThreadContentType<
   threadData: ThreadData<ThreadValues>[];
   hasMoreThreads: boolean;
   ignoreThread: (threadId: string) => Promise<void>;
-  fetchThreads: (agentId: string, deploymentId: string) => Promise<void>;
+  fetchThreads: (
+    agentId: string,
+    deploymentId: string,
+    sessionToUse: Session,
+  ) => Promise<void>;
   setThreadData: Dispatch<SetStateAction<ThreadData<Record<string, any>>[]>>;
   sendHumanResponse: <TStream extends boolean = false>(
     _threadId: string,
@@ -45,6 +50,7 @@ type ThreadContentType<
     : Promise<Run> | undefined;
   fetchSingleThread: (
     _threadId: string,
+    _agentInboxId?: string,
   ) => Promise<ThreadData<ThreadValues> | undefined>;
 };
 
@@ -56,7 +62,7 @@ const ThreadsContext = React.createContext<ThreadContentType | undefined>(
 function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
-  const { session } = useAuthContext();
+  const { session, isLoading } = useAuthContext();
   const [agentInboxId] = useQueryState("agentInbox");
   const [isPending] = useTransition();
 
@@ -75,8 +81,8 @@ function ThreadsProviderInternal<
   const [hasMoreThreads, setHasMoreThreads] = React.useState(true);
 
   const fetchThreads = React.useCallback(
-    async (agentId: string, deploymentId: string) => {
-      if (!session?.accessToken) {
+    async (agentId: string, deploymentId: string, sessionToUse: Session) => {
+      if (!sessionToUse?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
         });
@@ -91,7 +97,7 @@ function ThreadsProviderInternal<
 
       setLoading(true);
 
-      const client = createClient(deploymentId, session.accessToken);
+      const client = createClient(deploymentId, sessionToUse.accessToken);
 
       try {
         // Use the values from queryParams
@@ -231,7 +237,7 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [offsetParam, limitParam],
+    [offsetParam, limitParam, agentInboxId],
   );
 
   // Effect to fetch threads when parameters change
@@ -239,39 +245,59 @@ function ThreadsProviderInternal<
     if (typeof window === "undefined") {
       return;
     }
-    if (!agentInboxId || !inboxParam || offsetParam == null || !limitParam) {
+
+    if (
+      !agentInboxId ||
+      !inboxParam ||
+      offsetParam == null ||
+      !limitParam ||
+      isLoading ||
+      !session?.accessToken
+    ) {
       return;
     }
 
     const [assistantId, deploymentId] = agentInboxId.split(":");
 
     try {
-      // Fetch threads
-      fetchThreads(assistantId, deploymentId);
+      // Fetch threads - pass the session directly
+      fetchThreads(assistantId, deploymentId, session);
     } catch (e) {
       logger.error("Error occurred while fetching threads", e);
       toast.error("Failed to load threads. Please try again.");
       // Always reset loading state in case of error
       setLoading(false);
     }
-  }, [agentInboxId, inboxParam, offsetParam, limitParam, fetchThreads]);
+  }, [
+    agentInboxId,
+    inboxParam,
+    offsetParam,
+    limitParam,
+    fetchThreads,
+    isLoading,
+    session,
+  ]);
 
   const fetchSingleThread = React.useCallback(
-    async (threadId: string): Promise<ThreadData<ThreadValues> | undefined> => {
+    async (
+      threadId: string,
+      passedAgentInboxId?: string,
+    ): Promise<ThreadData<ThreadValues> | undefined> => {
+      const effectiveAgentInboxId = passedAgentInboxId || agentInboxId;
       if (!session?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
         });
         return;
       }
-      if (!agentInboxId) {
+      if (!effectiveAgentInboxId) {
         toast.error("No agent inbox ID found when fetching thread.", {
           richColors: true,
         });
-        return;
+        return undefined;
       }
 
-      const [_, deploymentId] = agentInboxId.split(":");
+      const [_, deploymentId] = effectiveAgentInboxId.split(":");
       const client = createClient(deploymentId, session.accessToken);
 
       try {

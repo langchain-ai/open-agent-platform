@@ -19,13 +19,11 @@ export default function InboxPage(): React.ReactNode {
     <React.Suspense fallback={<div>Loading...</div>}>
       <Toaster />
       <ThreadsProvider>
-        <div className="flex min-h-full w-full flex-row">
-          {/* Header */}
+        <div className="flex w-full flex-row">
           <div className="w-full">
             <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
               <div className="flex items-center gap-2 px-4">
                 <SidebarTrigger className="-ml-1" />
-
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem>
@@ -36,13 +34,9 @@ export default function InboxPage(): React.ReactNode {
               </div>
             </header>
 
-            {/* Main content */}
-            <div className="flex h-full w-full flex-col">
-              <AgentInbox />
-            </div>
+            <AgentInbox />
           </div>
 
-          {/* Right sidebar for inbox */}
           <div className="flex-none">
             <SidebarProvider style={{ width: "auto" }}>
               <InboxSidebar />

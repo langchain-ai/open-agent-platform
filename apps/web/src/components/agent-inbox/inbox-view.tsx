@@ -104,7 +104,7 @@ export function AgentInboxView<
   return (
     <div
       ref={containerRef}
-      className="h-full min-w-[1000px] overflow-y-auto"
+      className="min-w-[1000px] overflow-y-auto"
     >
       <div className="pt-4 pl-5">
         <InboxButtons />

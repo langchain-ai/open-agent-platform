@@ -19,8 +19,5 @@
     "turbo": "^2.5.0",
     "typescript": "^5"
   },
-  "packageManager": "yarn@3.5.1",
-  "dependencies": {
-    "react-hook-form": "^7.56.3"
-  }
+  "packageManager": "yarn@3.5.1"
 }
