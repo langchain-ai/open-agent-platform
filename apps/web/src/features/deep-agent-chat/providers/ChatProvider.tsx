@@ -10,6 +10,7 @@ import { ChatContext } from "./ChatContext";
 interface ChatProviderProps {
   children: ReactNode;
   setTodos: (todos: TodoItem[]) => void;
+  files: Record<string, string>;
   setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
   deploymentId: string | null;
@@ -19,6 +20,7 @@ interface ChatProviderProps {
 export function ChatProvider({
   children,
   setTodos,
+  files,
   setFiles,
   activeAssistant,
   deploymentId,
@@ -30,6 +32,7 @@ export function ChatProvider({
     threadId,
     setThreadId,
     setTodos,
+    files,
     setFiles,
     activeAssistant,
     deploymentId,

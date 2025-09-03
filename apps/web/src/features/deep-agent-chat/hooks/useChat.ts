@@ -22,6 +22,7 @@ export function useChat(
     value: string | ((old: string | null) => string | null) | null,
   ) => void,
   onTodosUpdate: (todos: TodoItem[]) => void,
+  files: Record<string, string>,
   onFilesUpdate: (files: Record<string, string>) => void,
   activeAssistant: Assistant | null,
   deploymentId: string | null,
@@ -32,10 +33,10 @@ export function useChat(
   const handleUpdateEvent = useCallback(
     (data: { [node: string]: Partial<StateType> }) => {
       Object.values(data).forEach((nodeData) => {
-        if (nodeData?.todos) {
+        if (nodeData?.todos !== undefined) {
           onTodosUpdate(nodeData.todos);
         }
-        if (nodeData?.files) {
+        if (nodeData?.files !== undefined) {
           onFilesUpdate(nodeData.files);
         }
       });
@@ -69,7 +70,7 @@ export function useChat(
         content: message,
       };
       stream.submit(
-        { messages: [humanMessage] },
+        { messages: [humanMessage], files },
         {
           optimisticValues(prev) {
             const prevMessages = prev.messages ?? [];
@@ -83,7 +84,7 @@ export function useChat(
         },
       );
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, files],
   );
 
   const runSingleStep = useCallback(
@@ -108,7 +109,7 @@ export function useChat(
         });
       } else {
         stream.submit(
-          { messages: messages },
+          { messages, files },
           {
             config: {
               ...(activeAssistant?.config || {}),
@@ -118,7 +119,7 @@ export function useChat(
         );
       }
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, files],
   );
 
   const continueStream = useCallback(
