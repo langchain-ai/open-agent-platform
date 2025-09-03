@@ -12,7 +12,7 @@ import {
   extractConfigurationsFromAgent,
   getConfigurableDefaults,
 } from "@/lib/ui-config";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { useConfigStore } from "@/hooks/use-config-store";
 import { Agent } from "@/types/agent";
 import { useQueryState } from "nuqs";
 

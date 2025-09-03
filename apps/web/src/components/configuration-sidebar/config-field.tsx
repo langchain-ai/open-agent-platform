@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { useConfigStore } from "@/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
 import {
   Check,
