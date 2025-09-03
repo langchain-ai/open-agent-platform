@@ -1,11 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useCallback,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Expand, X, Send, RotateCcw, Loader2 } from "lucide-react";
 import * as Diff from "diff";
 import { useStream } from "@langchain/langgraph-sdk/react";
@@ -210,12 +205,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           duration: 50000,
         });
       }
-    }, [
-      client,
-      activeAssistant,
-      setActiveAssistant,
-      setAssistantError,
-    ]);
+    }, [client, activeAssistant, setActiveAssistant, setAssistantError]);
 
     const handleApprove = useCallback(async () => {
       if (selectedOptimizerMessage) {
@@ -230,15 +220,12 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         handleClear();
 
         if (activeAssistant && client) {
-          await client.assistants.update(
-            activeAssistant.assistant_id,
-            {
-              metadata: activeAssistant.metadata,
-              config: {
-                configurable: selectedOptimizerMessage.new_config,
-              },
+          await client.assistants.update(activeAssistant.assistant_id, {
+            metadata: activeAssistant.metadata,
+            config: {
+              configurable: selectedOptimizerMessage.new_config,
             },
-          );
+          });
           await refreshActiveAssistant();
         }
 
@@ -513,7 +500,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
             >
               <AutoGrowTextarea
                 value={feedbackInput}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFeedbackInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setFeedbackInput(e.target.value)
+                }
                 onKeyDown={handleKeyDown}
                 placeholder="Enter your feedback..."
                 aria-label="Feedback input"

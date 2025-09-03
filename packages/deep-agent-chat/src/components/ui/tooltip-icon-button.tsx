@@ -2,11 +2,7 @@
 
 import { forwardRef } from "react";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "./tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 import { Button, ButtonProps } from "./button";
 import { cn } from "../../lib/utils";
 

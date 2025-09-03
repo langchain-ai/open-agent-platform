@@ -25,29 +25,26 @@ export function ClientProvider({
   optimizerUrl,
   optimizerAccessToken,
 }: ClientProviderProps) {
-  const client = useMemo(
-    () => {
-      // For locally running deployments
-      if (!accessToken) {
-        return new Client({
-          apiUrl: deploymentUrl,
-          defaultHeaders: {
-            "x-auth-scheme": "langsmith",
-          },
-        });
-      }
-      // TODO: Add support for LangSmith authenticated deployments
-      // For OAP deployments which require supabase access tokens
+  const client = useMemo(() => {
+    // For locally running deployments
+    if (!accessToken) {
       return new Client({
         apiUrl: deploymentUrl,
         defaultHeaders: {
-          Authorization: `Bearer ${accessToken}`,
-          "x-supabase-access-token": accessToken,
+          "x-auth-scheme": "langsmith",
         },
       });
-    },
-    [deploymentUrl, accessToken]
-  );
+    }
+    // TODO: Add support for LangSmith authenticated deployments
+    // For OAP deployments which require supabase access tokens
+    return new Client({
+      apiUrl: deploymentUrl,
+      defaultHeaders: {
+        Authorization: `Bearer ${accessToken}`,
+        "x-supabase-access-token": accessToken,
+      },
+    });
+  }, [deploymentUrl, accessToken]);
 
   const optimizerClient = useMemo(() => {
     if (!optimizerUrl) return undefined;
@@ -73,7 +70,7 @@ export function ClientProvider({
 
   const value = useMemo(
     () => ({ client, optimizerClient }),
-    [client, optimizerClient]
+    [client, optimizerClient],
   );
 
   return (
@@ -83,7 +80,7 @@ export function ClientProvider({
 
 export function useClients(): ClientContextValue {
   const context = useContext(ClientContext);
-  
+
   if (!context) {
     throw new Error("useClients must be used within a ClientProvider");
   }

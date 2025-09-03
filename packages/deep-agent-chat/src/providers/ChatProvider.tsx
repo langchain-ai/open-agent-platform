@@ -38,5 +38,7 @@ export function ChatProvider({
 
   const chatValue = useMemo(() => chat, [chat]);
 
-  return <ChatContext.Provider value={chatValue}>{children}</ChatContext.Provider>;
+  return (
+    <ChatContext.Provider value={chatValue}>{children}</ChatContext.Provider>
+  );
 }

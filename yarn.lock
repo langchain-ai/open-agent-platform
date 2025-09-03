@@ -1660,29 +1660,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:*":
-  version: 0.1.0
-  resolution: "@langchain/langgraph-sdk@npm:0.1.0"
-  dependencies:
-    "@types/json-schema": ^7.0.15
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.4.0"
-    react: ^18 || ^19
-    react-dom: ^18 || ^19
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    react:
-      optional: true
-    react-dom:
-      optional: true
-  checksum: adbf0949e59d3f0c4fcc5000e311957fc070b105b0b834ab265e5bfc6fd2f1bff84776ce86b8883fbbd2f1a421967c9d434cd01c8a64b892bcacdc26c0672997
-  languageName: node
-  linkType: hard
-
 "@langchain/langgraph-sdk@npm:^0.0.109, @langchain/langgraph-sdk@npm:~0.0.109":
   version: 0.0.109
   resolution: "@langchain/langgraph-sdk@npm:0.0.109"
@@ -4106,21 +4083,25 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@repo/deep-agent-chat@workspace:packages/deep-agent-chat"
   dependencies:
-    "@langchain/langgraph-sdk": "*"
+    "@langchain/langgraph-sdk": ^0.0.109
     "@radix-ui/react-dialog": ^1.1.15
     "@radix-ui/react-scroll-area": ^1.2.10
     "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.2.6
     "@radix-ui/react-tabs": ^1.1.13
     "@radix-ui/react-tooltip": ^1.2.8
+    "@types/js-yaml": ^4.0.9
     "@types/node": ^20
     "@types/react": ^18
     "@types/react-dom": ^18
+    "@types/react-syntax-highlighter": ^15.5.13
     class-variance-authority: ^0.7.1
     clsx: ^2.1.1
     eslint: ^8
     lucide-react: ^0.542.0
     nuqs: "*"
+    prettier: ^3.5.2
+    prettier-plugin-tailwindcss: ^0.6.11
     react: ^18
     react-dom: ^18
     react-markdown: ^10.1.0

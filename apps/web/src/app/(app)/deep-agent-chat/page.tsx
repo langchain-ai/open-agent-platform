@@ -51,7 +51,10 @@ export default function DeepAgentChatPage(): React.ReactNode {
     setDeploymentId(deploymentId_);
   };
 
-  const selectedDeployment = useMemo(() => deployments.find((d) => d.id === deploymentId), [deploymentId]);
+  const selectedDeployment = useMemo(
+    () => deployments.find((d) => d.id === deploymentId),
+    [deploymentId],
+  );
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
   if (!agentId || !deploymentId) {
@@ -96,15 +99,16 @@ export default function DeepAgentChatPage(): React.ReactNode {
     return <div>Loading...</div>;
   }
 
-
   return (
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
-      <DeepAgentChatInterface 
+      <DeepAgentChatInterface
         assistantId={agentId}
         deploymentUrl={selectedDeployment?.deploymentUrl || ""}
         accessToken={session.accessToken || ""}
-        optimizerDeploymentUrl={process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""}
+        optimizerDeploymentUrl={
+          process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+        }
         optimizerAccessToken={session.accessToken || ""}
         mode="oap"
         SidebarTrigger={SidebarTrigger}

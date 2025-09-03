@@ -64,7 +64,9 @@ export function useChat(
       stream.submit(
         { messages: [humanMessage], files },
         {
-          optimisticValues: { messages: [...(stream.messages ?? []), humanMessage] },
+          optimisticValues: {
+            messages: [...(stream.messages ?? []), humanMessage],
+          },
           config: {
             ...(activeAssistant?.config || {}),
             recursion_limit: 100,

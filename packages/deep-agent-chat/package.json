@@ -2,15 +2,18 @@
   "name": "@repo/deep-agent-chat",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "./src/index.tsx",
   "types": "./src/index.tsx",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@langchain/langgraph-sdk": "*",
+    "@langchain/langgraph-sdk": "^0.0.109",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",
@@ -36,6 +39,8 @@
     "@types/react-dom": "^18",
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^8",
+    "prettier": "^3.5.2",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "^5"
   },
   "peerDependencies": {
