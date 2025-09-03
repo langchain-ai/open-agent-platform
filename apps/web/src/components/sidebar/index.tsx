@@ -9,12 +9,10 @@ import { useEffect, useState } from "react";
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(
-    pathname !== "/deep-agent-chat",
-  );
+  const [sidebarOpen, setSidebarOpen] = useState(pathname !== "/chat");
 
   useEffect(() => {
-    if (pathname === "/deep-agent-chat") {
+    if (pathname === "/chat") {
       setSidebarOpen(false);
     }
   }, [pathname]);

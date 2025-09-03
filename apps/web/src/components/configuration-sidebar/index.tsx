@@ -9,9 +9,9 @@ import {
   ConfigFieldAgents,
   ConfigFieldRAG,
   ConfigFieldTool,
-} from "@/features/chat/components/configuration-sidebar/config-field";
-import { ConfigSection } from "@/features/chat/components/configuration-sidebar/config-section";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+} from "@/components/configuration-sidebar/config-field";
+import { ConfigSection } from "@/components/configuration-sidebar/config-section";
+import { useConfigStore } from "@/hooks/use-config-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useQueryState } from "nuqs";
