@@ -23,6 +23,9 @@ export function createClient(deploymentId: string, accessToken?: string) {
     return client;
   }
 
+  console.log("deployment", deployment);
+  console.log("accessToken", accessToken);
+
   const client = new Client({
     apiUrl: deployment.deploymentUrl,
     defaultHeaders: {

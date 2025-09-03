@@ -77,7 +77,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const refreshActiveAssistant = useCallback(async () => {
-      console.log("refreshActiveAssistant", assistantId, client);
       if (!assistantId || !client) {
         setActiveAssistant(null);
         setAssistantError(null);
@@ -86,12 +85,10 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       setAssistantError(null);
       try {
         const assistant = await client.assistants.get(assistantId);
-        console.log("assistant", assistant);
         setActiveAssistant(assistant);
         setAssistantError(null);
         toast.dismiss();
       } catch (error) {
-        console.log("error", error);
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error occurred";
         setActiveAssistant(null);

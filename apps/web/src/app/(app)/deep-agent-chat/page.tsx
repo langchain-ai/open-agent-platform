@@ -26,7 +26,6 @@ export default function DeepAgentChatPage(): React.ReactNode {
 
   const { agents, loading } = useAgentsContext();
   const deployments = getDeployments();
-  console.log("deployments", deployments);
   const filteredAgents = agents.filter((agent) =>
     deploymentSupportsDeepAgents(
       deployments.find((d) => d.id === agent.deploymentId),
@@ -105,7 +104,7 @@ export default function DeepAgentChatPage(): React.ReactNode {
       <Toaster />
       <DeepAgentChatInterface 
         assistantId={session.user?.id || ""}
-        deploymentUrl={`${selectedDeployment?.deploymentUrl}/langgraph/proxy/${deploymentId}` || ""}
+        deploymentUrl={selectedDeployment?.deploymentUrl || ""}
         accessToken={session.accessToken || ""}
         optimizerDeploymentUrl={process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""}
         optimizerAccessToken={session.accessToken || ""}
