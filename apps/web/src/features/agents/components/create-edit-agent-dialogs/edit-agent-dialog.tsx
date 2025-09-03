@@ -78,21 +78,24 @@ function EditAgentDialogContent({
       data,
     );
 
+    // Check if the triggers have changed. Either the default triggers have changed, or if no
+    // default exists, check if the trigger list is non-empty
     if (
-      triggersConfigurations[0]?.default?.length &&
-      triggersConfigurations[0].default.some(
-        // Check if the trigger is not in the new config
-        (existingTrigger) =>
-          !data.config?.triggers?.some(
-            (newTrigger: string) => existingTrigger === newTrigger,
-          ),
-      )
+      (triggersConfigurations[0]?.default?.length &&
+        triggersConfigurations[0].default.some(
+          (existingTrigger) =>
+            !data.config?.triggers?.some(
+              (newTrigger: string) => existingTrigger === newTrigger,
+            ),
+        )) ||
+      (!triggersConfigurations[0]?.default?.length &&
+        data.config?.triggers?.length)
     ) {
       const selectedTriggerIds = data.config?.triggers ?? [];
 
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: agent.assistant_id,
-        selectedTriggerIds: selectedTriggerIds,
+        selectedTriggerIds,
       });
       if (!success) {
         toast.error("Failed to update agent triggers", {
