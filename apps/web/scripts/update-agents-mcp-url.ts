@@ -15,7 +15,6 @@ async function main() {
   }
 
   const newMCPUrl = new URL(newMCPUrlStr);
-  newMCPUrl.pathname = `${newMCPUrl.pathname}/mcp`;
 
   for await (const deployment of deployments) {
     const client = new Client({
