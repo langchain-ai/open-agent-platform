@@ -88,14 +88,6 @@
   );
 }
 
-/* Logo and Platform Text */
-.platform-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
 .platform-text {
   color: #fff;
   text-align: center;
@@ -104,12 +96,6 @@
   font-weight: 400;
   line-height: 100%; /* 36px */
   letter-spacing: -1.44px;
-}
-
-.platform-logo {
-  width: 66.667px;
-  height: 34px;
-  flex-shrink: 0;
 }
 
 /* Main Card Container */

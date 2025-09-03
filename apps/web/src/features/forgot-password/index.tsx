@@ -58,16 +58,12 @@ export default function ForgotPasswordInterface() {
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
       <div className="flex flex-col items-center">
-        <div className="platform-header">
-          <Image
-            src="/LangGraph-logo.svg"
-            alt="LangGraph"
-            width={66.667}
-            height={34}
-            className="platform-logo"
-          />
-          <span className="platform-text">Open Agent Platform</span>
-        </div>
+        <Image
+          src="/oap-logo-dark.svg"
+          alt="Open Agent Platform"
+          width={400}
+          height={100}
+        />
         <Card
           className="forgot-password-card flex flex-col"
           style={{ marginTop: "36px" }}
