@@ -19,6 +19,5 @@
     "turbo": "^2.5.0",
     "typescript": "^5"
   },
-  "packageManager": "yarn@3.5.1",
-  "dependencies": {}
+  "packageManager": "yarn@3.5.1"
 }

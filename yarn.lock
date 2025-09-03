@@ -2126,6 +2126,7 @@ __metadata:
     "@supabase/ssr": ^0.6.1
     "@supabase/supabase-js": ^2.49.4
     "@tailwindcss/postcss": ^4.0.13
+    "@types/js-yaml": ^4.0.9
     "@types/lodash": ^4.17.16
     "@types/node": 22.15.2
     "@types/react": ^19.0.8
@@ -2145,6 +2146,7 @@ __metadata:
     eslint-plugin-react-refresh: ^0.4.18
     framer-motion: ^12.7.3
     globals: ^15.14.0
+    js-yaml: ^4.1.0
     katex: latest
     langgraph-nextjs-api-passthrough: ^0.1.0
     lodash: ^4.17.21
@@ -2157,6 +2159,7 @@ __metadata:
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19.0.0
     react-dom: ^19.0.0
+    react-hook-form: ^7.56.3
     react-markdown: ^10.1.0
     react-resizable-panels: ^3.0.2
     react-syntax-highlighter: ^15.6.1
@@ -12318,9 +12321,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "open-agent-platform@workspace:."
   dependencies:
-    "@types/js-yaml": ^4.0.9
-    js-yaml: ^4.1.0
-    react-hook-form: ^7.56.3
     turbo: ^2.5.0
     typescript: ^5
   languageName: unknown
