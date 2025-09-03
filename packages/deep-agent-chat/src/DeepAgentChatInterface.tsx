@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
 import { SubAgentPanel } from "./components/SubAgentPanel";
@@ -10,8 +9,10 @@ import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
+import { useQueryState } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-export default function DeepAgentChatInterface({
+function DeepAgentChatInterfaceCore({
   assistantId,
   deploymentUrl,
   accessToken,
@@ -22,6 +23,7 @@ export default function DeepAgentChatInterface({
   SidebarTrigger,
   DeepAgentChatBreadcrumb
 }: DeepAgentChatConfig) {
+  const [_, setThreadId] = useQueryState("threadId");
   const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
     null,
   );
@@ -34,13 +36,13 @@ export default function DeepAgentChatInterface({
   const [debugMode, setDebugMode] = useState(false);
 
   const onNewThread = useCallback(() => {
+    setThreadId(null);
     setSelectedSubAgent(null);
     setTodos([]);
     setFiles({});
-  }, []);
+  }, [setThreadId]);
 
   return (
-    <NuqsAdapter>
       <ClientProvider
         deploymentUrl={deploymentUrl}
         accessToken={accessToken}
@@ -99,6 +101,13 @@ export default function DeepAgentChatInterface({
           </div>
         </ChatProvider>
       </ClientProvider>
+  );
+}
+
+export default function DeepAgentChatInterface(props: DeepAgentChatConfig) {
+  return (
+    <NuqsAdapter>
+      <DeepAgentChatInterfaceCore {...props} />
     </NuqsAdapter>
   );
 }

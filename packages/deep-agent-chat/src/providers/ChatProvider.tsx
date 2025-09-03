@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import { useChat } from "../hooks/useChat";
@@ -36,5 +36,7 @@ export function ChatProvider({
     assistantId,
   );
 
-  return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
+  const chatValue = useMemo(() => chat, [chat]);
+
+  return <ChatContext.Provider value={chatValue}>{children}</ChatContext.Provider>;
 }

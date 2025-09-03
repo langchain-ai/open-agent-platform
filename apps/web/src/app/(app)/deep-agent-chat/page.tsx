@@ -2,7 +2,6 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import React, { useMemo, useState } from "react";
-// import DeepAgentChatInterface from "@/features/deep-agent-chat";
 import { DeepAgentChatInterface } from "@repo/deep-agent-chat";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -15,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/deep-agent-chat/components/breadcrumb";
-
 
 /**
  * Deep Agent Chat page (/deep-agent-chat).
@@ -103,7 +101,7 @@ export default function DeepAgentChatPage(): React.ReactNode {
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
       <DeepAgentChatInterface 
-        assistantId={session.user?.id || ""}
+        assistantId={agentId}
         deploymentUrl={selectedDeployment?.deploymentUrl || ""}
         accessToken={session.accessToken || ""}
         optimizerDeploymentUrl={process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""}

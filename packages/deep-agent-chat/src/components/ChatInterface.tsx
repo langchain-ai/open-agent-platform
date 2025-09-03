@@ -159,8 +159,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       }
     }, [input]);
 
-    console.log("assistantError", assistantError);
-
     const submitDisabled = isLoading || !!interrupt || !!assistantError;
 
     const handleSubmit = useCallback(
