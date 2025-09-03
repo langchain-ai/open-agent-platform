@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import React from "react";
 
 const VideoBackground = () => {
@@ -30,7 +31,7 @@ export default function VideoBackgroundPageWrapper({
   className,
 }: VideoBackgroundPageWrapperProps) {
   return (
-    <div className={`relative min-h-screen overflow-hidden ${className || ""}`}>
+    <div className={cn("relative min-h-screen overflow-hidden", className)}>
       <VideoBackground />
       <div className="absolute inset-0 z-5 bg-blue-600/20" />
       <div className="relative z-10 min-h-screen">{children}</div>
