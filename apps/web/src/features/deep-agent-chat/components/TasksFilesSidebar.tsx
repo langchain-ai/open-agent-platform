@@ -205,6 +205,20 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     const tabTriggerStyles =
       "h-10 p-1 data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=inactive]:bg-transparent data-[state=inactive]:hover:bg-black/5 data-[state=inactive]:hover:text-primary transition-colors duration-200 ease-in-out";
 
+    const createdAtDate = useMemo(() => {
+      if (!activeAssistant?.created_at) return null;
+      return new Date(
+        activeAssistant.created_at as string | number | Date,
+      ).toLocaleString();
+    }, [activeAssistant?.created_at]);
+
+    const updatedAtDate = useMemo(() => {
+      if (!activeAssistant?.updated_at) return null;
+      return new Date(
+        activeAssistant.updated_at as string | number | Date,
+      ).toLocaleString();
+    }, [activeAssistant?.updated_at]);
+
     return (
       <div className="min-h-0 w-[25vw] flex-1">
         <div className="bg-background border-border flex h-full w-full flex-col border-r">
@@ -396,26 +410,14 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                       <div>
                         {activeAssistant.created_at ? (
                           <span className="text-tertiary text-xs">
-                            Created:{" "}
-                            {new Date(
-                              activeAssistant.created_at as
-                                | string
-                                | number
-                                | Date,
-                            ).toLocaleString()}
+                            Created: {createdAtDate}
                           </span>
                         ) : null}
                       </div>
                       <div>
                         {activeAssistant.updated_at ? (
                           <span className="text-tertiary text-xs">
-                            Updated:{" "}
-                            {new Date(
-                              activeAssistant.updated_at as
-                                | string
-                                | number
-                                | Date,
-                            ).toLocaleString()}
+                            Updated: {updatedAtDate}
                           </span>
                         ) : null}
                       </div>

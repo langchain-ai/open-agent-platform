@@ -1,5 +1,6 @@
 import { Deployment } from "@/types/deployment";
-import { Message } from "@langchain/langgraph-sdk";
+import { Message, ToolMessage } from "@langchain/langgraph-sdk";
+import { ToolCall } from "@langchain/core/messages/tool";
 
 export function extractStringFromMessageContent(message: Message): string {
   return typeof message.content === "string"
@@ -99,8 +100,8 @@ export function formatMessageForLLM(message: Message): string {
 
   // For tool messages, include additional tool metadata
   if (message.type === "tool") {
-    const toolName = (message as any).name || "unknown_tool";
-    const toolCallId = (message as any).tool_call_id || "";
+    const toolName = (message as ToolMessage).name || "unknown_tool";
+    const toolCallId = (message as ToolMessage).tool_call_id || "";
     role = `Tool Result [${toolName}]`;
     if (toolCallId) {
       role += ` (call_id: ${toolCallId.slice(0, 8)})`;
@@ -115,7 +116,7 @@ export function formatMessageForLLM(message: Message): string {
     Array.isArray(message.tool_calls) &&
     message.tool_calls.length > 0
   ) {
-    message.tool_calls.forEach((call: any) => {
+    message.tool_calls.forEach((call: ToolCall) => {
       const toolName = call.name || "unknown_tool";
       const toolArgs = call.args ? JSON.stringify(call.args, null, 2) : "{}";
       toolCallsText.push(`[Tool Call: ${toolName}]\nArguments: ${toolArgs}`);

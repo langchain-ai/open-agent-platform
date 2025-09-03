@@ -70,7 +70,7 @@ export function useChat(
         content: message,
       };
       stream.submit(
-        { messages: [humanMessage], files: files },
+        { messages: [humanMessage], files },
         {
           optimisticValues(prev) {
             const prevMessages = prev.messages ?? [];
@@ -109,7 +109,7 @@ export function useChat(
         });
       } else {
         stream.submit(
-          { messages: messages, files: files },
+          { messages, files },
           {
             config: {
               ...(activeAssistant?.config || {}),
