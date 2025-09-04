@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from "react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { Settings } from "lucide-react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 interface Config {
   assistantId: string;
@@ -86,6 +87,7 @@ export default function HomePage() {
 
   // return (
   //   <React.Suspense fallback={<div>Loading...</div>}>
+  //     <NuqsAdapter>
   //     <div className="h-screen w-screen">
   //       <DeepAgentChatInterface
   //         assistantId={config.assistantId}
@@ -104,6 +106,7 @@ export default function HomePage() {
   // Testing
   return (
     <React.Suspense fallback={<div>Loading...</div>}>
+      <NuqsAdapter>
       <div className="h-screen w-screen">
         <DeepAgentChatInterface
           assistantId={"6b13ef15-47f6-477c-8241-baa3c97bc868"}
@@ -115,6 +118,7 @@ export default function HomePage() {
           // SidebarTrigger={SettingsButtonComponent}
         />
       </div>
+      </NuqsAdapter>
     </React.Suspense>
   );
 }
