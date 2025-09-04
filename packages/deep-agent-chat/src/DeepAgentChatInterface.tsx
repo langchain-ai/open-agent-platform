@@ -65,6 +65,11 @@ export function DeepAgentChatInterface({
                 </div>
               </header>
             )}
+            {mode === "standalone" && SidebarTrigger && (
+              <header className="flex h-10 shrink-0 items-center justify-start gap-2 px-4 my-2">
+                <SidebarTrigger className="" />
+              </header>
+            )}
             <TasksFilesSidebar
               todos={todos}
               files={files}

@@ -2160,7 +2160,6 @@ __metadata:
     eslint-plugin-react-refresh: ^0.4.14
     globals: ^15.13.0
     lucide-react: ^0.542.0
-    nuqs: "*"
     prettier: ^3.5.2
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19
@@ -2174,8 +2173,49 @@ __metadata:
     uuid: ^11.1.0
   peerDependencies:
     next: ^14
+    nuqs: ^2.4.1
     react: ^19
     react-dom: ^19
+  languageName: unknown
+  linkType: soft
+
+"@open-agent-platform/deep-agent-standalone@workspace:apps/deep-agent-standalone":
+  version: 0.0.0-use.local
+  resolution: "@open-agent-platform/deep-agent-standalone@workspace:apps/deep-agent-standalone"
+  dependencies:
+    "@eslint/js": ^9.19.0
+    "@langchain/langgraph-sdk": ^0.0.109
+    "@open-agent-platform/deep-agent-chat": "workspace:*"
+    "@tailwindcss/postcss": ^4.0.13
+    "@types/node": 22.15.2
+    "@types/react": ^19.0.8
+    "@types/react-dom": ^19.1.2
+    "@types/uuid": 10.0.0
+    autoprefixer: ^10.4.20
+    class-variance-authority: ^0.7.1
+    clsx: ^2.1.1
+    eslint: ^9.19.0
+    eslint-config-next: 15.2.2
+    eslint-plugin-react-hooks: ^5.0.0
+    eslint-plugin-react-refresh: ^0.4.18
+    globals: ^15.14.0
+    lucide-react: ^0.488.0
+    next: ^15.3.1
+    nuqs: ^2.4.1
+    postcss: ^8.5.3
+    prettier: ^3.5.2
+    prettier-plugin-tailwindcss: ^0.6.11
+    react: ^19.0.0
+    react-dom: ^19.0.0
+    sonner: ^2.0.3
+    tailwind-merge: ^3.0.2
+    tailwind-scrollbar: 3.1.0
+    tailwindcss: ^4.0.13
+    tailwindcss-animate: ^1.0.7
+    turbo: ^2.5.0
+    typescript: ~5.7.2
+    typescript-eslint: ^8.22.0
+    uuid: ^11.1.0
   languageName: unknown
   linkType: soft
 
@@ -4124,13 +4164,6 @@ __metadata:
   version: 3.1.2
   resolution: "@socket.io/component-emitter@npm:3.1.2"
   checksum: 89888f00699eb34e3070624eb7b8161fa29f064aeb1389a48f02195d55dd7c52a504e52160016859f6d6dffddd54324623cdd47fd34b3d46f9ed96c18c456edc
-  languageName: node
-  linkType: hard
-
-"@standard-schema/spec@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@standard-schema/spec@npm:1.0.0"
-  checksum: 2d7d73a1c9706622750ab06fc40ef7c1d320b52d5e795f8a1c7a77d0d6a9f978705092bc4149327b3cff4c9a14e5b3800d3b00dc945489175a2d3031ded8332a
   languageName: node
   linkType: hard
 
@@ -12804,33 +12837,6 @@ __metadata:
   dependencies:
     path-key: ^3.0.0
   checksum: 5374c0cea4b0bbfdfae62da7bbdf1e1558d338335f4cacf2515c282ff358ff27b2ecb91ffa5330a8b14390ac66a1e146e10700440c1ab868208430f56b5f4d23
-  languageName: node
-  linkType: hard
-
-"nuqs@npm:*":
-  version: 2.5.2
-  resolution: "nuqs@npm:2.5.2"
-  dependencies:
-    "@standard-schema/spec": 1.0.0
-  peerDependencies:
-    "@remix-run/react": ">=2"
-    "@tanstack/react-router": ^1
-    next: ">=14.2.0"
-    react: ">=18.2.0 || ^19.0.0-0"
-    react-router: ^6 || ^7
-    react-router-dom: ^6 || ^7
-  peerDependenciesMeta:
-    "@remix-run/react":
-      optional: true
-    "@tanstack/react-router":
-      optional: true
-    next:
-      optional: true
-    react-router:
-      optional: true
-    react-router-dom:
-      optional: true
-  checksum: 7b79af2ec76a85566c28b2442cb8adaebe19cb23b5c22aa9f2628b74ebfdce32c347fc3ea6711673d66c3a553fea4078297ac46ca4bef4e8385b817d0f86d80e
   languageName: node
   linkType: hard
 
