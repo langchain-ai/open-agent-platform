@@ -6,9 +6,6 @@ export const runtime = "edge";
 
 export async function GET(request: NextRequest) {
   try {
-    // eslint-disable-next-line no-console
-    console.log("request.url", request.url);
-
     // Parse the URL and get the code parameter
     const requestUrl = new URL(request.url);
     const providerId = requestUrl.searchParams.get("providerId");
