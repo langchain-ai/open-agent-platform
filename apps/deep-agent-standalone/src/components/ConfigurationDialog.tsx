@@ -36,7 +36,7 @@ export function ConfigurationDialog({
       assistantId: "",
       deploymentUrl: "",
       langsmithToken: "",
-    }
+    },
   );
 
   React.useEffect(() => {
@@ -66,19 +66,28 @@ export function ConfigurationDialog({
     if (required && (!config?.deploymentUrl || !config?.assistantId)) {
       return;
     }
-    setFormData(config || { assistantId: "", deploymentUrl: "", langsmithToken: "" });
+    setFormData(
+      config || { assistantId: "", deploymentUrl: "", langsmithToken: "" },
+    );
     setOpen(false);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && required && (!config?.deploymentUrl || !config?.assistantId)) {
+    if (
+      !newOpen &&
+      required &&
+      (!config?.deploymentUrl || !config?.assistantId)
+    ) {
       return;
     }
     setOpen(newOpen);
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={handleOpenChange}
+    >
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent>
         <DialogHeader>
@@ -86,16 +95,15 @@ export function ConfigurationDialog({
             {required ? "Setup Required" : "Configuration Settings"}
           </DialogTitle>
           <DialogDescription>
-            {required 
+            {required
               ? "Please configure your Deep Agent connection settings to continue."
-              : "Update your Deep Agent connection settings."
-            }
+              : "Update your Deep Agent connection settings."}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-foreground text-sm font-medium">
               Deployment URL <span className="text-destructive">*</span>
             </label>
             <input
@@ -107,13 +115,13 @@ export function ConfigurationDialog({
                   deploymentUrl: e.target.value,
                 }))
               }
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="https://your-deployment.com"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-foreground text-sm font-medium">
               Assistant ID <span className="text-destructive">*</span>
             </label>
             <input
@@ -125,13 +133,13 @@ export function ConfigurationDialog({
                   assistantId: e.target.value,
                 }))
               }
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Enter Assistant ID"
             />
           </div>
-          
+
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-foreground text-sm font-medium">
               LangSmith API Key
             </label>
             <input
@@ -143,7 +151,7 @@ export function ConfigurationDialog({
                   langsmithToken: e.target.value,
                 }))
               }
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               placeholder="Only necessary for agents deployed on LangGraph Platform"
             />
           </div>
@@ -153,14 +161,14 @@ export function ConfigurationDialog({
           {!required && (
             <button
               onClick={handleCancel}
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+              className="ring-offset-background focus-visible:ring-ring border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center rounded-md border px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
             >
               Cancel
             </button>
           )}
           <button
             onClick={handleSave}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+            className="ring-offset-background focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
           >
             {required ? "Continue" : "Save Changes"}
           </button>
