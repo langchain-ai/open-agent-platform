@@ -32,11 +32,9 @@ export default function SettingsInterface(): React.ReactNode {
     "",
   );
 
-  // Loading state for save operation
   const [isSaving, setIsSaving] = useState(false);
 
   const { session } = useAuthContext();
-  // Handle saving API keys to Supabase
   const handleSaveApiKeys = async () => {
     if (!session?.accessToken || !session?.refreshToken) {
       toast.error("You must be logged in to save API keys");
