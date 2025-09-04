@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { SupabaseAuthProvider } from "@/lib/auth/supabase";
 import {
   AuthProvider as CustomAuthProvider,
@@ -63,11 +62,7 @@ export function AuthProvider({
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const pathname = usePathname();
-  const isAuthPage =
-    pathname?.startsWith("/signin") || pathname?.startsWith("/signup");
-
-  // Load initial session on mount and when window regains focus
+  // Load initial session on mount
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -87,19 +82,7 @@ export function AuthProvider({
     };
 
     initializeAuth();
-
-    // Re-check session when window regains focus (e.g., after OAuth redirect)
-    // Only do this on auth pages where OAuth redirects might occur
-    if (isAuthPage) {
-      const handleFocus = () => {
-        if (!isLoading) {
-          initializeAuth();
-        }
-      };
-      window.addEventListener("focus", handleFocus);
-      return () => window.removeEventListener("focus", handleFocus);
-    }
-  }, [provider, isLoading, isAuthPage]);
+  }, [provider]);
 
   // Set up auth state change listener
   useEffect(() => {
