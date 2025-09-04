@@ -2136,7 +2136,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@open-agent-platform/deep-agent-chat@*, @open-agent-platform/deep-agent-chat@workspace:*, @open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat":
+"@open-agent-platform/deep-agent-chat@*, @open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat":
   version: 0.0.0-use.local
   resolution: "@open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat"
   dependencies:
@@ -2185,7 +2185,7 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/langgraph-sdk": ^0.0.109
-    "@open-agent-platform/deep-agent-chat": "workspace:*"
+    "@open-agent-platform/deep-agent-chat": "*"
     "@tailwindcss/postcss": ^4.0.13
     "@types/node": 22.15.2
     "@types/react": ^19.0.8
