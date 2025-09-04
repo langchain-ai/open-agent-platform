@@ -19,6 +19,9 @@ import { Agent } from "@/types/agent";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAuthContext } from "@/providers/Auth";
 import { useTriggers } from "@/hooks/use-triggers";
+import { useMCPContext } from "@/providers/MCP";
+import { useLangChainAuth } from "@/hooks/use-langchain-auth";
+import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -34,6 +37,8 @@ function EditAgentDialogContent({
   onClose: () => void;
 }) {
   const auth = useAuthContext();
+  const { tools } = useMCPContext();
+  const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
   const { updateAgentTriggers } = useTriggers();
   const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
@@ -72,12 +77,6 @@ function EditAgentDialogContent({
       return;
     }
 
-    const updatedAgent = await updateAgent(
-      agent.assistant_id,
-      agent.deploymentId,
-      data,
-    );
-
     // Check if the triggers have changed. Either the default triggers have changed, or if no
     // default exists, check if the trigger list is non-empty
     if (
@@ -104,6 +103,23 @@ function EditAgentDialogContent({
         return;
       }
     }
+
+    const enabledToolNames = data.config.tools?.tools;
+    if (enabledToolNames?.length) {
+      const success = await verifyUserAuthScopes(auth.session.accessToken, {
+        enabledToolNames,
+        tools,
+      });
+      if (!success) {
+        return;
+      }
+    }
+
+    const updatedAgent = await updateAgent(
+      agent.assistant_id,
+      agent.deploymentId,
+      data,
+    );
 
     if (!updatedAgent) {
       toast.error("Failed to update agent", {
@@ -195,6 +211,9 @@ function EditAgentDialogContent({
             />
           </FormProvider>
         )}
+        {authRequiredUrls?.length ? (
+          <ToolAuthRequiredAlert authRequiredUrls={authRequiredUrls} />
+        ) : null}
         <AlertDialogFooter>
           <Button
             onClick={handleDelete}

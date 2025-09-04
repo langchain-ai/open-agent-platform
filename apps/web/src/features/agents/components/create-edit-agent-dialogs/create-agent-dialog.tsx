@@ -8,9 +8,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useAgents } from "@/hooks/use-agents";
-import { Bot, LoaderCircle, X, ExternalLink, Copy, Info } from "lucide-react";
+import { Bot, LoaderCircle, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -26,6 +25,7 @@ import { useTriggers } from "@/hooks/use-triggers";
 import { useMCPContext } from "@/providers/MCP";
 import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import _ from "lodash";
+import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -41,7 +41,7 @@ function CreateAgentFormContent(props: {
   onClose: () => void;
 }) {
   const { tools } = useMCPContext();
-  const { verifyUserAuthScopes } = useLangChainAuth();
+  const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
   const auth = useAuthContext();
   const { setupAgentTrigger } = useTriggers();
   const form = useForm<{
@@ -68,10 +68,6 @@ function CreateAgentFormContent(props: {
     triggersConfigurations,
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
-  const [authRequiredUrls, setAuthRequiredUrls] = useState<{
-    provider: string,
-    authUrl: string
-  }[]>([]);
 
   const handleSubmit = async (data: {
     name: string;
@@ -95,40 +91,11 @@ function CreateAgentFormContent(props: {
 
     const enabledToolNames = config.tools?.tools;
     if (enabledToolNames?.length) {
-      const enabledTools = tools.filter((t) => enabledToolNames.includes(t.name));
-      if (enabledTools.length !== enabledToolNames.length) {
-        toast.error("One or more tools are not available", {
-          richColors: true,
-        });
-        return;
-      }
-
-      const accessToken = auth.session.accessToken;
-
-      const toolsAuthResPromise = enabledTools.map(async (tool) => {
-        if (!tool.auth_provider || !tool.scopes?.length) {
-          return true;
-        }
-        const authRes = await verifyUserAuthScopes(accessToken, {
-          providerId: tool.auth_provider,
-          scopes: tool.scopes,
-        });
-        if (typeof authRes === "string") {
-          return {
-            provider: tool.auth_provider,
-            authUrl: authRes,
-          };
-        }
-        return true;
+      const success = await verifyUserAuthScopes(auth.session.accessToken, {
+        enabledToolNames,
+        tools,
       });
-
-      const authUrls = (await Promise.all(toolsAuthResPromise)).filter((res) => typeof res === "object");
-      if (authUrls.length) {
-        toast.info("Please authenticate with the required tool providers.", {
-          richColors: true,
-        });
-
-        setAuthRequiredUrls(authUrls);
+      if (!success) {
         return;
       }
     }
@@ -198,51 +165,7 @@ function CreateAgentFormContent(props: {
         </FormProvider>
       )}
       {authRequiredUrls?.length ? (
-        <Alert variant="info" className="my-4">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Authentication Required</AlertTitle>
-          <AlertDescription>
-            <p className="mb-3">Please authenticate with the following providers, then click "Create Agent" again.</p>
-            <div className="space-y-3">
-              {authRequiredUrls.map((url) => (
-                <div key={url.provider} className="rounded-lg border border-blue-200 bg-blue-25 p-4 dark:border-blue-800 dark:bg-blue-950/50">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-blue-900 dark:text-blue-100 text-sm">
-                      {_.startCase(url.provider)}
-                    </h4>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-9 px-4 text-blue-700 border-blue-300 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-700 dark:hover:bg-blue-900 ml-4"
-                      onClick={() => window.open(url.authUrl, '_blank', 'noopener,noreferrer')}
-                    >
-                      <ExternalLink className="h-3 w-3 mr-2" />
-                      Authenticate
-                    </Button>
-                  </div>
-                  <div className="flex items-start gap-2 text-xs">
-                    <code className="flex-1 rounded bg-blue-100 px-2 py-1 font-mono text-blue-800 dark:bg-blue-900 dark:text-blue-200 break-all whitespace-pre-wrap">
-                      {url.authUrl}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100 dark:text-blue-400 dark:hover:bg-blue-900"
-                      onClick={() => {
-                        navigator.clipboard.writeText(url.authUrl);
-                        toast.success("URL copied to clipboard", {
-                          richColors: true,
-                        });
-                      }}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </AlertDescription>
-        </Alert>
+        <ToolAuthRequiredAlert authRequiredUrls={authRequiredUrls} />
       ) : null}
       <AlertDialogFooter>
         <Button
