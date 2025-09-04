@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
-import { Settings } from "lucide-react";
+import React, { useState } from "react";
+import { Settings, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
 
 /**
  * The Settings interface component containing API Keys configuration.
@@ -28,6 +31,53 @@ export default function SettingsInterface(): React.ReactNode {
     "lg:settings:tavilyApiKey",
     "",
   );
+
+  // Loading state for save operation
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { session } = useAuthContext();
+  // Handle saving API keys to Supabase
+  const handleSaveApiKeys = async () => {
+    if (!session?.accessToken || !session?.refreshToken) {
+      toast.error("You must be logged in to save API keys");
+      return;
+    }
+    setIsSaving(true);
+
+    try {
+      const apiKeys = {
+        OPENAI_API_KEY: openaiApiKey,
+        ANTHROPIC_API_KEY: anthropicApiKey,
+        GOOGLE_API_KEY: googleApiKey,
+        TAVILY_API_KEY: tavilyApiKey,
+      };
+
+      const response = await fetch("/api/settings/api-keys", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": session.accessToken,
+          "x-refresh-token": session.refreshToken,
+        },
+        body: JSON.stringify({ apiKeys }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save API keys");
+      }
+
+      await response.json();
+      toast.success("API keys saved successfully");
+    } catch (error) {
+      console.error("Error saving API keys:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save API keys",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">
@@ -86,6 +136,24 @@ export default function SettingsInterface(): React.ReactNode {
               onChange={(e) => setTavilyApiKey(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSaveApiKeys}
+            disabled={isSaving}
+            className="min-w-[120px]"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save API Keys"
+            )}
+          </Button>
         </div>
       </div>
     </div>
