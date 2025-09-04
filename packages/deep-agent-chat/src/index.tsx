@@ -1,3 +1,3 @@
-export { default as DeepAgentChatInterface } from "./DeepAgentChatInterface";
+export { DeepAgentChatInterface } from "./DeepAgentChatInterface";
 export type { DeepAgentChatConfig } from "./types/config";
 export * from "./types";

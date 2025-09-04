@@ -340,7 +340,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                   </div>
                 ) : (
                   <div className="p-1">
-                    {Object.keys(files).map((file, index) => (
+                    {Object.keys(files).map((file) => (
                       <div
                         key={file}
                         className="mb-1"

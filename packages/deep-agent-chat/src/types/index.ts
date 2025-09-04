@@ -33,3 +33,16 @@ export interface Thread {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// TODO: Remove Deployment Type and unify in Types package
+export interface Deployment {
+  id: string;
+  deploymentUrl: string;
+  tenantId: string;
+  name: string;
+  isDefault?: boolean;
+  defaultGraphId?: string;
+  requiresApiKeys?: boolean;
+  apiKeysRequiredMessage?: string;
+  supportsDeepAgents?: boolean;
+}

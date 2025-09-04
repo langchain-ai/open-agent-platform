@@ -1,4 +1,4 @@
-import { Deployment } from "@/types/deployment";
+import { Deployment } from "./types";
 import { Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { ToolCall } from "@langchain/core/messages/tool";
 
@@ -38,7 +38,9 @@ export function isPreparingToCallTaskTool(messages: Message[]): boolean {
 }
 
 export function justCalledTaskTool(messages: Message[]): boolean {
-  const lastAiMessage = messages.findLast((message) => message.type === "ai");
+  const lastAiMessage = messages.filter(
+    (message: Message) => message.type === "ai",
+  )[-1];
   if (!lastAiMessage) return false;
   const toolMessagesAfterLastAiMessage = messages.slice(
     messages.indexOf(lastAiMessage) + 1,
