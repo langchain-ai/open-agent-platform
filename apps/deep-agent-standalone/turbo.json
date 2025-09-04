@@ -1,15 +1,14 @@
 {
-    "extends": ["//"],
-    "tasks": {
-      "build": {
-        "outputs": [".next/**", "!.next/cache/**"]
-      },
-      "build:internal": {
-        "dependsOn": ["^build:internal"]
-      },
-      "dev": {
-        "dependsOn": ["^dev"]
-      }
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "build:internal": {
+      "dependsOn": ["^build:internal"]
+    },
+    "dev": {
+      "dependsOn": ["^dev"]
     }
   }
-  
+}
