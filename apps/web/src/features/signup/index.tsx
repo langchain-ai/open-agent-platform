@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { z } from "zod";
-import "../signin/signin.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -164,11 +163,13 @@ export default function SignupInterface() {
           height={100}
         />
         <Card
-          className="signup-card flex flex-col"
+          className="flex min-h-[900px] w-[628px] flex-col gap-8 rounded-[46px] p-14"
           style={{ marginTop: "36px" }}
         >
           <CardHeader className="p-0">
-            <CardTitle className="signin-title">Create an Account</CardTitle>
+            <CardTitle className="mx-auto h-12 w-[305px] text-center text-[40px] leading-tight font-normal -tracking-wider text-gray-900">
+              Create an Account
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {!googleAuthDisabled() && (
@@ -176,7 +177,7 @@ export default function SignupInterface() {
                 <Button
                   variant="outline"
                   type="button"
-                  className="google-signin-btn flex items-center justify-center gap-2"
+                  className="flex h-16 w-36 items-center justify-center gap-2 rounded-2xl border border-gray-200"
                   onClick={handleGoogleSignup}
                   disabled={isLoading}
                 >
@@ -192,11 +193,11 @@ export default function SignupInterface() {
 
             <div className="relative my-6 flex items-center justify-center">
               <div className="flex items-center gap-4">
-                <div className="divider-line"></div>
+                <div className="h-px w-[196px] bg-gray-500"></div>
                 <span className="text-muted-foreground text-xs uppercase">
                   or
                 </span>
-                <div className="divider-line"></div>
+                <div className="h-px w-[196px] bg-gray-500"></div>
               </div>
             </div>
 
@@ -209,7 +210,7 @@ export default function SignupInterface() {
                   <div className="w-[456px]">
                     <Label
                       htmlFor="firstName"
-                      className="input-label"
+                      className="text-black"
                     >
                       First Name
                     </Label>
@@ -222,7 +223,7 @@ export default function SignupInterface() {
                     value={formValues.firstName || ""}
                     onChange={handleInputChange}
                     aria-invalid={!!errors.firstName}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                   {errors.firstName && (
                     <p className="text-destructive text-sm">
@@ -235,7 +236,7 @@ export default function SignupInterface() {
                   <div className="w-[456px]">
                     <Label
                       htmlFor="lastName"
-                      className="input-label"
+                      className="text-black"
                     >
                       Last Name
                     </Label>
@@ -248,7 +249,7 @@ export default function SignupInterface() {
                     value={formValues.lastName || ""}
                     onChange={handleInputChange}
                     aria-invalid={!!errors.lastName}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                   {errors.lastName && (
                     <p className="text-destructive text-sm">
@@ -262,7 +263,7 @@ export default function SignupInterface() {
                 <div className="w-[456px]">
                   <Label
                     htmlFor="companyName"
-                    className="input-label"
+                    className="text-black"
                   >
                     Company Name{" "}
                     <span className="text-muted-foreground text-xs">
@@ -278,7 +279,7 @@ export default function SignupInterface() {
                   value={formValues.companyName || ""}
                   onChange={handleInputChange}
                   aria-invalid={!!errors.companyName}
-                  className="signin-input"
+                  className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                 />
                 {errors.companyName && (
                   <p className="text-destructive text-sm">
@@ -291,7 +292,7 @@ export default function SignupInterface() {
                 <div className="w-[456px]">
                   <Label
                     htmlFor="email"
-                    className="input-label"
+                    className="text-black"
                   >
                     Email
                   </Label>
@@ -304,7 +305,7 @@ export default function SignupInterface() {
                   value={formValues.email || ""}
                   onChange={handleInputChange}
                   aria-invalid={!!errors.email}
-                  className="signin-input"
+                  className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                 />
                 {errors.email && (
                   <p className="text-destructive text-sm">{errors.email}</p>
@@ -328,7 +329,7 @@ export default function SignupInterface() {
                     value={formValues.password || ""}
                     onChange={handleInputChange}
                     aria-invalid={!!errors.password}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
                 {errors.password && (
@@ -353,7 +354,7 @@ export default function SignupInterface() {
                     value={formValues.confirmPassword || ""}
                     onChange={handleInputChange}
                     aria-invalid={!!errors.confirmPassword}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
                 {errors.confirmPassword && (
@@ -372,7 +373,7 @@ export default function SignupInterface() {
               <div className="flex justify-center">
                 <Button
                   type="submit"
-                  className="continue-btn"
+                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black"
                   disabled={isLoading}
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
@@ -381,28 +382,28 @@ export default function SignupInterface() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col items-center">
-            <p className="account-link-text">
+            <p className="text-base font-normal text-black">
               Already have an account?{" "}
               <Link
                 href="/signin"
-                className="terms-link"
+                className="font-normal text-black underline underline-offset-2"
               >
                 Sign in
               </Link>
             </p>
-            <div className="terms-text">
+            <div className="text-center text-base font-normal text-black">
               <p>
                 By continuing, you agree to our{" "}
                 <Link
                   href="/terms"
-                  className="terms-link"
+                  className="font-normal text-black underline underline-offset-2"
                 >
                   Terms of Service.
                 </Link>{" "}
                 Data security is important to us. Please read our{" "}
                 <Link
                   href="/data-policy"
-                  className="terms-link"
+                  className="font-normal text-black underline underline-offset-2"
                 >
                   Data Security Policy
                 </Link>

@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/providers/Auth";
 import { z } from "zod";
-import "../signin/signin.css";
 
 // Form validation schema
 const resetPasswordSchema = z
@@ -100,11 +99,13 @@ export default function ResetPasswordInterface() {
           height={100}
         />
         <Card
-          className="signin-card flex flex-col"
+          className="flex h-[718px] w-[628px] flex-col gap-8 rounded-[46px] p-14"
           style={{ marginTop: "36px" }}
         >
           <CardHeader className="p-0">
-            <CardTitle className="signin-title">Reset Password</CardTitle>
+            <CardTitle className="mx-auto h-12 w-[305px] text-center text-[40px] leading-tight font-normal -tracking-wider text-gray-900">
+              Reset Password
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <form
@@ -115,7 +116,7 @@ export default function ResetPasswordInterface() {
                 <div className="w-[456px]">
                   <Label
                     htmlFor="password"
-                    className="input-label"
+                    className="text-black"
                   >
                     New Password
                   </Label>
@@ -127,7 +128,7 @@ export default function ResetPasswordInterface() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     aria-invalid={!!errors.password}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
                 {errors.password && (
@@ -139,7 +140,7 @@ export default function ResetPasswordInterface() {
                 <div className="w-[456px]">
                   <Label
                     htmlFor="confirmPassword"
-                    className="input-label"
+                    className="text-black"
                   >
                     Confirm Password
                   </Label>
@@ -151,7 +152,7 @@ export default function ResetPasswordInterface() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     aria-invalid={!!errors.confirmPassword}
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
                 {errors.confirmPassword && (
@@ -170,7 +171,7 @@ export default function ResetPasswordInterface() {
               <div className="flex justify-center">
                 <Button
                   type="submit"
-                  className="continue-btn"
+                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black"
                   disabled={isLoading}
                 >
                   {isLoading ? "Resetting..." : "Reset Password"}

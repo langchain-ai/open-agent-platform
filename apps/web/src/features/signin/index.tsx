@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import "./signin.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -120,11 +119,13 @@ export default function SigninInterface() {
           height={100}
         />
         <Card
-          className="signin-card flex flex-col"
+          className="flex h-[718px] w-[628px] flex-col gap-8 rounded-[46px] p-14"
           style={{ marginTop: "36px" }}
         >
           <CardHeader className="p-0">
-            <CardTitle className="signin-title">Sign In</CardTitle>
+            <CardTitle className="mx-auto h-12 w-[305px] text-center text-[40px] leading-tight font-normal -tracking-wider text-gray-900">
+              Sign In
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {message && !isSuccess && (
@@ -157,7 +158,7 @@ export default function SigninInterface() {
                 <Button
                   variant="outline"
                   type="button"
-                  className="google-signin-btn flex items-center justify-center"
+                  className="flex h-16 w-36 items-center justify-center rounded-2xl border border-gray-200"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading || isSuccess}
                 >
@@ -173,11 +174,11 @@ export default function SigninInterface() {
 
             <div className="relative my-6 flex items-center justify-center">
               <div className="flex items-center gap-4">
-                <div className="divider-line"></div>
+                <div className="h-px w-[196px] bg-gray-500"></div>
                 <span className="text-muted-foreground text-xs uppercase">
                   or
                 </span>
-                <div className="divider-line"></div>
+                <div className="h-px w-[196px] bg-gray-500"></div>
               </div>
             </div>
 
@@ -189,7 +190,7 @@ export default function SigninInterface() {
                 <div className="w-[456px]">
                   <Label
                     htmlFor="email"
-                    className="input-label"
+                    className="text-black"
                   >
                     Email
                   </Label>
@@ -201,7 +202,7 @@ export default function SigninInterface() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="signin-input"
+                  className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                 />
               </div>
 
@@ -209,7 +210,7 @@ export default function SigninInterface() {
                 <div className="flex w-[456px] items-center justify-between">
                   <Label
                     htmlFor="password"
-                    className="input-label"
+                    className="text-black"
                   >
                     Password
                   </Label>
@@ -227,7 +228,7 @@ export default function SigninInterface() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
               </div>
@@ -241,7 +242,7 @@ export default function SigninInterface() {
               <div className="flex justify-center">
                 <Button
                   type="submit"
-                  className="continue-btn"
+                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black"
                   disabled={isLoading || isSuccess}
                 >
                   {isLoading
@@ -254,28 +255,28 @@ export default function SigninInterface() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col items-center gap-4 p-0">
-            <p className="account-link-text">
+            <p className="text-base font-normal text-black">
               Don't have an account?{" "}
               <Link
                 href="/signup"
-                className="terms-link"
+                className="font-normal text-black underline underline-offset-2"
               >
                 Sign up
               </Link>
             </p>
-            <div className="terms-text">
+            <div className="text-center text-base font-normal text-black">
               <p>
                 By continuing, you agree to our{" "}
                 <Link
                   href="https://www.langchain.com/terms-of-service"
-                  className="terms-link"
+                  className="font-normal text-black underline underline-offset-2"
                 >
                   Terms of Service.
                 </Link>{" "}
                 Data security is important to us. Please read our{" "}
                 <Link
                   href="https://smith.langchain.com/data-security-policy.pdf"
-                  className="terms-link"
+                  className="font-normal text-black underline underline-offset-2"
                 >
                   Data Security Policy
                 </Link>

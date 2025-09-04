@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthContext } from "@/providers/Auth";
-import "../signin/signin.css";
 
 export default function ForgotPasswordInterface() {
   const { resetPassword } = useAuthContext();
@@ -65,11 +64,13 @@ export default function ForgotPasswordInterface() {
           height={100}
         />
         <Card
-          className="forgot-password-card flex flex-col"
+          className="flex min-h-[400px] w-[628px] flex-col gap-8 rounded-[46px] p-14"
           style={{ marginTop: "36px" }}
         >
           <CardHeader className="p-0">
-            <CardTitle className="signin-title">Reset Password</CardTitle>
+            <CardTitle className="mx-auto h-12 w-[305px] text-center text-[40px] leading-tight font-normal -tracking-wider text-gray-900">
+              Reset Password
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {success ? (
@@ -89,7 +90,7 @@ export default function ForgotPasswordInterface() {
                   <div className="w-[456px]">
                     <Label
                       htmlFor="email"
-                      className="input-label"
+                      className="text-black"
                     >
                       Email
                     </Label>
@@ -101,7 +102,7 @@ export default function ForgotPasswordInterface() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="signin-input"
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
                   />
                 </div>
 
@@ -114,7 +115,7 @@ export default function ForgotPasswordInterface() {
                 <div className="flex justify-center">
                   <Button
                     type="submit"
-                    className="continue-btn"
+                    className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black"
                     disabled={isLoading}
                   >
                     {isLoading ? "Sending..." : "Send Reset Link"}
@@ -124,11 +125,11 @@ export default function ForgotPasswordInterface() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col items-center gap-4 p-0">
-            <p className="account-link-text">
+            <p className="text-base font-normal text-black">
               Remember your password?{" "}
               <Link
                 href="/signin"
-                className="terms-link"
+                className="font-normal text-black underline underline-offset-2"
               >
                 Sign in
               </Link>
