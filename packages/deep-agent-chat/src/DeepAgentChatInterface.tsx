@@ -10,8 +10,9 @@ import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
 import { useQueryState } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-export function DeepAgentChatInterface({
+function DeepAgentChatInterfaceInternal({
   assistantId,
   deploymentUrl,
   accessToken,
@@ -100,5 +101,13 @@ export function DeepAgentChatInterface({
         </div>
       </ChatProvider>
     </ClientProvider>
+  );
+}
+
+export function DeepAgentChatInterface(props: DeepAgentChatConfig) {
+  return (
+    <NuqsAdapter>
+      <DeepAgentChatInterfaceInternal {...props} />
+    </NuqsAdapter>
   );
 }

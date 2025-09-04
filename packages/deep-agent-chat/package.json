@@ -25,7 +25,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.542.0",
-    "nuqs": "*",
+    "nuqs": "^2.4.1",
     "react": "^19",
     "react-dom": "^19",
     "react-markdown": "^10.1.0",
