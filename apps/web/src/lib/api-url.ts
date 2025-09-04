@@ -8,8 +8,11 @@
  */
 export function getApiUrl() {
   const fallbackLocalUrl = "http://localhost:3000";
+  const vercelUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : undefined;
   try {
-    const baseUrl = new URL(process.env.VERCEL_URL ?? fallbackLocalUrl);
+    const baseUrl = new URL(vercelUrl ?? fallbackLocalUrl);
     baseUrl.pathname = "/api";
     return baseUrl.toString();
   } catch {
