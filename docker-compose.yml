@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Main web application (this repo)
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reloading
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_BASE_API_URL=http://localhost:3000/api
+      - NEXT_PUBLIC_RAG_API_URL=http://localhost:8080
+    depends_on:
+      - deep-agent
+      - agent-optimizer
+      - triggers
+      - langconnect
+      - tool-server
+    networks:
+      - open-agent-network
+
+  # Deep agent service (external repo)
+  deep-agent:
+    build:
+      context: ../deep-agent  # Adjust path to your deep-agent repo
+    ports:
+      - "2024:2024"
+    volumes:
+      - ../deep-agent:/app
+      - /app/node_modules  # If JS/TS
+    environment:
+      - NODE_ENV=development
+    networks:
+      - open-agent-network
+    # Uncomment if it's a Python service:
+    # command: python -m uvicorn main:app --host 0.0.0.0 --port 2024 --reload
+
+  # Agent optimizer service (external repo)  
+  agent-optimizer:
+    build:
+      context: ../agent-optimizer  # Adjust path to your agent-optimizer repo
+    ports:
+      - "2025:2025"
+    volumes:
+      - ../agent-optimizer:/app
+      - /app/node_modules  # If JS/TS
+    environment:
+      - NODE_ENV=development
+    networks:
+      - open-agent-network
+    # Uncomment if it's a Python service:
+    # command: python -m uvicorn main:app --host 0.0.0.0 --port 2025 --reload
+
+  # Triggers service (external repo)
+  triggers:
+    build:
+      context: ../triggers  # Adjust path to your triggers repo
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../triggers:/app
+      - /app/node_modules  # If JS/TS
+    environment:
+      - NODE_ENV=development
+    networks:
+      - open-agent-network
+    # Uncomment if it's a Python service:
+    # command: python -m uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+
+  # LangConnect service (external repo)
+  langconnect:
+    build:
+      context: ../langconnect  # Adjust path to your langconnect repo
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../langconnect:/app
+      - /app/node_modules  # If JS/TS
+    environment:
+      - NODE_ENV=development
+    networks:
+      - open-agent-network
+    # Uncomment if it's a Python service:
+    # command: python -m uvicorn main:app --host 0.0.0.0 --port 8888 --reload
+
+  # Tool server service (external repo)
+  tool-server:
+    build:
+      context: ../tool-server  # Adjust path to your tool-server repo
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../tool-server:/app
+      - /app/node_modules  # If JS/TS
+    environment:
+      - NODE_ENV=development
+    networks:
+      - open-agent-network
+    # Uncomment if it's a Python service:
+    # command: python -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  open-agent-network:
+    driver: bridge
