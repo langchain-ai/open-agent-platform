@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc --noEmit",
     "build:internal": "tsc --noEmit",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -35,15 +35,20 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^8",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.14",
+    "globals": "^15.13.0",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "typescript": "^5"
+    "typescript": "^5",
+    "typescript-eslint": "^8"
   },
   "peerDependencies": {
     "next": "^14",

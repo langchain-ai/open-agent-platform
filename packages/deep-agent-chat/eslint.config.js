@@ -29,10 +29,8 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
+      // Disable react-refresh rules for component library
+      "react-refresh/only-export-components": "off",
       "no-console": ["error", { allow: ["warn", "error"] }],
     },
   },
