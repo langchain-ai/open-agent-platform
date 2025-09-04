@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { Toaster } from "sonner";
 import React from "react";
 
 const inter = Inter({
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <NuqsAdapter>
           {children}
-          <Toaster />
         </NuqsAdapter>
       </body>
     </html>
