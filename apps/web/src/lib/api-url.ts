@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /**
  * Get the API URL for the current environment. Includes the `/api` path.
  * It defaults to the `NEXT_PUBLIC_VERCEL_URL` environment variable which
@@ -9,36 +8,22 @@
  */
 export function getApiUrl() {
   const fallbackLocalUrl = "http://localhost:3000";
-  const vercelUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : undefined;
+
+  const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
+  let vercelUrl: string | undefined;
+  if (vercelEnv) {
+    vercelUrl =
+      vercelEnv === "production"
+        ? process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+        : process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL;
+    vercelUrl = vercelUrl ? `https://${vercelUrl}` : undefined;
+  }
+
   try {
-    console.log("vercelUrl", vercelUrl);
-    console.log("process.env.VERCEL_URL", process.env.VERCEL_URL);
-    console.log(
-      "process.env.VERCEL_PROJECT_PRODUCTION_URL",
-      process.env.VERCEL_PROJECT_PRODUCTION_URL,
-    );
-    console.log("process.env.VERCEL_BRANCH_URL", process.env.VERCEL_BRANCH_URL);
-
-    console.log(
-      "process.env.NEXT_PUBLIC_VERCEL_URL",
-      process.env.NEXT_PUBLIC_VERCEL_URL,
-    );
-    console.log(
-      "process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL",
-      process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL,
-    );
-    console.log(
-      "process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL",
-      process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL,
-    );
-
     const baseUrl = new URL(vercelUrl ?? fallbackLocalUrl);
     baseUrl.pathname = "/api";
     return baseUrl.toString();
   } catch (e) {
-    console.error("Failed to construct API URL", e);
     // Add a catch in case the NEXT_PUBLIC_VERCEL_URL is invalid and throws an error
     const baseUrl = new URL(fallbackLocalUrl);
     baseUrl.pathname = "/api";
