@@ -1,22 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { decodeJWT } from "@/lib/jwt-utils";
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
 
-    // Get the current user from the session
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser(request.headers.get("x-access-token") ?? undefined);
+    // Decode JWT token to get user ID
+    const accessToken = request.headers.get("x-access-token");
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
-    if (authError || !user) {
+    if (!accessToken || !jwtSecret) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
       );
     }
+
+    const payload = decodeJWT(accessToken, jwtSecret);
+    if (!payload || !payload.sub) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 },
+      );
+    }
+
+    const userId = payload.sub;
 
     // Parse the request body to get API keys
     const body = await request.json();
@@ -35,25 +44,25 @@ export async function POST(request: NextRequest) {
         return value && typeof value === "string" && value.trim() !== "";
       }),
     );
-    if (!request.headers.get("x-access-token") || !request.headers.get("x-refresh-token")) {
+    if (
+      !request.headers.get("x-access-token") ||
+      !request.headers.get("x-refresh-token")
+    ) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
       );
     } else {
-      supabase.auth.setSession(
-        {
-          access_token: request.headers.get("x-access-token") ?? "",
-          refresh_token: request.headers.get("x-refresh-token") ?? "",
-        },
-      )
+      supabase.auth.setSession({
+        access_token: request.headers.get("x-access-token") ?? "",
+        refresh_token: request.headers.get("x-refresh-token") ?? "",
+      });
     }
-      
 
     // Upsert the API keys to the users_config table
     const { error: upsertError } = await supabase.from("users_config").upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         api_keys: nonNullApiKeys,
       },
       {

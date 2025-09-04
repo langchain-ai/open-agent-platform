@@ -27,10 +27,6 @@ export default function SettingsInterface(): React.ReactNode {
     "lg:settings:googleApiKey",
     "",
   );
-  const [tavilyApiKey, setTavilyApiKey] = useLocalStorage<string>(
-    "lg:settings:tavilyApiKey",
-    "",
-  );
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -47,7 +43,6 @@ export default function SettingsInterface(): React.ReactNode {
         OPENAI_API_KEY: openaiApiKey,
         ANTHROPIC_API_KEY: anthropicApiKey,
         GOOGLE_API_KEY: googleApiKey,
-        TAVILY_API_KEY: tavilyApiKey,
       };
 
       const response = await fetch("/api/settings/api-keys", {
@@ -70,7 +65,13 @@ export default function SettingsInterface(): React.ReactNode {
     } catch (error) {
       console.error("Error saving API keys:", error);
       let errMessage = "Failed to save API keys";
-      if (typeof error === "object" && error && "message" in error && error.message && typeof error.message === "string") {
+      if (
+        typeof error === "object" &&
+        error &&
+        "message" in error &&
+        error.message &&
+        typeof error.message === "string"
+      ) {
         errMessage = error.message;
       }
       toast.error(errMessage, { richColors: true });
@@ -123,17 +124,6 @@ export default function SettingsInterface(): React.ReactNode {
               placeholder="Enter your Google Gen AI API key"
               value={googleApiKey}
               onChange={(e) => setGoogleApiKey(e.target.value)}
-            />
-          </div>
-
-          {/* Tavily API Key */}
-          <div className="grid gap-2">
-            <Label htmlFor="tavily-api-key">Tavily API Key</Label>
-            <PasswordInput
-              id="tavily-api-key"
-              placeholder="Enter your Tavily API key"
-              value={tavilyApiKey}
-              onChange={(e) => setTavilyApiKey(e.target.value)}
             />
           </div>
         </div>
