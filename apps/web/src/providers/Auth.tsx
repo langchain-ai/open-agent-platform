@@ -64,7 +64,8 @@ export function AuthProvider({
   const [isLoading, setIsLoading] = useState(true);
 
   const pathname = usePathname();
-  const isAuthPage = pathname?.startsWith('/signin') || pathname?.startsWith('/signup');
+  const isAuthPage =
+    pathname?.startsWith("/signin") || pathname?.startsWith("/signup");
 
   // Load initial session on mount and when window regains focus
   useEffect(() => {
