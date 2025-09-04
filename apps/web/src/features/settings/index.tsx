@@ -71,9 +71,11 @@ export default function SettingsInterface(): React.ReactNode {
       toast.success("API keys saved successfully", { richColors: true });
     } catch (error) {
       console.error("Error saving API keys:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save API keys",
-      );
+      let errMessage = "Failed to save API keys";
+      if (typeof error === "object" && error && "message" in error && error.message && typeof error.message === "string") {
+        errMessage = error.message;
+      }
+      toast.error(errMessage, { richColors: true });
     } finally {
       setIsSaving(false);
     }
