@@ -2489,28 +2489,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-collection@npm:1.1.7":
-  version: 1.1.7
-  resolution: "@radix-ui/react-collection@npm:1.1.7"
-  dependencies:
-    "@radix-ui/react-compose-refs": 1.1.2
-    "@radix-ui/react-context": 1.1.2
-    "@radix-ui/react-primitive": 2.1.3
-    "@radix-ui/react-slot": 1.2.3
-  peerDependencies:
-    "@types/react": "*"
-    "@types/react-dom": "*"
-    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-    "@types/react-dom":
-      optional: true
-  checksum: dd9bb015ef86205b4246f55bc84e5ad54519bb89b4825dd83e646fe95205191fe376bb31a9e847f9d66b710d0ef7fc9353c0b0ded7e8997a5c1f5be6addf94ef
-  languageName: node
-  linkType: hard
-
 "@radix-ui/react-compose-refs@npm:1.0.0":
   version: 1.0.0
   resolution: "@radix-ui/react-compose-refs@npm:1.0.0"
@@ -3314,33 +3292,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-roving-focus@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@radix-ui/react-roving-focus@npm:1.1.11"
-  dependencies:
-    "@radix-ui/primitive": 1.1.3
-    "@radix-ui/react-collection": 1.1.7
-    "@radix-ui/react-compose-refs": 1.1.2
-    "@radix-ui/react-context": 1.1.2
-    "@radix-ui/react-direction": 1.1.1
-    "@radix-ui/react-id": 1.1.1
-    "@radix-ui/react-primitive": 2.1.3
-    "@radix-ui/react-use-callback-ref": 1.1.1
-    "@radix-ui/react-use-controllable-state": 1.2.2
-  peerDependencies:
-    "@types/react": "*"
-    "@types/react-dom": "*"
-    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-    "@types/react-dom":
-      optional: true
-  checksum: 62af05c244803359c36beea278dac89caee37d20c31b84bcba3a20c462df33b7395c2e1b08b3a8ebb471c29cec4b3fb4f97488b6a167b1b275cedf994cf436e6
-  languageName: node
-  linkType: hard
-
 "@radix-ui/react-roving-focus@npm:1.1.7":
   version: 1.1.7
   resolution: "@radix-ui/react-roving-focus@npm:1.1.7"
@@ -3613,32 +3564,6 @@ __metadata:
     "@types/react-dom":
       optional: true
   checksum: 737ebe7cd5544455411e8a606980e4491281fb38a829eb08a4505251f51c32dcae0b9f13b9ab0b574980d4e228e352b1613971f0b2a516d0fe2eefe2bb318231
-  languageName: node
-  linkType: hard
-
-"@radix-ui/react-tabs@npm:^1.1.13":
-  version: 1.1.13
-  resolution: "@radix-ui/react-tabs@npm:1.1.13"
-  dependencies:
-    "@radix-ui/primitive": 1.1.3
-    "@radix-ui/react-context": 1.1.2
-    "@radix-ui/react-direction": 1.1.1
-    "@radix-ui/react-id": 1.1.1
-    "@radix-ui/react-presence": 1.1.5
-    "@radix-ui/react-primitive": 2.1.3
-    "@radix-ui/react-roving-focus": 1.1.11
-    "@radix-ui/react-use-controllable-state": 1.2.2
-  peerDependencies:
-    "@types/react": "*"
-    "@types/react-dom": "*"
-    react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-    react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
-  peerDependenciesMeta:
-    "@types/react":
-      optional: true
-    "@types/react-dom":
-      optional: true
-  checksum: 6bb8fa404d65ddb1be12cb03912abff8d924fb9b3435da71b39836585df6b55bd25341bd989324c330724af942c0f0cdf4c51503057b0532359da40c64b08081
   languageName: node
   linkType: hard
 
@@ -4088,12 +4013,12 @@ __metadata:
     "@radix-ui/react-scroll-area": ^1.2.10
     "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.2.6
-    "@radix-ui/react-tabs": ^1.1.13
+    "@radix-ui/react-tabs": ^1.1.7
     "@radix-ui/react-tooltip": ^1.2.8
     "@types/js-yaml": ^4.0.9
     "@types/node": ^20
-    "@types/react": ^18
-    "@types/react-dom": ^18
+    "@types/react": ^19
+    "@types/react-dom": ^19
     "@types/react-syntax-highlighter": ^15.5.13
     class-variance-authority: ^0.7.1
     clsx: ^2.1.1
@@ -4105,15 +4030,15 @@ __metadata:
     react: ^18
     react-dom: ^18
     react-markdown: ^10.1.0
-    react-syntax-highlighter: ^15.6.6
+    react-syntax-highlighter: ^15.6.1
     sonner: "*"
     tailwind-merge: ^3.3.1
     typescript: ^5
     uuid: ^11.1.0
   peerDependencies:
     next: ^14
-    react: ^18
-    react-dom: ^18
+    react: ^19
+    react-dom: ^19
   languageName: unknown
   linkType: soft
 
@@ -4997,19 +4922,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prop-types@npm:*":
-  version: 15.7.15
-  resolution: "@types/prop-types@npm:15.7.15"
-  checksum: 31aa2f59b28f24da6fb4f1d70807dae2aedfce090ec63eaf9ea01727a9533ef6eaf017de5bff99fbccad7d1c9e644f52c6c2ba30869465dd22b1a7221c29f356
-  languageName: node
-  linkType: hard
-
-"@types/react-dom@npm:^18":
-  version: 18.3.7
-  resolution: "@types/react-dom@npm:18.3.7"
+"@types/react-dom@npm:^19":
+  version: 19.1.9
+  resolution: "@types/react-dom@npm:19.1.9"
   peerDependencies:
-    "@types/react": ^18.0.0
-  checksum: c8b63ec944d2a68992b4dba474003fe55ee1d949c4b9c8fe97eecb2290de23f76acfb670b2f7ceb46a5fc8e46808d1745369b03edda48a7a0cf730eff4c5d315
+    "@types/react": ^19.0.0
+  checksum: 207acb79f6c3c9704938138960e21429efdf2db2184f17c166e8ec3f3180dfe6445b282c5302f559a71b2d09ab2fafef7735f3d24fd01cda4e5c7bf0cea1d5b9
   languageName: node
   linkType: hard
 
@@ -5040,13 +4958,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18":
-  version: 18.3.24
-  resolution: "@types/react@npm:18.3.24"
+"@types/react@npm:^19":
+  version: 19.1.12
+  resolution: "@types/react@npm:19.1.12"
   dependencies:
-    "@types/prop-types": "*"
     csstype: ^3.0.2
-  checksum: 852fd0430d721ceb431662ac90b6b41d6473ea55d29b5d92f7a81f4c6c397eb3b26a904fdd276fb71a5fad318d0d79cc0072867024611716bfb85e6b4907ae68
+  checksum: da3affb60344c8868076e73bf92474faceef814ad3097a240ea533d80950431078f1bc41bdca771287acafe4488a98d5ac1b083c2ca914ee7f748acb4d849efb
   languageName: node
   linkType: hard
 
@@ -13479,7 +13396,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prismjs@npm:^1.27.0, prismjs@npm:^1.30.0":
+"prismjs@npm:^1.27.0":
   version: 1.30.0
   resolution: "prismjs@npm:1.30.0"
   checksum: a68eddd4c5f1c506badb5434b0b28a7cc2479ed1df91bc4218e6833c7971ef40c50ec481ea49749ac964256acb78d8b66a6bd11554938e8998e46c18b5f9a580
@@ -13861,22 +13778,6 @@ __metadata:
   peerDependencies:
     react: ">= 0.14.0"
   checksum: 417b6f1f2e0c1e00dcc12d34da457b94c7419345306a951d0a8d2d031a0c964179d6b700137870ad1397572cbc3a4454e94de7bbef914a81674edae2098f02dc
-  languageName: node
-  linkType: hard
-
-"react-syntax-highlighter@npm:^15.6.6":
-  version: 15.6.6
-  resolution: "react-syntax-highlighter@npm:15.6.6"
-  dependencies:
-    "@babel/runtime": ^7.3.1
-    highlight.js: ^10.4.1
-    highlightjs-vue: ^1.0.0
-    lowlight: ^1.17.0
-    prismjs: ^1.30.0
-    refractor: ^3.6.0
-  peerDependencies:
-    react: ">= 0.14.0"
-  checksum: 92d7438eb9e56ab4838ab9e2d3d6857e109c68d036227e0db75f1acdd2fe6b89c4bb5701d759b798cafb9f46982f540e1f75aa9fc13484bd7836a8dfe666b06e
   languageName: node
   linkType: hard
 

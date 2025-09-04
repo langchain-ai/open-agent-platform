@@ -18,7 +18,7 @@
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.6",
-    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tabs": "^1.1.7",
     "@radix-ui/react-tooltip": "^1.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -27,7 +27,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^10.1.0",
-    "react-syntax-highlighter": "^15.6.6",
+    "react-syntax-highlighter": "^15.6.1",
     "sonner": "*",
     "tailwind-merge": "^3.3.1",
     "uuid": "^11.1.0"
@@ -35,8 +35,8 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@types/react-syntax-highlighter": "^15.5.13",
     "eslint": "^8",
     "prettier": "^3.5.2",
@@ -45,7 +45,7 @@
   },
   "peerDependencies": {
     "next": "^14",
-    "react": "^18",
-    "react-dom": "^18"
+    "react": "^19",
+    "react-dom": "^19"
   }
 }
