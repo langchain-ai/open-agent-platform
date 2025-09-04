@@ -2,12 +2,13 @@
 
 import { Toaster } from "@/components/ui/sonner";
 import React, { useMemo, useState } from "react";
-import { DeepAgentChatInterface } from "@repo/deep-agent-chat";
+import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useAgentsContext } from "@/providers/Agents";
 import { deploymentSupportsDeepAgents } from "@/features/deep-agent-chat/utils";
 import { useQueryState } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,9 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/deep-agent-chat/components/breadcrumb";
 
 /**
- * Deep Agent Chat page (/chat).
- * Contains the deep agent chat interface.
+ * Deep Agent Chat page content that uses nuqs hooks.
  */
-export default function DeepAgentChatPage(): React.ReactNode {
+function DeepAgentChatPageContent(): React.ReactNode {
   const { session } = useAuthContext();
 
   const { agents, loading } = useAgentsContext();
@@ -115,5 +115,19 @@ export default function DeepAgentChatPage(): React.ReactNode {
         DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
       />
     </React.Suspense>
+  );
+}
+
+/**
+ * Deep Agent Chat page (/chat).
+ * Contains the deep agent chat interface.
+ */
+export default function DeepAgentChatPage(): React.ReactNode {
+  return (
+    <NuqsAdapter>
+      <React.Suspense fallback={<div>Loading chat...</div>}>
+        <DeepAgentChatPageContent />
+      </React.Suspense>
+    </NuqsAdapter>
   );
 }
