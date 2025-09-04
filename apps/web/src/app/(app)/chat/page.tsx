@@ -8,7 +8,6 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { useAgentsContext } from "@/providers/Agents";
 import { deploymentSupportsDeepAgents } from "@/features/deep-agent-chat/utils";
 import { useQueryState } from "nuqs";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
@@ -124,10 +123,8 @@ function DeepAgentChatPageContent(): React.ReactNode {
  */
 export default function DeepAgentChatPage(): React.ReactNode {
   return (
-    <NuqsAdapter>
-      <React.Suspense fallback={<div>Loading chat...</div>}>
-        <DeepAgentChatPageContent />
-      </React.Suspense>
-    </NuqsAdapter>
+    <React.Suspense fallback={<div>Loading chat...</div>}>
+      <DeepAgentChatPageContent />
+    </React.Suspense>
   );
 }
