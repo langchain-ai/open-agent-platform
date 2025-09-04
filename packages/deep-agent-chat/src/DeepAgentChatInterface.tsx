@@ -66,7 +66,7 @@ export function DeepAgentChatInterface({
               </header>
             )}
             {mode === "standalone" && SidebarTrigger && (
-              <header className="flex h-10 shrink-0 items-center justify-start gap-2 px-4 my-2">
+              <header className="my-2 flex h-10 shrink-0 items-center justify-start gap-2 px-4">
                 <SidebarTrigger className="" />
               </header>
             )}
