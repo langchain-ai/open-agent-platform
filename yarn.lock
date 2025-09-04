@@ -2186,46 +2186,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@open-agent-platform/deep-agent-standalone@workspace:apps/deep-agent-standalone":
-  version: 0.0.0-use.local
-  resolution: "@open-agent-platform/deep-agent-standalone@workspace:apps/deep-agent-standalone"
-  dependencies:
-    "@eslint/js": ^9.19.0
-    "@langchain/langgraph-sdk": ^0.0.109
-    "@open-agent-platform/deep-agent-chat": "*"
-    "@tailwindcss/postcss": ^4.0.13
-    "@types/node": 22.15.2
-    "@types/react": ^19.0.8
-    "@types/react-dom": ^19.1.2
-    "@types/uuid": 10.0.0
-    autoprefixer: ^10.4.20
-    class-variance-authority: ^0.7.1
-    clsx: ^2.1.1
-    eslint: ^9.19.0
-    eslint-config-next: 15.2.2
-    eslint-plugin-react-hooks: ^5.0.0
-    eslint-plugin-react-refresh: ^0.4.18
-    globals: ^15.14.0
-    lucide-react: ^0.488.0
-    next: ^15.3.1
-    nuqs: ^2.4.1
-    postcss: ^8.5.3
-    prettier: ^3.5.2
-    prettier-plugin-tailwindcss: ^0.6.11
-    react: ^19.0.0
-    react-dom: ^19.0.0
-    sonner: ^2.0.3
-    tailwind-merge: ^3.0.2
-    tailwind-scrollbar: 3.1.0
-    tailwindcss: ^4.0.13
-    tailwindcss-animate: ^1.0.7
-    turbo: ^2.5.0
-    typescript: ~5.7.2
-    typescript-eslint: ^8.22.0
-    uuid: ^11.1.0
-  languageName: unknown
-  linkType: soft
-
 "@open-agent-platform/docs@workspace:apps/docs":
   version: 0.0.0-use.local
   resolution: "@open-agent-platform/docs@workspace:apps/docs"
