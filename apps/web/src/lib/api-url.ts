@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Get the API URL for the current environment. Includes the `/api` path.
  * It defaults to the `NEXT_PUBLIC_VERCEL_URL` environment variable which
