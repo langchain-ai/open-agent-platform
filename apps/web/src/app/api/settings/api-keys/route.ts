@@ -6,11 +6,11 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseClient();
 
-    // Decode JWT token to get user ID
     const accessToken = request.headers.get("x-access-token");
+    const refreshToken = request.headers.get("x-refresh-token");
     const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
-    if (!accessToken || !jwtSecret) {
+    if (!accessToken || !refreshToken || !jwtSecret) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
 
     const userId = payload.sub;
 
-    // Parse the request body to get API keys
     const body = await request.json();
     const { apiKeys } = body;
 
@@ -44,22 +43,12 @@ export async function POST(request: NextRequest) {
         return value && typeof value === "string" && value.trim() !== "";
       }),
     );
-    if (
-      !request.headers.get("x-access-token") ||
-      !request.headers.get("x-refresh-token")
-    ) {
-      return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 },
-      );
-    } else {
-      supabase.auth.setSession({
-        access_token: request.headers.get("x-access-token") ?? "",
-        refresh_token: request.headers.get("x-refresh-token") ?? "",
-      });
-    }
 
-    // Upsert the API keys to the users_config table
+    await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
     const { error: upsertError } = await supabase.from("users_config").upsert(
       {
         user_id: userId,
