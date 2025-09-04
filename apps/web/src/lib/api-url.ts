@@ -9,9 +9,7 @@
 export function getApiUrl() {
   const fallbackLocalUrl = "http://localhost:3000";
   try {
-    const baseUrl = new URL(
-      process.env.NEXT_PUBLIC_VERCEL_URL ?? fallbackLocalUrl,
-    );
+    const baseUrl = new URL(process.env.VERCEL_URL ?? fallbackLocalUrl);
     baseUrl.pathname = "/api";
     return baseUrl.toString();
   } catch {
