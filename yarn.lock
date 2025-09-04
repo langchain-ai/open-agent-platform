@@ -2159,7 +2159,7 @@ __metadata:
     eslint-plugin-react-hooks: ^5.1.0
     eslint-plugin-react-refresh: ^0.4.14
     globals: ^15.13.0
-    lucide-react: ^0.542.0
+    lucide-react: ^0.488.0
     prettier: ^3.5.2
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19
@@ -11438,15 +11438,6 @@ __metadata:
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
   checksum: 11a4398ef7a591fb42b72468b021f3885d5b1332da7585f579865c0bcd5dee14e2096284b4fe47b6cf4ae15d34f2f0881d259536442c4cfd29fbba539b4bc057
-  languageName: node
-  linkType: hard
-
-"lucide-react@npm:^0.542.0":
-  version: 0.542.0
-  resolution: "lucide-react@npm:0.542.0"
-  peerDependencies:
-    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 779e426ef3473e6a56bbc627c945d8fb6fb98039ff6b731b66e60f1af5240aac5fcb16cae3a348ffc11f023a47e7f3f212ddc49e16548f2e47bd24e6f71c4ce4
   languageName: node
   linkType: hard
 
