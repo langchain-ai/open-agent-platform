@@ -1,6 +1,11 @@
 {
   "buildCommand": "yarn turbo build --filter=@open-agent-platform/web",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "yarn install",
-  "framework": null
+  "installCommand": "yarn install --frozen-lockfile",
+  "framework": null,
+  "functions": {
+    "apps/web/src/app/api/**/*.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
