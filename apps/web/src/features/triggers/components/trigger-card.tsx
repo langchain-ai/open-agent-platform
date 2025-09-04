@@ -13,6 +13,7 @@ import { TriggerForm } from "./trigger-form";
 import type { Trigger } from "@/types/triggers";
 import { Zap, ChevronDown } from "lucide-react";
 import { ListUserTriggersData } from "@/hooks/use-triggers";
+import { ResourceRenderer } from "./resource-renderer";
 
 interface TriggerCardProps {
   trigger: Trigger;
@@ -48,7 +49,7 @@ function ConfiguredAccounts(props: { userTriggers: ListUserTriggersData[] }) {
               className="text-muted-foreground flex items-center gap-2 text-sm"
             >
               <div className="bg-muted-foreground h-1.5 w-1.5 flex-shrink-0 rounded-full" />
-              <span>{userTrigger.resource_id}</span>
+              <ResourceRenderer resource={userTrigger.resource} />
             </div>
           ))}
         </div>
