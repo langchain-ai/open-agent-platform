@@ -23,7 +23,7 @@ export function getApiUrl() {
     const baseUrl = new URL(vercelUrl ?? fallbackLocalUrl);
     baseUrl.pathname = "/api";
     return baseUrl.toString();
-  } catch (e) {
+  } catch {
     // Add a catch in case the NEXT_PUBLIC_VERCEL_URL is invalid and throws an error
     const baseUrl = new URL(fallbackLocalUrl);
     baseUrl.pathname = "/api";
