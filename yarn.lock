@@ -2136,7 +2136,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@open-agent-platform/deep-agent-chat@workspace:*, @open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat":
+"@open-agent-platform/deep-agent-chat@*, @open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat":
   version: 0.0.0-use.local
   resolution: "@open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat"
   dependencies:
@@ -2195,7 +2195,7 @@ __metadata:
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.0.109
     "@modelcontextprotocol/sdk": ^1.11.4
-    "@open-agent-platform/deep-agent-chat": "workspace:*"
+    "@open-agent-platform/deep-agent-chat": "*"
     "@radix-ui/react-alert-dialog": ^1.1.11
     "@radix-ui/react-avatar": ^1.1.4
     "@radix-ui/react-checkbox": ^1.3.3
