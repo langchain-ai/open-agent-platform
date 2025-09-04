@@ -68,7 +68,7 @@ export default function SettingsInterface(): React.ReactNode {
       }
 
       await response.json();
-      toast.success("API keys saved successfully");
+      toast.success("API keys saved successfully", { richColors: true });
     } catch (error) {
       console.error("Error saving API keys:", error);
       toast.error(
