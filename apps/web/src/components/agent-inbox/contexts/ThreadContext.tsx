@@ -7,7 +7,12 @@ import {
 } from "@/components/agent-inbox/types";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
-import { Run, Thread, ThreadStatus } from "@langchain/langgraph-sdk";
+import {
+  Run,
+  Thread,
+  ThreadStatus,
+  RunsInvokePayload,
+} from "@langchain/langgraph-sdk";
 import React, { Dispatch, SetStateAction, useTransition } from "react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { IMPROPER_SCHEMA } from "../constants";
@@ -39,6 +44,7 @@ type ThreadContentType<
     _response: HumanResponse[],
     _options?: {
       stream?: TStream;
+      scheduledFor?: string;
     },
   ) => TStream extends true
     ?
@@ -410,6 +416,7 @@ function ThreadsProviderInternal<
     response: HumanResponse[],
     options?: {
       stream?: TStream;
+      scheduledFor?: string;
     },
   ): TStream extends true
     ?
@@ -436,19 +443,35 @@ function ThreadsProviderInternal<
     const client = createClient(deploymentId, session.accessToken);
 
     try {
-      if (options?.stream) {
-        return client.runs.stream(threadId, assistantId, {
-          command: {
-            resume: response,
-          },
-          streamMode: "events",
-        }) as any; // Type assertion needed due to conditional return type
-      }
-      return client.runs.create(threadId, assistantId, {
+      const createRunPayload: RunsInvokePayload = {
         command: {
           resume: response,
         },
-      }) as any; // Type assertion needed due to conditional return type
+      };
+
+      // Add scheduling information if provided
+      if (options?.scheduledFor) {
+        // Calculate afterSeconds from the scheduled time
+        const scheduledTime = new Date(options.scheduledFor);
+        const currentTime = new Date();
+        const afterSeconds = Math.floor(
+          (scheduledTime.getTime() - currentTime.getTime()) / 1000,
+        );
+
+        // Only add afterSeconds if it's positive (future time)
+        if (afterSeconds > 0) {
+          createRunPayload.afterSeconds = afterSeconds;
+        }
+      }
+
+      if (options?.stream) {
+        const streamPayload: RunsInvokePayload & { streamMode: "events" } = {
+          ...createRunPayload,
+          streamMode: "events",
+        };
+        return client.runs.stream(threadId, assistantId, streamPayload) as any; // Type assertion needed due to conditional return type
+      }
+      return client.runs.create(threadId, assistantId, createRunPayload) as any; // Type assertion needed due to conditional return type
     } catch (e: any) {
       logger.error("Error sending human response", e);
       throw e;

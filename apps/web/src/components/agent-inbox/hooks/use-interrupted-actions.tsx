@@ -29,6 +29,7 @@ interface UseInterruptedActionsValue {
   handleSubmit: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
+  handleScheduledSubmit: (scheduledTime: Date) => Promise<void>;
   handleIgnore: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
@@ -136,7 +137,7 @@ export default function useInterruptedActions<
   ) => {
     e.preventDefault();
     if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+      toast.error("No agent inbox ID found", { richColors: true });
       return;
     }
     if (!threadData || !setThreadData) {
@@ -313,12 +314,83 @@ export default function useInterruptedActions<
     setLoading(false);
   };
 
+  const handleScheduledSubmit = async (scheduledTime: Date) => {
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found", { richColors: true });
+      return;
+    }
+    if (!threadData || !setThreadData) {
+      toast.error("Thread data is not available");
+      return;
+    }
+    if (!humanResponse) {
+      toast.error("Please enter a response.");
+      return;
+    }
+    if (!selectedInbox) {
+      toast.error("No inbox selected");
+      return;
+    }
+
+    try {
+      // For scheduled submit, always use accept action
+      const acceptResponse = humanResponse.find((r) => r.type === "accept");
+      if (!acceptResponse || !acceptAllowed) {
+        toast.error(
+          "Accept action is not available for this interrupt. Cannot schedule.",
+        );
+        return;
+      }
+
+      const input: HumanResponse = {
+        type: "accept",
+        args: acceptResponse.args,
+      };
+
+      setLoading(true);
+
+      // Send the human response with scheduled execution time
+      const response = sendHumanResponse(threadData.thread.thread_id, [input], {
+        stream: false,
+        scheduledFor: scheduledTime.toISOString(),
+      });
+
+      if (!response) {
+        return;
+      }
+
+      toast.success(
+        `Accept action scheduled for ${scheduledTime.toLocaleString()}`,
+        {
+          description:
+            "The interrupt will be automatically accepted at the scheduled time.",
+          duration: 5000,
+          richColors: true,
+        },
+      );
+
+      // Navigate back to inbox after scheduling
+      const [assistantId, deploymentId] = agentInboxId.split(":");
+      if (session) {
+        await fetchThreads(assistantId, deploymentId, session);
+      }
+      await setSelectedThreadId(null);
+    } catch (e: any) {
+      logger.error("Error scheduling human response", e);
+      toast.error("Failed to schedule response.", {
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleIgnore = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
     if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+      toast.error("No agent inbox ID found", { richColors: true });
       return;
     }
     if (!threadData || !setThreadData) {
@@ -360,7 +432,7 @@ export default function useInterruptedActions<
   ) => {
     e.preventDefault();
     if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+      toast.error("No agent inbox ID found", { richColors: true });
       return;
     }
     if (!threadData || !setThreadData) {
@@ -388,6 +460,7 @@ export default function useInterruptedActions<
 
   return {
     handleSubmit,
+    handleScheduledSubmit,
     handleIgnore,
     handleResolve,
     streaming,

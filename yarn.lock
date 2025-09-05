@@ -450,6 +450,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@date-fns/tz@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "@date-fns/tz@npm:1.4.1"
+  checksum: eceefcd68d3fc4f2fa07bdea5a22b05b0075850434cdcc765cea78995bb60cfe72d63c50e925188a1841af8d0a76a16d7d4f139d57d1c16ee03b30b2017a8d2d
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:^1.4.0":
   version: 1.4.3
   resolution: "@emnapi/core@npm:1.4.3"
@@ -2213,13 +2220,13 @@ __metadata:
     "@radix-ui/react-hover-card": 1.1.2
     "@radix-ui/react-icons": ^1.3.2
     "@radix-ui/react-label": ^2.1.3
-    "@radix-ui/react-popover": ^1.1.7
+    "@radix-ui/react-popover": ^1.1.15
     "@radix-ui/react-progress": 1.1.0
     "@radix-ui/react-scroll-area": ^1.2.5
     "@radix-ui/react-select": ^2.2.2
     "@radix-ui/react-separator": ^1.1.3
     "@radix-ui/react-slider": ^1.3.2
-    "@radix-ui/react-slot": ^1.2.0
+    "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.2.2
     "@radix-ui/react-tabs": ^1.1.7
     "@radix-ui/react-toast": 1.1.0
@@ -2239,7 +2246,7 @@ __metadata:
     class-variance-authority: ^0.7.1
     clsx: ^2.1.1
     cmdk: ^1.1.1
-    date-fns: 4.1.0
+    date-fns: ^4.1.0
     diff: ^8.0.2
     dotenv: ^16.5.0
     eslint: ^9.19.0
@@ -2261,6 +2268,7 @@ __metadata:
     prettier: ^3.5.2
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19.0.0
+    react-day-picker: ^9.9.0
     react-dom: ^19.0.0
     react-hook-form: ^7.56.3
     react-markdown: ^10.1.0
@@ -2999,22 +3007,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-popover@npm:^1.1.7":
-  version: 1.1.11
-  resolution: "@radix-ui/react-popover@npm:1.1.11"
+"@radix-ui/react-popover@npm:^1.1.15":
+  version: 1.1.15
+  resolution: "@radix-ui/react-popover@npm:1.1.15"
   dependencies:
-    "@radix-ui/primitive": 1.1.2
+    "@radix-ui/primitive": 1.1.3
     "@radix-ui/react-compose-refs": 1.1.2
     "@radix-ui/react-context": 1.1.2
-    "@radix-ui/react-dismissable-layer": 1.1.7
-    "@radix-ui/react-focus-guards": 1.1.2
-    "@radix-ui/react-focus-scope": 1.1.4
+    "@radix-ui/react-dismissable-layer": 1.1.11
+    "@radix-ui/react-focus-guards": 1.1.3
+    "@radix-ui/react-focus-scope": 1.1.7
     "@radix-ui/react-id": 1.1.1
-    "@radix-ui/react-popper": 1.2.4
-    "@radix-ui/react-portal": 1.1.6
-    "@radix-ui/react-presence": 1.1.4
-    "@radix-ui/react-primitive": 2.1.0
-    "@radix-ui/react-slot": 1.2.0
+    "@radix-ui/react-popper": 1.2.8
+    "@radix-ui/react-portal": 1.1.9
+    "@radix-ui/react-presence": 1.1.5
+    "@radix-ui/react-primitive": 2.1.3
+    "@radix-ui/react-slot": 1.2.3
     "@radix-ui/react-use-controllable-state": 1.2.2
     aria-hidden: ^1.2.4
     react-remove-scroll: ^2.6.3
@@ -3028,7 +3036,7 @@ __metadata:
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: 8a79c985ace121c3ec0be47eaaed849bff12278f41c910bfc8736124720051ffe0d29444ecb141914c277619363b5424113b237e81cbe67a18ffb51e8f1728c8
+  checksum: 8a9ff4c6d8755cb770bbcfa2e60c4364364ccbf57888d72ebb77d8eb73a859023d7950c125de23d29d8506b4944b2af8b8c0f59f9880768eea6b2543e66e3d36
   languageName: node
   linkType: hard
 
@@ -3548,7 +3556,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-slot@npm:1.2.0, @radix-ui/react-slot@npm:^1.2.0":
+"@radix-ui/react-slot@npm:1.2.0":
   version: 1.2.0
   resolution: "@radix-ui/react-slot@npm:1.2.0"
   dependencies:
@@ -7025,7 +7033,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:4.1.0":
+"date-fns-jalali@npm:^4.1.0-0":
+  version: 4.1.0-0
+  resolution: "date-fns-jalali@npm:4.1.0-0"
+  checksum: cde80e4a87bfd96458ff1edfd5af5fed7ed6e04dd48574ed64d376e37e7689ddee1a7c5a6685f4b93cf3432eac73c51acd786504070a6973a140c5f15163ca39
+  languageName: node
+  linkType: hard
+
+"date-fns@npm:^4.1.0":
   version: 4.1.0
   resolution: "date-fns@npm:4.1.0"
   checksum: fb681b242cccabed45494468f64282a7d375ea970e0adbcc5dcc92dcb7aba49b2081c2c9739d41bf71ce89ed68dd73bebfe06ca35129490704775d091895710b
@@ -13871,6 +13886,19 @@ __metadata:
     iconv-lite: 0.6.3
     unpipe: 1.0.0
   checksum: 25b7cf7964183db322e819050d758a5abd0f22c51e9f37884ea44a9ed6855a1fb61f8caa8ec5b61d07e69f54db43dbbc08ad98ef84556696d6aa806be247af0e
+  languageName: node
+  linkType: hard
+
+"react-day-picker@npm:^9.9.0":
+  version: 9.9.0
+  resolution: "react-day-picker@npm:9.9.0"
+  dependencies:
+    "@date-fns/tz": ^1.4.1
+    date-fns: ^4.1.0
+    date-fns-jalali: ^4.1.0-0
+  peerDependencies:
+    react: ">=16.8.0"
+  checksum: dbfc77ea011e6865b820d742e519872aa2061b60697ce24296d799e9d857959bec2058a0d6d278dda8b199f8352ad73099854e14c9900854e31e0fa61590c8f6
   languageName: node
   linkType: hard
 

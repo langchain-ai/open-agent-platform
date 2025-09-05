@@ -13,6 +13,7 @@ import { constructOpenInStudioURL } from "../utils";
 import { ThreadIdCopyable } from "./thread-id";
 import { InboxItemInput } from "./inbox-item-input";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import {
   STUDIO_NOT_WORKING_TROUBLESHOOTING_URL,
   VIEW_STATE_THREAD_QUERY_PARAM,
@@ -124,6 +125,9 @@ export function ThreadActionsView<
     [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState<Date | undefined>(
+    undefined,
+  );
 
   // Only use interrupted actions for interrupted threads
   const isInterrupted =
@@ -495,32 +499,69 @@ export function ThreadActionsView<
       </div>
 
       {/* Interrupted thread actions */}
-      <div className="flex w-full flex-row items-center justify-start gap-2">
-        <Button
-          variant="outline"
-          className="border-gray-500 bg-white font-normal text-gray-800"
-          onClick={actions?.handleResolve}
-          disabled={actions?.loading}
-        >
-          Mark as Resolved
-        </Button>
-        {ignoreAllowed && (
-          <Tooltip>
-            <TooltipTrigger asChild>
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex w-full flex-row items-center justify-start gap-2">
+          <Button
+            variant="outline"
+            className="border-gray-500 bg-white font-normal text-gray-800"
+            onClick={actions?.handleResolve}
+            disabled={actions?.loading}
+          >
+            Mark as Resolved
+          </Button>
+          {ignoreAllowed && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={actions?.handleIgnore}
+                  disabled={actions?.loading}
+                >
+                  Ignore
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Ignore this interrupt and end the thread.
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+
+        {/* Schedule for later section */}
+        <div className="flex w-full flex-col gap-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+          <div>
+            <h3 className="mb-1 text-sm font-medium text-gray-700">
+              Schedule for Later
+            </h3>
+            <p className="text-xs text-gray-600">
+              Select a future date and time to automatically execute this
+              action.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <DateTimePicker
+              date={scheduledTime}
+              onDateChange={setScheduledTime}
+              placeholder="Select date and time..."
+            />
+            <div className="flex justify-end">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={actions?.handleIgnore}
-                disabled={actions?.loading}
+                variant="default"
+                disabled={!scheduledTime || actions?.loading}
+                onClick={() => {
+                  if (scheduledTime && actions?.handleScheduledSubmit) {
+                    actions.handleScheduledSubmit(scheduledTime);
+                    // Reset the scheduled time after scheduling
+                    setScheduledTime(undefined);
+                  }
+                }}
               >
-                Ignore
+                Schedule
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Ignore this interrupt and end the thread.
-            </TooltipContent>
-          </Tooltip>
-        )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}
