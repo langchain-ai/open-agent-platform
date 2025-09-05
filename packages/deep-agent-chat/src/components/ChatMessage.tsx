@@ -106,7 +106,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                 className={cn(
                   "mt-4 overflow-hidden rounded-lg p-2 break-words",
                   isUser
-                    ? "bg-user-message ml-auto text-white"
+                    ? "bg-user-message text-white"
                     : "border-border bg-surface text-primary w-[calc(100%-100px)] border",
                 )}
               >
@@ -118,7 +118,12 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   <MarkdownContent content={messageContent} />
                 )}
               </div>
-              <div className="relative mt-4 w-[72px] flex-shrink-0">
+              <div
+                className={cn(
+                  "relative mt-4 flex-shrink-0",
+                  !isUser && "w-[72px]",
+                )}
+              >
                 {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
                   <button
                     onClick={() => onRestartFromAIMessage(message)}

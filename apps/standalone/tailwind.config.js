@@ -71,7 +71,7 @@ module.exports = {
           DEFAULT: "#ef4444",
           foreground: "#ffffff",
         },
-        "user-message": "#6366f1",
+        "user-message": "#1e40af",
         "avatar-bg": "#f3f0ff",
         "subagent-hover": "#e0e7ff",
         "border-light": "#f3f3f3",
