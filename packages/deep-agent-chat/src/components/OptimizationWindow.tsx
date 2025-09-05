@@ -408,8 +408,8 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       <>
         <div
           className={cn(
-            "duration-400 flex flex-col overflow-hidden rounded-t-[10px] transition-[height] ease-out",
-            isExpanded ? "h-full" : "h-12",
+            "flex flex-col overflow-hidden rounded-t-[10px] transition-all duration-300 ease-in-out",
+            isExpanded ? "h-[400px]" : "h-12",
           )}
         >
           <div className="bg-primary flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">

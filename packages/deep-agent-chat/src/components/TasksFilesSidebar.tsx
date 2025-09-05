@@ -218,7 +218,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
         <div className="bg-background border-border flex h-full w-full flex-col border-r">
           <Tabs
             defaultValue="tasks"
-            className="mb-auto flex h-full flex-col overflow-hidden"
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 py-2">
               <TabsList className="bg-background m-4 flex h-full w-full justify-stretch gap-2 rounded-md p-1">
@@ -245,7 +245,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
             <TabsContent
               value="tasks"
-              className="flex-1 overflow-hidden"
+              className="overflow-hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col"
             >
               <ScrollArea className="h-full">
                 {todos.length === 0 ? (
@@ -316,7 +316,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
             </TabsContent>
             <TabsContent
               value="files"
-              className="flex-1 overflow-hidden"
+              className="overflow-hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col"
             >
               <div className="flex justify-end px-5 py-1">
                 <Button
@@ -387,7 +387,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
             </TabsContent>
             <TabsContent
               value="config"
-              className="flex flex-1 flex-col overflow-hidden"
+              className="overflow-hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col"
             >
               <div className="flex flex-shrink-0 items-center justify-between gap-2 px-5 py-1">
                 <div className="flex-1 truncate">
