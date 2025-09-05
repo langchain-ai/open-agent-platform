@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@langchain/auth";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { decodeJWT } from "@/lib/jwt-utils";
 
 export const runtime = "edge";
 
@@ -11,11 +11,12 @@ export async function GET(request: NextRequest) {
     const providerId = requestUrl.searchParams.get("providerId");
     const rawScopes = requestUrl.searchParams.get("scopes");
 
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
     const accessToken = request.headers.get("x-access-token");
-    if (!accessToken) {
+    if (!accessToken || !jwtSecret) {
       return NextResponse.json(
-        { error: "Missing access token" },
-        { status: 400 },
+        { error: "Authentication required" },
+        { status: 401 },
       );
     }
 
@@ -33,12 +34,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = getSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser(accessToken);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 400 });
+    const payload = decodeJWT(accessToken, jwtSecret);
+    if (!payload || !payload.sub) {
+      return NextResponse.json(
+        { error: "Invalid or expired token" },
+        { status: 401 },
+      );
     }
 
     const client = new Client({
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
     const authRes = await client.authenticate({
       provider: providerId,
       scopes,
-      userId: user.id,
+      userId: payload.sub,
     });
 
     if (authRes.authUrl) {
