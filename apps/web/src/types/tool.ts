@@ -17,4 +17,13 @@ export interface Tool {
    * The tool's input schema
    */
   inputSchema: InputSchema;
+  /**
+   * The OAuth provider ID associated
+   * with the tool.
+   */
+  auth_provider?: string;
+  /**
+   * The auth scopes this tool requires
+   */
+  scopes?: string[];
 }

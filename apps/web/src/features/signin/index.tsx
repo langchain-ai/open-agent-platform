@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -13,7 +14,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -66,25 +66,28 @@ export default function SigninInterface() {
     setIsLoading(true);
 
     try {
-      const result = await signIn({
+      const { error } = await signIn({
         email,
         password,
       });
 
-      if (result.error) {
-        setError(result.error.message);
+      if (error) {
+        setError(error.message);
         return;
       }
 
-      // Show success message and set up manual redirect timer
       setIsSuccess(true);
+      // Delay to show success state before redirect
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
 
-      // Set a timer to show manual redirect button after 5 seconds
+      // Show manual redirect option after 3 seconds
       setTimeout(() => {
         setShowManualRedirect(true);
-      }, 5000);
-    } catch (err) {
-      console.error("Sign in error:", err);
+      }, 3000);
+    } catch (error) {
+      console.error("Sign in error:", error);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -108,140 +111,181 @@ export default function SigninInterface() {
 
   return (
     <div className="flex min-h-screen items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl">Sign In</CardTitle>
-          <CardDescription className="text-center">
-            Welcome back to Open Agent Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {message && !isSuccess && (
-            <Alert className="mb-4 bg-blue-50 text-blue-800">
-              <AlertDescription>{message}</AlertDescription>
-            </Alert>
-          )}
-
-          {isSuccess && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
-              <AlertDescription className="flex flex-col gap-2">
-                <span>Success! We're redirecting you to the dashboard...</span>
-                {showManualRedirect && (
-                  <Button
-                    onClick={() => router.push("/")}
-                    variant="outline"
-                    className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
-                  >
-                    Go to Dashboard Now
-                  </Button>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-primary text-sm font-medium hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <PasswordInput
-                id="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+      <div className="flex flex-col items-center">
+        <Image
+          src="/oap-logo-dark.svg"
+          alt="Open Agent Platform"
+          width={400}
+          height={100}
+        />
+        <Card
+          className="flex h-[718px] w-[628px] flex-col gap-8 rounded-[46px] p-14"
+          style={{ marginTop: "36px" }}
+        >
+          <CardHeader className="p-0">
+            <CardTitle className="mx-auto h-12 w-[305px] text-center text-[40px] leading-tight font-normal -tracking-wider text-gray-900">
+              Sign In
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {message && !isSuccess && (
+              <Alert className="mb-4 bg-blue-50 text-blue-800">
+                <AlertDescription>{message}</AlertDescription>
               </Alert>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || isSuccess}
-            >
-              {isLoading
-                ? "Signing in..."
-                : isSuccess
-                  ? "Signed In Successfully"
-                  : "Sign In"}
-            </Button>
-          </form>
-
-          {!googleAuthDisabled() && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t"></div>
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card text-muted-foreground px-2">
-                    Or continue with
+            {isSuccess && (
+              <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+                <AlertDescription className="flex flex-col gap-2">
+                  <span>
+                    Success! We're redirecting you to the dashboard...
                   </span>
+                  {showManualRedirect && (
+                    <Button
+                      onClick={() => router.push("/")}
+                      variant="outline"
+                      className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                    >
+                      Go to Dashboard Now
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!googleAuthDisabled() && (
+              <div className="mb-6 flex justify-center">
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="flex h-16 w-36 items-center justify-center rounded-2xl border border-gray-200"
+                  onClick={handleGoogleSignIn}
+                  disabled={isLoading || isSuccess}
+                >
+                  <Image
+                    src="/google-logo.svg"
+                    alt="Google"
+                    width={27.44}
+                    height={28}
+                  />
+                </Button>
+              </div>
+            )}
+
+            <div className="relative my-6 flex items-center justify-center">
+              <div className="flex items-center gap-4">
+                <div className="h-px w-[196px] bg-gray-500"></div>
+                <span className="text-muted-foreground text-xs uppercase">
+                  or
+                </span>
+                <div className="h-px w-[196px] bg-gray-500"></div>
+              </div>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-[456px]">
+                  <Label
+                    htmlFor="email"
+                    className="text-black"
+                  >
+                    Email
+                  </Label>
+                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
+                />
+              </div>
+
+              <div className="flex flex-col items-center space-y-2">
+                <div className="flex w-[456px] items-center justify-between">
+                  <Label
+                    htmlFor="password"
+                    className="text-black"
+                  >
+                    Password
+                  </Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-gray-600 hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div style={{ width: "456px" }}>
+                  <PasswordInput
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="h-16 w-[456px] rounded-full border border-gray-200 px-5 py-2.5 text-base"
+                  />
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                type="button"
-                className="flex w-full items-center justify-center gap-2"
-                onClick={handleGoogleSignIn}
-                disabled={isLoading || isSuccess}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex justify-center">
+                <Button
+                  type="submit"
+                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black hover:bg-purple-200/80"
+                  disabled={isLoading || isSuccess}
                 >
-                  <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
-                </svg>
-                Sign in with Google
-              </Button>
-            </>
-          )}
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-muted-foreground text-sm">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="text-primary font-medium hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+                  {isLoading
+                    ? "Signing in..."
+                    : isSuccess
+                      ? "Signed In Successfully"
+                      : "Sign In"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col items-center gap-4 p-0">
+            <p className="text-base font-normal text-black">
+              Don't have an account?{" "}
+              <Link
+                href="/signup"
+                className="font-normal text-black underline underline-offset-2"
+              >
+                Sign up
+              </Link>
+            </p>
+            {/* TODO: Add back once we have a terms of service/data security policy */}
+            {/* <div className="text-center text-base font-normal text-black">
+              <p>
+                By continuing, you agree to our{" "}
+                <Link
+                  href="https://www.langchain.com/terms-of-service"
+                  className="font-normal text-black underline underline-offset-2"
+                >
+                  Terms of Service.
+                </Link>{" "}
+                Data security is important to us. Please read our{" "}
+                <Link
+                  href="https://smith.langchain.com/data-security-policy.pdf"
+                  className="font-normal text-black underline underline-offset-2"
+                >
+                  Data Security Policy
+                </Link>
+              </p>
+            </div> */}
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   );
 }

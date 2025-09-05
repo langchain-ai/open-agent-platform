@@ -14,6 +14,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph-sdk": "^0.0.109",
     "@modelcontextprotocol/sdk": "^1.11.4",
@@ -75,6 +76,7 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@tailwindcss/postcss": "^4.0.13",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.16",
     "@types/node": "22.15.2",
     "@types/react": "^19.0.8",

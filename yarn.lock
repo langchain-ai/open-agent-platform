@@ -1616,6 +1616,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/auth@npm:^0.0.0":
+  version: 0.0.0
+  resolution: "@langchain/auth@npm:0.0.0"
+  checksum: 6918724dd63a7d0a1295800e40744d4a10187b0505dc976aebbca611092875893bf032f2e4e81d28d8ffb376d68f6784c6a5c301ca10493fe28fb9f5886e775f
+  languageName: node
+  linkType: hard
+
 "@langchain/core@npm:^0.3.44":
   version: 0.3.49
   resolution: "@langchain/core@npm:0.3.49"
@@ -2192,6 +2199,7 @@ __metadata:
   resolution: "@open-agent-platform/web@workspace:apps/web"
   dependencies:
     "@eslint/js": ^9.19.0
+    "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.0.109
     "@modelcontextprotocol/sdk": ^1.11.4
@@ -2220,6 +2228,7 @@ __metadata:
     "@supabase/supabase-js": ^2.49.4
     "@tailwindcss/postcss": ^4.0.13
     "@types/js-yaml": ^4.0.9
+    "@types/jsonwebtoken": ^9.0.10
     "@types/lodash": ^4.17.16
     "@types/node": 22.15.2
     "@types/react": ^19.0.8
@@ -4821,6 +4830,16 @@ __metadata:
   version: 0.0.29
   resolution: "@types/json5@npm:0.0.29"
   checksum: e60b153664572116dfea673c5bda7778dbff150498f44f998e34b5886d8afc47f16799280e4b6e241c0472aef1bc36add771c569c68fc5125fc2ae519a3eb9ac
+  languageName: node
+  linkType: hard
+
+"@types/jsonwebtoken@npm:^9.0.10":
+  version: 9.0.10
+  resolution: "@types/jsonwebtoken@npm:9.0.10"
+  dependencies:
+    "@types/ms": "*"
+    "@types/node": "*"
+  checksum: 370e60879902d769c3dd86dc94cda0bf6149c3514762fa8ed6de873d10de7f0952edf960796a4b89ebc5d81f45abcff21430c1e956b165962ad42c836f3e88c8
   languageName: node
   linkType: hard
 
