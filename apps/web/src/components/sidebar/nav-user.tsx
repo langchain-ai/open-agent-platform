@@ -67,7 +67,7 @@ export function NavUser() {
         return;
       }
 
-      router.push("/signin");
+      router.push("/");
     } catch (err) {
       console.error("Error during sign out:", err);
       toast.error("Error signing out", { richColors: true });
