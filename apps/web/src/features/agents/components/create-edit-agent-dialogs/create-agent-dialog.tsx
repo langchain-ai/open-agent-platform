@@ -22,6 +22,10 @@ import { useAgentConfig } from "@/hooks/use-agent-config";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAuthContext } from "@/providers/Auth";
 import { useTriggers } from "@/hooks/use-triggers";
+import { useMCPContext } from "@/providers/MCP";
+import { useLangChainAuth } from "@/hooks/use-langchain-auth";
+import _ from "lodash";
+import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -36,6 +40,8 @@ function CreateAgentFormContent(props: {
   selectedDeployment: Deployment;
   onClose: () => void;
 }) {
+  const { tools } = useMCPContext();
+  const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
   const auth = useAuthContext();
   const { setupAgentTrigger } = useTriggers();
   const form = useForm<{
@@ -81,6 +87,17 @@ function CreateAgentFormContent(props: {
         richColors: true,
       });
       return;
+    }
+
+    const enabledToolNames = config.tools?.tools;
+    if (enabledToolNames?.length) {
+      const success = await verifyUserAuthScopes(auth.session.accessToken, {
+        enabledToolNames,
+        tools,
+      });
+      if (!success) {
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -147,6 +164,9 @@ function CreateAgentFormContent(props: {
           />
         </FormProvider>
       )}
+      {authRequiredUrls?.length ? (
+        <ToolAuthRequiredAlert authRequiredUrls={authRequiredUrls} />
+      ) : null}
       <AlertDialogFooter>
         <Button
           onClick={(e) => {
