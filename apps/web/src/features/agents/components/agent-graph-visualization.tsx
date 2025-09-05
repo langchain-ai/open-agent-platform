@@ -172,21 +172,19 @@ export function AgentGraphVisualization({
     const centerX = 400;
     const nodeSpacing = 150;
 
-    // Start node - center it based on approximate width
     nodes.push({
       id: "start",
       type: "startEnd",
-      position: { x: centerX - 50, y: currentY }, // 100px width / 2
+      position: { x: centerX - 50, y: currentY },
       data: { label: "Start", type: "start" },
     });
 
     currentY += nodeSpacing;
 
-    // Main agent node - center it based on approximate width
     nodes.push({
       id: "main-agent",
       type: "mainAgent",
-      position: { x: centerX - 80, y: currentY }, // 160px width / 2
+      position: { x: centerX - 80, y: currentY },
       data: { label: name, type: "mainAgent" },
     });
 
@@ -206,8 +204,8 @@ export function AgentGraphVisualization({
 
     // Layout subagents horizontally
     if (subagents.length > 0) {
-      const subagentSpacing = 280; // Increased spacing for better distribution
-      const subagentWidth = 140; // Approximate width of subagent nodes
+      const subagentSpacing = 280;
+      const subagentWidth = 140;
       const totalWidth = (subagents.length - 1) * subagentSpacing;
       const startX = centerX - totalWidth / 2 - subagentWidth / 2;
 
@@ -239,14 +237,12 @@ export function AgentGraphVisualization({
     if (subagents.length > 0) {
       let maxToolsCount = 0;
 
-      // First pass: find the maximum number of tools
       subagents.forEach((subagent: any) => {
         const subagentTools = subagent?.tools || [];
         maxToolsCount = Math.max(maxToolsCount, subagentTools.length);
       });
 
       subagents.forEach((subagent: any, subagentIndex: number) => {
-        // Use the same spacing calculation as subagents to ensure consistency
         const subagentSpacing = 280;
         const subagentWidth = 140;
         const totalWidth = (subagents.length - 1) * subagentSpacing;
@@ -262,7 +258,6 @@ export function AgentGraphVisualization({
           const toolLabel =
             typeof tool === "string" ? tool : tool?.name || String(tool);
 
-          // Position tools with consistent spacing - center them if fewer tools
           const toolSpacing = 90;
           const totalToolsHeight = (maxToolsCount - 1) * toolSpacing;
           const thisSubagentHeight = (subagentTools.length - 1) * toolSpacing;
@@ -298,10 +293,7 @@ export function AgentGraphVisualization({
     }
 
     // End node - center it below the middle subagent or main agent
-    const endX =
-      subagents.length > 0
-        ? centerX - 50 // Center below subagents
-        : centerX - 50; // Center below main agent if no subagents
+    const endX = subagents.length > 0 ? centerX - 50 : centerX - 50;
 
     nodes.push({
       id: "end",
