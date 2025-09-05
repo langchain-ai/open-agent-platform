@@ -35,7 +35,16 @@ export function ClientProvider({
         },
       });
     }
-    // TODO: Add support for LangSmith authenticated deployments
+    // TODO: Clean up this logic
+    if (accessToken.startsWith("lsv2")) {
+      return new Client({
+        apiUrl: deploymentUrl,
+        defaultHeaders: {
+          "Content-Type": "application/json",
+          "X-Api-Key": accessToken,
+        },
+      });
+    }
     // For OAP deployments which require supabase access tokens
     return new Client({
       apiUrl: deploymentUrl,
