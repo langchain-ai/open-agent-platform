@@ -14,6 +14,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph-sdk": "^0.0.109",
     "@modelcontextprotocol/sdk": "^1.11.4",

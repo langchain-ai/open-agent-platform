@@ -1616,6 +1616,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/auth@npm:^0.0.0":
+  version: 0.0.0
+  resolution: "@langchain/auth@npm:0.0.0"
+  checksum: 6918724dd63a7d0a1295800e40744d4a10187b0505dc976aebbca611092875893bf032f2e4e81d28d8ffb376d68f6784c6a5c301ca10493fe28fb9f5886e775f
+  languageName: node
+  linkType: hard
+
 "@langchain/core@npm:^0.3.44":
   version: 0.3.49
   resolution: "@langchain/core@npm:0.3.49"
@@ -2192,6 +2199,7 @@ __metadata:
   resolution: "@open-agent-platform/web@workspace:apps/web"
   dependencies:
     "@eslint/js": ^9.19.0
+    "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.0.109
     "@modelcontextprotocol/sdk": ^1.11.4
