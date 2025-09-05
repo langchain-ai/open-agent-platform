@@ -33,7 +33,7 @@ function DeepAgentChatInterfaceInternal({
     null,
   );
   const [assistantError, setAssistantError] = useState<string | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
+  const [debugMode, setDebugMode] = useState(true);
 
   const onNewThread = useCallback(() => {
     setThreadId(null);
