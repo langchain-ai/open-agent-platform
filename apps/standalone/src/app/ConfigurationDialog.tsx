@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import { Client } from "@langchain/langgraph-sdk";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,10 @@ export function ConfigurationDialog({
     },
   );
 
+  const [isCreatingNewAssistant, setIsCreatingNewAssistant] = useState<boolean>(false);
+  const [graphId, setGraphId] = useState<string>("");
+  const [newAssistantName, setNewAssistantName] = useState<string>("");
+
   React.useEffect(() => {
     if (config) {
       setFormData(config);
@@ -51,7 +56,7 @@ export function ConfigurationDialog({
     }
   }, [required, config]);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (!formData.assistantId || !formData.deploymentUrl) {
       alert("Please fill in all required fields");
       return;
@@ -60,9 +65,9 @@ export function ConfigurationDialog({
     localStorage.setItem("deep-agent-config", JSON.stringify(formData));
     onConfigUpdate(formData);
     if (!required) setOpen(false);
-  };
+  }, [formData, onConfigUpdate, required]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (required && (!config?.deploymentUrl || !config?.assistantId)) {
       return;
     }
@@ -70,9 +75,9 @@ export function ConfigurationDialog({
       config || { assistantId: "", deploymentUrl: "", langsmithToken: "" },
     );
     setOpen(false);
-  };
+  }, [config, required]);
 
-  const handleOpenChange = (newOpen: boolean) => {
+  const handleOpenChange = useCallback((newOpen: boolean) => {
     if (
       !newOpen &&
       required &&
@@ -81,7 +86,40 @@ export function ConfigurationDialog({
       return;
     }
     setOpen(newOpen);
-  };
+  }, [config, required]);
+
+  const handleCreateNewAssistant = useCallback(async () => {
+    const defaultHeaders = formData.langsmithToken ? {
+      "X-Api-Key": formData.langsmithToken,
+    } : {};
+    if (!formData.deploymentUrl || !graphId || !newAssistantName) {
+      alert("To create a new assistant, you need to provide a deployment URL, a graph ID and a new assistant name");
+      return;
+    }
+    const client = new Client({
+      apiUrl: formData.deploymentUrl,
+      defaultHeaders
+    })
+    const newAssistant = await client.assistants.create({
+      graphId,
+      name: newAssistantName,
+    });
+
+    setFormData({
+      assistantId: newAssistant.assistant_id,
+      deploymentUrl: formData.deploymentUrl,
+      langsmithToken: formData.langsmithToken,
+    });
+    setIsCreatingNewAssistant(false);
+    setGraphId("");
+    setNewAssistantName("");
+  }, [formData.deploymentUrl, formData.langsmithToken, graphId, newAssistantName]);
+
+  const handleCancelAssistantCreation = useCallback(() => {
+    setIsCreatingNewAssistant(false);
+    setGraphId("");
+    setNewAssistantName("");
+  }, []);
 
   return (
     <Dialog
@@ -124,18 +162,78 @@ export function ConfigurationDialog({
             <label className="text-sm font-medium text-foreground">
               Assistant ID <span className="text-destructive">*</span>
             </label>
-            <input
-              type="text"
-              value={formData.assistantId}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  assistantId: e.target.value,
-                }))
-              }
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Enter Assistant ID"
-            />
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setIsCreatingNewAssistant(false)}
+                className={`inline-flex items-center justify-center rounded-md border px-3 py-1 text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  !isCreatingNewAssistant 
+                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" 
+                    : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                Use Existing Assistant
+              </button>
+              <button
+                onClick={() => setIsCreatingNewAssistant(true)}
+                className={`inline-flex items-center justify-center rounded-md border px-3 py-1 text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                  isCreatingNewAssistant 
+                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" 
+                    : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                }`}
+              >
+                Create New Assistant
+              </button>
+            </div>
+            {!isCreatingNewAssistant ? (
+              <input
+                type="text"
+                value={formData.assistantId}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    assistantId: e.target.value,
+                  }))
+                }
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Enter Assistant ID"
+              />
+            ) : (
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={graphId}
+                    onChange={(e) => setGraphId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Graph ID"
+                  />
+                  <input
+                    type="text"
+                    value={newAssistantName}
+                    onChange={(e) => setNewAssistantName(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="New Assistant Name"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleCreateNewAssistant}
+                    className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md px-2 text-xs font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                    style={{ backgroundColor: "#166534" }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#14532d"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#166534"}
+                  >
+                    Create Assistant
+                  </button>
+                  <button
+                    onClick={() => handleCancelAssistantCreation}
+                    className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md border border-input bg-background px-2 text-xs font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -168,7 +266,10 @@ export function ConfigurationDialog({
           )}
           <button
             onClick={handleSave}
-            className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+            style={{ backgroundColor: "#166534" }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#14532d"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#166534"}
           >
             {required ? "Continue" : "Save Changes"}
           </button>
