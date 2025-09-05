@@ -51,7 +51,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         );
       case "error":
         return (
-          <AlertCircle style={{ ...iconStyle, color: "var(--color-error)" }} />
+          <AlertCircle style={{ ...iconStyle, color: "var(--color-destructive)" }} />
         );
       case "pending":
         return (
@@ -63,7 +63,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
       default:
         return (
           <Terminal
-            style={{ ...iconStyle, color: "var(--color-text-secondary)" }}
+            style={{ ...iconStyle, color: "var(--color-muted-foreground)" }}
           />
         );
     }
@@ -77,10 +77,8 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
   return (
     <div
-      className="w-fit overflow-hidden rounded-md border"
+      className="w-fit overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm"
       style={{
-        backgroundColor: "var(--color-surface)",
-        borderColor: "var(--color-border)",
         maxWidth: "70vw",
       }}
     >
@@ -96,7 +94,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         disabled={!hasContent}
         onMouseEnter={(e) => {
           if (hasContent) {
-            e.currentTarget.style.backgroundColor = "var(--color-border-light)";
+            e.currentTarget.style.backgroundColor = "var(--color-accent)";
           }
         }}
         onMouseLeave={(e) => {
@@ -120,8 +118,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           )}
           {statusIcon}
           <span
-            className="text-sm font-medium"
-            style={{ color: "var(--color-text-primary)" }}
+            className="text-sm font-medium text-foreground"
           >
             {name}
           </span>
@@ -130,19 +127,16 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
       {isExpanded && hasContent && (
         <div
-          className="border-t"
+          className="border-t border-border"
           style={{
             padding: "0 1rem 1rem",
-            borderTopColor: "var(--color-border-light)",
           }}
         >
           {Object.keys(args).length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="font-semibold tracking-wider uppercase"
+                className="text-xs font-semibold tracking-wider uppercase text-muted-foreground"
                 style={{
-                  fontSize: "12px",
-                  color: "var(--color-text-secondary)",
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
                 }}
@@ -150,11 +144,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Arguments
               </h4>
               <pre
-                className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
+                className="text-xs overflow-x-auto rounded-sm border border-border font-mono break-all whitespace-pre-wrap bg-muted/30 text-foreground"
                 style={{
-                  fontSize: "12px",
                   padding: "0.5rem",
-                  borderColor: "var(--color-border-light)",
                   lineHeight: "1.75",
                   margin: "0",
                   fontFamily:
@@ -168,10 +160,8 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="font-semibold tracking-wider uppercase"
+                className="text-xs font-semibold tracking-wider uppercase text-muted-foreground"
                 style={{
-                  fontSize: "12px",
-                  color: "var(--color-text-secondary)",
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
                 }}
@@ -179,11 +169,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Result
               </h4>
               <pre
-                className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
+                className="text-xs overflow-x-auto rounded-sm border border-border font-mono break-all whitespace-pre-wrap bg-muted/30 text-foreground"
                 style={{
-                  fontSize: "12px",
                   padding: "0.5rem",
-                  borderColor: "var(--color-border-light)",
                   lineHeight: "1.75",
                   margin: "0",
                   fontFamily:
