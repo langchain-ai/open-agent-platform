@@ -454,11 +454,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                           className={cn(
                             "flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
                             message.status === "pending" &&
-                              "border-[#fbbf244d] bg-[#fbbf241a] text-[#d97706]",
+                              "border-warning/30 bg-warning/10 text-warning-dark",
                             message.status === "approved" &&
-                              "border-[#22c55e4d] bg-[#22c55e1a] text-[#059669]",
+                              "border-success/30 bg-success/10 text-success-dark",
                             !["pending", "approved"].includes(message.status) &&
-                              "border-[#ef44444d] bg-[#ef44441a] text-[#dc2626]",
+                              "border-destructive/30 bg-destructive/10 text-destructive",
                           )}
                           onClick={() => handleOptimizerMessageClick(message)}
                           disabled={message.status !== "pending"}
@@ -544,7 +544,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   Configuration Changes
                 </h2>
                 <button
-                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90"
                   style={{ color: "var(--color-text-secondary)" }}
                   onClick={handleCloseDiffDialog}
                   aria-label="Close dialog"
@@ -645,7 +645,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 }}
               >
                 <button
-                  className="cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-100 active:translate-y-px dark:hover:bg-gray-800"
+                  className="hover:bg-muted cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 active:translate-y-px"
                   style={{
                     color: "var(--color-text-secondary)",
                     borderColor: "var(--color-border)",

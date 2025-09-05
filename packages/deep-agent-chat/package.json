@@ -3,31 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.tsx",
   "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    },
-    "./styles": {
-      "import": "./dist/styles.css",
-      "require": "./dist/styles.css"
-    }
+    ".": "./src/index.tsx",
+    "./types": "./src/types/index.ts"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "rollup -c",
-    "build:internal": "rollup -c",
+    "build": "tsc --noEmit",
+    "build:internal": "tsc --noEmit",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
@@ -56,9 +39,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-typescript": "^12.1.4",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -71,9 +51,6 @@
     "postcss": "^8.5.6",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "rollup": "^4.50.0",
-    "rollup-plugin-dts": "^6.2.3",
-    "rollup-plugin-postcss": "^4.0.2",
     "typescript": "^5",
     "typescript-eslint": "^8"
   },
