@@ -69,9 +69,9 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    // For non-API requests, redirect to the login page
+    // For non-API requests, redirect to the homepage
     const url = request.nextUrl.clone();
-    url.pathname = "/signin";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

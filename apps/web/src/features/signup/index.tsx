@@ -373,7 +373,7 @@ export default function SignupInterface() {
               <div className="flex justify-center">
                 <Button
                   type="submit"
-                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black"
+                  className="h-16 w-[456px] rounded-full border-none bg-purple-200 text-xl font-normal text-black hover:bg-purple-200/80"
                   disabled={isLoading}
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
@@ -391,7 +391,8 @@ export default function SignupInterface() {
                 Sign in
               </Link>
             </p>
-            <div className="text-center text-base font-normal text-black">
+            {/* TODO: Add back once we have a terms of service/data security policy */}
+            {/* <div className="text-center text-base font-normal text-black">
               <p>
                 By continuing, you agree to our{" "}
                 <Link
@@ -408,7 +409,7 @@ export default function SignupInterface() {
                   Data Security Policy
                 </Link>
               </p>
-            </div>
+            </div> */}
           </CardFooter>
         </Card>
       </div>

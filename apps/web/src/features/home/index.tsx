@@ -20,7 +20,7 @@ export function HomePageInterface() {
           href="/signup"
           className="cursor-pointer rounded-[64px] border border-white bg-white px-10 py-4 text-2xl font-medium text-black transition-colors duration-200 hover:bg-gray-100"
         >
-          Sign Up
+          <p className="text-[#175166]">Sign Up</p>
         </NextLink>
         <a
           href={DOCS_LINK}
