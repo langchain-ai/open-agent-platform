@@ -37,12 +37,6 @@ interface ToolNodeData {
   type: "tool";
 }
 
-type NodeData =
-  | StartEndNodeData
-  | MainAgentNodeData
-  | SubAgentNodeData
-  | ToolNodeData;
-
 interface SubAgentNode {
   id: string;
   type: "subagent";
