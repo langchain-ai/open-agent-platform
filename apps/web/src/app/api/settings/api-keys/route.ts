@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       {
         user_id: userId,
         api_keys: nonNullApiKeys,
-      },
+      } as any,
       {
         onConflict: "user_id",
       },
