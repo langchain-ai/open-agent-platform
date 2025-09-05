@@ -100,23 +100,27 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             ))}
         </div>
         <div className="min-w-0 max-w-[70%] flex-shrink-0">
-          {hasContent && (
+          {(hasContent || debugMode) && (
             <div className="flex items-end gap-2">
               <div
                 className={cn(
                   "mt-4 overflow-hidden break-words rounded-lg p-2",
                   isUser
                     ? "bg-user-message text-white"
-                    : "border-border bg-surface text-primary w-[calc(100%-100px)] border",
+                    : "border-border bg-surface text-primary w-[calc(100%-80px)] border",
                 )}
               >
                 {isUser ? (
                   <p className="m-0 whitespace-pre-wrap text-sm leading-relaxed">
                     {messageContent}
                   </p>
-                ) : (
+                ) : hasContent ? (
                   <MarkdownContent content={messageContent} />
-                )}
+                ) : debugMode ? (
+                  <p className="m-0 whitespace-nowrap text-xs italic">
+                    Empty Message
+                  </p>
+                ) : null}
               </div>
               <div
                 className={cn(
