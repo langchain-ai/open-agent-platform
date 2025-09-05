@@ -1,0 +1,14 @@
+# Example Dockerfile for Node.js services
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Default command (override in docker-compose.yml if needed)
+CMD ["npm", "run", "dev"]
