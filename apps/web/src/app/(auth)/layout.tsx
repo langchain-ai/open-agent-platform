@@ -3,14 +3,8 @@ import AuthLayout from "./auth-layout";
 import { AuthProvider } from "@/providers/Auth";
 import type { Metadata } from "next";
 import "../globals.css";
-import { Inter } from "next/font/google";
 import { DOCS_LINK } from "@/constants";
-
-const inter = Inter({
-  subsets: ["latin"],
-  preload: true,
-  display: "swap",
-});
+import VideoBackgroundPageWrapper from "@/components/VideoBackgroundPageWrapper";
 
 export const metadata: Metadata = {
   title: "Open Agent Platform - Auth",
@@ -25,7 +19,7 @@ export default function Layout({
   const isDemoApp = process.env.NEXT_PUBLIC_DEMO_APP === "true";
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         {isDemoApp && (
           <div className="fixed top-0 right-0 left-0 z-10 bg-[#CFC8FE] py-2 text-center text-black shadow-md">
             You're currently using the demo application. To use your own agents,
@@ -41,7 +35,9 @@ export default function Layout({
           </div>
         )}
         <AuthProvider>
-          <AuthLayout>{children}</AuthLayout>
+          <VideoBackgroundPageWrapper>
+            <AuthLayout>{children}</AuthLayout>
+          </VideoBackgroundPageWrapper>
         </AuthProvider>
       </body>
     </html>

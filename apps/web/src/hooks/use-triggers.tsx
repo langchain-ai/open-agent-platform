@@ -14,7 +14,7 @@ export interface ListUserTriggersData {
   id: string;
   user_id: string;
   provider_id: string;
-  resource_id: string;
+  resource: unknown;
   linked_assistant_ids?: string[];
   created_at: string;
 }

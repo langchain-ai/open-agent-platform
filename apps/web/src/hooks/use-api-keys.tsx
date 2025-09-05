@@ -13,17 +13,12 @@ export function useApiKeys() {
     "lg:settings:googleApiKey",
     "",
   );
-  const [tavilyApiKey] = useLocalStorage<string>(
-    "lg:settings:tavilyApiKey",
-    "",
-  );
 
   return {
     apiKeys: {
       OPENAI_API_KEY: openaiApiKey,
       ANTHROPIC_API_KEY: anthropicApiKey,
       GOOGLE_API_KEY: googleApiKey,
-      TAVILY_API_KEY: tavilyApiKey,
     },
   };
 }
