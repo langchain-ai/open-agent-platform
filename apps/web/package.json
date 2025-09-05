@@ -48,6 +48,7 @@
     "diff": "^8.0.2",
     "framer-motion": "^12.7.3",
     "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.2",
     "katex": "latest",
     "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
@@ -74,6 +75,7 @@
   "devDependencies": {
     "@eslint/js": "^9.19.0",
     "@tailwindcss/postcss": "^4.0.13",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.16",
     "@types/node": "22.15.2",
     "@types/react": "^19.0.8",
