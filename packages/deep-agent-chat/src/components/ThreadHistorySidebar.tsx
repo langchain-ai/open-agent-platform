@@ -133,7 +133,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             animation: "slideIn 300ms ease-out",
           }}
         >
-          <div className="border-border flex h-full w-full max-w-full flex-col overflow-hidden border-l shadow-2xl">
+          <div className="border-border bg-background flex h-full w-full max-w-full flex-col overflow-hidden border-l shadow-2xl">
             <div className="border-border bg-surface flex items-center justify-between border-b p-4">
               <h3 className="text-foreground m-0 text-base font-semibold">
                 Thread History
