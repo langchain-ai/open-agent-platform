@@ -272,6 +272,11 @@ export function AgentGraphVisualization({
           source: `subagent-${targetSubagentIndex}`,
           target: nodeId,
           type: "smoothstep",
+          style: {
+            strokeDasharray: "5,5",
+            strokeWidth: 2,
+            stroke: "#64748b",
+          },
         });
       });
 
@@ -294,6 +299,11 @@ export function AgentGraphVisualization({
           source: "main-agent",
           target: nodeId,
           type: "smoothstep",
+          style: {
+            strokeDasharray: "5,5",
+            strokeWidth: 2,
+            stroke: "#64748b",
+          },
         });
       });
 
