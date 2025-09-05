@@ -201,9 +201,8 @@ export function AgentGraphVisualization({
 
     currentY += nodeSpacing;
 
-    // Get subagents and tools from configurable
+    // Get subagents from configurable
     const subagents = configurable?.subagents || [];
-    const tools = configurable?.tools?.tools || [];
 
     // Layout subagents horizontally
     if (subagents.length > 0) {
@@ -236,78 +235,66 @@ export function AgentGraphVisualization({
       currentY += nodeSpacing;
     }
 
-    // Layout tools below subagents
-    if (tools.length > 0 && subagents.length > 0) {
-      // Find the skill extractor subagent to connect tools to
-      const skillExtractorIndex = subagents.findIndex((sub: any) => {
-        const subName =
-          typeof sub === "string" ? sub : sub?.name || String(sub);
-        return (
-          subName.toLowerCase().includes("skill") ||
-          subName.toLowerCase().includes("extract")
-        );
+    // Layout tools below subagents - each subagent gets its own tools
+    if (subagents.length > 0) {
+      let maxToolsCount = 0;
+
+      // First pass: find the maximum number of tools
+      subagents.forEach((subagent: any) => {
+        const subagentTools = subagent?.tools || [];
+        maxToolsCount = Math.max(maxToolsCount, subagentTools.length);
       });
 
-      // Use skill extractor if found, otherwise use the last subagent
-      const targetSubagentIndex =
-        skillExtractorIndex >= 0 ? skillExtractorIndex : subagents.length - 1;
-      const targetSubagentX =
-        centerX -
-        ((subagents.length - 1) * 250) / 2 +
-        targetSubagentIndex * 250;
+      subagents.forEach((subagent: any, subagentIndex: number) => {
+        // Use the same spacing calculation as subagents to ensure consistency
+        const subagentSpacing = 280;
+        const subagentWidth = 140;
+        const totalWidth = (subagents.length - 1) * subagentSpacing;
+        const startX = centerX - totalWidth / 2 - subagentWidth / 2;
+        const subagentX = startX + subagentIndex * subagentSpacing;
 
-      tools.forEach((tool: any, index: number) => {
-        const nodeId = `tool-${index}`;
-        const toolLabel =
-          typeof tool === "string" ? tool : tool?.name || String(tool);
-        nodes.push({
-          id: nodeId,
-          type: "tool",
-          position: { x: targetSubagentX, y: currentY },
-          data: { label: toolLabel, type: "tool" },
-        });
+        // Get tools for this specific subagent
+        const subagentTools = subagent?.tools || [];
 
-        edges.push({
-          id: `subagent-${targetSubagentIndex}-to-${nodeId}`,
-          source: `subagent-${targetSubagentIndex}`,
-          target: nodeId,
-          type: "smoothstep",
-          style: {
-            strokeDasharray: "5,5",
-            strokeWidth: 2,
-            stroke: "#64748b",
-          },
-        });
-      });
+        // Create tools for this specific subagent
+        subagentTools.forEach((tool: any, toolIndex: number) => {
+          const nodeId = `tool-${subagentIndex}-${toolIndex}`;
+          const toolLabel =
+            typeof tool === "string" ? tool : tool?.name || String(tool);
 
-      currentY += nodeSpacing;
-    } else if (tools.length > 0 && subagents.length === 0) {
-      // No subagents, connect tools directly to main agent
-      tools.forEach((tool: any, index: number) => {
-        const nodeId = `tool-${index}`;
-        const toolLabel =
-          typeof tool === "string" ? tool : tool?.name || String(tool);
-        nodes.push({
-          id: nodeId,
-          type: "tool",
-          position: { x: centerX, y: currentY },
-          data: { label: toolLabel, type: "tool" },
-        });
+          // Position tools with consistent spacing - center them if fewer tools
+          const toolSpacing = 90;
+          const totalToolsHeight = (maxToolsCount - 1) * toolSpacing;
+          const thisSubagentHeight = (subagentTools.length - 1) * toolSpacing;
+          const offset = (totalToolsHeight - thisSubagentHeight) / 2;
 
-        edges.push({
-          id: `agent-to-${nodeId}`,
-          source: "main-agent",
-          target: nodeId,
-          type: "smoothstep",
-          style: {
-            strokeDasharray: "5,5",
-            strokeWidth: 2,
-            stroke: "#64748b",
-          },
+          const toolY = currentY + offset + toolIndex * toolSpacing;
+
+          nodes.push({
+            id: nodeId,
+            type: "tool",
+            position: { x: subagentX, y: toolY },
+            data: { label: toolLabel, type: "tool" },
+          });
+
+          edges.push({
+            id: `subagent-${subagentIndex}-to-${nodeId}`,
+            source: `subagent-${subagentIndex}`,
+            target: nodeId,
+            type: "smoothstep",
+            style: {
+              strokeDasharray: "5,5",
+              strokeWidth: 2,
+              stroke: "#64748b",
+            },
+          });
         });
       });
 
-      currentY += nodeSpacing;
+      // Update currentY to account for the tallest column of tools
+      if (maxToolsCount > 0) {
+        currentY += nodeSpacing + (maxToolsCount - 1) * 90;
+      }
     }
 
     // End node - center it below the middle subagent or main agent
