@@ -5,6 +5,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{ts,tsx,js,jsx}",
     "./agent/**/*.{ts,tsx,js,jsx}",
+    "../../packages/deep-agent-chat/src/**/*.{ts,tsx,js,jsx}",
   ],
   theme: {
     extend: {
