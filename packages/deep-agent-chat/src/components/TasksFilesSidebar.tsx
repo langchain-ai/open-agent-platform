@@ -253,7 +253,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                     <p className="text-tertiary">No tasks yet</p>
                   </div>
                 ) : (
-                  <div className="p-1">
+                  <div className="p-1 ml-4">
                     {groupedTodos.in_progress.length > 0 && (
                       <div className="mb-4">
                         <h3 className="text-tertiary mb-1 text-xs font-semibold uppercase">
