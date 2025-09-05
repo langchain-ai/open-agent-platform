@@ -40,7 +40,8 @@ export function ConfigurationDialog({
     },
   );
 
-  const [isCreatingNewAssistant, setIsCreatingNewAssistant] = useState<boolean>(false);
+  const [isCreatingNewAssistant, setIsCreatingNewAssistant] =
+    useState<boolean>(false);
   const [graphId, setGraphId] = useState<string>("");
   const [newAssistantName, setNewAssistantName] = useState<string>("");
 
@@ -77,33 +78,62 @@ export function ConfigurationDialog({
     setOpen(false);
   }, [config, required]);
 
-  const handleOpenChange = useCallback((newOpen: boolean) => {
-    if (
-      !newOpen &&
-      required &&
-      (!config?.deploymentUrl || !config?.assistantId)
-    ) {
-      return;
-    }
-    setOpen(newOpen);
-  }, [config, required]);
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (
+        !newOpen &&
+        required &&
+        (!config?.deploymentUrl || !config?.assistantId)
+      ) {
+        return;
+      }
+      setOpen(newOpen);
+    },
+    [config, required],
+  );
 
   const handleCreateNewAssistant = useCallback(async () => {
-    const defaultHeaders = formData.langsmithToken ? {
-      "X-Api-Key": formData.langsmithToken,
-    } : {};
+    const defaultHeaders = formData.langsmithToken
+      ? {
+          "X-Api-Key": formData.langsmithToken,
+        }
+      : {};
     if (!formData.deploymentUrl || !graphId || !newAssistantName) {
-      alert("To create a new assistant, you need to provide a deployment URL, a graph ID and a new assistant name");
+      alert(
+        "To create a new assistant, you need to provide a deployment URL, a graph ID and a new assistant name",
+      );
       return;
     }
     const client = new Client({
       apiUrl: formData.deploymentUrl,
-      defaultHeaders
-    })
+      defaultHeaders,
+    });
     const newAssistant = await client.assistants.create({
       graphId,
       name: newAssistantName,
     });
+    const schema = await client.assistants.getSchemas(
+      newAssistant.assistant_id,
+    );
+    if (schema.config_schema) {
+      const configurableSchema: Record<string, any> = {};
+      for (const property in schema.config_schema.properties) {
+        if (
+          typeof schema.config_schema.properties[property] === "object" &&
+          schema.config_schema.properties[property] !== null
+        ) {
+          configurableSchema[property] =
+            schema.config_schema.properties[property].default;
+        }
+      }
+      await client.assistants.update(newAssistant.assistant_id, {
+        config: {
+          configurable: {
+            ...configurableSchema,
+          },
+        },
+      });
+    }
 
     setFormData({
       assistantId: newAssistant.assistant_id,
@@ -113,7 +143,12 @@ export function ConfigurationDialog({
     setIsCreatingNewAssistant(false);
     setGraphId("");
     setNewAssistantName("");
-  }, [formData.deploymentUrl, formData.langsmithToken, graphId, newAssistantName]);
+  }, [
+    formData.deploymentUrl,
+    formData.langsmithToken,
+    graphId,
+    newAssistantName,
+  ]);
 
   const handleCancelAssistantCreation = useCallback(() => {
     setIsCreatingNewAssistant(false);
@@ -166,8 +201,8 @@ export function ConfigurationDialog({
               <button
                 onClick={() => setIsCreatingNewAssistant(false)}
                 className={`inline-flex items-center justify-center rounded-md border px-3 py-1 text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  !isCreatingNewAssistant 
-                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" 
+                  !isCreatingNewAssistant
+                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
                     : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
@@ -176,8 +211,8 @@ export function ConfigurationDialog({
               <button
                 onClick={() => setIsCreatingNewAssistant(true)}
                 className={`inline-flex items-center justify-center rounded-md border px-3 py-1 text-xs font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  isCreatingNewAssistant 
-                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90" 
+                  isCreatingNewAssistant
+                    ? "border-primary bg-primary text-primary-foreground hover:bg-primary/90"
                     : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
@@ -220,8 +255,12 @@ export function ConfigurationDialog({
                     onClick={handleCreateNewAssistant}
                     className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md px-2 text-xs font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                     style={{ backgroundColor: "#166534" }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#14532d"}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#166534"}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#14532d")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#166534")
+                    }
                   >
                     Create Assistant
                   </button>
@@ -268,8 +307,12 @@ export function ConfigurationDialog({
             onClick={handleSave}
             className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium text-white ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
             style={{ backgroundColor: "#166534" }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#14532d"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#166534"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "#14532d")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "#166534")
+            }
           >
             {required ? "Continue" : "Save Changes"}
           </button>
