@@ -135,19 +135,25 @@ export function ConfigurationDialog({
       });
     }
 
-    setFormData({
+    const updatedConfig = {
       assistantId: newAssistant.assistant_id,
       deploymentUrl: formData.deploymentUrl,
       langsmithToken: formData.langsmithToken,
-    });
+    };
+    setFormData(updatedConfig);
     setIsCreatingNewAssistant(false);
     setGraphId("");
     setNewAssistantName("");
+
+    localStorage.setItem("deep-agent-config", JSON.stringify(updatedConfig));
+    onConfigUpdate(updatedConfig);
+    setOpen(false);
   }, [
     formData.deploymentUrl,
     formData.langsmithToken,
     graphId,
     newAssistantName,
+    onConfigUpdate,
   ]);
 
   const handleCancelAssistantCreation = useCallback(() => {
