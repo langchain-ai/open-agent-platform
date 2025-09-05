@@ -134,7 +134,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
         open={true}
         onOpenChange={onClose}
       >
-        <DialogContent className="flex max-h-[80vh] min-w-[60vw] flex-col p-6">
+        <DialogContent className="flex h-[80vh] max-h-[80vh] min-w-[60vw] flex-col p-6">
           <DialogTitle className="sr-only">
             {file?.path || "New File"}
           </DialogTitle>
@@ -199,7 +199,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
               )}
             </div>
           </div>
-          <div className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1 overflow-hidden">
             {isEditingMode ? (
               <Textarea
                 value={fileContent}
@@ -208,33 +208,41 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                 className="h-full min-h-[400px] resize-none font-mono text-sm"
               />
             ) : (
-              <ScrollArea className="bg-surface h-full max-h-[60vh] rounded-md p-4">
-                {fileContent ? (
-                  isMarkdown ? (
-                    <div className="rounded-md p-6">
-                      <MarkdownContent content={fileContent} />
-                    </div>
+              <ScrollArea className="bg-surface h-full rounded-md">
+                <div className="p-4">
+                  {fileContent ? (
+                    isMarkdown ? (
+                      <div className="rounded-md p-6">
+                        <MarkdownContent content={fileContent} />
+                      </div>
+                    ) : (
+                      <SyntaxHighlighter
+                        language={language}
+                        style={oneDark}
+                        customStyle={{
+                          margin: 0,
+                          borderRadius: "0.5rem",
+                          fontSize: "0.875rem",
+                        }}
+                        showLineNumbers
+                        wrapLines={true}
+                        lineProps={{
+                          style: {
+                            whiteSpace: "pre-wrap",
+                          },
+                        }}
+                      >
+                        {fileContent}
+                      </SyntaxHighlighter>
+                    )
                   ) : (
-                    <SyntaxHighlighter
-                      language={language}
-                      style={oneDark}
-                      customStyle={{
-                        margin: 0,
-                        borderRadius: "0.5rem",
-                        fontSize: "0.875rem",
-                      }}
-                      showLineNumbers
-                    >
-                      {fileContent}
-                    </SyntaxHighlighter>
-                  )
-                ) : (
-                  <div className="flex items-center justify-center p-12">
-                    <p className="text-muted-foreground text-sm">
-                      File is empty
-                    </p>
-                  </div>
-                )}
+                    <div className="flex items-center justify-center p-12">
+                      <p className="text-muted-foreground text-sm">
+                        File is empty
+                      </p>
+                    </div>
+                  )}
+                </div>
               </ScrollArea>
             )}
           </div>
