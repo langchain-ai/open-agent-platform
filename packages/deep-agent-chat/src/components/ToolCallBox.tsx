@@ -133,7 +133,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {Object.keys(args).length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+                className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -142,7 +142,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Arguments
               </h4>
               <pre
-                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto whitespace-pre-wrap break-all rounded-sm border font-mono text-xs"
                 style={{
                   padding: "0.5rem",
                   lineHeight: "1.75",
@@ -158,7 +158,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+                className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -167,7 +167,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Result
               </h4>
               <pre
-                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto whitespace-pre-wrap break-all rounded-sm border font-mono text-xs"
                 style={{
                   padding: "0.5rem",
                   lineHeight: "1.75",

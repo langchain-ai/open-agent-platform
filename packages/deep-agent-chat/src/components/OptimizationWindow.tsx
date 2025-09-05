@@ -408,7 +408,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
       <>
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-t-[10px] transition-[height] duration-400 ease-out",
+            "duration-400 flex flex-col overflow-hidden rounded-t-[10px] transition-[height] ease-out",
             isExpanded ? "h-full" : "h-12",
           )}
         >
@@ -464,7 +464,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     return (
                       <div
                         key={`user-${index}`}
-                        className="bg-user-message mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
+                        className="bg-user-message mb-2 ml-auto flex max-w-[80%] justify-end break-words rounded-2xl px-3.5 py-2.5 text-sm text-white"
                       >
                         {message.content}
                       </div>
@@ -473,7 +473,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     return (
                       <div
                         key={message.id}
-                        className="mr-auto mb-2 flex justify-start"
+                        className="mb-2 mr-auto flex justify-start"
                       >
                         <button
                           className={cn(
@@ -508,7 +508,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   return null;
                 })}
                 {isLoading && (
-                  <div className="border-border mb-2 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm text-black/80 italic">
+                  <div className="border-border mb-2 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm italic text-black/80">
                     <Loader2
                       size={16}
                       className="animate-spin"
@@ -520,7 +520,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               </div>
             </div>
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-38 items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary max-h-38 mx-2 mb-2 flex items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea
@@ -574,7 +574,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                       Current Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto whitespace-pre-wrap break-words rounded-lg border p-4 font-mono text-xs leading-normal">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -598,7 +598,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                       Proposed Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto whitespace-pre-wrap break-words rounded-lg border p-4 font-mono text-xs leading-normal">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
