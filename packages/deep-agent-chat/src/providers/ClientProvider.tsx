@@ -35,7 +35,16 @@ export function ClientProvider({
         },
       });
     }
-    // TODO: Add support for LangSmith authenticated deployments
+    // TODO: Clean up this logic
+    if (accessToken.startsWith("lsv2")) {
+      return new Client({
+        apiUrl: deploymentUrl,
+        defaultHeaders: {
+          "Content-Type": "application/json",
+          "X-Api-Key": accessToken,
+        },
+      });
+    }
     // For OAP deployments which require supabase access tokens
     return new Client({
       apiUrl: deploymentUrl,
@@ -55,6 +64,16 @@ export function ClientProvider({
         apiUrl: optimizerUrl,
         defaultHeaders: {
           "x-auth-scheme": "langsmith",
+        },
+      });
+    }
+    if (optimizerAccessToken.startsWith("lsv2")) {
+      return new Client({
+        apiUrl: optimizerUrl,
+        defaultHeaders: {
+          "Content-Type": "application/json",
+          "X-Api-Key": optimizerAccessToken,
+          "X-Tenant-Id": "ebbaf2eb-769b-4505-aca2-d11de10372a4", // TODO: REMOVE ONCE BUG FIXED
         },
       });
     }

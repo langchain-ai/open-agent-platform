@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "main": "./src/index.tsx",
-  "types": "./src/index.tsx",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./types": "./src/types/index.ts"
+  },
   "scripts": {
     "build": "tsc --noEmit",
     "build:internal": "tsc --noEmit",
@@ -45,13 +48,15 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.13.0",
+    "postcss": "^8.5.6",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "typescript": "^5",
     "typescript-eslint": "^8"
   },
   "peerDependencies": {
-    "next": "^14",
+    "next": "^15",
+    "nuqs": "^2.4.1",
     "react": "^19",
     "react-dom": "^19"
   }

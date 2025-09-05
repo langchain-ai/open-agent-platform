@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import {

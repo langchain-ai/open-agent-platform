@@ -15,19 +15,19 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
       switch (subAgent.status) {
         case "completed":
           return (
-            <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-[#10b981] dark:text-[#34d399]" />
+            <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-green-500 dark:text-green-400" />
           );
         case "error":
           return (
-            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 text-[#ef4444] dark:text-[#f87171]" />
+            <AlertCircle className="text-destructive h-3.5 w-3.5 flex-shrink-0" />
           );
         case "pending":
           return (
-            <Loader className="h-3.5 w-3.5 flex-shrink-0 animate-spin text-[#1c3c3c] dark:text-[#2dd4bf]" />
+            <Loader className="text-primary h-3.5 w-3.5 flex-shrink-0 animate-spin" />
           );
         default:
           return (
-            <Clock className="h-3.5 w-3.5 flex-shrink-0 text-[#9ca3af] dark:text-[#6b7280]" />
+            <Clock className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
           );
       }
     };
@@ -41,11 +41,11 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-start gap-2">
             {getStatusIcon()}
-            <span className="text-lg font-semibold text-[#111827] dark:text-[#f3f4f6]">
+            <span className="text-foreground text-lg font-semibold">
               {subAgent.subAgentName}
             </span>
           </div>
-          <p className="m-0 line-clamp-2 overflow-hidden text-xs leading-normal text-[#6b7280] dark:text-[#9ca3af]">
+          <p className="text-muted-foreground m-0 line-clamp-2 overflow-hidden text-xs leading-normal">
             {typeof subAgent.input === "string"
               ? subAgent.input
               : subAgent.input.description &&
