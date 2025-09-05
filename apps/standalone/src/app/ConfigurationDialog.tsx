@@ -34,7 +34,7 @@ export function ConfigurationDialog({
   const [formData, setFormData] = useState<Config>(
     config || {
       assistantId: "",
-      deploymentUrl: "",
+      deploymentUrl: "http://localhost:2024",
       langsmithToken: "",
     },
   );
