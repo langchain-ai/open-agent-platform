@@ -17,6 +17,32 @@ interface AgentGraphVisualizationProps {
   name: string;
 }
 
+interface StartEndNodeData {
+  label: string;
+  type: "start" | "end";
+}
+
+interface MainAgentNodeData {
+  label: string;
+  type: "mainAgent";
+}
+
+interface SubAgentNodeData {
+  label: string;
+  type: "subagent";
+}
+
+interface ToolNodeData {
+  label: string;
+  type: "tool";
+}
+
+type NodeData =
+  | StartEndNodeData
+  | MainAgentNodeData
+  | SubAgentNodeData
+  | ToolNodeData;
+
 interface SubAgentNode {
   id: string;
   type: "subagent";
@@ -47,7 +73,7 @@ interface MainAgentNode {
 
 type GraphNode = SubAgentNode | ToolNode | StartEndNode | MainAgentNode;
 
-const StartEndNodeComponent = ({ data }: { data: any }) => (
+const StartEndNodeComponent = ({ data }: { data: StartEndNodeData }) => (
   <div className="min-w-[100px] rounded-lg border-2 border-gray-800 bg-white px-6 py-3 text-center font-medium shadow-lg">
     {data.type === "start" && (
       <Handle
@@ -69,7 +95,7 @@ const StartEndNodeComponent = ({ data }: { data: any }) => (
   </div>
 );
 
-const MainAgentNodeComponent = ({ data }: { data: any }) => (
+const MainAgentNodeComponent = ({ data }: { data: MainAgentNodeData }) => (
   <div className="min-w-[160px] rounded-lg border-2 border-yellow-500 bg-yellow-100 px-6 py-3 text-center font-medium shadow-lg">
     <Handle
       type="target"
@@ -87,7 +113,7 @@ const MainAgentNodeComponent = ({ data }: { data: any }) => (
   </div>
 );
 
-const SubAgentNodeComponent = ({ data }: { data: any }) => (
+const SubAgentNodeComponent = ({ data }: { data: SubAgentNodeData }) => (
   <div className="min-w-[140px] rounded-lg border-2 border-purple-500 bg-purple-100 px-4 py-4 text-center shadow-lg">
     <Handle
       type="target"
@@ -110,7 +136,7 @@ const SubAgentNodeComponent = ({ data }: { data: any }) => (
   </div>
 );
 
-const ToolNodeComponent = ({ data }: { data: any }) => (
+const ToolNodeComponent = ({ data }: { data: ToolNodeData }) => (
   <div className="min-w-[140px] rounded-lg border-2 border-green-500 bg-green-100 px-4 py-4 text-center shadow-lg">
     <Handle
       type="target"
