@@ -8,10 +8,19 @@
  */
 export function getApiUrl() {
   const fallbackLocalUrl = "http://localhost:3000";
+
+  const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV;
+  let vercelUrl: string | undefined;
+  if (vercelEnv) {
+    vercelUrl =
+      vercelEnv === "production"
+        ? process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+        : process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL;
+    vercelUrl = vercelUrl ? `https://${vercelUrl}` : undefined;
+  }
+
   try {
-    const baseUrl = new URL(
-      process.env.NEXT_PUBLIC_VERCEL_URL ?? fallbackLocalUrl,
-    );
+    const baseUrl = new URL(vercelUrl ?? fallbackLocalUrl);
     baseUrl.pathname = "/api";
     return baseUrl.toString();
   } catch {
