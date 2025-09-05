@@ -65,6 +65,7 @@ import {
 } from "@/components/ui/tooltip";
 import { HumanInterruptConfig } from "@/components/agent-inbox/types";
 import { InterruptConfigDialog } from "./interrupt-config-dialog";
+import { ResourceRenderer } from "@/features/triggers/components/resource-renderer";
 
 interface Option {
   label: string;
@@ -1081,7 +1082,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.provider_id}:{trigger.resource_id}
+            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -1149,14 +1150,7 @@ export function ConfigFieldTriggers({
                             : "opacity-0",
                         )}
                       />
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {trigger.resource_id}
-                        </span>
-                        <span className="text-muted-foreground text-xs">
-                          {trigger.provider_id}
-                        </span>
-                      </div>
+                      <ResourceRenderer resource={trigger.resource} />
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -1177,7 +1171,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.provider_id}:{trigger.resource_id}
+                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}

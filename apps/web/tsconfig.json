@@ -28,7 +28,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/hooks/use-threads",
-    "src/app/thread/[threadId]"
+    "src/app/thread/[threadId]",
+    "src/app/api/langchain-auth/verify-user-auth-scopes"
   ],
   "exclude": ["node_modules"]
 }
