@@ -105,8 +105,12 @@ function configSchemaToToolsConfig(
       continue;
     }
 
-    if (!process.env.NEXT_PUBLIC_MCP_SERVER_URL) {
-      toast.error("Can not configure MCP tool without MCP server URL", {
+    // Allow MCP configuration if env var exists OR if we're in browser (user might have custom config)
+    const mcpServerUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
+    const allowMcpConfiguration = mcpServerUrl || (typeof window !== "undefined");
+
+    if (!allowMcpConfiguration) {
+      toast.error("MCP server not configured. Please set up a tool server in Settings.", {
         richColors: true,
       });
       continue;
@@ -116,7 +120,7 @@ function configSchemaToToolsConfig(
       label: key,
       type: uiConfig.type,
       default: {
-        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        url: mcpServerUrl || "", // Will be empty if no env var, but proxy will use user config
         tools: [],
         auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
         ...(uiConfig.default ?? {}),
