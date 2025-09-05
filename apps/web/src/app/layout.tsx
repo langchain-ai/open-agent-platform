@@ -1,13 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
 import "./globals.css";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  preload: true,
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Open Agent Platform",
@@ -21,7 +14,7 @@ export default function Layout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body>
         <main>{children}</main>
       </body>
     </html>

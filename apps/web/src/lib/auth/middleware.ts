@@ -8,6 +8,7 @@ const NO_AUTH_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/api/auth",
+  "/",
 ];
 
 export async function updateSession(request: NextRequest) {
@@ -53,7 +54,11 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    !NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
+    !NO_AUTH_PATHS.some((path) =>
+      path === "/"
+        ? request.nextUrl.pathname === path
+        : request.nextUrl.pathname.startsWith(path),
+    )
   ) {
     // Check if this is an API request
     if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -64,19 +69,23 @@ export async function updateSession(request: NextRequest) {
       );
     }
 
-    // For non-API requests, redirect to the login page
+    // For non-API requests, redirect to the homepage
     const url = request.nextUrl.clone();
-    url.pathname = "/signin";
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 
-  // If the user is authenticated, and they are trying to access an auth page, redirect them to the home page
+  // If the user is authenticated, and they are trying to access an auth page, redirect them to the chat page
   if (
     user &&
-    NO_AUTH_PATHS.some((path) => request.nextUrl.pathname.startsWith(path))
+    NO_AUTH_PATHS.some((path) =>
+      path === "/"
+        ? request.nextUrl.pathname === path
+        : request.nextUrl.pathname.startsWith(path),
+    )
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/chat";
     return NextResponse.redirect(url);
   }
 
