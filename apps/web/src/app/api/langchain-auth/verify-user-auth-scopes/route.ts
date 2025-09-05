@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@langchain/auth";
 import { decodeJWT } from "@/lib/jwt-utils";
 
-export const runtime = "edge";
-
 export async function GET(request: NextRequest) {
   try {
     // Parse the URL and get the code parameter
