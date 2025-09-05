@@ -277,97 +277,95 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           sortKeys: true,
         });
 
-        const oldLines = oldStr.split("\n");
-        const newLines = newStr.split("\n");
+        const oldLines = oldStr.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
+        const newLines = newStr.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
 
-        // Use diff library to get line-level changes
+        // Get line-level diff
         const lineDiff = Diff.diffLines(oldStr, newStr);
-
-        // Build arrays tracking which lines were added/removed/unchanged
-        const oldLineStatuses: ("removed" | "unchanged")[] = [];
-        const newLineStatuses: ("added" | "unchanged")[] = [];
+        
+        const result: {
+          lineNumber: number;
+          oldLine: string;
+          newLine: string;
+          hasChanges: boolean;
+        }[] = [];
+        let oldLineIndex = 0;
+        let newLineIndex = 0;
 
         lineDiff.forEach((part) => {
-          const lines = part.value.split("\n").filter((line) => line !== "");
+          const lines = part.value.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
+          
           if (part.removed) {
-            oldLineStatuses.push(...lines.map(() => "removed" as const));
+            // These lines exist only in the old version
+            lines.forEach((line) => {
+              const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                newLine: "",
+                hasChanges: true,
+              });
+              oldLineIndex++;
+            });
           } else if (part.added) {
-            newLineStatuses.push(...lines.map(() => "added" as const));
+            // These lines exist only in the new version
+            lines.forEach((line) => {
+              const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: "",
+                newLine: `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                hasChanges: true,
+              });
+              newLineIndex++;
+            });
           } else {
-            oldLineStatuses.push(...lines.map(() => "unchanged" as const));
-            newLineStatuses.push(...lines.map(() => "unchanged" as const));
+            // These lines are unchanged, but we still want to check for word-level differences
+            lines.forEach((line) => {
+              const oldLine = oldLines[oldLineIndex] || line;
+              const newLine = newLines[newLineIndex] || line;
+              
+              let oldHighlighted = oldLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              let newHighlighted = newLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              let hasChanges = false;
+
+              // Check if the lines are actually different (they should be the same in unchanged sections)
+              if (oldLine !== newLine) {
+                // Apply word-level diff for modified lines
+                const wordDiff = Diff.diffWords(oldLine, newLine);
+                
+                oldHighlighted = "";
+                newHighlighted = "";
+                
+                wordDiff.forEach((wordPart) => {
+                  if (wordPart.removed) {
+                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    oldHighlighted += `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    hasChanges = true;
+                  } else if (wordPart.added) {
+                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    newHighlighted += `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    hasChanges = true;
+                  } else {
+                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    oldHighlighted += escapedValue;
+                    newHighlighted += escapedValue;
+                  }
+                });
+              }
+
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: oldHighlighted,
+                newLine: newHighlighted,
+                hasChanges,
+              });
+              
+              oldLineIndex++;
+              newLineIndex++;
+            });
           }
         });
-
-        // Create aligned arrays for side-by-side display
-        const result = [];
-        let oldIndex = 0;
-        let newIndex = 0;
-
-        while (oldIndex < oldLines.length || newIndex < newLines.length) {
-          const oldLine = oldLines[oldIndex] || "";
-          const newLine = newLines[newIndex] || "";
-          const oldStatus = oldLineStatuses[oldIndex] || "unchanged";
-          const newStatus = newLineStatuses[newIndex] || "unchanged";
-
-          let oldHighlighted = oldLine;
-          let newHighlighted = newLine;
-          let hasChanges = false;
-
-          // Handle removed lines
-          if (oldStatus === "removed" && newStatus !== "added") {
-            oldHighlighted = `<span class="word-removed">${oldLine}</span>`;
-            newHighlighted = "";
-            hasChanges = true;
-            oldIndex++;
-          }
-          // Handle added lines
-          else if (newStatus === "added" && oldStatus !== "removed") {
-            oldHighlighted = "";
-            newHighlighted = `<span class="word-added">${newLine}</span>`;
-            hasChanges = true;
-            newIndex++;
-          }
-          // Handle changed lines (both removed and added at same position)
-          else if (oldStatus === "removed" && newStatus === "added") {
-            // For changed lines, highlight word-level differences
-            const wordDiff = Diff.diffWords(oldLine.trim(), newLine.trim());
-
-            // Preserve indentation
-            const oldIndent = oldLine.match(/^(\s*)/)?.[1] || "";
-            const newIndent = newLine.match(/^(\s*)/)?.[1] || "";
-
-            oldHighlighted = oldIndent;
-            newHighlighted = newIndent;
-
-            wordDiff.forEach((part) => {
-              if (part.removed) {
-                oldHighlighted += `<span class="word-removed">${part.value}</span>`;
-              } else if (part.added) {
-                newHighlighted += `<span class="word-added">${part.value}</span>`;
-              } else {
-                oldHighlighted += part.value;
-                newHighlighted += part.value;
-              }
-            });
-
-            hasChanges = true;
-            oldIndex++;
-            newIndex++;
-          }
-          // Handle unchanged lines
-          else {
-            oldIndex++;
-            newIndex++;
-          }
-
-          result.push({
-            lineNumber: Math.max(oldIndex, newIndex),
-            oldLine: oldHighlighted,
-            newLine: newHighlighted,
-            hasChanges,
-          });
-        }
 
         return result;
       },
@@ -530,54 +528,26 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               className="flex max-h-[85vh] w-[95%] max-w-[1200px] animate-[slideIn_0.3s_cubic-bezier(0.4,0,0.2,1)] flex-col rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="flex items-center justify-between rounded-t-xl border-b px-6 py-5"
-                style={{
-                  borderBottomColor: "var(--color-border)",
-                  backgroundColor: "var(--color-surface)",
-                }}
-              >
-                <h2
-                  className="m-0 text-lg font-semibold"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+              <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-card px-6 py-5">
+                <h2 className="m-0 text-lg font-semibold text-foreground">
                   Configuration Changes
                 </h2>
                 <button
-                  className="hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90"
-                  style={{ color: "var(--color-text-secondary)" }}
+                  className="hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl text-muted-foreground transition-all duration-200 hover:rotate-90"
                   onClick={handleCloseDiffDialog}
                   aria-label="Close dialog"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <div
-                className="flex-1 overflow-y-auto bg-white p-6 leading-relaxed"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <div className="flex-1 overflow-y-auto bg-background p-6 leading-relaxed text-foreground">
                 <div className="grid h-full grid-cols-2 gap-6">
                   <div className="flex flex-col">
-                    <h3
-                      className="m-0 mb-3 border-b pb-2 text-base font-semibold"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderBottomColor: "var(--color-border)",
-                      }}
-                    >
+                    <h3 className="m-0 mb-3 border-b border-border pb-2 text-base font-semibold text-foreground">
                       Current Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div
-                        className="overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap"
-                        style={{
-                          backgroundColor: "#0d1117",
-                          borderColor: "var(--color-border)",
-                          color: "#e6edf3",
-                          fontFamily:
-                            '"Monaco", "Menlo", "Ubuntu Mono", monospace',
-                        }}
-                      >
+                      <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap text-foreground">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -597,26 +567,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <h3
-                      className="m-0 mb-3 border-b pb-2 text-base font-semibold"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderBottomColor: "var(--color-border)",
-                      }}
-                    >
+                    <h3 className="m-0 mb-3 border-b border-border pb-2 text-base font-semibold text-foreground">
                       Proposed Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div
-                        className="overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap"
-                        style={{
-                          backgroundColor: "#0d1117",
-                          borderColor: "var(--color-border)",
-                          color: "#e6edf3",
-                          fontFamily:
-                            '"Monaco", "Menlo", "Ubuntu Mono", monospace',
-                        }}
-                      >
+                      <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap text-foreground">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -637,19 +592,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   </div>
                 </div>
               </div>
-              <div
-                className="flex justify-end gap-3 rounded-b-xl border-t px-6 py-5"
-                style={{
-                  borderTopColor: "var(--color-border)",
-                  backgroundColor: "var(--color-surface)",
-                }}
-              >
+              <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-card px-6 py-5">
                 <button
-                  className="hover:bg-muted cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 active:translate-y-px"
-                  style={{
-                    color: "var(--color-text-secondary)",
-                    borderColor: "var(--color-border)",
-                  }}
+                  className="hover:bg-muted cursor-pointer rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 active:translate-y-px"
                   onClick={handleReject}
                 >
                   Reject Changes
