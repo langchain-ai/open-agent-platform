@@ -39,9 +39,9 @@ export default function HomePage() {
 
   if (!optimizerDeploymentUrl) {
     return (
-      <div className="bg-background flex min-h-screen items-center justify-center p-4">
-        <div className="bg-card border-border w-full max-w-md rounded-lg border p-6 shadow-lg">
-          <h1 className="text-foreground mb-4 text-center text-2xl font-bold">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+          <h1 className="mb-4 text-center text-2xl font-bold text-foreground">
             Set your Optimizer Configuration in your Environment Variables
           </h1>
         </div>
@@ -77,7 +77,7 @@ export default function HomePage() {
       onConfigUpdate={handleConfigUpdate}
       trigger={
         <button
-          className={`focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${className || "h-9 px-3"}`}
+          className={`inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${className || "h-9 px-3"}`}
         >
           <Settings className="h-4 w-4" />
           Deep Agent Settings
