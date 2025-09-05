@@ -44,6 +44,26 @@ export function ConfigurationDialog({
     useState<boolean>(false);
   const [graphId, setGraphId] = useState<string>("");
   const [newAssistantName, setNewAssistantName] = useState<string>("");
+  const [availableGraphs, setAvailableGraphs] = useState<string[]>([]);
+
+  React.useEffect(() => {
+    const fetchAvailableGraphs = async () => {
+      const client = new Client({
+        apiUrl: formData.deploymentUrl,
+        defaultHeaders: {
+          "X-Api-Key": formData.langsmithToken,
+        },
+      });
+      const assistants = await client.assistants.search({
+        metadata: { created_by: "system" },
+      });
+      const graphs = [
+        ...new Set(assistants.map((assistant) => assistant.graph_id)),
+      ];
+      setAvailableGraphs(graphs);
+    };
+    fetchAvailableGraphs();
+  }, [formData.deploymentUrl, formData.langsmithToken]);
 
   React.useEffect(() => {
     if (config) {
@@ -241,13 +261,21 @@ export function ConfigurationDialog({
             ) : (
               <div className="space-y-2">
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
+                  <select
                     value={graphId}
                     onChange={(e) => setGraphId(e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder="Graph ID"
-                  />
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Select Graph ID</option>
+                    {availableGraphs.map((graph) => (
+                      <option
+                        key={graph}
+                        value={graph}
+                      >
+                        {graph}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     type="text"
                     value={newAssistantName}
