@@ -3,13 +3,15 @@
   "author": "LangChain",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "turbo:command": "turbo",
     "format": "turbo format",
+    "format:check": "turbo format:check",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix"
   },
@@ -18,7 +20,7 @@
     "typescript": "^5"
   },
   "packageManager": "yarn@3.5.1",
-  "dependencies": {
-    "react-hook-form": "^7.56.3"
+  "resolutions": {
+    "nuqs": "^2.4.1"
   }
 }

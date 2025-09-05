@@ -13,6 +13,7 @@ import { INBOX_PARAM, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
 
 import { useQueryState, parseAsString } from "nuqs";
 import { logger } from "../utils/logger";
+import { useAuthContext } from "@/providers/Auth";
 
 interface UseInterruptedActionsInput<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -83,6 +84,8 @@ export default function useInterruptedActions<
 
   const { fetchSingleThread, fetchThreads, sendHumanResponse, ignoreThread } =
     useThreadsContext<ThreadValues>();
+
+  const { session } = useAuthContext();
 
   const [humanResponse, setHumanResponse] = React.useState<
     HumanResponseWithEdits[]
@@ -209,8 +212,7 @@ export default function useInterruptedActions<
           return;
         }
 
-        toast("Success", {
-          description: "Response submitted successfully.",
+        toast.success("Response submitted successfully.", {
           duration: 5000,
         });
 
@@ -270,16 +272,31 @@ export default function useInterruptedActions<
       if (!errorOccurred) {
         setCurrentNode("");
         setStreaming(false);
+
+        if (!agentInboxId) {
+          console.warn(
+            "No agentInboxId found after successful submission, redirecting to inbox",
+          );
+          await setSelectedThreadId(null);
+          setStreamFinished(false);
+          return;
+        }
+
+        // Fetch updated thread data BEFORE any navigation/redirect
         const updatedThreadData = await fetchSingleThread(
           threadData.thread.thread_id,
+          agentInboxId,
         );
+
         if (updatedThreadData && updatedThreadData?.status === "interrupted") {
+          // Thread is still interrupted, stay on this view with updated data
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
         } else {
+          // Thread is resolved or no longer interrupted, redirect to inbox
           const [assistantId, deploymentId] = agentInboxId.split(":");
-          // Re-fetch threads before routing back so the inbox is up to date
-          await fetchThreads(assistantId, deploymentId);
-          // Clear the selected thread ID to go back to inbox view
+          if (session) {
+            await fetchThreads(assistantId, deploymentId, session);
+          }
           await setSelectedThreadId(null);
         }
         setStreamFinished(false);
@@ -288,8 +305,7 @@ export default function useInterruptedActions<
       setLoading(true);
       await sendHumanResponse(threadData.thread.thread_id, humanResponse);
 
-      toast("Success", {
-        description: "Response submitted successfully.",
+      toast.success("Response submitted successfully.", {
         duration: 5000,
       });
     }
@@ -327,7 +343,9 @@ export default function useInterruptedActions<
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
     const [assistantId, deploymentId] = agentInboxId.split(":");
     // Re-fetch threads before routing back so the inbox is up to date
-    await fetchThreads(assistantId, deploymentId);
+    if (session) {
+      await fetchThreads(assistantId, deploymentId, session);
+    }
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -359,7 +377,9 @@ export default function useInterruptedActions<
 
     await ignoreThread(threadData.thread.thread_id);
     const [assistantId, deploymentId] = agentInboxId.split(":");
-    await fetchThreads(assistantId, deploymentId);
+    if (session) {
+      await fetchThreads(assistantId, deploymentId, session);
+    }
 
     setLoading(false);
     // Clear the selected thread ID to go back to inbox view

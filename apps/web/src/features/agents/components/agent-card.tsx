@@ -4,10 +4,12 @@ import { useState } from "react";
 import {
   Bot,
   Brain,
+  BrainCircuit,
   Cloud,
   Edit,
   MessageSquare,
   User,
+  Webhook,
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,7 +31,7 @@ import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 function SupportedConfigBadge({
   type,
 }: {
-  type: "rag" | "tools" | "supervisor";
+  type: "rag" | "tools" | "supervisor" | "deep_agent" | "triggers";
 }) {
   return (
     <TooltipProvider>
@@ -51,6 +53,18 @@ function SupportedConfigBadge({
             <Badge variant="brand">
               <User />
               Supervisor
+            </Badge>
+          )}
+          {type === "deep_agent" && (
+            <Badge variant="secondary">
+              <BrainCircuit />
+              Deep Agent
+            </Badge>
+          )}
+          {type === "triggers" && (
+            <Badge variant="secondary">
+              <Webhook />
+              Triggers
             </Badge>
           )}
         </TooltipTrigger>
@@ -142,7 +156,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             </Button>
           )}
           <NextLink
-            href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+            href={`/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
             className="ml-auto"
           >
             <Button size="sm">

@@ -1,5 +1,7 @@
 // The type interface for configuration fields
 
+import { HumanInterruptConfig } from "@/components/agent-inbox/types";
+
 export type ConfigurableFieldUIType =
   | "text"
   | "textarea"
@@ -75,6 +77,7 @@ export type ConfigurableFieldMCPMetadata = {
     tools?: string[];
     url?: string;
     auth_required?: boolean;
+    interrupt_config?: Record<string, boolean | HumanInterruptConfig>;
   };
 };
 
@@ -98,4 +101,25 @@ export type ConfigurableFieldAgentsMetadata = {
     deployment_url?: string;
     name?: string;
   }[];
+};
+
+export type ConfigurableFieldSubAgentsMetadata = {
+  label: string;
+  type: "sub_agents";
+  default?: {
+    name?: string;
+    description?: string;
+    prompt?: string;
+    tools?: string[];
+    mcp_server?: string;
+  }[];
+};
+
+export type ConfigurableFieldTriggersMetadata = {
+  label: string;
+  type: "triggers";
+  /**
+   * The list of trigger IDs attached to the agent.
+   */
+  default?: string[];
 };

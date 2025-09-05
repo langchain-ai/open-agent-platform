@@ -28,7 +28,7 @@ import {
 import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useConfigStore } from "@/features/chat/hooks/use-config-store";
+import { useConfigStore } from "@/hooks/use-config-store";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -67,7 +67,7 @@ export function NavUser() {
         return;
       }
 
-      router.push("/signin");
+      router.push("/");
     } catch (err) {
       console.error("Error during sign out:", err);
       toast.error("Error signing out", { richColors: true });

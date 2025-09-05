@@ -1,15 +1,19 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
 
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-manrope: "Manrope", system-ui, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
+  --success: oklch(0.6959 0.1491 162.48);
+  --warning: oklch(0.7686 0.1647 70.08);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
@@ -38,6 +42,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.87 0 0);
+  --user-message: oklch(0.4 0.12 240);
+  --avatar-bg: oklch(0.9399 0.0297 292.08);
+  --subagent-hover: oklch(0.8591 0.0733 290.82);
+  --surface: oklch(0.9846 0.0017 247.84);
+  --border-light: oklch(0.967 0.0029 264.54);
 }
 
 .dark {
@@ -48,6 +57,8 @@
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
+  --success-dark: oklch(0.7729 0.1535 163.22);
+  --warning-dark: oklch(0.8369 0.1644 84.43);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -73,6 +84,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  --user-message: oklch(0.4 0.12 240);
+  --avatar-bg: oklch(0.7991 0.1054 289.9);
+  --subagent-hover: oklch(0.8591 0.0733 290.82);
+  --surface: oklch(0.2178 0 0);
+  --border-light: oklch(0.2562 0 0);
 }
 
 @theme inline {
@@ -112,6 +128,15 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-user-message: var(--user-message);
+  --color-avatar-bg: var(--avatar-bg);
+  --color-subagent-hover: var(--subagent-hover);
+  --color-surface: var(--surface);
+  --color-border-light: var(--border-light);
+  --color-success: var(--success);
+  --color-success-dark: var(--success-dark);
+  --color-warning: var(--warning);
+  --color-warning-dark: var(--warning-dark);
 }
 
 @layer base {
@@ -120,7 +145,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 
   :root {
@@ -164,4 +189,43 @@
   .shadow-inner-left {
     box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
   }
+
+  .scrollbar-pretty-auto {
+    overflow-y: auto;
+  }
+
+  .scrollbar-pretty-auto::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scrollbar-pretty-auto::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: rgb(209 213 219);
+  }
+
+  .scrollbar-pretty-auto::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+
+  .dark .scrollbar-pretty-auto::-webkit-scrollbar-thumb {
+    background-color: rgb(95 105 119);
+  }
+}
+
+.word-added {
+  background-color: rgba(46, 160, 67, 0.4);
+  color: #ffffff;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.word-removed {
+  background-color: rgba(248, 81, 73, 0.4);
+  color: #ffffff;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-decoration: line-through;
+  text-decoration-color: #f85149;
 }

@@ -2,13 +2,12 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Tool } from "@/types/tool";
 import { useState } from "react";
+import { getApiUrl } from "@/lib/api-url";
 
 function getMCPUrlOrThrow() {
-  if (!process.env.NEXT_PUBLIC_BASE_API_URL) {
-    throw new Error("NEXT_PUBLIC_BASE_API_URL is not defined");
-  }
+  const apiUrl = getApiUrl();
 
-  const url = new URL(process.env.NEXT_PUBLIC_BASE_API_URL);
+  const url = new URL(apiUrl);
   url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
   return url;
 }

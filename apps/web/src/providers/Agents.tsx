@@ -22,17 +22,13 @@ import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
 import { Assistant } from "@langchain/langgraph-sdk";
+import { getApiUrl } from "@/lib/api-url";
 
 async function getOrCreateDefaultAssistants(
   deployment: Deployment,
   accessToken?: string,
 ): Promise<Assistant[]> {
-  const baseApiUrl = process.env.NEXT_PUBLIC_BASE_API_URL;
-  if (!baseApiUrl) {
-    throw new Error(
-      "Failed to get default assistants: Base API URL not configured. Please set NEXT_PUBLIC_BASE_API_URL",
-    );
-  }
+  const baseApiUrl = getApiUrl();
 
   try {
     const url = `${baseApiUrl}/langgraph/defaults?deploymentId=${deployment.id}`;
@@ -113,11 +109,16 @@ async function getAgents(
 
           const supportedConfigs: string[] = [];
           if (schema) {
-            const { toolConfig, ragConfig, agentsConfig } =
-              extractConfigurationsFromAgent({
-                agent: defaultAssistant,
-                schema,
-              });
+            const {
+              toolConfig,
+              ragConfig,
+              agentsConfig,
+              subAgentsConfig,
+              triggersConfig,
+            } = extractConfigurationsFromAgent({
+              agent: defaultAssistant,
+              schema,
+            });
             if (toolConfig.length) {
               supportedConfigs.push("tools");
             }
@@ -127,13 +128,19 @@ async function getAgents(
             if (agentsConfig.length) {
               supportedConfigs.push("supervisor");
             }
+            if (subAgentsConfig.length) {
+              supportedConfigs.push("deep_agent");
+            }
+            if (triggersConfig.length) {
+              supportedConfigs.push("triggers");
+            }
           }
 
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
             supportedConfigs: supportedConfigs as [
-              "tools" | "rag" | "supervisor",
+              "tools" | "rag" | "supervisor" | "deep_agent" | "triggers",
             ],
           }));
         });

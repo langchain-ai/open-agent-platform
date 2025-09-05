@@ -8,14 +8,31 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       components: {
-        ".scrollbar-pretty":
-          "overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
+        ".word-added": {
+          backgroundColor: "rgba(46, 160, 67, 0.4)",
+          color: "#ffffff",
+          padding: "2px 4px",
+          borderRadius: "3px",
+          fontWeight: "600",
+        },
+        ".word-removed": {
+          backgroundColor: "rgba(248, 81, 73, 0.4)",
+          color: "#ffffff",
+          padding: "2px 4px",
+          borderRadius: "3px",
+          fontWeight: "600",
+          textDecoration: "line-through",
+          textDecorationColor: "#f85149",
+        },
       },
       colors: {
         background: "hsl(var(--background))",
@@ -27,6 +44,14 @@ module.exports = {
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--color-success))",
+          dark: "hsl(var(--color-success-dark))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--color-warning))",
+          dark: "hsl(var(--color-warning-dark))",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -48,6 +73,11 @@ module.exports = {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        "user-message": "hsl(var(--user-message))",
+        "avatar-bg": "hsl(var(--avatar-bg))",
+        "subagent-hover": "hsl(var(--subagent-hover))",
+        "border-light": "hsl(var(--border-light))",
+        surface: "hsl(var(--surface))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -3,6 +3,7 @@
 import React from "react";
 import { useAuthContext } from "@/providers/Auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePathname } from "next/navigation";
 
 // Layout component for pages that don't need the sidebar (auth pages)
 export default function AuthLayout({
@@ -10,7 +11,12 @@ export default function AuthLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
   const { isLoading } = useAuthContext();
+
+  if (pathname === "/" && isLoading) {
+    return null;
+  }
 
   if (isLoading) {
     return (

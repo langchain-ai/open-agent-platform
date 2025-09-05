@@ -9,9 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import React from "react";
 import { haveArgsChanged, prettifyText } from "../utils";
 import { MarkdownText } from "@/components/ui/markdown-text";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { CircleX, LoaderCircle, Undo2 } from "lucide-react";
+import { CircleX, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "../utils/logger";
 
@@ -519,10 +518,8 @@ export function InboxItemInput({
           handleSubmit={handleSubmit}
         />
         {supportsMultipleMethods ? (
-          <div className="mt-3 flex w-full items-center gap-3">
-            <Separator className="w-1/2" />
-            <p className="text-sm text-gray-500">Or</p>
-            <Separator className="w-1/2" />
+          <div className="mt-4 mb-2 flex w-full items-center justify-center">
+            <p className="text-xs text-gray-400">or</p>
           </div>
         ) : null}
         {isResponseAllowed && (
@@ -539,15 +536,14 @@ export function InboxItemInput({
           <p className="text-sm text-gray-600">Waiting for Graph to start...</p>
         )}
         {streaming && currentNode && !isError && (
-          <div className="flex gap-2">
-            <span className="flex items-center justify-start gap-1 text-sm text-gray-600">
-              <p>Running</p>
-              <LoaderCircle className="h-3 w-3 animate-spin" />
+          <div className="flex items-center gap-2 px-3 py-2">
+            <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400"></div>
+            <span className="text-sm text-gray-600">
+              Running:{" "}
+              <span className="font-medium text-gray-700">
+                {prettifyText(currentNode)}
+              </span>
             </span>
-            <p className="font-mono text-sm text-black">
-              <span className="font-sans text-gray-700">Node: </span>
-              {prettifyText(currentNode)}
-            </p>
           </div>
         )}
         {streaming && currentNode && isError && (
@@ -557,9 +553,12 @@ export function InboxItemInput({
           </div>
         )}
         {streamFinished && (
-          <p className="text-base font-medium text-green-600">
-            Successfully finished Graph invocation.
-          </p>
+          <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2">
+            <div className="h-2 w-2 rounded-full bg-green-500"></div>
+            <span className="text-sm font-medium text-green-700">
+              Successfully completed
+            </span>
+          </div>
         )}
       </div>
     </div>
