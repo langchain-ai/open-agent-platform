@@ -51,7 +51,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         );
       case "error":
         return (
-          <AlertCircle style={{ ...iconStyle, color: "var(--color-destructive)" }} />
+          <AlertCircle
+            style={{ ...iconStyle, color: "var(--color-destructive)" }}
+          />
         );
       case "pending":
         return (
@@ -77,7 +79,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
   return (
     <div
-      className="w-fit overflow-hidden rounded-lg border-2 border-border bg-card shadow-sm"
+      className="border-border bg-card w-fit overflow-hidden rounded-lg border-2 shadow-sm"
       style={{
         maxWidth: "70vw",
       }}
@@ -117,17 +119,13 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
             />
           )}
           {statusIcon}
-          <span
-            className="text-sm font-medium text-foreground"
-          >
-            {name}
-          </span>
+          <span className="text-foreground text-sm font-medium">{name}</span>
         </div>
       </Button>
 
       {isExpanded && hasContent && (
         <div
-          className="border-t border-border"
+          className="border-border border-t"
           style={{
             padding: "0 1rem 1rem",
           }}
@@ -135,7 +133,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {Object.keys(args).length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-xs font-semibold tracking-wider uppercase text-muted-foreground"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -144,7 +142,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Arguments
               </h4>
               <pre
-                className="text-xs overflow-x-auto rounded-sm border border-border font-mono break-all whitespace-pre-wrap bg-muted/30 text-foreground"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
                 style={{
                   padding: "0.5rem",
                   lineHeight: "1.75",
@@ -160,7 +158,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-xs font-semibold tracking-wider uppercase text-muted-foreground"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -169,7 +167,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Result
               </h4>
               <pre
-                className="text-xs overflow-x-auto rounded-sm border border-border font-mono break-all whitespace-pre-wrap bg-muted/30 text-foreground"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
                 style={{
                   padding: "0.5rem",
                   lineHeight: "1.75",

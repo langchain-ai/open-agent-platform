@@ -277,12 +277,16 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           sortKeys: true,
         });
 
-        const oldLines = oldStr.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
-        const newLines = newStr.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
+        const oldLines = oldStr
+          .split("\n")
+          .filter((line, i, arr) => i < arr.length - 1 || line !== "");
+        const newLines = newStr
+          .split("\n")
+          .filter((line, i, arr) => i < arr.length - 1 || line !== "");
 
         // Get line-level diff
         const lineDiff = Diff.diffLines(oldStr, newStr);
-        
+
         const result: {
           lineNumber: number;
           oldLine: string;
@@ -293,12 +297,17 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         let newLineIndex = 0;
 
         lineDiff.forEach((part) => {
-          const lines = part.value.split("\n").filter((line, i, arr) => i < arr.length - 1 || line !== "");
-          
+          const lines = part.value
+            .split("\n")
+            .filter((line, i, arr) => i < arr.length - 1 || line !== "");
+
           if (part.removed) {
             // These lines exist only in the old version
             lines.forEach((line) => {
-              const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const escapedLine = line
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
               result.push({
                 lineNumber: result.length + 1,
                 oldLine: `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
@@ -310,7 +319,10 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           } else if (part.added) {
             // These lines exist only in the new version
             lines.forEach((line) => {
-              const escapedLine = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+              const escapedLine = line
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
               result.push({
                 lineNumber: result.length + 1,
                 oldLine: "",
@@ -324,30 +336,45 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
             lines.forEach((line) => {
               const oldLine = oldLines[oldLineIndex] || line;
               const newLine = newLines[newLineIndex] || line;
-              
-              let oldHighlighted = oldLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-              let newHighlighted = newLine.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+              let oldHighlighted = oldLine
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              let newHighlighted = newLine
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
               let hasChanges = false;
 
               // Check if the lines are actually different (they should be the same in unchanged sections)
               if (oldLine !== newLine) {
                 // Apply word-level diff for modified lines
                 const wordDiff = Diff.diffWords(oldLine, newLine);
-                
+
                 oldHighlighted = "";
                 newHighlighted = "";
-                
+
                 wordDiff.forEach((wordPart) => {
                   if (wordPart.removed) {
-                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
                     oldHighlighted += `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
                     hasChanges = true;
                   } else if (wordPart.added) {
-                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
                     newHighlighted += `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
                     hasChanges = true;
                   } else {
-                    const escapedValue = wordPart.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
                     oldHighlighted += escapedValue;
                     newHighlighted += escapedValue;
                   }
@@ -360,7 +387,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 newLine: newHighlighted,
                 hasChanges,
               });
-              
+
               oldLineIndex++;
               newLineIndex++;
             });
@@ -528,26 +555,26 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               className="flex max-h-[85vh] w-[95%] max-w-[1200px] animate-[slideIn_0.3s_cubic-bezier(0.4,0,0.2,1)] flex-col rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between rounded-t-xl border-b border-border bg-card px-6 py-5">
-                <h2 className="m-0 text-lg font-semibold text-foreground">
+              <div className="border-border bg-card flex items-center justify-between rounded-t-xl border-b px-6 py-5">
+                <h2 className="text-foreground m-0 text-lg font-semibold">
                   Configuration Changes
                 </h2>
                 <button
-                  className="hover:bg-muted flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl text-muted-foreground transition-all duration-200 hover:rotate-90"
+                  className="hover:bg-muted text-muted-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90"
                   onClick={handleCloseDiffDialog}
                   aria-label="Close dialog"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto bg-background p-6 leading-relaxed text-foreground">
+              <div className="bg-background text-foreground flex-1 overflow-y-auto p-6 leading-relaxed">
                 <div className="grid h-full grid-cols-2 gap-6">
                   <div className="flex flex-col">
-                    <h3 className="m-0 mb-3 border-b border-border pb-2 text-base font-semibold text-foreground">
+                    <h3 className="border-border text-foreground m-0 mb-3 border-b pb-2 text-base font-semibold">
                       Current Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap text-foreground">
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -567,11 +594,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <h3 className="m-0 mb-3 border-b border-border pb-2 text-base font-semibold text-foreground">
+                    <h3 className="border-border text-foreground m-0 mb-3 border-b pb-2 text-base font-semibold">
                       Proposed Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div className="overflow-auto rounded-lg border border-border bg-muted/30 p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap text-foreground">
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -592,9 +619,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 rounded-b-xl border-t border-border bg-card px-6 py-5">
+              <div className="border-border bg-card flex justify-end gap-3 rounded-b-xl border-t px-6 py-5">
                 <button
-                  className="hover:bg-muted cursor-pointer rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 active:translate-y-px"
+                  className="hover:bg-muted border-border text-muted-foreground cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 active:translate-y-px"
                   onClick={handleReject}
                 >
                   Reject Changes
