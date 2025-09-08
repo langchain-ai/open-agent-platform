@@ -272,17 +272,20 @@ export function AgentGraphVisualization({
             data: { label: toolLabel, type: "tool" },
           });
 
-          edges.push({
-            id: `subagent-${subagentIndex}-to-${nodeId}`,
-            source: `subagent-${subagentIndex}`,
-            target: nodeId,
-            type: "smoothstep",
-            style: {
-              strokeDasharray: "5,5",
-              strokeWidth: 2,
-              stroke: "#64748b",
-            },
-          });
+          // Only connect first tool to subagent, other tools are just stacked
+          if (toolIndex === 0) {
+            edges.push({
+              id: `subagent-${subagentIndex}-to-${nodeId}`,
+              source: `subagent-${subagentIndex}`,
+              target: nodeId,
+              type: "smoothstep",
+              style: {
+                strokeDasharray: "5,5",
+                strokeWidth: 2,
+                stroke: "#64748b",
+              },
+            });
+          }
         });
       });
 
@@ -327,7 +330,7 @@ export function AgentGraphVisualization({
   }, [configurable, name]);
 
   return (
-    <div className="h-96 w-full rounded-lg border bg-gray-50">
+    <div className="h-[500px] w-full rounded-lg border bg-gray-50">
       <ReactFlow
         nodes={nodes}
         edges={edges}
