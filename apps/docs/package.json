@@ -4,7 +4,8 @@
   "repository": "https://github.com/langchain-ai/open-agent-platform",
   "private": true,
   "scripts": {
-    "dev": "mint dev --no-open"
+    "dev": "mint dev --no-open",
+    "clean": "rm -rf .turbo || true"
   },
   "devDependencies": {
     "mint": "^4.1.19"
