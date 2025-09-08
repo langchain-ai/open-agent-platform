@@ -1,11 +1,11 @@
 {
-  "name": "@open-agent-platform/web",
+  "name": "@open-agent-platform/standalone",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "turbo build:internal --filter=@open-agent-platform/web",
+    "build": "turbo build:internal --filter=@open-agent-platform/standalone",
     "build:internal": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -14,7 +14,6 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph-sdk": "^0.0.109",
     "@modelcontextprotocol/sdk": "^1.11.4",
@@ -49,7 +48,6 @@
     "diff": "^8.0.2",
     "framer-motion": "^12.7.3",
     "js-yaml": "^4.1.0",
-    "jsonwebtoken": "^9.0.2",
     "katex": "latest",
     "langgraph-nextjs-api-passthrough": "^0.1.0",
     "lodash": "^4.17.21",
@@ -75,8 +73,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
-    "@tailwindcss/postcss": "^4.0.13",
-    "@types/jsonwebtoken": "^9.0.10",
     "@types/lodash": "^4.17.16",
     "@types/node": "22.15.2",
     "@types/react": "^19.0.8",
@@ -94,7 +90,7 @@
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "tailwindcss": "^4.0.13",
+    "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "turbo": "^2.5.0",
     "typescript": "~5.7.2",

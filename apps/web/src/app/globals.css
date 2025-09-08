@@ -1,9 +1,5 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap");
-
-@plugin "tailwindcss-animate";
-
-@custom-variant dark (&:is(.dark *));
+@config "../../tailwind.config.js";
 
 :root {
   --font-manrope: "Manrope", system-ui, sans-serif;

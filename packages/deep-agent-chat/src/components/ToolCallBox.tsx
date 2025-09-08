@@ -18,6 +18,7 @@ interface ToolCallBoxProps {
 
 export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedArgs, setExpandedArgs] = useState<Record<string, boolean>>({});
 
   const { name, args, result, status } = useMemo(() => {
     const toolName = toolCall.name || "Unknown Tool";
@@ -51,7 +52,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         );
       case "error":
         return (
-          <AlertCircle style={{ ...iconStyle, color: "var(--color-error)" }} />
+          <AlertCircle
+            style={{ ...iconStyle, color: "var(--color-destructive)" }}
+          />
         );
       case "pending":
         return (
@@ -63,7 +66,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
       default:
         return (
           <Terminal
-            style={{ ...iconStyle, color: "var(--color-text-secondary)" }}
+            style={{ ...iconStyle, color: "var(--color-muted-foreground)" }}
           />
         );
     }
@@ -73,14 +76,19 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
     setIsExpanded((prev) => !prev);
   }, []);
 
+  const toggleArgExpanded = useCallback((argKey: string) => {
+    setExpandedArgs((prev) => ({
+      ...prev,
+      [argKey]: !prev[argKey],
+    }));
+  }, []);
+
   const hasContent = result || Object.keys(args).length > 0;
 
   return (
     <div
-      className="w-fit overflow-hidden rounded-md border"
+      className="border-border bg-card w-fit overflow-hidden rounded-lg border-2 shadow-sm"
       style={{
-        backgroundColor: "var(--color-surface)",
-        borderColor: "var(--color-border)",
         maxWidth: "70vw",
       }}
     >
@@ -96,7 +104,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         disabled={!hasContent}
         onMouseEnter={(e) => {
           if (hasContent) {
-            e.currentTarget.style.backgroundColor = "var(--color-border-light)";
+            e.currentTarget.style.backgroundColor = "var(--color-accent)";
           }
         }}
         onMouseLeave={(e) => {
@@ -119,59 +127,72 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
             />
           )}
           {statusIcon}
-          <span
-            className="text-sm font-medium"
-            style={{ color: "var(--color-text-primary)" }}
-          >
-            {name}
-          </span>
+          <span className="text-foreground text-sm font-medium">{name}</span>
         </div>
       </Button>
 
       {isExpanded && hasContent && (
         <div
-          className="border-t"
+          className="border-border border-t"
           style={{
             padding: "0 1rem 1rem",
-            borderTopColor: "var(--color-border-light)",
           }}
         >
           {Object.keys(args).length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="font-semibold tracking-wider uppercase"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
-                  fontSize: "12px",
-                  color: "var(--color-text-secondary)",
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
                 }}
               >
                 Arguments
               </h4>
-              <pre
-                className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
-                style={{
-                  fontSize: "12px",
-                  padding: "0.5rem",
-                  borderColor: "var(--color-border-light)",
-                  lineHeight: "1.75",
-                  margin: "0",
-                  fontFamily:
-                    '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
-                }}
-              >
-                {JSON.stringify(args, null, 2)}
-              </pre>
+              <div className="space-y-2">
+                {Object.entries(args).map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="border-border rounded-sm border"
+                  >
+                    <button
+                      onClick={() => toggleArgExpanded(key)}
+                      className="bg-muted/20 hover:bg-muted/40 flex w-full items-center justify-between p-2 text-left text-xs font-medium transition-colors"
+                    >
+                      <span className="font-mono">{key}</span>
+                      {expandedArgs[key] ? (
+                        <ChevronDown size={12} />
+                      ) : (
+                        <ChevronRight size={12} />
+                      )}
+                    </button>
+                    {expandedArgs[key] && (
+                      <div className="border-border bg-muted/10 border-t p-2">
+                        <pre
+                          className="text-foreground overflow-x-auto font-mono text-xs break-all whitespace-pre-wrap"
+                          style={{
+                            lineHeight: "1.5",
+                            margin: "0",
+                            fontFamily:
+                              '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
+                          }}
+                        >
+                          {typeof value === "string"
+                            ? value
+                            : JSON.stringify(value, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="font-semibold tracking-wider uppercase"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
-                  fontSize: "12px",
-                  color: "var(--color-text-secondary)",
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
                 }}
@@ -179,11 +200,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Result
               </h4>
               <pre
-                className="overflow-x-auto rounded-sm border font-mono break-all whitespace-pre-wrap"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
                 style={{
-                  fontSize: "12px",
                   padding: "0.5rem",
-                  borderColor: "var(--color-border-light)",
                   lineHeight: "1.75",
                   margin: "0",
                   fontFamily:
