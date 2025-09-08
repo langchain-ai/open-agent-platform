@@ -1,3 +1,5 @@
+"use client";
+
 import { Deployment } from "./types";
 import { Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { ToolCall } from "@langchain/core/messages/tool";

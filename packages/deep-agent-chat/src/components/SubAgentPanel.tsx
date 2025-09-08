@@ -14,31 +14,15 @@ interface SubAgentPanelProps {
 
 const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
   const statusIcon = useMemo(() => {
-    const iconStyle = { width: "14px", height: "14px" };
     switch (subAgent.status) {
       case "completed":
-        return (
-          <CheckCircle
-            style={{ ...iconStyle, color: "var(--color-success)" }}
-          />
-        );
+        return <CheckCircle className="text-success h-3.5 w-3.5" />;
       case "error":
-        return (
-          <AlertCircle style={{ ...iconStyle, color: "var(--color-error)" }} />
-        );
+        return <AlertCircle className="text-destructive h-3.5 w-3.5" />;
       case "pending":
-        return (
-          <Loader
-            style={{ ...iconStyle, color: "var(--color-primary)" }}
-            className="animate-spin"
-          />
-        );
+        return <Loader className="text-primary h-3.5 w-3.5 animate-spin" />;
       default:
-        return (
-          <Clock
-            style={{ ...iconStyle, color: "var(--color-text-tertiary)" }}
-          />
-        );
+        return <Clock className="text-tertiary h-3.5 w-3.5 flex-shrink-0" />;
     }
   }, [subAgent.status]);
 

@@ -9,6 +9,7 @@ import type { Thread } from "../types";
 import { extractStringFromMessageContent } from "../utils";
 import { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
+import { cn } from "../lib/utils";
 
 interface ThreadHistorySidebarProps {
   open: boolean;
@@ -132,32 +133,9 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             animation: "slideIn 300ms ease-out",
           }}
         >
-          <div
-            className="flex h-full flex-col border-l"
-            style={{
-              width: "100%",
-              maxWidth: "100%",
-              borderLeftColor: "var(--color-border)",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              className="flex items-center justify-between border-b"
-              style={{
-                padding: "1rem",
-                borderBottomColor: "var(--color-border)",
-                backgroundColor: "var(--color-surface)",
-              }}
-            >
-              <h3
-                className="text-base font-semibold"
-                style={{
-                  margin: "0",
-                  color: "var(--color-text-primary)",
-                }}
-              >
+          <div className="border-border bg-background flex h-full w-full max-w-full flex-col overflow-hidden border-l shadow-2xl">
+            <div className="border-border bg-surface flex items-center justify-between border-b p-4">
+              <h3 className="text-foreground m-0 text-base font-semibold">
                 Thread History
               </h3>
               <div
@@ -168,15 +146,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   variant="ghost"
                   size="icon"
                   onClick={() => setOpen(false)}
-                  className="transition-colors duration-200"
-                  style={{ padding: "0.25rem" }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      "var(--color-border-light)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
+                  className="hover:bg-muted p-1 transition-colors duration-200"
                 >
                   <X size={20} />
                 </Button>
@@ -184,23 +154,11 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             </div>
             <ScrollArea className="flex-1 overflow-y-auto">
               {isLoadingThreadHistory ? (
-                <div
-                  className="flex flex-col items-center justify-center text-center"
-                  style={{
-                    padding: "3rem",
-                    color: "var(--color-text-tertiary)",
-                  }}
-                >
+                <div className="text-tertiary flex flex-col items-center justify-center p-12 text-center">
                   Loading threads...
                 </div>
               ) : threads.length === 0 ? (
-                <div
-                  className="flex flex-col items-center justify-center text-center"
-                  style={{
-                    padding: "3rem",
-                    color: "var(--color-text-tertiary)",
-                  }}
-                >
+                <div className="text-tertiary flex flex-col items-center justify-center p-12 text-center">
                   <MessageSquare
                     style={{
                       width: "32px",
@@ -223,16 +181,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                 >
                   {groupedThreads.today.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4
-                        className="font-semibold tracking-wider uppercase"
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--color-text-secondary)",
-                          letterSpacing: "0.05em",
-                          padding: "0.5rem",
-                          margin: "0",
-                        }}
-                      >
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Today
                       </h4>
                       {groupedThreads.today.map((thread) => (
@@ -247,16 +196,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.yesterday.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4
-                        className="font-semibold tracking-wider uppercase"
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--color-text-secondary)",
-                          letterSpacing: "0.05em",
-                          padding: "0.5rem",
-                          margin: "0",
-                        }}
-                      >
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Yesterday
                       </h4>
                       {groupedThreads.yesterday.map((thread) => (
@@ -271,16 +211,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.week.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4
-                        className="font-semibold tracking-wider uppercase"
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--color-text-secondary)",
-                          letterSpacing: "0.05em",
-                          padding: "0.5rem",
-                          margin: "0",
-                        }}
-                      >
+                      <h4 className="font-semibold tracking-wider uppercase">
                         This Week
                       </h4>
                       {groupedThreads.week.map((thread) => (
@@ -295,16 +226,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.older.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4
-                        className="font-semibold tracking-wider uppercase"
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--color-text-secondary)",
-                          letterSpacing: "0.05em",
-                          padding: "0.5rem",
-                          margin: "0",
-                        }}
-                      >
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Older
                       </h4>
                       {groupedThreads.older.map((thread) => (
@@ -335,35 +257,12 @@ const ThreadItem = React.memo<{
   return (
     <button
       onClick={onClick}
-      className="flex cursor-pointer items-start rounded-md border-none text-left transition-colors duration-200"
-      style={{
-        width: "100%",
-        maxWidth: "100%",
-        gap: "0.5rem",
-        padding: "0.5rem",
-        backgroundColor: isActive ? "var(--color-avatar-bg)" : "transparent",
-        overflow: "hidden",
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = "var(--color-border-light)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }
-      }}
+      className={cn(
+        "flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
+        isActive ? "bg-accent" : "hover:bg-muted bg-transparent",
+      )}
     >
-      <MessageSquare
-        className="shrink-0"
-        style={{
-          width: "16px",
-          height: "16px",
-          color: "var(--color-text-secondary)",
-          marginTop: "2px",
-        }}
-      />
+      <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
       <div
         style={{
           flex: "1",
@@ -372,19 +271,7 @@ const ThreadItem = React.memo<{
           width: "calc(20vw - 3rem)", // sidebar width minus padding and icon space
         }}
       >
-        <div
-          className="font-medium"
-          style={{
-            fontSize: "12px",
-            color: "var(--color-text-primary)",
-            marginBottom: "0.25rem",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            width: "100%",
-            maxWidth: "100%",
-          }}
-        >
+        <div className="text-foreground mb-1 w-full max-w-full overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
           {thread.title}
         </div>
       </div>

@@ -33,7 +33,7 @@ function DeepAgentChatInterfaceInternal({
     null,
   );
   const [assistantError, setAssistantError] = useState<string | null>(null);
-  const [debugMode, setDebugMode] = useState(false);
+  const [debugMode, setDebugMode] = useState(true);
 
   const onNewThread = useCallback(() => {
     setThreadId(null);
@@ -64,6 +64,11 @@ function DeepAgentChatInterfaceInternal({
                   {SidebarTrigger && <SidebarTrigger className="-ml-1" />}
                   {DeepAgentChatBreadcrumb && <DeepAgentChatBreadcrumb />}
                 </div>
+              </header>
+            )}
+            {mode === "standalone" && SidebarTrigger && (
+              <header className="my-2 flex h-10 shrink-0 items-center justify-start gap-2 px-4">
+                <SidebarTrigger className="" />
               </header>
             )}
             <TasksFilesSidebar

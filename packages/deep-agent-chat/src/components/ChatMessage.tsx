@@ -96,33 +96,42 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             (isUser ? (
               <User className="h-4 w-4 text-white" />
             ) : (
-              <Bot className="h-4 w-4 text-gray-500" />
+              <Bot className="text-muted-foreground h-4 w-4" />
             ))}
         </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
-          {hasContent && (
+          {(hasContent || debugMode) && (
             <div className="flex items-end gap-2">
               <div
                 className={cn(
                   "mt-4 overflow-hidden rounded-lg p-2 break-words",
                   isUser
-                    ? "bg-user-message ml-auto text-white"
-                    : "border-border bg-surface text-primary w-[calc(100%-100px)] border",
+                    ? "bg-user-message text-white"
+                    : "border-border bg-surface text-primary border",
                 )}
               >
                 {isUser ? (
                   <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
                     {messageContent}
                   </p>
-                ) : (
+                ) : hasContent ? (
                   <MarkdownContent content={messageContent} />
-                )}
+                ) : debugMode ? (
+                  <p className="m-0 text-xs whitespace-nowrap italic">
+                    Empty Message
+                  </p>
+                ) : null}
               </div>
-              <div className="relative mt-4 w-[72px] flex-shrink-0">
+              <div
+                className={cn(
+                  "relative mt-4 flex-shrink-0",
+                  !isUser && "w-[72px]",
+                )}
+              >
                 {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
                   <button
                     onClick={() => onRestartFromAIMessage(message)}
-                    className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
+                    className="text-muted-foreground hover:text-foreground absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap transition-colors duration-200"
                   >
                     Regenerate
                   </button>
@@ -160,7 +169,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                     {debugMode && subAgent.status === "completed" && (
                       <button
                         onClick={() => onRestartFromSubTask(subAgent.id)}
-                        className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
+                        className="text-muted-foreground hover:text-foreground absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap transition-colors duration-200"
                       >
                         Regenerate
                       </button>
