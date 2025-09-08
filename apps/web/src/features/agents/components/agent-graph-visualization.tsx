@@ -330,7 +330,7 @@ export function AgentGraphVisualization({
   }, [configurable, name]);
 
   return (
-    <div className="h-[500px] w-full rounded-lg border bg-gray-50">
+    <div className="h-full min-h-[80vh] w-full rounded-lg border bg-gray-50">
       <ReactFlow
         nodes={nodes}
         edges={edges}

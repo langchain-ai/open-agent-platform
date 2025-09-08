@@ -173,16 +173,14 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
                   View Graph
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl">
+              <DialogContent className="w-full min-w-[80vw]">
                 <DialogHeader>
                   <DialogTitle>Agent Graph: {agent.name}</DialogTitle>
                 </DialogHeader>
-                <div className="mt-4">
-                  <AgentGraphVisualization
-                    configurable={agent.config?.configurable || {}}
-                    name={agent.name}
-                  />
-                </div>
+                <AgentGraphVisualization
+                  configurable={agent.config?.configurable || {}}
+                  name={agent.name}
+                />
               </DialogContent>
             </Dialog>
           </CardContent>
