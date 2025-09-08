@@ -11,7 +11,7 @@ export function getDeployments(): Deployment[] {
   );
   for (const deployment of deployments) {
     if (deployment.isDefault && !defaultExists) {
-      if (!deployment.defaultGraphId) {
+      if (!deployment.agents.find((a) => a.isDefault)) {
         throw new Error("Default deployment must have a default graph ID");
       }
       defaultExists = true;

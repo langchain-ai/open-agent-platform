@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { Client } from "@langchain/langgraph-sdk";
 import { getDeployments } from "@/lib/environment/deployments";
+import { isDefaultGraph } from "@/lib/agent-utils";
 
 /**
  * Creates a client for a specific deployment, using either LangSmith auth or user auth
@@ -84,8 +85,7 @@ async function getOrCreateDefaultAssistants(
   const newUserDefaultAssistantsPromise = missingDefaultAssistants.map(
     async (assistant) => {
       const isDefaultDeploymentAndGraph =
-        deployment.isDefault &&
-        deployment.defaultGraphId === assistant.graph_id;
+        deployment.isDefault && isDefaultGraph(deployment, assistant.graph_id);
       return await userAuthClient.assistants.create({
         graphId: assistant.graph_id,
         name: `${isDefaultDeploymentAndGraph ? "Default" : "Primary"} Assistant`,
