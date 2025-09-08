@@ -1,7 +1,5 @@
 "use client";
 
- 
-
 import React, { useState, useEffect } from "react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { Settings } from "lucide-react";
