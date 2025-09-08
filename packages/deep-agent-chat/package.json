@@ -15,7 +15,8 @@
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "clean": "rm -rf .turbo || true"
   },
   "dependencies": {
     "@langchain/langgraph-sdk": "^0.0.109",
