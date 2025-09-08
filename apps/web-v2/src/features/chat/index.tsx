@@ -92,17 +92,17 @@ export default function DeepAgentChatPageContent(): React.ReactNode {
   }
 
   return (
-      <DeepAgentChatInterface
-        assistantId={agentId}
-        deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-        accessToken={session.accessToken || ""}
-        optimizerDeploymentUrl={
-          process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
-        }
-        optimizerAccessToken={session.accessToken || ""}
-        mode="oap"
-        SidebarTrigger={SidebarTrigger}
-        DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-      />
+    <DeepAgentChatInterface
+      assistantId={agentId}
+      deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+      accessToken={session.accessToken || ""}
+      optimizerDeploymentUrl={
+        process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+      }
+      optimizerAccessToken={session.accessToken || ""}
+      mode="oap"
+      SidebarTrigger={SidebarTrigger}
+      DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+    />
   );
 }
