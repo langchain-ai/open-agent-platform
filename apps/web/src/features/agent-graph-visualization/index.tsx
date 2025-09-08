@@ -15,6 +15,7 @@ import {
   SubAgentNodeComponent,
   ToolNodeComponent,
 } from "./nodes";
+import { ConfigurableFieldSubAgentsMetadata } from "@/types/configurable";
 
 interface AgentGraphVisualizationProps {
   configurable: Record<string, any>;
@@ -98,7 +99,9 @@ export function AgentGraphVisualization({
     currentY += nodeSpacing;
 
     // Get subagents from configurable
-    const subagents = configurable?.subagents || [];
+    const subagents: NonNullable<
+      ConfigurableFieldSubAgentsMetadata["default"]
+    > = configurable?.subagents || [];
 
     // Layout subagents horizontally
     if (subagents.length > 0) {
@@ -107,7 +110,7 @@ export function AgentGraphVisualization({
       const totalWidth = (subagents.length - 1) * subagentSpacing;
       const startX = centerX - totalWidth / 2 - subagentWidth / 2;
 
-      subagents.forEach((subagent: any, index: number) => {
+      subagents.forEach((subagent, index) => {
         const nodeId = `subagent-${index}`;
         const subagentLabel =
           typeof subagent === "string"
@@ -135,12 +138,12 @@ export function AgentGraphVisualization({
     if (subagents.length > 0) {
       let maxToolsCount = 0;
 
-      subagents.forEach((subagent: any) => {
+      subagents.forEach((subagent) => {
         const subagentTools = subagent?.tools || [];
         maxToolsCount = Math.max(maxToolsCount, subagentTools.length);
       });
 
-      subagents.forEach((subagent: any, subagentIndex: number) => {
+      subagents.forEach((subagent, subagentIndex) => {
         const subagentSpacing = 280;
         const subagentWidth = 140;
         const totalWidth = (subagents.length - 1) * subagentSpacing;
@@ -151,10 +154,9 @@ export function AgentGraphVisualization({
         const subagentTools = subagent?.tools || [];
 
         // Create tools for this specific subagent
-        subagentTools.forEach((tool: any, toolIndex: number) => {
+        subagentTools.forEach((tool, toolIndex) => {
           const nodeId = `tool-${subagentIndex}-${toolIndex}`;
-          const toolLabel =
-            typeof tool === "string" ? tool : tool?.name || String(tool);
+          const toolLabel = tool;
 
           const toolSpacing = 90;
           const totalToolsHeight = (maxToolsCount - 1) * toolSpacing;
@@ -206,7 +208,7 @@ export function AgentGraphVisualization({
     // Connect terminal nodes to end - always from subagents to end
     if (subagents.length > 0) {
       // Subagents always connect to end (tools are intermediate)
-      subagents.forEach((_: any, index: number) => {
+      subagents.forEach((_, index) => {
         edges.push({
           id: `subagent-${index}-to-end`,
           source: `subagent-${index}`,
