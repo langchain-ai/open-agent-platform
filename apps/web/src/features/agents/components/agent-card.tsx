@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Agent } from "@/types/agent";
 import { EditAgentDialog } from "./create-edit-agent-dialogs/edit-agent-dialog";
-import { AgentGraphVisualization } from "./agent-graph-visualization";
+import { AgentGraphVisualization } from "@/features/agent-graph-visualization";
 import _ from "lodash";
 import NextLink from "next/link";
 import { Badge } from "@/components/ui/badge";
