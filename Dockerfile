@@ -1,26 +1,23 @@
 FROM node:20-alpine
 
+# Install build dependencies for native modules
+RUN apk add --no-cache make gcc g++ python3
+
 WORKDIR /app
 
-# Install dependencies
 COPY package.json yarn.lock ./
 COPY .yarn .yarn
 COPY .yarnrc.yml .yarnrc.yml
 
-# Copy package.json files for all workspaces
-COPY apps/web/package.json ./apps/web/
-COPY apps/docs/package.json ./apps/docs/
-COPY packages/*/package.json ./packages/*/
+COPY apps/ ./apps/
+COPY packages/ ./packages/
 COPY turbo.json ./
 
-# Install all dependencies
-RUN yarn install --frozen-lockfile
+RUN corepack enable
+RUN yarn install --immutable
 
-# Copy source code
 COPY . .
 
-# Expose port for the web app
 EXPOSE 3000
 
-# Start the development server
 CMD ["yarn", "dev"]

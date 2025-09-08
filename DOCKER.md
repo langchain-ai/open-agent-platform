@@ -24,12 +24,12 @@ Each external service needs a Dockerfile. Copy the appropriate template:
 
 **For Node.js services:**
 ```bash
-cp docker/Dockerfile.node ../service-name/Dockerfile
+cp docker/Dockerfile.oap.node ../service-name/Dockerfile.oap
 ```
 
 **For Python services:**
 ```bash
-cp docker/Dockerfile.python ../service-name/Dockerfile
+cp docker/Dockerfile.oap.python ../service-name/Dockerfile.oap
 ```
 
 ### 2. Update Docker Compose
