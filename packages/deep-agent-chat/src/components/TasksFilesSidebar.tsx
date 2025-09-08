@@ -265,7 +265,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                             className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span className="flex-1 break-words text-sm leading-relaxed text-inherit">
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -284,7 +284,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                             className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span className="flex-1 break-words text-sm leading-relaxed text-inherit">
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -303,7 +303,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                             className="mb-1 flex items-start gap-1.5 rounded-md p-1.5 transition-colors"
                           >
                             {getStatusIcon(todo.status)}
-                            <span className="flex-1 break-words text-sm leading-relaxed text-inherit">
+                            <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                               {todo.content}
                             </span>
                           </div>
@@ -367,7 +367,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                             size={16}
                             className="text-tertiary flex-shrink-0"
                           />
-                          <span className="flex-1 break-words text-sm leading-relaxed text-inherit">
+                          <span className="flex-1 text-sm leading-relaxed break-words text-inherit">
                             {file}
                           </span>
                         </div>
@@ -481,7 +481,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
               ) : !isEditingConfig ? (
                 <ScrollArea className="min-h-0 w-full flex-1">
                   <div className="p-4 pt-2">
-                    <div className="border-border text-primary whitespace-pre-wrap break-words rounded-lg border bg-white p-4 font-mono text-xs leading-relaxed">
+                    <div className="border-border text-primary rounded-lg border bg-white p-4 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap">
                       {editedConfig}
                     </div>
                   </div>
@@ -491,7 +491,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                   <textarea
                     value={editedConfig}
                     onChange={(e) => setEditedConfig(e.target.value)}
-                    className="border-border text-primary focus:ring-primary w-full flex-1 resize-none rounded-lg border bg-white p-4 font-mono text-xs leading-relaxed focus:outline-none focus:ring-2"
+                    className="border-border text-primary focus:ring-primary w-full flex-1 resize-none rounded-lg border bg-white p-4 font-mono text-xs leading-relaxed focus:ring-2 focus:outline-none"
                     placeholder="Enter YAML configuration..."
                   />
                 </div>

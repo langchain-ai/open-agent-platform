@@ -127,7 +127,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
           }
         `}</style>
         <div
-          className="fixed right-0 top-0 z-50 h-screen"
+          className="fixed top-0 right-0 z-50 h-screen"
           style={{
             width: "20vw",
             animation: "slideIn 300ms ease-out",
@@ -181,7 +181,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                 >
                   {groupedThreads.today.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4 className="font-semibold uppercase tracking-wider">
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Today
                       </h4>
                       {groupedThreads.today.map((thread) => (
@@ -196,7 +196,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.yesterday.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4 className="font-semibold uppercase tracking-wider">
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Yesterday
                       </h4>
                       {groupedThreads.yesterday.map((thread) => (
@@ -211,7 +211,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.week.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4 className="font-semibold uppercase tracking-wider">
+                      <h4 className="font-semibold tracking-wider uppercase">
                         This Week
                       </h4>
                       {groupedThreads.week.map((thread) => (
@@ -226,7 +226,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.older.length > 0 && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                      <h4 className="font-semibold uppercase tracking-wider">
+                      <h4 className="font-semibold tracking-wider uppercase">
                         Older
                       </h4>
                       {groupedThreads.older.map((thread) => (
@@ -271,7 +271,7 @@ const ThreadItem = React.memo<{
           width: "calc(20vw - 3rem)", // sidebar width minus padding and icon space
         }}
       >
-        <div className="text-foreground mb-1 w-full max-w-full overflow-hidden text-ellipsis whitespace-nowrap text-xs font-medium">
+        <div className="text-foreground mb-1 w-full max-w-full overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
           {thread.title}
         </div>
       </div>

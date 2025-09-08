@@ -40,7 +40,7 @@ const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
   }, [subAgent.status]);
 
   return (
-    <div className="bg-background border-border absolute right-0 top-0 z-10 flex h-full w-[40vw] flex-col border-l shadow-lg">
+    <div className="bg-background border-border absolute top-0 right-0 z-10 flex h-full w-[40vw] flex-col border-l shadow-lg">
       <div className="border-border bg-surface flex items-start justify-between border-b p-4">
         <div className="flex flex-1 gap-2">
           <Bot className="text-primary size-8 shrink-0" />
@@ -66,7 +66,7 @@ const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
 
       <ScrollArea className="flex-1 overflow-y-auto p-6">
         <div style={{ marginBottom: "2rem" }}>
-          <h4 className="text-primary/70 mb-2 text-xs font-semibold uppercase tracking-wider">
+          <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
             Input
           </h4>
           <div className="bg-surface border-border-light rounded-md border p-4">
@@ -87,7 +87,7 @@ const SubAgentPanelComponent = ({ subAgent, onClose }: SubAgentPanelProps) => {
         </div>
         {subAgent.output && (
           <div>
-            <h4 className="text-primary/70 mb-2 font-semibold uppercase tracking-wider">
+            <h4 className="text-primary/70 mb-2 font-semibold tracking-wider uppercase">
               Output
             </h4>
             <div className="bg-surface border-border-light rounded-md border p-4">

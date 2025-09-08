@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 
 import React, { useState, useEffect } from "react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";

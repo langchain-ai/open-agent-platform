@@ -141,7 +141,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {Object.keys(args).length > 0 && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -169,7 +169,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                     {expandedArgs[key] && (
                       <div className="border-border bg-muted/10 border-t p-2">
                         <pre
-                          className="text-foreground overflow-x-auto whitespace-pre-wrap break-all font-mono text-xs"
+                          className="text-foreground overflow-x-auto font-mono text-xs break-all whitespace-pre-wrap"
                           style={{
                             lineHeight: "1.5",
                             margin: "0",
@@ -191,7 +191,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           {result && (
             <div style={{ marginTop: "1rem" }}>
               <h4
-                className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
+                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
                 style={{
                   letterSpacing: "0.05em",
                   marginBottom: "0.25rem",
@@ -200,7 +200,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                 Result
               </h4>
               <pre
-                className="border-border bg-muted/30 text-foreground overflow-x-auto whitespace-pre-wrap break-all rounded-sm border font-mono text-xs"
+                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
                 style={{
                   padding: "0.5rem",
                   lineHeight: "1.75",

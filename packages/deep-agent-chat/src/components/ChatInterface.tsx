@@ -409,7 +409,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               </div>
             )}
             {isLoadingThreadState && (
-              <div className="absolute left-0 top-0 z-10 flex h-full w-full justify-center pt-[100px]">
+              <div className="absolute top-0 left-0 z-10 flex h-full w-full justify-center pt-[100px]">
                 <LoaderCircle className="text-primary flex h-[50px] w-[50px] animate-spin items-center justify-center" />
               </div>
             )}
@@ -473,7 +473,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 <div className="flex shrink-0 cursor-pointer items-center gap-1 p-1">
                   <label
                     htmlFor="debug-mode"
-                    className="text-primary/50 cursor-pointer select-none whitespace-nowrap text-xs"
+                    className="text-primary/50 cursor-pointer text-xs whitespace-nowrap select-none"
                   >
                     Debug Mode
                   </label>

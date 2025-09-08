@@ -2270,7 +2270,6 @@ __metadata:
     remark-math: ^6.0.0
     sonner: ^2.0.3
     tailwind-merge: ^3.0.2
-    tailwind-scrollbar: 3.1.0
     tailwindcss: ^3.4.0
     tailwindcss-animate: ^1.0.7
     turbo: ^2.5.0
@@ -2361,7 +2360,6 @@ __metadata:
     remark-math: ^6.0.0
     sonner: ^2.0.3
     tailwind-merge: ^3.0.2
-    tailwind-scrollbar: 3.1.0
     tailwindcss: ^4.0.13
     tailwindcss-animate: ^1.0.7
     turbo: ^2.5.0
@@ -15794,15 +15792,6 @@ __metadata:
   version: 3.3.1
   resolution: "tailwind-merge@npm:3.3.1"
   checksum: ace3675227d86f1def95b25b7f6793268a6ab2f340b43ef64ad25646588d2b1d87714cd60db6947bfdb5bb85be3bb6ce1802021620c541ef7a9c3faa05915f2b
-  languageName: node
-  linkType: hard
-
-"tailwind-scrollbar@npm:3.1.0":
-  version: 3.1.0
-  resolution: "tailwind-scrollbar@npm:3.1.0"
-  peerDependencies:
-    tailwindcss: 3.x
-  checksum: a3aca614824ae655ff9b8fa6341e54cd543d68bf107c41cb45cbdcb80e4dff4169250bd13c50beb4f8690ca90392da6452ee4ade0e0e8203ef38aacac176173d
   languageName: node
   linkType: hard
 

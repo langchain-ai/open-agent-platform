@@ -150,7 +150,7 @@ export const FileViewDialog = React.memo<FileViewDialogProps>(
                   aria-invalid={!fileNameIsValid}
                 />
               ) : (
-                <span className="text-primary overflow-hidden text-ellipsis whitespace-nowrap text-base font-medium">
+                <span className="text-primary overflow-hidden text-base font-medium text-ellipsis whitespace-nowrap">
                   {file?.path}
                 </span>
               )}
