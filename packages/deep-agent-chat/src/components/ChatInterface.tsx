@@ -13,7 +13,7 @@ import { LoaderCircle, Square, ArrowUp } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { AgentGraphVisualization } from "./AgentGraphVisualization";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
-import type { SubAgent, TodoItem, ToolCall } from "../types";
+import type { TodoItem, ToolCall } from "../types";
 import { Assistant, Message } from "@langchain/langgraph-sdk";
 import {
   extractStringFromMessageContent,
@@ -28,8 +28,6 @@ import { useQueryState } from "nuqs";
 interface ChatInterfaceProps {
   assistantId: string;
   activeAssistant?: Assistant | null;
-  selectedSubAgent: SubAgent | null;
-  onSelectSubAgent: (subAgent: SubAgent | null) => void;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
   assistantError: string | null;
@@ -43,8 +41,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
   ({
     assistantId,
     activeAssistant: _activeAssistant,
-    selectedSubAgent,
-    onSelectSubAgent,
     debugMode,
     setDebugMode: _setDebugMode,
     assistantError,
@@ -426,8 +422,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       key={data.message.id}
                       message={data.message}
                       toolCalls={data.toolCalls}
-                      onSelectSubAgent={onSelectSubAgent}
-                      selectedSubAgent={selectedSubAgent}
                       onRestartFromAIMessage={handleRestartFromAIMessage}
                       onRestartFromSubTask={handleRestartFromSubTask}
                       debugMode={debugMode}

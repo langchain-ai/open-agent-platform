@@ -4,8 +4,7 @@ import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
 import { OptimizationSidebar } from "./components/OptimizationSidebar";
-import { SubAgentPanel } from "./components/SubAgentPanel";
-import type { SubAgent, TodoItem } from "./types";
+import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
@@ -21,9 +20,7 @@ function DeepAgentChatInterfaceInternal({
   optimizerAccessToken,
 }: DeepAgentChatConfig) {
   const [_, __setThreadId] = useQueryState("threadId");
-  const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
-    null,
-  );
+  // SubAgent panel moved inline; no global selection state needed
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
@@ -67,15 +64,8 @@ function DeepAgentChatInterfaceInternal({
               setActiveAssistant={setActiveAssistant}
               setTodos={setTodos}
               setFiles={setFiles}
-              selectedSubAgent={selectedSubAgent}
-              onSelectSubAgent={setSelectedSubAgent}
             />
-            {selectedSubAgent && (
-              <SubAgentPanel
-                subAgent={selectedSubAgent}
-                onClose={() => setSelectedSubAgent(null)}
-              />
-            )}
+            {/* SubAgentPanel removed; details now render inline in ChatMessage */}
           </div>
 
           <TasksFilesSidebar

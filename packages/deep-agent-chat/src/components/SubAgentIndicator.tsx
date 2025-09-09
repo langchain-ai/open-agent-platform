@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Button } from "./ui/button";
+import { ChevronDown } from "lucide-react";
 import type { SubAgent } from "../types";
 
 interface SubAgentIndicatorProps {
@@ -56,6 +57,11 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
                 {subAgent.subAgentName}
               </span>
             </div>
+            <ChevronDown
+              size={14}
+              className="shrink-0"
+              style={{ color: "#70707B" }}
+            />
           </div>
         </Button>
       </div>

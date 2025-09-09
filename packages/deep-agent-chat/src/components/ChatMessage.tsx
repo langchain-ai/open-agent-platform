@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { RotateCcw } from "lucide-react";
 import { SubAgentIndicator } from "./SubAgentIndicator";
 import { ToolCallBox } from "./ToolCallBox";
@@ -13,8 +13,6 @@ import { cn } from "../lib/utils";
 interface ChatMessageProps {
   message: Message;
   toolCalls: ToolCall[];
-  onSelectSubAgent: (subAgent: SubAgent | null) => void;
-  selectedSubAgent: SubAgent | null;
   onRestartFromAIMessage: (message: Message) => void;
   onRestartFromSubTask: (toolCallId: string) => void;
   debugMode?: boolean;
@@ -26,8 +24,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
   ({
     message,
     toolCalls,
-    onSelectSubAgent,
-    selectedSubAgent,
     onRestartFromAIMessage,
     onRestartFromSubTask,
     debugMode,
@@ -61,17 +57,19 @@ export const ChatMessage = React.memo<ChatMessageProps>(
         });
     }, [toolCalls]);
 
-    const subAgentsString = useMemo(() => {
-      return JSON.stringify(subAgents);
-    }, [subAgents]);
-
-    useEffect(() => {
-      if (subAgents.some((subAgent) => subAgent.id === selectedSubAgent?.id)) {
-        onSelectSubAgent(
-          subAgents.find((subAgent) => subAgent.id === selectedSubAgent?.id)!,
-        );
-      }
-    }, [selectedSubAgent, onSelectSubAgent, subAgentsString, subAgents]);
+    const [expandedSubAgents, setExpandedSubAgents] = useState<
+      Record<string, boolean>
+    >({});
+    const isSubAgentExpanded = useCallback(
+      (id: string) => expandedSubAgents[id] ?? true,
+      [expandedSubAgents],
+    );
+    const toggleSubAgent = useCallback((id: string) => {
+      setExpandedSubAgents((prev) => ({
+        ...prev,
+        [id]: prev[id] === undefined ? false : !prev[id],
+      }));
+    }, []);
 
     return (
       <div
@@ -154,25 +152,69 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               {subAgents.map((subAgent) => (
                 <div
                   key={subAgent.id}
-                  className="flex items-end gap-2"
+                  className="flex w-full flex-col gap-2"
                 >
-                  <div className={"w-[calc(100%-100px)]"}>
-                    <SubAgentIndicator
-                      subAgent={subAgent}
-                      onClick={() => onSelectSubAgent(subAgent)}
-                    />
+                  <div className="flex items-end gap-2">
+                    <div className={"w-[calc(100%-100px)]"}>
+                      <SubAgentIndicator
+                        subAgent={subAgent}
+                        onClick={() => toggleSubAgent(subAgent.id)}
+                      />
+                    </div>
+                    <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">
+                      {debugMode && subAgent.status === "completed" && (
+                        <button
+                          onClick={() => onRestartFromSubTask(subAgent.id)}
+                          className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
+                          style={{ transform: "scaleX(-1)" }}
+                        >
+                          <RotateCcw className="h-3 w-3 text-gray-600" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">
-                    {debugMode && subAgent.status === "completed" && (
-                      <button
-                        onClick={() => onRestartFromSubTask(subAgent.id)}
-                        className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
-                        style={{ transform: "scaleX(-1)" }}
-                      >
-                        <RotateCcw className="h-3 w-3 text-gray-600" />
-                      </button>
-                    )}
-                  </div>
+                  {isSubAgentExpanded(subAgent.id) && (
+                    <div className="w-full max-w-full">
+                      <div className="bg-surface border-border-light rounded-md border p-4">
+                        <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+                          Input
+                        </h4>
+                        <div className="mb-4">
+                          <MarkdownContent
+                            content={
+                              typeof subAgent.input === "string"
+                                ? subAgent.input
+                                : subAgent.input.description &&
+                                    typeof subAgent.input.description ===
+                                      "string"
+                                  ? subAgent.input.description
+                                  : subAgent.input.prompt &&
+                                      typeof subAgent.input.prompt === "string"
+                                    ? subAgent.input.prompt
+                                    : JSON.stringify(subAgent.input, null, 2)
+                            }
+                          />
+                        </div>
+                        {subAgent.output && (
+                          <>
+                            <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+                              Output
+                            </h4>
+                            <MarkdownContent
+                              content={
+                                typeof subAgent.output === "string"
+                                  ? subAgent.output
+                                  : subAgent.output.result &&
+                                      typeof subAgent.output.result === "string"
+                                    ? subAgent.output.result
+                                    : JSON.stringify(subAgent.output, null, 2)
+                              }
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

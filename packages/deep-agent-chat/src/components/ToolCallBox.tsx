@@ -129,6 +129,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
             <ChevronDown
               size={14}
               className="shrink-0"
+              style={{ color: "#70707B" }}
             />
           )}
         </div>
@@ -164,9 +165,15 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                     >
                       <span className="font-mono">{key}</span>
                       {expandedArgs[key] ? (
-                        <ChevronDown size={12} />
+                        <ChevronDown
+                          size={12}
+                          style={{ color: "#70707B" }}
+                        />
                       ) : (
-                        <ChevronRight size={12} />
+                        <ChevronRight
+                          size={12}
+                          style={{ color: "#70707B" }}
+                        />
                       )}
                     </button>
                     {expandedArgs[key] && (
