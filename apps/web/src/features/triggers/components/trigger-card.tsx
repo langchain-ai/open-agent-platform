@@ -20,7 +20,6 @@ interface TriggerCardProps {
   userTriggers: ListUserTriggersData[];
 }
 
-
 function ConfiguredAccounts(props: { userTriggers: ListUserTriggersData[] }) {
   const { userTriggers } = props;
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(false);
@@ -31,7 +30,7 @@ function ConfiguredAccounts(props: { userTriggers: ListUserTriggersData[] }) {
         onClick={() => setIsAccountsExpanded(!isAccountsExpanded)}
         className="text-muted-foreground hover:text-foreground flex w-full cursor-pointer items-center justify-between text-left text-sm font-medium transition-colors"
       >
-        <span>Configured Registrations ({userTriggers.length})</span>
+        <span>Configured Accounts ({userTriggers.length})</span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-200 ${
             isAccountsExpanded ? "rotate-180" : ""

@@ -53,7 +53,6 @@ import { useAgentsContext } from "@/providers/Agents";
 import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
-import { Trigger } from "@/types/triggers";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -1010,15 +1009,13 @@ export function ConfigFieldTriggers({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:triggers`;
   const auth = useAuthContext();
-  const { listUserTriggers, listTriggers } = useTriggers();
+  const { listUserTriggers } = useTriggers();
 
   const [userTriggers, setUserTriggers] = React.useState<
     ListUserTriggersData[]
   >([]);
-  const [triggerTemplates, setTriggerTemplates] = React.useState<Trigger[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
-  
 
   const isExternallyManaged = externalSetValue !== undefined;
 
@@ -1030,26 +1027,17 @@ export function ConfigFieldTriggers({
 
   const selectedTriggers = defaults || [];
 
-  // Fetch user triggers and trigger templates on mount
+  // Fetch user triggers on mount
   React.useEffect(() => {
     if (!auth.session?.accessToken || loading || userTriggers.length > 0)
       return;
 
-    const fetchTriggersData = async (accessToken: string) => {
+    const fetchTriggers = async (accessToken: string) => {
       setLoading(true);
       try {
-        // Fetch both user triggers and trigger templates
-        const [userTriggersData, triggerTemplatesData] = await Promise.all([
-          listUserTriggers(accessToken),
-          listTriggers(accessToken)
-        ]);
-        
-        if (userTriggersData) {
-          setUserTriggers(userTriggersData);
-        }
-        
-        if (triggerTemplatesData) {
-          setTriggerTemplates(triggerTemplatesData);
+        const triggers = await listUserTriggers(accessToken);
+        if (triggers) {
+          setUserTriggers(triggers);
         }
       } catch (error) {
         console.error("Failed to fetch triggers:", error);
@@ -1059,8 +1047,8 @@ export function ConfigFieldTriggers({
       }
     };
 
-    fetchTriggersData(auth.session.accessToken);
-  }, [auth.session?.accessToken, listUserTriggers, listTriggers]);
+    fetchTriggers(auth.session.accessToken);
+  }, [auth.session?.accessToken, listUserTriggers]);
 
   const groupedTriggers = React.useMemo(() => {
     return groupUserRegisteredTriggersByProvider(userTriggers);
@@ -1094,7 +1082,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.template_id}:{JSON.stringify(trigger.resource)}
+            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -1108,8 +1096,6 @@ export function ConfigFieldTriggers({
       </div>
     );
   };
-
-
 
   return (
     <div className={cn("w-full space-y-2", className)}>
@@ -1185,7 +1171,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.template_id}:{JSON.stringify(trigger.resource)}
+                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}
@@ -1197,7 +1183,6 @@ export function ConfigFieldTriggers({
             ))}
         </div>
       )}
-
 
       <p className="text-xs text-gray-500">
         Select triggers to activate when this agent is used.

@@ -19,7 +19,6 @@ import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
-import { useConfigStore } from "@/hooks/use-config-store";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAuthContext } from "@/providers/Auth";
 import { useTriggers } from "@/hooks/use-triggers";
@@ -68,7 +67,6 @@ function CreateAgentFormContent(props: {
     subAgentsConfigurations,
     triggersConfigurations,
   } = useAgentConfig();
-  const { configsByAgentId } = useConfigStore();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (data: {
