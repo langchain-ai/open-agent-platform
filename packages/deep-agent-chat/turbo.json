@@ -1,8 +1,6 @@
 {
   "extends": ["//"],
   "tasks": {
-    "build:internal": {
-      "outputs": []
-    }
+    "build:internal": {}
   }
 }
