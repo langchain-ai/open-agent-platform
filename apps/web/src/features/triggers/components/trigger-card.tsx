@@ -20,7 +20,9 @@ interface TriggerCardProps {
   userTriggers: ListTriggerRegistrationsData[];
 }
 
-function ConfiguredAccounts(props: { userTriggers: ListTriggerRegistrationsData[] }) {
+function ConfiguredAccounts(props: {
+  userTriggers: ListTriggerRegistrationsData[];
+}) {
   const { userTriggers } = props;
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(false);
 
