@@ -98,20 +98,24 @@ export function AgentFieldsForm({ agentId }: AgentFieldsFormProps) {
           className="w-full"
         />
         <div className="max-h-[500px] w-full overflow-y-auto rounded-md border-[1px] border-slate-200 px-4">
-          <Controller
-            control={form.control}
-            name="config.tools"
-            render={({ field: { value, onChange } }) => (
-              <ConfigFieldTool
-                id="tools"
-                label="Tools"
-                description="TODO: ADD TOOLS DESCRIPTION"
-                className="border-b-[1px] py-4"
-                value={value}
-                setValue={onChange}
-              />
-            )}
-          />
+          {displayTools.map((c) => (
+            <Controller
+              key={`tool-${c.name}`}
+              control={form.control}
+              name="config.tools"
+              render={({ field: { value, onChange } }) => (
+                <ConfigFieldTool
+                  key={`tool-field-${c.name}`}
+                  id={c.name}
+                  label={c.name}
+                  description={c.description}
+                  className="border-b-[1px] py-4"
+                  value={value}
+                  setValue={onChange}
+                />
+              )}
+            />
+          ))}
           {displayTools.length === 0 && toolSearchTerm && (
             <p className="my-4 w-full text-center text-sm text-slate-500">
               No tools found matching "{toolSearchTerm}".
