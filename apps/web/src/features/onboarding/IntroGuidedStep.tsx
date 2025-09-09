@@ -11,9 +11,15 @@ type IntroGuidedStepProps = {
   onSkip?: () => void;
 };
 
-export function IntroGuidedStep({ className, onContinue, onSkip }: IntroGuidedStepProps) {
+export function IntroGuidedStep({
+  className,
+  onContinue,
+  onSkip,
+}: IntroGuidedStepProps) {
   return (
-    <div className={cn(className, "grid h-screen grid-cols-2 overflow-y-hidden")}> 
+    <div
+      className={cn(className, "grid h-screen grid-cols-2 overflow-y-hidden")}
+    >
       <div
         className={cn(
           "z-10",
@@ -21,7 +27,7 @@ export function IntroGuidedStep({ className, onContinue, onSkip }: IntroGuidedSt
           "shadow-[0_675px_189px_0_rgba(138,118,158,0.00),0_432px_173px_0_rgba(138,118,158,0.01),0_243px_146px_0_rgba(138,118,158,0.05),0_108px_108px_0_rgba(138,118,158,0.09),0_27px_59px_0_rgba(138,118,158,0.10)]",
         )}
       >
-        <div className={cn("shrink-0")}> 
+        <div className={cn("shrink-0")}>
           <Image
             src="/oap-onboarding-logo.svg"
             alt="Onboarding logo"
@@ -41,7 +47,7 @@ export function IntroGuidedStep({ className, onContinue, onSkip }: IntroGuidedSt
             description="Step through a form to set up your agent. Perfect if you want structure and guidance"
             helperText="Continue"
             onClick={onContinue}
-            className="!bg-white hover:!bg-white dark:!bg-white w-[560px]"
+            className="w-[560px] !bg-white hover:!bg-white dark:!bg-white"
             align="left"
             arrowInside
             noOuterHoverBorder
@@ -66,5 +72,3 @@ export function IntroGuidedStep({ className, onContinue, onSkip }: IntroGuidedSt
 }
 
 export default IntroGuidedStep;
-
-

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 
 export interface OnboardingCardProps {
@@ -43,10 +42,12 @@ export function OnboardingCard({
       <div
         className={cn(
           "flex flex-1 flex-col gap-3 bg-white p-[28px] transition-colors duration-300",
-          innerBorder ? "rounded-[20px] border border-[#0A5982]" : "rounded-3xl",
+          innerBorder
+            ? "rounded-[20px] border border-[#0A5982]"
+            : "rounded-3xl",
           align === "center"
-            ? "items-center text-center justify-center"
-            : "items-start text-left justify-start",
+            ? "items-center justify-center text-center"
+            : "items-start justify-start text-left",
           arrowInside && "relative",
           "group-hover:bg-[#F4F3FF]",
         )}
@@ -68,8 +69,13 @@ export function OnboardingCard({
           {description}
         </div>
         {arrowInside && (
-          <div className="absolute bottom-[28px] right-[28px] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
-            <Image src="/icons/intro-arrow.svg" alt="arrow" width={25} height={25} />
+          <div className="absolute right-[28px] bottom-[28px] transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
+            <Image
+              src="/icons/intro-arrow.svg"
+              alt="arrow"
+              width={25}
+              height={25}
+            />
           </div>
         )}
       </div>
@@ -81,7 +87,12 @@ export function OnboardingCard({
             </div>
           )}
           <div className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
-            <Image src="/icons/intro-arrow.svg" alt="arrow" width={25} height={25} />
+            <Image
+              src="/icons/intro-arrow.svg"
+              alt="arrow"
+              width={25}
+              height={25}
+            />
           </div>
         </div>
       )}

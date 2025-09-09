@@ -15,13 +15,18 @@ type ToolsSelectionStepProps = {
   onCreate?: (selected: string[]) => void;
 };
 
-export default function ToolsSelectionStep({ onSkip, onContinue, onBack, onCreate }: ToolsSelectionStepProps) {
+export default function ToolsSelectionStep({
+  onSkip,
+  onContinue,
+  onBack,
+  onCreate,
+}: ToolsSelectionStepProps) {
   const { tools } = useMCPContext();
   const { displayTools } = useSearchTools(tools);
   const [selected, setSelected] = React.useState<string[]>([]);
 
   return (
-    <div className={cn("grid h-screen grid-cols-2 overflow-y-hidden")}> 
+    <div className={cn("grid h-screen grid-cols-2 overflow-y-hidden")}>
       <div
         className={cn(
           "z-10",
@@ -29,13 +34,19 @@ export default function ToolsSelectionStep({ onSkip, onContinue, onBack, onCreat
           "shadow-[0_675px_189px_0_rgba(138,118,158,0.00),0_432px_173px_0_rgba(138,118,158,0.01),0_243px_146px_0_rgba(138,118,158,0.05),0_108px_108px_0_rgba(138,118,158,0.09),0_27px_59px_0_rgba(138,118,158,0.10)]",
         )}
       >
-        <div className={cn("shrink-0")}> 
-          <Image src="/oap-onboarding-logo.svg" alt="Onboarding logo" width={146} height={38} priority />
+        <div className={cn("shrink-0")}>
+          <Image
+            src="/oap-onboarding-logo.svg"
+            alt="Onboarding logo"
+            width={146}
+            height={38}
+            priority
+          />
         </div>
 
         <button
           type="button"
-          className="mt-6 -ml-2 mb-6 flex items-center gap-2 text-lg text-black"
+          className="mt-6 mb-6 -ml-2 flex items-center gap-2 text-lg text-black"
           onClick={onBack}
         >
           ← Back
@@ -45,15 +56,19 @@ export default function ToolsSelectionStep({ onSkip, onContinue, onBack, onCreat
           What kind of tools do you want to connect?
         </h1>
         <p className="mt-2 max-w-[640px] text-[16px] leading-[20px] tracking-[-0.2px] text-[var(--colours-text-text-quaternary-500,#70707B)]">
-          Pick the ones you're likely to use, this helps us set up your agent. You can always add or remove tools later.
+          Pick the ones you're likely to use, this helps us set up your agent.
+          You can always add or remove tools later.
         </p>
 
         <div className="mt-8 grid w-full max-w-[640px] grid-cols-2 gap-4">
           {displayTools.slice(0, 12).map((tool, idx) => (
-            <label key={`${tool.name}:${idx}`} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[#2F6868] px-[36px] py-[24px]">
+            <label
+              key={`${tool.name}:${idx}`}
+              className="flex cursor-pointer items-center gap-3 rounded-2xl border border-[#2F6868] px-[36px] py-[24px]"
+            >
               <input
                 type="checkbox"
-                className="size-4 rounded-full"
+                className="size-5 appearance-none rounded-full border-2 border-[#2F6868] checked:border-[#0A5982] checked:bg-[#0A5982]"
                 checked={selected.includes(tool.name)}
                 onChange={(e) =>
                   setSelected((prev) =>
@@ -90,5 +105,3 @@ export default function ToolsSelectionStep({ onSkip, onContinue, onBack, onCreat
     </div>
   );
 }
-
-

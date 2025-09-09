@@ -9,8 +9,15 @@ export type OnboardingProgressProps = {
   className?: string;
 };
 
-export function OnboardingProgress({ steps, currentIndex, className }: OnboardingProgressProps) {
-  const percentComplete = Math.max(0, Math.min(100, Math.round(((currentIndex + 1) / steps.length) * 100)));
+export function OnboardingProgress({
+  steps,
+  currentIndex,
+  className,
+}: OnboardingProgressProps) {
+  const percentComplete = Math.max(
+    0,
+    Math.min(100, Math.round(((currentIndex + 1) / steps.length) * 100)),
+  );
 
   return (
     <div className={cn("w-full", className)}>
@@ -34,7 +41,9 @@ export function OnboardingProgress({ steps, currentIndex, className }: Onboardin
             key={label}
             className={cn(
               "text-sm",
-              idx <= currentIndex ? "text-[var(--colors-text-text-primary-900,#101828)]" : "text-gray-400",
+              idx <= currentIndex
+                ? "text-[var(--colors-text-text-primary-900,#101828)]"
+                : "text-gray-400",
             )}
           >
             {label}
@@ -42,11 +51,11 @@ export function OnboardingProgress({ steps, currentIndex, className }: Onboardin
         ))}
       </div>
 
-      <div className="mt-2 text-sm text-gray-500">{percentComplete}% complete</div>
+      <div className="mt-2 text-sm text-gray-500">
+        {percentComplete}% complete
+      </div>
     </div>
   );
 }
 
 export default OnboardingProgress;
-
-

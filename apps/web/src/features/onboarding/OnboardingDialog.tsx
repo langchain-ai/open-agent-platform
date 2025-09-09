@@ -2,7 +2,6 @@
 
 import React from "react";
 import VideoBackgroundPageWrapper from "@/components/VideoBackgroundPageWrapper";
-import { cn } from "@/lib/utils";
 import DescribeAgentStep from "./DescribeAgentStep";
 import ConnectServicesStep from "./ConnectServicesStep";
 import ToolsSelectionStep from "./ToolsSelectionStep";
@@ -18,7 +17,9 @@ export function OnboardingDialog({
   onClose,
 }: OnboardingDialogProps) {
   const [open, setOpen] = React.useState<boolean>(initialOpen);
-  const [step, setStep] = React.useState<"describe" | "connect" | "tools" | "creating" | "ready">("describe");
+  const [step, setStep] = React.useState<
+    "describe" | "connect" | "tools" | "ready"
+  >("describe");
   const [agentName, setAgentName] = React.useState("");
   const [agentDescription, setAgentDescription] = React.useState("");
   const close = () => {
@@ -28,29 +29,41 @@ export function OnboardingDialog({
 
   if (!open) return null;
 
+  // Render a plain white background for the final ready page
+  if (step === "ready") {
+    return (
+      <div className="min-h-screen w-full bg-white">
+        <ReadyStep onOpenWorkspace={close} />
+      </div>
+    );
+  }
+
   return (
     <VideoBackgroundPageWrapper className="relative h-screen overflow-hidden">
-      <div
-        className={cn("bg-primary flex h-full w-full")}
-        style={{
-          transitionDuration: "700ms",
-          transformOrigin: "right",
-          transform: "scaleX(2)",
-        }}
-      />
       <div className="absolute top-0 left-0 w-full">
         {step === "describe" ? (
-          <DescribeAgentStep onSkip={close} onContinue={() => setStep("connect")} name={agentName} description={agentDescription} setName={setAgentName} setDescription={setAgentDescription} />
+          <DescribeAgentStep
+            onSkip={close}
+            onContinue={() => setStep("connect")}
+            name={agentName}
+            description={agentDescription}
+            setName={setAgentName}
+            setDescription={setAgentDescription}
+          />
         ) : step === "connect" ? (
-          <ConnectServicesStep onSkip={close} onContinue={() => setStep("tools")} onBack={() => setStep("describe")} />
+          <ConnectServicesStep
+            onSkip={close}
+            onContinue={() => setStep("tools")}
+            onBack={() => setStep("describe")}
+          />
         ) : step === "tools" ? (
-          <ToolsSelectionStep onSkip={close} onContinue={() => setStep("creating")} onBack={() => setStep("connect")} onCreate={() => setStep("creating")} />
-        ) : step === "creating" ? (
-          <ReadyStep onOpenWorkspace={() => setStep("ready")} />
-        ) : (
-          <ReadyStep onOpenWorkspace={close} />
-        )}
-        
+          <ToolsSelectionStep
+            onSkip={close}
+            onContinue={() => setStep("ready")}
+            onBack={() => setStep("connect")}
+            onCreate={() => setStep("ready")}
+          />
+        ) : null}
       </div>
     </VideoBackgroundPageWrapper>
   );

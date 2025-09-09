@@ -9,9 +9,7 @@ export default function DummyOnboardingPage() {
   return (
     <AuthProvider>
       <MCPProvider>
-        <OnboardingDialog
-          initialOpen={true}
-        />
+        <OnboardingDialog initialOpen={true} />
       </MCPProvider>
     </AuthProvider>
   );
