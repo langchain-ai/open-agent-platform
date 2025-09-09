@@ -79,8 +79,8 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         return;
       }
 
-      // Check for auth URL in response
-      if (!registerResponse.registered && "auth_url" in registerResponse) {
+      // Handle response based on auth requirements
+      if ("auth_url" in registerResponse) {
         setAuthUrl(registerResponse.auth_url);
         setIsAuthenticating(true);
       } else {
