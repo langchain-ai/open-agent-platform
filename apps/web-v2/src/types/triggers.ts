@@ -1,10 +1,6 @@
 export interface Trigger {
   /**
-   * The provider ID of the trigger
-   */
-  providerId: string;
-  /**
-   * A unique UUID v4 to identify the trigger by
+   * A unique identifier for the trigger (e.g., "gmail-email-received")
    */
   id: string;
   /**
