@@ -377,8 +377,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               style={
                 !isWorkflowView
                   ? {
-                      background:
-                        "var(--colours-background-bg-quaternary, var(--Colours-Background-bg-quaternary, #F4F3FF))",
+                      background: "#F4F3FF",
                     }
                   : undefined
               }
@@ -392,8 +391,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               style={
                 isWorkflowView
                   ? {
-                      background:
-                        "var(--colours-background-bg-quaternary, var(--Colours-Background-bg-quaternary, #F4F3FF))",
+                      background: "#F4F3FF",
                     }
                   : undefined
               }
