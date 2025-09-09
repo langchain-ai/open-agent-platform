@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     const { error: upsertError } = await usersConfig.upsert(
       {
         user_id: userId,
-        api_keys: nonNullApiKeys as Record<string, string>,
+        api_keys: nonNullApiKeys,
       },
       {
         onConflict: "user_id",

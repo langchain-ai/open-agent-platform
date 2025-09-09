@@ -13,9 +13,23 @@ import {
   Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Agent } from "@/types/agent";
 import { EditAgentDialog } from "./create-edit-agent-dialogs/edit-agent-dialog";
+import { AgentGraphVisualization } from "@/features/agent-graph-visualization";
 import _ from "lodash";
 import NextLink from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +101,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   );
 
   const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
+  const hasConfigurable = Boolean(agent.config?.configurable);
 
   return (
     <>
@@ -144,6 +159,33 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
             ))}
           </div>
         </CardHeader>
+
+        {hasConfigurable && (
+          <CardContent className="pt-0 pb-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  <Bot className="mr-2 h-4 w-4" />
+                  View Graph
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-full min-w-[80vw]">
+                <DialogHeader>
+                  <DialogTitle>Agent Graph: {agent.name}</DialogTitle>
+                </DialogHeader>
+                <AgentGraphVisualization
+                  configurable={agent.config?.configurable || {}}
+                  name={agent.name}
+                />
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        )}
+
         <CardFooter className="mt-auto flex w-full justify-between pt-2">
           {!isDefaultAgent && (
             <Button
