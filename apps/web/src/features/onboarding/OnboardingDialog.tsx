@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import VideoBackgroundPageWrapper from "@/components/VideoBackgroundPageWrapper";
 import DescribeAgentStep from "./DescribeAgentStep";
 import ConnectServicesStep from "./ConnectServicesStep";
@@ -22,6 +23,7 @@ export function OnboardingDialog({
   >("describe");
   const [agentName, setAgentName] = React.useState("");
   const [agentDescription, setAgentDescription] = React.useState("");
+  const router = useRouter();
   const close = () => {
     setOpen(false);
     onClose?.();
@@ -33,7 +35,7 @@ export function OnboardingDialog({
   if (step === "ready") {
     return (
       <div className="min-h-screen w-full bg-white">
-        <ReadyStep onOpenWorkspace={close} />
+        <ReadyStep onOpenWorkspace={() => router.push("/")} />
       </div>
     );
   }

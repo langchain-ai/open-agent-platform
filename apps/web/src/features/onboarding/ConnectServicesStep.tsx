@@ -111,7 +111,7 @@ export default function ConnectServicesStep({
           ← Back
         </button>
 
-        <h1 className="mb-[12px] text-start text-[58px] leading-[120%] font-normal tracking-[-1.2px] text-[var(--colors-text-text-primary-900,#101828)]">
+        <h1 className="mb-[12px] text-start text-[58px] leading-[120%] font-normal tracking-[-1.2px]">
           Connect your services
         </h1>
         <p className="mt-2 mb-[36px] max-w-[640px] text-[16px] leading-[20px] tracking-[-0.2px] text-[#3F3F46]">
