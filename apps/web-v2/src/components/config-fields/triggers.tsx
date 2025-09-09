@@ -17,7 +17,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
+import {
+  useTriggers,
+  ListTriggerRegistrationsData,
+} from "@/hooks/use-triggers";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -36,7 +39,7 @@ export function ConfigFieldTriggers({
   const { listUserTriggers } = useTriggers();
 
   const [userTriggers, setUserTriggers] = React.useState<
-    ListUserTriggersData[]
+    ListTriggerRegistrationsData[]
   >([]);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
@@ -94,7 +97,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+            {trigger.template_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -183,7 +186,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+                  {trigger.template_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}

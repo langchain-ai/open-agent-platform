@@ -3,17 +3,21 @@ import { toast } from "sonner";
 
 type RegisterTriggerResponse =
   | {
-      authUrl: string;
+      success: boolean;
       registered: false;
+      auth_required: true;
+      auth_url: string;
+      auth_id: string;
     }
   | {
+      success: boolean;
       registered: true;
     };
 
-export interface ListUserTriggersData {
+export interface ListTriggerRegistrationsData {
   id: string;
   user_id: string;
-  provider_id: string;
+  template_id: string;
   resource: unknown;
   linked_assistant_ids?: string[];
   created_at: string;
@@ -76,10 +80,10 @@ export function useTriggers() {
     return triggers.data;
   };
 
-  const listUserTriggers = async (
+  const listTriggerRegistrations = async (
     accessToken: string,
-  ): Promise<ListUserTriggersData[] | undefined> => {
-    const triggersApiUrl = constructTriggerUrl("/api/user-triggers");
+  ): Promise<ListTriggerRegistrationsData[] | undefined> => {
+    const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
     if (!triggersApiUrl) {
       return;
     }
@@ -122,8 +126,11 @@ export function useTriggers() {
       },
       body:
         Object.keys(args.payload).length > 0
-          ? JSON.stringify(args.payload)
-          : undefined,
+          ? JSON.stringify({
+              type: args.id,
+              ...args.payload,
+            })
+          : JSON.stringify({ type: args.id }),
     });
 
     if (!response.ok) {
@@ -143,29 +150,29 @@ export function useTriggers() {
       agentId: string;
     },
   ): Promise<boolean> => {
-    const triggerApiUrl = constructTriggerUrl(
-      "/api/user-triggers/linked-assistants",
-    );
-    if (!triggerApiUrl) {
-      return false;
-    }
+    // Link the agent to each selected trigger individually
+    for (const triggerId of args.selectedTriggerIds) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+      );
+      if (!triggerApiUrl) {
+        return false;
+      }
 
-    const response = await fetch(triggerApiUrl, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        trigger_ids: args.selectedTriggerIds,
-        assistant_id: args.agentId,
-      }),
-    });
-
-    if (!response.ok) {
-      toast.error("Failed to setup agent trigger", {
-        richColors: true,
+      const response = await fetch(triggerApiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
-      return false;
+
+      if (!response.ok) {
+        toast.error("Failed to setup agent trigger", {
+          richColors: true,
+        });
+        return false;
+      }
     }
 
     return true;
@@ -178,29 +185,32 @@ export function useTriggers() {
       selectedTriggerIds: string[];
     },
   ): Promise<boolean> => {
-    const triggerApiUrl = constructTriggerUrl(
-      "/api/user-triggers/edit-assistant",
-    );
-    if (!triggerApiUrl) {
-      return false;
-    }
+    // For RESTful API, we need to update each registration individually
+    for (const triggerId of args.selectedTriggerIds) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/assistants`,
+      );
+      if (!triggerApiUrl) {
+        return false;
+      }
 
-    const response = await fetch(triggerApiUrl, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        trigger_ids: args.selectedTriggerIds,
-        assistant_id: args.agentId,
-      }),
-    });
-
-    if (!response.ok) {
-      toast.error("Failed to update agent triggers", {
-        richColors: true,
+      const response = await fetch(triggerApiUrl, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          assistant_id: args.agentId,
+        }),
       });
-      return false;
+
+      if (!response.ok) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return false;
+      }
     }
 
     return true;
@@ -208,7 +218,7 @@ export function useTriggers() {
 
   return {
     listTriggers,
-    listUserTriggers,
+    listUserTriggers: listTriggerRegistrations,
     registerTrigger,
     setupAgentTrigger,
     updateAgentTriggers,

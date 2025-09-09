@@ -79,9 +79,9 @@ export function TriggerForm({ trigger, onCancel }: TriggerFormProps) {
         return;
       }
 
-      // Check for auth URL in response
-      if (!registerResponse.registered && registerResponse.authUrl) {
-        setAuthUrl(registerResponse.authUrl);
+      // Handle response based on auth requirements
+      if ("auth_url" in registerResponse) {
+        setAuthUrl(registerResponse.auth_url);
         setIsAuthenticating(true);
       } else {
         toast.success(

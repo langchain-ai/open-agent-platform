@@ -31,7 +31,7 @@ export interface Graph {
   /**
    * The ID of the graph.
    */
-  graphId: string;
+  id: string;
   /**
    * Whether or not this graph is the default graph for this deployment.
    * This should only be set to true for one graph per deployment.

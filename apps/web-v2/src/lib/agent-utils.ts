@@ -125,5 +125,5 @@ export function isDefaultGraph(
   deployment: Deployment,
   graphId: string,
 ): boolean {
-  return deployment.agents.find((a) => a.isDefault)?.graphId === graphId;
+  return deployment.graphs.find((g) => g.isDefault)?.id === graphId;
 }
