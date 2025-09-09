@@ -329,6 +329,29 @@ export function AgentFieldsForm({
             </div>
           </>
         )}
+        
+        {/* Hardcoded Trigger Selection */}
+        <>
+          <Separator />
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <p className="text-lg font-semibold tracking-tight">
+              Agent Triggers
+            </p>
+            <Controller
+              control={form.control}
+              name="config.triggers"
+              render={({ field: { value, onChange } }) => (
+                <ConfigFieldTriggers
+                  id="triggers"
+                  label="triggers"
+                  agentId={agentId}
+                  value={value}
+                  setValue={onChange}
+                />
+              )}
+            />
+          </div>
+        </>
       </>
     </div>
   );

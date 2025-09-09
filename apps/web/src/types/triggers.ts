@@ -1,10 +1,6 @@
 export interface Trigger {
   /**
-   * The provider ID of the trigger
-   */
-  providerId: string;
-  /**
-   * A unique UUID v4 to identify the trigger by
+   * A unique identifier for the trigger (e.g., "gmail-email-received")
    */
   id: string;
   /**
@@ -27,4 +23,8 @@ export interface Trigger {
    * A JSON schema for the payload of the trigger registration
    */
   payloadSchema: Record<string, any> | null;
+  /**
+   * The output schema defining fields this trigger provides
+   */
+  outputSchema?: Record<string, { type: string; description: string }>;
 }

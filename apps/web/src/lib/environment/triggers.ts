@@ -28,10 +28,10 @@ export function groupUserRegisteredTriggersByProvider(
   const groupedTriggers: Record<string, ListUserTriggersData[]> = {};
 
   triggers.forEach((trigger) => {
-    if (!groupedTriggers[trigger.provider_id]) {
-      groupedTriggers[trigger.provider_id] = [];
+    if (!groupedTriggers[trigger.template_id]) {
+      groupedTriggers[trigger.template_id] = [];
     }
-    groupedTriggers[trigger.provider_id].push(trigger);
+    groupedTriggers[trigger.template_id].push(trigger);
   });
 
   return groupedTriggers;

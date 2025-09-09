@@ -53,6 +53,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
+import { Trigger } from "@/types/triggers";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -1009,13 +1010,17 @@ export function ConfigFieldTriggers({
   const store = useConfigStore();
   const actualAgentId = `${agentId}:triggers`;
   const auth = useAuthContext();
-  const { listUserTriggers } = useTriggers();
+  const { listUserTriggers, listTriggers } = useTriggers();
 
   const [userTriggers, setUserTriggers] = React.useState<
     ListUserTriggersData[]
   >([]);
+  const [triggerTemplates, setTriggerTemplates] = React.useState<Trigger[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  
+  // Field selection state: triggerId -> { fieldName -> boolean }
+  const [fieldSelections, setFieldSelections] = React.useState<Record<string, Record<string, boolean>>>({});
 
   const isExternallyManaged = externalSetValue !== undefined;
 
@@ -1027,17 +1032,26 @@ export function ConfigFieldTriggers({
 
   const selectedTriggers = defaults || [];
 
-  // Fetch user triggers on mount
+  // Fetch user triggers and trigger templates on mount
   React.useEffect(() => {
     if (!auth.session?.accessToken || loading || userTriggers.length > 0)
       return;
 
-    const fetchTriggers = async (accessToken: string) => {
+    const fetchTriggersData = async (accessToken: string) => {
       setLoading(true);
       try {
-        const triggers = await listUserTriggers(accessToken);
-        if (triggers) {
-          setUserTriggers(triggers);
+        // Fetch both user triggers and trigger templates
+        const [userTriggersData, triggerTemplatesData] = await Promise.all([
+          listUserTriggers(accessToken),
+          listTriggers(accessToken)
+        ]);
+        
+        if (userTriggersData) {
+          setUserTriggers(userTriggersData);
+        }
+        
+        if (triggerTemplatesData) {
+          setTriggerTemplates(triggerTemplatesData);
         }
       } catch (error) {
         console.error("Failed to fetch triggers:", error);
@@ -1047,8 +1061,8 @@ export function ConfigFieldTriggers({
       }
     };
 
-    fetchTriggers(auth.session.accessToken);
-  }, [auth.session?.accessToken, listUserTriggers]);
+    fetchTriggersData(auth.session.accessToken);
+  }, [auth.session?.accessToken, listUserTriggers, listTriggers]);
 
   const groupedTriggers = React.useMemo(() => {
     return groupUserRegisteredTriggersByProvider(userTriggers);
@@ -1082,7 +1096,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+            {trigger.template_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -1095,6 +1109,36 @@ export function ConfigFieldTriggers({
         )}
       </div>
     );
+  };
+
+  // Get output schema for a trigger by matching template_id
+  const getOutputSchemaForTrigger = (userTrigger: ListUserTriggersData) => {
+    const template = triggerTemplates.find(t => t.id === userTrigger.template_id);
+    return template?.outputSchema || {};
+  };
+
+  // Handle field selection toggle
+  const handleFieldToggle = (triggerId: string, fieldName: string) => {
+    const newFieldSelections = {
+      ...fieldSelections,
+      [triggerId]: {
+        ...fieldSelections[triggerId],
+        [fieldName]: !fieldSelections[triggerId]?.[fieldName]
+      }
+    };
+    
+    setFieldSelections(newFieldSelections);
+    
+    // Also update the form's fieldSelections
+    if (isExternallyManaged) {
+      // Need to call a parent method to update fieldSelections in the form
+      // For now, we'll store it in localStorage or similar approach
+      const actualFieldSelectionsKey = `${actualAgentId}:fieldSelections`;
+      store.updateConfig(actualFieldSelectionsKey, 'fieldSelections', newFieldSelections);
+    } else {
+      const actualFieldSelectionsKey = `${actualAgentId}:fieldSelections`;
+      store.updateConfig(actualFieldSelectionsKey, 'fieldSelections', newFieldSelections);
+    }
   };
 
   return (
@@ -1171,7 +1215,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+                  {trigger.template_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}
@@ -1181,6 +1225,63 @@ export function ConfigFieldTriggers({
                 </>
               </Badge>
             ))}
+        </div>
+      )}
+
+      {/* Field Selection for Selected Triggers */}
+      {selectedTriggers.length > 0 && (
+        <div className="space-y-4 border-t pt-4">
+          <p className="text-sm font-medium">Field Selection</p>
+          <p className="text-xs text-gray-500">
+            Choose which fields to send to the agent for each trigger.
+          </p>
+          
+          {userTriggers
+            .filter((trigger) => selectedTriggers.includes(trigger.id))
+            .map((trigger) => {
+              const outputSchema = getOutputSchemaForTrigger(trigger);
+              const fields = Object.keys(outputSchema);
+              
+              if (fields.length === 0) return null;
+              
+              return (
+                <div key={trigger.id} className="space-y-2 rounded border p-3">
+                  <p className="text-sm font-medium">
+                    {trigger.provider_id}: {JSON.stringify(trigger.resource)}
+                  </p>
+                  
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {fields.map((fieldName) => {
+                      const field = outputSchema[fieldName];
+                      const isSelected = fieldSelections[trigger.id]?.[fieldName] ?? true; // Default to true
+                      
+                      return (
+                        <div key={fieldName} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`${trigger.id}-${fieldName}`}
+                            checked={isSelected}
+                            onChange={() => handleFieldToggle(trigger.id, fieldName)}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <label
+                            htmlFor={`${trigger.id}-${fieldName}`}
+                            className="text-sm"
+                          >
+                            <span className="font-medium">{fieldName}</span>
+                            {field.description && (
+                              <span className="text-gray-500 block text-xs">
+                                {field.description}
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
         </div>
       )}
 

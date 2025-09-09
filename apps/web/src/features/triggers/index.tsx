@@ -141,7 +141,7 @@ export default function TriggersInterface() {
             trigger={trigger}
             userTriggers={
               groupUserRegisteredTriggersByProvider(userTriggers)?.[
-                trigger.providerId
+                trigger.id
               ] || []
             }
           />

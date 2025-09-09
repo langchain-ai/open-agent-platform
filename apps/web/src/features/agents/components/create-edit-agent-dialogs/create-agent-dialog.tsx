@@ -19,6 +19,7 @@ import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
+import { useConfigStore } from "@/hooks/use-config-store";
 import { FormProvider, useForm } from "react-hook-form";
 import { useAuthContext } from "@/providers/Auth";
 import { useTriggers } from "@/hooks/use-triggers";
@@ -67,6 +68,7 @@ function CreateAgentFormContent(props: {
     subAgentsConfigurations,
     triggersConfigurations,
   } = useAgentConfig();
+  const { configsByAgentId } = useConfigStore();
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (data: {
@@ -120,9 +122,14 @@ function CreateAgentFormContent(props: {
     }
 
     if (config.triggers?.length) {
+      // Get field selections from config store
+      const fieldSelectionsKey = `${props.selectedGraph.assistant_id}:triggers:fieldSelections`;
+      const fieldSelections = configsByAgentId[fieldSelectionsKey]?.fieldSelections;
+      
       const success = await setupAgentTrigger(auth.session.accessToken, {
         selectedTriggerIds: config.triggers,
         agentId: newAgent.assistant_id,
+        fieldSelections: fieldSelections,
       });
 
       if (!success) {
