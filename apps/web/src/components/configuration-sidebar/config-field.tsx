@@ -52,10 +52,7 @@ import { ToolsCombobox } from "@/components/ui/tools-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
-import {
-  useTriggers,
-  ListTriggerRegistrationsData,
-} from "@/hooks/use-triggers";
+import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -1015,7 +1012,7 @@ export function ConfigFieldTriggers({
   const { listUserTriggers } = useTriggers();
 
   const [userTriggers, setUserTriggers] = React.useState<
-    ListTriggerRegistrationsData[]
+    ListUserTriggersData[]
   >([]);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
@@ -1085,7 +1082,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.template_id}:{JSON.stringify(trigger.resource)}
+            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -1174,7 +1171,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.template_id}:{JSON.stringify(trigger.resource)}
+                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}
