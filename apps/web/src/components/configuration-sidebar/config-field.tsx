@@ -52,7 +52,7 @@ import { ToolsCombobox } from "@/components/ui/tools-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { Tool } from "@/types/tool";
 import { getDeployments } from "@/lib/environment/deployments";
-import { useTriggers, ListUserTriggersData } from "@/hooks/use-triggers";
+import { useTriggers, ListTriggerRegistrationsData } from "@/hooks/use-triggers";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/environment/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -1012,7 +1012,7 @@ export function ConfigFieldTriggers({
   const { listUserTriggers } = useTriggers();
 
   const [userTriggers, setUserTriggers] = React.useState<
-    ListUserTriggersData[]
+    ListTriggerRegistrationsData[]
   >([]);
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);

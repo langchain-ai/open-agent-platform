@@ -14,7 +14,7 @@ type RegisterTriggerResponse =
       registered: true;
     };
 
-export interface ListUserTriggersData {
+export interface ListTriggerRegistrationsData {
   id: string;
   user_id: string;
   template_id: string;
@@ -80,9 +80,9 @@ export function useTriggers() {
     return triggers.data;
   };
 
-  const listUserTriggers = async (
+  const listTriggerRegistrations = async (
     accessToken: string,
-  ): Promise<ListUserTriggersData[] | undefined> => {
+  ): Promise<ListTriggerRegistrationsData[] | undefined> => {
     const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
     if (!triggersApiUrl) {
       return;
@@ -218,7 +218,7 @@ export function useTriggers() {
 
   return {
     listTriggers,
-    listUserTriggers,
+    listUserTriggers: listTriggerRegistrations,
     registerTrigger,
     setupAgentTrigger,
     updateAgentTriggers,

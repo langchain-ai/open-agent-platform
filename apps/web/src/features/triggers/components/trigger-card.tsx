@@ -12,15 +12,15 @@ import {
 import { TriggerForm } from "./trigger-form";
 import type { Trigger } from "@/types/triggers";
 import { Zap, ChevronDown } from "lucide-react";
-import { ListUserTriggersData } from "@/hooks/use-triggers";
+import { ListTriggerRegistrationsData } from "@/hooks/use-triggers";
 import { ResourceRenderer } from "./resource-renderer";
 
 interface TriggerCardProps {
   trigger: Trigger;
-  userTriggers: ListUserTriggersData[];
+  userTriggers: ListTriggerRegistrationsData[];
 }
 
-function ConfiguredAccounts(props: { userTriggers: ListUserTriggersData[] }) {
+function ConfiguredAccounts(props: { userTriggers: ListTriggerRegistrationsData[] }) {
   const { userTriggers } = props;
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(false);
 
