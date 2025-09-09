@@ -1085,7 +1085,7 @@ export function ConfigFieldTriggers({
             variant="secondary"
             className="text-xs"
           >
-            {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+            {trigger.template_id}:{JSON.stringify(trigger.resource)}
           </Badge>
         ))}
         {selectedTriggers.length > 2 && (
@@ -1174,7 +1174,7 @@ export function ConfigFieldTriggers({
                 className="flex items-center gap-1 text-xs"
               >
                 <>
-                  {trigger.provider_id}:{JSON.stringify(trigger.resource)}
+                  {trigger.template_id}:{JSON.stringify(trigger.resource)}
                   <TooltipIconButton
                     tooltip="Remove trigger"
                     onClick={() => handleTriggerToggle(trigger.id)}
