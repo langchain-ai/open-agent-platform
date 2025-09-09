@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, AlertCircle, Clock, Loader } from "lucide-react";
+import { Button } from "./ui/button";
 import type { SubAgent } from "../types";
 
 interface SubAgentIndicatorProps {
@@ -11,50 +11,54 @@ interface SubAgentIndicatorProps {
 
 export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
   ({ subAgent, onClick }) => {
-    const getStatusIcon = () => {
-      switch (subAgent.status) {
-        case "completed":
-          return (
-            <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-green-500 dark:text-green-400" />
-          );
-        case "error":
-          return (
-            <AlertCircle className="text-destructive h-3.5 w-3.5 flex-shrink-0" />
-          );
-        case "pending":
-          return (
-            <Loader className="text-primary h-3.5 w-3.5 flex-shrink-0 animate-spin" />
-          );
-        default:
-          return (
-            <Clock className="text-muted-foreground h-3.5 w-3.5 flex-shrink-0" />
-          );
-      }
-    };
-
     return (
-      <button
-        onClick={onClick}
-        className="bg-avatar-bg hover:bg-subagent-hover flex w-full cursor-pointer items-start gap-4 rounded-md !px-6 !py-4 text-left transition-all duration-200 ease-in-out hover:translate-x-0.5 active:translate-x-0"
-        aria-label={`View ${subAgent.name} details`}
+      <div
+        className="bg-card w-fit overflow-hidden rounded-lg"
+        style={{
+          maxWidth: "70vw",
+          border: "none",
+          boxShadow: "none",
+          outline: "none",
+        }}
       >
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-start gap-2">
-            {getStatusIcon()}
-            <span className="text-foreground text-lg font-semibold">
-              {subAgent.subAgentName}
-            </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClick}
+          className="flex w-full items-center justify-between text-left transition-colors duration-200"
+          style={{
+            padding: "0.5rem 1rem",
+            gap: "0.5rem",
+            border: "none",
+            outline: "none",
+            boxShadow: "none",
+          }}
+        >
+          <div
+            className="flex w-full items-center justify-between"
+            style={{ gap: "0.5rem" }}
+          >
+            <div
+              className="flex items-center"
+              style={{ gap: "0.5rem" }}
+            >
+              <span
+                style={{
+                  color: "#3F3F46",
+                  fontFamily: "Inter",
+                  fontSize: "15px",
+                  fontStyle: "normal",
+                  fontWeight: "700",
+                  lineHeight: "140%",
+                  letterSpacing: "-0.6px",
+                }}
+              >
+                {subAgent.subAgentName}
+              </span>
+            </div>
           </div>
-          <p className="text-muted-foreground m-0 line-clamp-2 overflow-hidden text-xs leading-normal">
-            {typeof subAgent.input === "string"
-              ? subAgent.input
-              : subAgent.input.description &&
-                  typeof subAgent.input.description === "string"
-                ? subAgent.input.description
-                : JSON.stringify(subAgent.input)}
-          </p>
-        </div>
-      </button>
+        </Button>
+      </div>
     );
   },
 );

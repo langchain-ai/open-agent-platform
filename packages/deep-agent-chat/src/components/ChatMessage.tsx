@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from "react";
-import { User, Bot } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { SubAgentIndicator } from "./SubAgentIndicator";
 import { ToolCallBox } from "./ToolCallBox";
 import { MarkdownContent } from "./MarkdownContent";
@@ -13,7 +13,6 @@ import { cn } from "../lib/utils";
 interface ChatMessageProps {
   message: Message;
   toolCalls: ToolCall[];
-  showAvatar: boolean;
   onSelectSubAgent: (subAgent: SubAgent | null) => void;
   selectedSubAgent: SubAgent | null;
   onRestartFromAIMessage: (message: Message) => void;
@@ -27,7 +26,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
   ({
     message,
     toolCalls,
-    showAvatar,
     onSelectSubAgent,
     selectedSubAgent,
     onRestartFromAIMessage,
@@ -78,37 +76,44 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     return (
       <div
         className={cn(
-          "flex w-full max-w-full gap-2 overflow-x-hidden",
+          "flex w-full max-w-full overflow-x-hidden",
           isUser && "flex-row-reverse",
         )}
       >
-        <div
-          className={cn(
-            "mt-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-            !showAvatar
-              ? "bg-transparent"
-              : isUser
-                ? "bg-user-message"
-                : "bg-avatar-bg",
-          )}
-        >
-          {showAvatar &&
-            (isUser ? (
-              <User className="h-4 w-4 text-white" />
-            ) : (
-              <Bot className="text-muted-foreground h-4 w-4" />
-            ))}
-        </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
           {(hasContent || debugMode) && (
-            <div className="flex items-end gap-2">
+            <div className={cn("relative flex items-end gap-0")}>
               <div
                 className={cn(
-                  "mt-4 overflow-hidden rounded-lg p-2 break-words",
+                  "mt-4 overflow-hidden break-words",
                   isUser
-                    ? "bg-user-message text-white"
-                    : "border-border bg-surface text-primary border",
+                    ? "font-inter text-black"
+                    : "font-inter p-3 text-black",
                 )}
+                style={
+                  isUser
+                    ? {
+                        borderRadius: "999px",
+                        background: "#F4F3FF",
+                        padding: "12px 16px",
+                        color: "#1A1A1E",
+                        fontFamily: "Inter",
+                        fontSize: "14px",
+                        fontStyle: "normal",
+                        fontWeight: "400",
+                        lineHeight: "150%",
+                      }
+                    : {
+                        borderRadius: "12px",
+                        background: "#F4F4F5",
+                        color: "#1A1A1E",
+                        fontFamily: "Inter",
+                        fontSize: "14px",
+                        fontStyle: "normal",
+                        fontWeight: "400",
+                        lineHeight: "150%",
+                      }
+                }
               >
                 {isUser ? (
                   <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
@@ -122,21 +127,15 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   </p>
                 ) : null}
               </div>
-              <div
-                className={cn(
-                  "relative mt-4 flex-shrink-0",
-                  !isUser && "w-[72px]",
-                )}
-              >
-                {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
-                  <button
-                    onClick={() => onRestartFromAIMessage(message)}
-                    className="text-muted-foreground hover:text-foreground absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap transition-colors duration-200"
-                  >
-                    Regenerate
-                  </button>
-                )}
-              </div>
+              {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
+                <button
+                  onClick={() => onRestartFromAIMessage(message)}
+                  className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
+                  style={{ transform: "scaleX(-1)" }}
+                >
+                  <RotateCcw className="h-3 w-3 text-gray-600" />
+                </button>
+              )}
             </div>
           )}
           {hasToolCalls && (
@@ -169,9 +168,10 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                     {debugMode && subAgent.status === "completed" && (
                       <button
                         onClick={() => onRestartFromSubTask(subAgent.id)}
-                        className="text-muted-foreground hover:text-foreground absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap transition-colors duration-200"
+                        className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
+                        style={{ transform: "scaleX(-1)" }}
                       >
-                        Regenerate
+                        <RotateCcw className="h-3 w-3 text-gray-600" />
                       </button>
                     )}
                   </div>

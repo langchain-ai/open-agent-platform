@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Expand, X, Send, RotateCcw, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import * as Diff from "diff";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { useClients } from "../providers/ClientProvider";
@@ -9,10 +9,10 @@ import { Assistant, type Message } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { prepareOptimizerMessage, formatConversationForLLM } from "../utils";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
-import { TooltipIconButton } from "./ui/tooltip-icon-button";
+// import { Button } from "./ui/button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "./ui/auto-grow-textarea";
+import { ChevronUpCircleIcon } from "./icons/ChevronUpCircle";
 import * as yaml from "js-yaml";
 import { useQueryState } from "nuqs";
 
@@ -51,7 +51,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
   ({
     deepAgentMessages,
     isExpanded,
-    onToggle,
+    onToggle: _onToggle,
     activeAssistant,
     setActiveAssistant,
     setAssistantError,
@@ -400,65 +400,35 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     );
 
     useEffect(() => {
-      if (!isExpanded || !displayMessages.length) return;
+      if (!displayMessages.length) return;
       optimizerMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [displayMessages, isExpanded]);
+    }, [displayMessages]);
 
     return (
       <>
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-t-[10px] transition-all duration-300 ease-in-out",
-            isExpanded ? "h-[400px]" : "h-12",
+            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            isExpanded ? "" : "",
           )}
         >
-          <div className="bg-primary flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">
-            <Button
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              className="flex h-full flex-1 cursor-pointer items-center justify-between bg-transparent px-4 text-sm font-medium text-white/80 transition-colors duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {optimizerClient
-                ? "Deep Agent Optimizer"
-                : "(Disabled) Deep Agent Optimizer"}
-            </Button>
-
-            {isExpanded && displayMessages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClear}
-                className="ml-auto bg-transparent text-white/80 transition-colors duration-200 hover:bg-transparent hover:text-white"
-              >
-                <RotateCcw size={16} />
-              </Button>
-            )}
-            <TooltipIconButton
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              tooltip={
-                !optimizerClient
-                  ? "Set Optimizer Agent Environment Variables in FE Deployment"
-                  : "Expand Optimizer"
-              }
-              className="cursor-pointer bg-transparent px-6 text-white/80 transition-transform duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {isExpanded ? (
-                <X size={16} />
-              ) : (
-                optimizerClient && <Expand size={16} />
-              )}
-            </TooltipIconButton>
+          <div
+            className="flex items-center px-4 py-3"
+            style={{
+              fontFamily:
+                "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans', sans-serif",
+            }}
+          >
+            <span className="text-foreground text-md font-semibold tracking-wide">
+              AGENT CREATOR
+            </span>
           </div>
 
           <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col transition-opacity delay-100 duration-300 ease-in-out",
-              isExpanded ? "opacity-100" : "opacity-0",
-            )}
+            className={cn("flex min-h-0 flex-1 flex-col justify-between", "")}
           >
             <div className="scrollbar-pretty-auto min-h-0 flex-1">
-              <div className="flex flex-col gap-3 bg-inherit p-4">
+              <div className="flex flex-col gap-4 bg-inherit p-4">
                 {displayMessages.map((message, index) => {
                   if (isUserMessage(message)) {
                     return (
@@ -519,8 +489,35 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 <div ref={optimizerMessagesEndRef} />
               </div>
             </div>
+            <div className="px-4 pb-2">
+              <div
+                className="rounded-xl p-4"
+                style={{
+                  background:
+                    "var(--colours-background-bg-secondary, var(--Colours-Background-bg-secondary, #F4F4F5))",
+                  color: "var(--colours-text-text-secondary-700, #3F3F46)",
+                  fontFamily: "Inter",
+                  fontSize: "14px",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  lineHeight: "150%",
+                }}
+              >
+                <p className="m-0">
+                  Update your agent’s goals, tools, instructions, or sub-agents
+                  anytime.
+                </p>
+                <p className="m-0 mt-3">
+                  Just tell me what you’d like to change — for example:
+                </p>
+                <p className="m-0">
+                  ‘Add LinkedIn as a tool’ or ‘Update the agent’s tone to be
+                  more casual.’
+                </p>
+              </div>
+            </div>
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-38 items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary mx-4 mt-auto mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea
@@ -529,20 +526,24 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   setFeedbackInput(e.target.value)
                 }
                 onKeyDown={handleKeyDown}
-                placeholder="Enter your feedback..."
+                placeholder="Make changes to your agent"
                 aria-label="Feedback input"
                 excludeDefaultStyles
                 className="w-full text-sm outline-none"
                 maxRows={6}
               />
-              <Button
+              <button
                 type="submit"
-                size="icon"
-                className="flex-shrink-0"
+                className="h-9 w-9 flex-shrink-0 rounded-full bg-transparent transition-opacity disabled:opacity-50"
                 disabled={isLoading}
+                aria-label="Submit agent changes"
               >
-                <Send size={14} />
-              </Button>
+                <ChevronUpCircleIcon
+                  className="mx-auto my-auto"
+                  width={36}
+                  height={37}
+                />
+              </button>
             </form>
           </div>
         </div>

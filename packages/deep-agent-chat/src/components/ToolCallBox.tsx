@@ -5,11 +5,10 @@ import {
   ChevronDown,
   ChevronRight,
   Terminal,
-  CheckCircle,
   AlertCircle,
-  Loader,
 } from "lucide-react";
 import { Button } from "./ui/button";
+import { ChromeLoader } from "./ChromeLoader";
 import { ToolCall } from "../types";
 
 interface ToolCallBoxProps {
@@ -45,11 +44,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
     const iconStyle = { width: "14px", height: "14px" };
     switch (status) {
       case "completed":
-        return (
-          <CheckCircle
-            style={{ ...iconStyle, color: "var(--color-success)" }}
-          />
-        );
+        return null; // No icon for completed status
       case "error":
         return (
           <AlertCircle
@@ -57,12 +52,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           />
         );
       case "pending":
-        return (
-          <Loader
-            style={{ ...iconStyle, color: "var(--color-primary)" }}
-            className="animate-spin"
-          />
-        );
+        return <ChromeLoader size={14} />;
       default:
         return (
           <Terminal
@@ -87,9 +77,12 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
   return (
     <div
-      className="border-border bg-card w-fit overflow-hidden rounded-lg border-2 shadow-sm"
+      className="bg-card w-fit overflow-hidden rounded-lg"
       style={{
         maxWidth: "70vw",
+        border: "none",
+        boxShadow: "none",
+        outline: "none",
       }}
     >
       <Button
@@ -100,6 +93,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         style={{
           padding: "0.5rem 1rem",
           gap: "0.5rem",
+          border: "none",
+          outline: "none",
+          boxShadow: "none",
         }}
         disabled={!hasContent}
         onMouseEnter={(e) => {
@@ -112,22 +108,34 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         }}
       >
         <div
-          className="flex items-center"
+          className="flex w-full items-center justify-between"
           style={{ gap: "0.5rem" }}
         >
-          {hasContent && isExpanded ? (
+          <div
+            className="flex items-center"
+            style={{ gap: "0.5rem" }}
+          >
+            {statusIcon}
+            <span
+              style={{
+                color: "#3F3F46",
+                fontFamily: "Inter",
+                fontSize: "15px",
+                fontStyle: "normal",
+                fontWeight: "500",
+                lineHeight: "140%",
+                letterSpacing: "-0.6px",
+              }}
+            >
+              {name}
+            </span>
+          </div>
+          {hasContent && (
             <ChevronDown
               size={14}
               className="shrink-0"
             />
-          ) : (
-            <ChevronRight
-              size={14}
-              className="shrink-0"
-            />
           )}
-          {statusIcon}
-          <span className="text-foreground text-sm font-medium">{name}</span>
         </div>
       </Button>
 

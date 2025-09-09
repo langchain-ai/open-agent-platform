@@ -129,7 +129,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
         <div
           className="fixed top-0 right-0 z-50 h-screen"
           style={{
-            width: "20vw",
+            width: "350px",
             animation: "slideIn 300ms ease-out",
           }}
         >

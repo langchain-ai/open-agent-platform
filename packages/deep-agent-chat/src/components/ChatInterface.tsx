@@ -9,22 +9,9 @@ import React, {
   FormEvent,
 } from "react";
 import { Button } from "./ui/button";
-import { Switch } from "./ui/switch";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipProvider,
-  TooltipContent,
-} from "./ui/tooltip";
-import {
-  Send,
-  Bot,
-  LoaderCircle,
-  SquarePen,
-  History,
-  Square,
-} from "lucide-react";
+import { LoaderCircle, Square, ArrowUp } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
+import { AgentGraphVisualization } from "./AgentGraphVisualization";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import type { SubAgent, TodoItem, ToolCall } from "../types";
 import { Assistant, Message } from "@langchain/langgraph-sdk";
@@ -40,9 +27,9 @@ import { useQueryState } from "nuqs";
 
 interface ChatInterfaceProps {
   assistantId: string;
+  activeAssistant?: Assistant | null;
   selectedSubAgent: SubAgent | null;
   onSelectSubAgent: (subAgent: SubAgent | null) => void;
-  onNewThread: () => void;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
   assistantError: string | null;
@@ -55,11 +42,11 @@ interface ChatInterfaceProps {
 export const ChatInterface = React.memo<ChatInterfaceProps>(
   ({
     assistantId,
+    activeAssistant: _activeAssistant,
     selectedSubAgent,
     onSelectSubAgent,
-    onNewThread,
     debugMode,
-    setDebugMode,
+    setDebugMode: _setDebugMode,
     assistantError,
     setAssistantError,
     setActiveAssistant,
@@ -68,6 +55,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
+    const [isWorkflowView, setIsWorkflowView] = useState(false);
 
     const { client } = useClients();
 
@@ -197,15 +185,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       [handleSubmit, submitDisabled],
     );
 
-    const handleNewThread = useCallback(() => {
-      // Cancel any ongoing thread when creating new thread
-      if (isLoading) {
-        stopStream();
-      }
-      setIsThreadHistoryOpen(false);
-      onNewThread();
-    }, [isLoading, stopStream, onNewThread]);
-
     const handleThreadSelect = useCallback(
       (id: string) => {
         setThreadId(id);
@@ -213,10 +192,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       },
       [setThreadId],
     );
-
-    const toggleThreadHistory = useCallback(() => {
-      setIsThreadHistoryOpen((prev) => !prev);
-    }, []);
 
     const handleContinue = useCallback(() => {
       const preparingToCallTaskTool = isPreparingToCallTaskTool(messages);
@@ -259,7 +234,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       [debugMode, runSingleStep, messages, getMessagesMetadata],
     );
 
-    const hasMessages = messages.length > 0;
+    // Reserved: additional UI state
     const processedMessages = useMemo(() => {
       /* 
     1. Loop through all messages
@@ -366,8 +341,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     }, [messages]);
 
     return (
-      <div className="flex h-screen w-full flex-col">
-        <div className="border-border flex shrink-0 items-center justify-between border-b px-6 py-4">
+      <div className="flex h-full w-full flex-col font-sans">
+        {/* <div className="border-border flex shrink-0 items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-2">
             <Bot className="text-primary h-6 w-6" />
             <p className="text-xl font-semibold">Deep Agent</p>
@@ -391,6 +366,45 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               <History size={20} />
             </Button>
           </div>
+        </div> */}
+        <div className="flex w-full justify-center">
+          <div
+            className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border bg-white p-[3px] text-[12px] shadow-sm"
+            style={{
+              borderColor: "var(--Colours-Borders-border-primary, #D1D1D6)",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setIsWorkflowView(false)}
+              className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
+              style={
+                !isWorkflowView
+                  ? {
+                      background:
+                        "var(--colours-background-bg-quaternary, var(--Colours-Background-bg-quaternary, #F4F3FF))",
+                    }
+                  : undefined
+              }
+            >
+              Chat
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsWorkflowView(true)}
+              className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
+              style={
+                isWorkflowView
+                  ? {
+                      background:
+                        "var(--colours-background-bg-quaternary, var(--Colours-Background-bg-quaternary, #F4F3FF))",
+                    }
+                  : undefined
+              }
+            >
+              Workflow
+            </button>
+          </div>
         </div>
         <div className="flex flex-1 overflow-hidden">
           <ThreadHistorySidebar
@@ -399,104 +413,97 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             onThreadSelect={handleThreadSelect}
           />
           <div className="flex flex-1 flex-col overflow-hidden">
-            {!hasMessages && !isLoading && !isLoadingThreadState && (
-              <div className="flex h-full flex-col items-center justify-center p-12 text-center">
-                <Bot
-                  size={48}
-                  className="text-tertiary mb-6"
-                />
-                <h2>Start a conversation or select a thread from history</h2>
-              </div>
-            )}
             {isLoadingThreadState && (
               <div className="absolute top-0 left-0 z-10 flex h-full w-full justify-center pt-[100px]">
                 <LoaderCircle className="text-primary flex h-[50px] w-[50px] animate-spin items-center justify-center" />
               </div>
             )}
-            <div className="flex-1 overflow-y-auto p-6 pb-[50px]">
-              {processedMessages.map((data, index) => (
-                <ChatMessage
-                  key={data.message.id}
-                  message={data.message}
-                  toolCalls={data.toolCalls}
-                  showAvatar={data.showAvatar}
-                  onSelectSubAgent={onSelectSubAgent}
-                  selectedSubAgent={selectedSubAgent}
-                  onRestartFromAIMessage={handleRestartFromAIMessage}
-                  onRestartFromSubTask={handleRestartFromSubTask}
-                  debugMode={debugMode}
-                  isLoading={isLoading}
-                  isLastMessage={index === processedMessages.length - 1}
-                />
-              ))}
-              {isLoading && (
-                <div className="text-primary/50 flex items-center justify-center gap-2 p-4 pt-8">
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  <span>Working...</span>
-                </div>
-              )}
-              {interrupt && debugMode && (
-                <div className="flex w-full max-w-full gap-2">
-                  <div className="mt-4 flex h-8 w-8 shrink-0 items-center justify-center"></div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <Button
-                      onClick={handleContinue}
-                      className="border-success text-success rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-green-500/10 active:scale-95"
-                    >
-                      Continue
-                    </Button>
+            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-4">
+              {!isWorkflowView ? (
+                <>
+                  {processedMessages.map((data, index) => (
+                    <ChatMessage
+                      key={data.message.id}
+                      message={data.message}
+                      toolCalls={data.toolCalls}
+                      onSelectSubAgent={onSelectSubAgent}
+                      selectedSubAgent={selectedSubAgent}
+                      onRestartFromAIMessage={handleRestartFromAIMessage}
+                      onRestartFromSubTask={handleRestartFromSubTask}
+                      debugMode={debugMode}
+                      isLoading={isLoading}
+                      isLastMessage={index === processedMessages.length - 1}
+                    />
+                  ))}
+                  {isLoading && (
+                    <div className="text-primary/50 flex items-center justify-center gap-2 p-4 pt-8">
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      <span>Working...</span>
+                    </div>
+                  )}
+                  {interrupt && debugMode && (
+                    <div className="flex w-full max-w-full gap-2">
+                      <div className="mt-4 flex h-8 w-8 shrink-0 items-center justify-center"></div>
+                      <div className="mt-4 flex items-center gap-2">
+                        <Button
+                          onClick={handleContinue}
+                          className="border-success text-success rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-green-500/10 active:scale-95"
+                        >
+                          Continue
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </>
+              ) : (
+                <div className="flex h-full w-full items-stretch">
+                  <div className="flex h-full w-full flex-1">
+                    <AgentGraphVisualization
+                      configurable={
+                        (getMessagesMetadata(messages[messages.length - 1])
+                          ?.activeAssistant?.config?.configurable as any) || {}
+                      }
+                      name={
+                        getMessagesMetadata(messages[messages.length - 1])
+                          ?.activeAssistant?.name || "Agent"
+                      }
+                    />
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
             </div>
           </div>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          className="border-border focus-within:border-primary mx-auto mb-4 flex w-full max-w-[700px] items-center gap-3 rounded-xl border-2 px-3 py-4 shadow-lg transition-all duration-200 focus-within:shadow-xl"
-        >
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={
-              isLoading || !!interrupt ? "Running..." : "Type your message..."
-            }
-            className="font-inherit text-primary placeholder:text-tertiary h-6 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 text-sm leading-6 outline-none"
-            rows={1}
-          />
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex shrink-0 cursor-pointer items-center gap-1 p-1">
-                  <label
-                    htmlFor="debug-mode"
-                    className="text-primary/50 cursor-pointer text-xs whitespace-nowrap select-none"
-                  >
-                    Debug Mode
-                  </label>
-                  <Switch
-                    id="debug-mode"
-                    checked={debugMode}
-                    onCheckedChange={setDebugMode}
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>Run the agent step-by-step</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Button
-            type={isLoading ? "button" : "submit"}
-            variant={isLoading ? "destructive" : "default"}
-            onClick={isLoading ? stopStream : handleSubmit}
-            disabled={!isLoading && (submitDisabled || !input.trim())}
-            size="icon"
+        {!isWorkflowView && (
+          <form
+            onSubmit={handleSubmit}
+            className="border-border focus-within:border-primary focus-within:ring-primary mx-6 mb-0 flex w-auto items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
           >
-            {isLoading ? <Square size={14} /> : <Send size={16} />}
-          </Button>
-        </form>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={
+                isLoading || !!interrupt
+                  ? "Running..."
+                  : "Write your message..."
+              }
+              className="font-inherit text-primary placeholder:text-tertiary flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm leading-6 outline-none"
+              rows={1}
+            />
+            <Button
+              type={isLoading ? "button" : "submit"}
+              variant="default"
+              onClick={isLoading ? stopStream : handleSubmit}
+              disabled={!isLoading && (submitDisabled || !input.trim())}
+              className="rounded-full p-5"
+            >
+              {isLoading ? <Square size={14} /> : <ArrowUp size={16} />}
+            </Button>
+          </form>
+        )}
       </div>
     );
   },
