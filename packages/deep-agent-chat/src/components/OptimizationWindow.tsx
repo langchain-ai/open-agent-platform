@@ -493,10 +493,10 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               <div
                 className="rounded-xl p-4"
                 style={{
-                  background:
-                    "var(--colours-background-bg-secondary, var(--Colours-Background-bg-secondary, #F4F4F5))",
+                  background: "#F4F4F5",
                   color: "var(--colours-text-text-secondary-700, #3F3F46)",
-                  fontFamily: "Inter",
+                  fontFamily:
+                    'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif',
                   fontSize: "14px",
                   fontStyle: "normal",
                   fontWeight: 400,
