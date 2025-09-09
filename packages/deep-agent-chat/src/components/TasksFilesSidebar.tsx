@@ -26,8 +26,8 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     const [isFileCreationDialogOpen, setIsFileCreationDialogOpen] =
       useState(false);
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
-    const [tasksOpen, setTasksOpen] = useState(true);
-    const [filesOpen, setFilesOpen] = useState(true);
+    const [tasksOpen, setTasksOpen] = useState(false);
+    const [filesOpen, setFilesOpen] = useState(false);
 
     const handleCloseFileDialog = useCallback(() => {
       setIsFileCreationDialogOpen(false);
