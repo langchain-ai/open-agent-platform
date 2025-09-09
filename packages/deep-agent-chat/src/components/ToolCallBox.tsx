@@ -39,7 +39,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
     const iconStyle = { width: "14px", height: "14px" };
     switch (status) {
       case "completed":
-        return null; // No icon for completed status
+        return null;
       case "error":
         return (
           <AlertCircle
@@ -112,9 +112,9 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           >
             {statusIcon}
             <span
+              className="font-sans"
               style={{
                 color: "#3F3F46",
-                fontFamily: "Inter",
                 fontSize: "15px",
                 fontStyle: "normal",
                 fontWeight: "500",

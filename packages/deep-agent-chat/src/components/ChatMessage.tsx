@@ -87,8 +87,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                 className={cn(
                   "mt-4 overflow-hidden break-words",
                   isUser
-                    ? "font-inter text-black"
-                    : "font-inter p-3 text-black",
+                    ? "text-foreground font-sans"
+                    : "text-foreground p-3 font-sans",
                 )}
                 style={
                   isUser
@@ -97,7 +97,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                         background: "#F4F3FF",
                         padding: "12px 16px",
                         color: "#1A1A1E",
-                        fontFamily: "Inter",
                         fontSize: "14px",
                         fontStyle: "normal",
                         fontWeight: "400",
@@ -107,7 +106,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                         borderRadius: "12px",
                         background: "#F4F4F5",
                         color: "#1A1A1E",
-                        fontFamily: "Inter",
                         fontSize: "14px",
                         fontStyle: "normal",
                         fontWeight: "400",

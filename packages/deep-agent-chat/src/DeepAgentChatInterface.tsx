@@ -32,8 +32,6 @@ function DeepAgentChatInterfaceInternal({
   const [assistantError, setAssistantError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
 
-  // Note: new thread handler removed in this view; toggled workflow does not use it
-
   return (
     <ClientProvider
       deploymentUrl={deploymentUrl}

@@ -43,9 +43,9 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
               style={{ gap: "0.5rem" }}
             >
               <span
+                className="font-sans"
                 style={{
                   color: "#3F3F46",
-                  fontFamily: "Inter",
                   fontSize: "15px",
                   fontStyle: "normal",
                   fontWeight: "700",

@@ -438,7 +438,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   {isLoading && (
                     <div className="text-primary/50 flex items-center justify-center gap-2 p-4 pt-8">
                       <LoaderCircle className="h-4 w-4 animate-spin" />
-                      <span>Working...</span>
                     </div>
                   )}
                   {interrupt && debugMode && (
