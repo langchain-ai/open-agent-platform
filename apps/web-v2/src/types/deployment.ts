@@ -22,19 +22,19 @@ export interface Deployment {
    */
   isDefault?: boolean;
   /**
-   * The agents to load for this deployment.
+   * The graphs (agents) to load for this deployment.
    */
-  agents: Agent[];
+  graphs: Graph[];
 }
 
-export interface Agent {
+export interface Graph {
   /**
-   * The ID of the graph this agent is from.
+   * The ID of the graph.
    */
   graphId: string;
   /**
-   * Whether or not this agent is the default agent for this deployment.
-   * This should only be set to true for one agent per deployment.
+   * Whether or not this graph is the default graph for this deployment.
+   * This should only be set to true for one graph per deployment.
    */
   isDefault?: boolean;
 }
