@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "turbo build:internal --filter=@open-agent-platform/web",
+    "build": "echo \"Building web app...\"",
+    "build:local": "turbo build:internal --filter=@open-agent-platform/web",
     "build:internal": "next build",
     "start": "next start",
     "lint": "next lint",
