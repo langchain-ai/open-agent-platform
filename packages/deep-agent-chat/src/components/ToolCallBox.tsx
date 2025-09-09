@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  Terminal,
-  AlertCircle,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, Terminal, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { ChromeLoader } from "./ChromeLoader";
 import { ToolCall } from "../types";
