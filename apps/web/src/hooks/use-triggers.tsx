@@ -8,7 +8,6 @@ type RegisterTriggerResponse =
       auth_required: true;
       auth_url: string;
       auth_id: string;
-      provider: string;
     }
   | {
       success: boolean;
@@ -149,7 +148,6 @@ export function useTriggers() {
     args: {
       selectedTriggerIds: string[];
       agentId: string;
-      fieldSelections?: Record<string, Record<string, boolean>>;
     },
   ): Promise<boolean> => {
     // Link the agent to each selected trigger individually
@@ -161,20 +159,12 @@ export function useTriggers() {
         return false;
       }
 
-      const body: any = {};
-      
-      // Add field selection if provided for this trigger
-      if (args.fieldSelections?.[triggerId]) {
-        body.field_selection = args.fieldSelections[triggerId];
-      }
-
       const response = await fetch(triggerApiUrl, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: Object.keys(body).length > 0 ? JSON.stringify(body) : undefined,
       });
 
       if (!response.ok) {

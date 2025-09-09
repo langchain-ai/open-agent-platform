@@ -122,14 +122,9 @@ function CreateAgentFormContent(props: {
     }
 
     if (config.triggers?.length) {
-      // Get field selections from config store
-      const fieldSelectionsKey = `${props.selectedGraph.assistant_id}:triggers:fieldSelections`;
-      const fieldSelections = configsByAgentId[fieldSelectionsKey]?.fieldSelections;
-      
       const success = await setupAgentTrigger(auth.session.accessToken, {
         selectedTriggerIds: config.triggers,
         agentId: newAgent.assistant_id,
-        fieldSelections: fieldSelections,
       });
 
       if (!success) {

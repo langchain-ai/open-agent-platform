@@ -1019,8 +1019,6 @@ export function ConfigFieldTriggers({
   const [loading, setLoading] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   
-  // Field selection state: triggerId -> { fieldName -> boolean }
-  const [fieldSelections, setFieldSelections] = React.useState<Record<string, Record<string, boolean>>>({});
 
   const isExternallyManaged = externalSetValue !== undefined;
 
@@ -1111,35 +1109,7 @@ export function ConfigFieldTriggers({
     );
   };
 
-  // Get output schema for a trigger by matching template_id
-  const getOutputSchemaForTrigger = (userTrigger: ListUserTriggersData) => {
-    const template = triggerTemplates.find(t => t.id === userTrigger.template_id);
-    return template?.outputSchema || {};
-  };
 
-  // Handle field selection toggle
-  const handleFieldToggle = (triggerId: string, fieldName: string) => {
-    const newFieldSelections = {
-      ...fieldSelections,
-      [triggerId]: {
-        ...fieldSelections[triggerId],
-        [fieldName]: !fieldSelections[triggerId]?.[fieldName]
-      }
-    };
-    
-    setFieldSelections(newFieldSelections);
-    
-    // Also update the form's fieldSelections
-    if (isExternallyManaged) {
-      // Need to call a parent method to update fieldSelections in the form
-      // For now, we'll store it in localStorage or similar approach
-      const actualFieldSelectionsKey = `${actualAgentId}:fieldSelections`;
-      store.updateConfig(actualFieldSelectionsKey, 'fieldSelections', newFieldSelections);
-    } else {
-      const actualFieldSelectionsKey = `${actualAgentId}:fieldSelections`;
-      store.updateConfig(actualFieldSelectionsKey, 'fieldSelections', newFieldSelections);
-    }
-  };
 
   return (
     <div className={cn("w-full space-y-2", className)}>
@@ -1228,62 +1198,6 @@ export function ConfigFieldTriggers({
         </div>
       )}
 
-      {/* Field Selection for Selected Triggers */}
-      {selectedTriggers.length > 0 && (
-        <div className="space-y-4 border-t pt-4">
-          <p className="text-sm font-medium">Field Selection</p>
-          <p className="text-xs text-gray-500">
-            Choose which fields to send to the agent for each trigger.
-          </p>
-          
-          {userTriggers
-            .filter((trigger) => selectedTriggers.includes(trigger.id))
-            .map((trigger) => {
-              const outputSchema = getOutputSchemaForTrigger(trigger);
-              const fields = Object.keys(outputSchema);
-              
-              if (fields.length === 0) return null;
-              
-              return (
-                <div key={trigger.id} className="space-y-2 rounded border p-3">
-                  <p className="text-sm font-medium">
-                    {trigger.provider_id}: {JSON.stringify(trigger.resource)}
-                  </p>
-                  
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {fields.map((fieldName) => {
-                      const field = outputSchema[fieldName];
-                      const isSelected = fieldSelections[trigger.id]?.[fieldName] ?? true; // Default to true
-                      
-                      return (
-                        <div key={fieldName} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`${trigger.id}-${fieldName}`}
-                            checked={isSelected}
-                            onChange={() => handleFieldToggle(trigger.id, fieldName)}
-                            className="h-4 w-4 rounded border-gray-300"
-                          />
-                          <label
-                            htmlFor={`${trigger.id}-${fieldName}`}
-                            className="text-sm"
-                          >
-                            <span className="font-medium">{fieldName}</span>
-                            {field.description && (
-                              <span className="text-gray-500 block text-xs">
-                                {field.description}
-                              </span>
-                            )}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-        </div>
-      )}
 
       <p className="text-xs text-gray-500">
         Select triggers to activate when this agent is used.

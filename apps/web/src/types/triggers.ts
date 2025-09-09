@@ -23,8 +23,4 @@ export interface Trigger {
    * A JSON schema for the payload of the trigger registration
    */
   payloadSchema: Record<string, any> | null;
-  /**
-   * The output schema defining fields this trigger provides
-   */
-  outputSchema?: Record<string, { type: string; description: string }>;
 }
