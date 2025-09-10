@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronUp } from "lucide-react";
 import * as Diff from "diff";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { useClients } from "../providers/ClientProvider";
@@ -9,10 +9,8 @@ import { Assistant, type Message } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { prepareOptimizerMessage, formatConversationForLLM } from "../utils";
 import { cn } from "../lib/utils";
-// import { Button } from "./ui/button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "./ui/auto-grow-textarea";
-import { ChevronUpCircleIcon } from "./icons/ChevronUpCircle";
 import * as yaml from "js-yaml";
 import { useQueryState } from "nuqs";
 
@@ -310,7 +308,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 .replace(/>/g, "&gt;");
               result.push({
                 lineNumber: result.length + 1,
-                oldLine: `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                oldLine: `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
                 newLine: "",
                 hasChanges: true,
               });
@@ -326,7 +324,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               result.push({
                 lineNumber: result.length + 1,
                 oldLine: "",
-                newLine: `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                newLine: `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
                 hasChanges: true,
               });
               newLineIndex++;
@@ -361,14 +359,14 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;");
-                    oldHighlighted += `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    oldHighlighted += `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
                     hasChanges = true;
                   } else if (wordPart.added) {
                     const escapedValue = wordPart.value
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;");
-                    newHighlighted += `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    newHighlighted += `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
                     hasChanges = true;
                   } else {
                     const escapedValue = wordPart.value
@@ -412,13 +410,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
             isExpanded ? "" : "",
           )}
         >
-          <div
-            className="flex items-center px-4 py-3"
-            style={{
-              fontFamily:
-                "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans', sans-serif",
-            }}
-          >
+          <div className="flex items-center px-4 py-3">
             <span className="text-foreground text-md font-semibold tracking-wide">
               AGENT CREATOR
             </span>
@@ -488,19 +480,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               </div>
             </div>
             <div className="px-4 pb-2">
-              <div
-                className="rounded-xl p-4"
-                style={{
-                  background: "#F4F4F5",
-                  color: "var(--colours-text-text-secondary-700, #3F3F46)",
-                  fontFamily:
-                    'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif',
-                  fontSize: "14px",
-                  fontStyle: "normal",
-                  fontWeight: 400,
-                  lineHeight: "150%",
-                }}
-              >
+              <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
                 <p className="m-0">
                   Update your agent’s goals, tools, instructions, or sub-agents
                   anytime.
@@ -536,11 +516,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 disabled={isLoading}
                 aria-label="Submit agent changes"
               >
-                <ChevronUpCircleIcon
-                  className="mx-auto my-auto"
-                  width={36}
-                  height={37}
-                />
+                <ChevronUp className="mx-auto my-auto h-9 w-9" />
               </button>
             </form>
           </div>

@@ -135,7 +135,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                   className="flex w-full flex-col gap-2"
                 >
                   <div className="flex items-end gap-2">
-                    <div className={"w-[calc(100%-100px)]"}>
+                    <div className="w-[calc(100%-100px)]">
                       <SubAgentIndicator
                         subAgent={subAgent}
                         onClick={() => toggleSubAgent(subAgent.id)}
