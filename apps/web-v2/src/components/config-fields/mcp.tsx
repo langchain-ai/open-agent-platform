@@ -30,6 +30,7 @@ const getInterruptConfig = (
     return false;
   }
 
+  // Should always be true in this case
   if (typeof interruptConfig[label] === "boolean") {
     return {
       allow_accept: interruptConfig[label],
