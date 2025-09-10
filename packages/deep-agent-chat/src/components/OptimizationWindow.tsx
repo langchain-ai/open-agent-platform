@@ -102,6 +102,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
         }
         if (isLoading) return;
 
+        // Silent early return if input is empty or only whitespace
+        if (!feedbackInput.trim()) return;
+
         setFeedbackInput("");
         setDisplayMessages((prev) => [
           ...prev,
@@ -479,21 +482,23 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 <div ref={optimizerMessagesEndRef} />
               </div>
             </div>
-            <div className="px-4 pb-2">
-              <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
-                <p className="m-0">
-                  Update your agent’s goals, tools, instructions, or sub-agents
-                  anytime.
-                </p>
-                <p className="m-0 mt-3">
-                  Just tell me what you’d like to change — for example:
-                </p>
-                <p className="m-0">
-                  ‘Add LinkedIn as a tool’ or ‘Update the agent’s tone to be
-                  more casual.’
-                </p>
+            {displayMessages.length === 0 && (
+              <div className="px-4 pb-2">
+                <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
+                  <p className="m-0">
+                    Update your agent's goals, tools, instructions, or
+                    sub-agents anytime.
+                  </p>
+                  <p className="m-0 mt-3">
+                    Just tell me what you'd like to change — for example:
+                  </p>
+                  <p className="m-0">
+                    'Add LinkedIn as a tool' or 'Update the agent's tone to be
+                    more casual.'
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
             <form
               className="border-border focus-within:border-primary focus-within:ring-primary mx-4 mt-auto mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
@@ -512,11 +517,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               />
               <button
                 type="submit"
-                className="h-9 w-9 flex-shrink-0 rounded-full bg-transparent transition-opacity disabled:opacity-50"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white disabled:opacity-50"
                 disabled={isLoading}
                 aria-label="Submit agent changes"
               >
-                <ChevronUp className="mx-auto my-auto h-9 w-9" />
+                <ChevronUp className="h-5 w-5 text-gray-700" />
               </button>
             </form>
           </div>

@@ -59,6 +59,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
+    const [showLoadingSpinner, setShowLoadingSpinner] = useState(false);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
     const isControlledView = typeof view !== "undefined";
@@ -142,6 +143,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       };
       fetchThreadState();
     }, [threadId, client, setTodos, setFiles]);
+
+    // Delay showing the loading spinner to avoid flashes
+    useEffect(() => {
+      let timeoutId: ReturnType<typeof setTimeout>;
+      if (isLoadingThreadState) {
+        timeoutId = setTimeout(() => {
+          setShowLoadingSpinner(true);
+        }, 200); // Show spinner only after 200ms delay
+      } else {
+        setShowLoadingSpinner(false);
+      }
+      return () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
+    }, [isLoadingThreadState]);
 
     const {
       messages,
@@ -419,7 +437,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             onThreadSelect={handleThreadSelect}
           />
           <div className="flex flex-1 flex-col overflow-hidden">
-            {isLoadingThreadState && (
+            {showLoadingSpinner && (
               <div className="absolute top-0 left-0 z-10 flex h-full w-full justify-center pt-[100px]">
                 <LoaderCircle className="text-primary flex h-[50px] w-[50px] animate-spin items-center justify-center" />
               </div>
@@ -498,7 +516,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             />
             <Button
               type={isLoading ? "button" : "submit"}
-              variant="default"
+              variant={isLoading ? "destructive" : "default"}
               onClick={isLoading ? stopStream : handleSubmit}
               disabled={!isLoading && (submitDisabled || !input.trim())}
               className="rounded-full p-5"

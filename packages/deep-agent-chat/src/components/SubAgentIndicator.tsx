@@ -2,16 +2,17 @@
 
 import React from "react";
 import { Button } from "./ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { SubAgent } from "../types";
 
 interface SubAgentIndicatorProps {
   subAgent: SubAgent;
   onClick: () => void;
+  isExpanded?: boolean;
 }
 
 export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
-  ({ subAgent, onClick }) => {
+  ({ subAgent, onClick, isExpanded = true }) => {
     return (
       <div className="bg-card w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none outline-none">
         <Button
@@ -26,10 +27,17 @@ export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
                 {subAgent.subAgentName}
               </span>
             </div>
-            <ChevronDown
-              size={14}
-              className="shrink-0 text-[#70707B]"
-            />
+            {isExpanded ? (
+              <ChevronUp
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ) : (
+              <ChevronDown
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            )}
           </div>
         </Button>
       </div>

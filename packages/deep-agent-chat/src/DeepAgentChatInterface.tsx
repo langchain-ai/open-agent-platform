@@ -9,7 +9,6 @@ import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
-import { useQueryState } from "nuqs";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 function DeepAgentChatInterfaceInternal({
@@ -22,8 +21,6 @@ function DeepAgentChatInterfaceInternal({
   onViewChange,
   hideInternalToggle,
 }: DeepAgentChatConfig) {
-  const [_, __setThreadId] = useQueryState("threadId");
-  // SubAgent panel moved inline; no global selection state needed
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
@@ -71,7 +68,6 @@ function DeepAgentChatInterfaceInternal({
               onViewChange={onViewChange}
               hideInternalToggle={hideInternalToggle}
             />
-            {/* SubAgentPanel removed; details now render inline in ChatMessage */}
           </div>
 
           <TasksFilesSidebar

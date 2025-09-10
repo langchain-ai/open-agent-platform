@@ -139,6 +139,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                       <SubAgentIndicator
                         subAgent={subAgent}
                         onClick={() => toggleSubAgent(subAgent.id)}
+                        isExpanded={isSubAgentExpanded(subAgent.id)}
                       />
                     </div>
                     <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">

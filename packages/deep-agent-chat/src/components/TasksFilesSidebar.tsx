@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useMemo, useCallback, useState } from "react";
+import React, {
+  useMemo,
+  useCallback,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import {
   FileText,
   CheckCircle,
@@ -28,6 +34,27 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
     const [tasksOpen, setTasksOpen] = useState(false);
     const [filesOpen, setFilesOpen] = useState(false);
+
+    // Track previous counts to detect when content goes from empty to having items
+    const prevTodosCount = useRef(todos.length);
+    const prevFilesCount = useRef(Object.keys(files).length);
+
+    // Auto-expand when todos go from empty to having content
+    useEffect(() => {
+      if (prevTodosCount.current === 0 && todos.length > 0) {
+        setTasksOpen(true);
+      }
+      prevTodosCount.current = todos.length;
+    }, [todos.length]);
+
+    // Auto-expand when files go from empty to having content
+    useEffect(() => {
+      const filesCount = Object.keys(files).length;
+      if (prevFilesCount.current === 0 && filesCount > 0) {
+        setFilesOpen(true);
+      }
+      prevFilesCount.current = filesCount;
+    }, [Object.keys(files).length]);
 
     const handleCloseFileDialog = useCallback(() => {
       setIsFileCreationDialogOpen(false);
@@ -92,7 +119,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
             <div className="bg-muted/30 rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
                 <span className="text-muted-foreground text-xs font-semibold tracking-wide">
-                  AGENT TASKS AND FILES
+                  AGENT TASKS
                 </span>
                 <button
                   onClick={() => setTasksOpen((v) => !v)}
@@ -109,7 +136,11 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                 <div className="px-3 pb-2">
                   <ScrollArea className="h-full">
                     {todos.length === 0 ? (
-                      <div className="flex h-full items-center justify-center p-4 text-center"></div>
+                      <div className="flex h-full items-center justify-center p-4 text-center">
+                        <p className="text-muted-foreground text-xs">
+                          No tasks created yet
+                        </p>
+                      </div>
                     ) : (
                       <div className="ml-1 p-0.5">
                         {groupedTodos.in_progress.length > 0 && (
@@ -207,7 +238,11 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                   </div>
                   <ScrollArea className="h-full">
                     {Object.keys(files).length === 0 ? (
-                      <div className="flex h-full items-center justify-center p-4 text-center"></div>
+                      <div className="flex h-full items-center justify-center p-4 text-center">
+                        <p className="text-muted-foreground text-xs">
+                          No files created yet
+                        </p>
+                      </div>
                     ) : (
                       <div className="p-1">
                         {Object.keys(files).map((file) => (

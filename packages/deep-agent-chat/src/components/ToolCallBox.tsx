@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   ChevronDown,
-  ChevronRight,
+  ChevronUp,
   Terminal,
   AlertCircle,
   Loader2,
@@ -97,12 +97,18 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
               {name}
             </span>
           </div>
-          {hasContent && (
-            <ChevronDown
-              size={14}
-              className="shrink-0 text-[#70707B]"
-            />
-          )}
+          {hasContent &&
+            (isExpanded ? (
+              <ChevronUp
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ) : (
+              <ChevronDown
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ))}
         </div>
       </Button>
 
@@ -125,12 +131,12 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                     >
                       <span className="font-mono">{key}</span>
                       {expandedArgs[key] ? (
-                        <ChevronDown
+                        <ChevronUp
                           size={12}
                           className="text-[#70707B]"
                         />
                       ) : (
-                        <ChevronRight
+                        <ChevronDown
                           size={12}
                           className="text-[#70707B]"
                         />
