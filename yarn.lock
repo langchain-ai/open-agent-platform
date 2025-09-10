@@ -2387,6 +2387,7 @@ __metadata:
     jsonwebtoken: ^9.0.2
     katex: latest
     langgraph-nextjs-api-passthrough: ^0.1.0
+    launchdarkly-react-client-sdk: ^3.8.1
     lodash: ^4.17.21
     lucide-react: ^0.488.0
     next: ^15.3.1
