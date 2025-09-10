@@ -25,9 +25,7 @@ export default function LaunchDarklyProvider({
 
   const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID;
   if (!clientSideID) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_LD_CLIENT_SIDE_ID.",
-    );
+    throw new Error("Missing NEXT_PUBLIC_LD_CLIENT_SIDE_ID.");
   }
 
   return (
