@@ -27,7 +27,7 @@ import _ from "lodash";
 import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 import { AgentFormValues } from "./types";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
-import { DEFAULT_FORM_CONFIG } from "./utils";
+import { DEFAULT_FORM_CONFIG, prepareConfigForSaving } from "./utils";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -92,7 +92,7 @@ function CreateAgentFormContent(props: {
       {
         name,
         description,
-        config,
+        config: prepareConfigForSaving(config),
       },
     );
 
