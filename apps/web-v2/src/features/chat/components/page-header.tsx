@@ -35,13 +35,15 @@ export function PageHeader({
 
   return (
     <header className="relative flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-      <div className="flex items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-        <span className="text-muted-foreground">›</span>
-        <span className="text-sm font-medium">
-          {assistantName || "main agent"}
-        </span>
-      </div>
+      {showToggle && (
+        <div className="flex items-center gap-2 px-4">
+          <SidebarTrigger className="-ml-1" />
+          <span className="text-muted-foreground">›</span>
+          <span className="text-sm font-medium">
+            {assistantName || "main agent"}
+          </span>
+        </div>
+      )}
       {showToggle && (
         <div className="absolute left-1/2 -translate-x-1/2">
           <div className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border border-[#D1D1D6] bg-white p-[3px] text-[12px] shadow-sm">
