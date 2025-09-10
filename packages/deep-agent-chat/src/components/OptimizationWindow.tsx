@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Expand, X, Send, RotateCcw, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronUp } from "lucide-react";
 import * as Diff from "diff";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { useClients } from "../providers/ClientProvider";
@@ -9,8 +9,6 @@ import { Assistant, type Message } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { prepareOptimizerMessage, formatConversationForLLM } from "../utils";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
-import { TooltipIconButton } from "./ui/tooltip-icon-button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "./ui/auto-grow-textarea";
 import * as yaml from "js-yaml";
@@ -51,7 +49,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
   ({
     deepAgentMessages,
     isExpanded,
-    onToggle,
+    onToggle: _onToggle,
     activeAssistant,
     setActiveAssistant,
     setAssistantError,
@@ -103,6 +101,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           e.preventDefault();
         }
         if (isLoading) return;
+
+        // Silent early return if input is empty or only whitespace
+        if (!feedbackInput.trim()) return;
 
         setFeedbackInput("");
         setDisplayMessages((prev) => [
@@ -310,7 +311,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 .replace(/>/g, "&gt;");
               result.push({
                 lineNumber: result.length + 1,
-                oldLine: `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                oldLine: `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
                 newLine: "",
                 hasChanges: true,
               });
@@ -326,7 +327,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               result.push({
                 lineNumber: result.length + 1,
                 oldLine: "",
-                newLine: `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedLine}</span>`,
+                newLine: `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
                 hasChanges: true,
               });
               newLineIndex++;
@@ -361,14 +362,14 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;");
-                    oldHighlighted += `<span style="background-color: rgba(248, 81, 73, 0.1); color: #dc2626; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    oldHighlighted += `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
                     hasChanges = true;
                   } else if (wordPart.added) {
                     const escapedValue = wordPart.value
                       .replace(/&/g, "&amp;")
                       .replace(/</g, "&lt;")
                       .replace(/>/g, "&gt;");
-                    newHighlighted += `<span style="background-color: rgba(46, 160, 67, 0.1); color: #16a34a; padding: 2px 4px; border-radius: 3px; font-weight: 600;">${escapedValue}</span>`;
+                    newHighlighted += `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
                     hasChanges = true;
                   } else {
                     const escapedValue = wordPart.value
@@ -400,65 +401,27 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     );
 
     useEffect(() => {
-      if (!isExpanded || !displayMessages.length) return;
+      if (!displayMessages.length) return;
       optimizerMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [displayMessages, isExpanded]);
+    }, [displayMessages]);
 
     return (
       <>
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-t-[10px] transition-all duration-300 ease-in-out",
-            isExpanded ? "h-[400px]" : "h-12",
+            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            isExpanded ? "" : "",
           )}
         >
-          <div className="bg-primary flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">
-            <Button
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              className="flex h-full flex-1 cursor-pointer items-center justify-between bg-transparent px-4 text-sm font-medium text-white/80 transition-colors duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {optimizerClient
-                ? "Deep Agent Optimizer"
-                : "(Disabled) Deep Agent Optimizer"}
-            </Button>
-
-            {isExpanded && displayMessages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClear}
-                className="ml-auto bg-transparent text-white/80 transition-colors duration-200 hover:bg-transparent hover:text-white"
-              >
-                <RotateCcw size={16} />
-              </Button>
-            )}
-            <TooltipIconButton
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              tooltip={
-                !optimizerClient
-                  ? "Set Optimizer Agent Environment Variables in FE Deployment"
-                  : "Expand Optimizer"
-              }
-              className="cursor-pointer bg-transparent px-6 text-white/80 transition-transform duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {isExpanded ? (
-                <X size={16} />
-              ) : (
-                optimizerClient && <Expand size={16} />
-              )}
-            </TooltipIconButton>
+          <div className="flex items-center px-4 py-3">
+            <span className="text-foreground text-md font-semibold tracking-wide">
+              AGENT CREATOR
+            </span>
           </div>
 
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col transition-opacity delay-100 duration-300 ease-in-out",
-              isExpanded ? "opacity-100" : "opacity-0",
-            )}
-          >
+          <div className="flex min-h-0 flex-1 flex-col justify-between">
             <div className="scrollbar-pretty-auto min-h-0 flex-1">
-              <div className="flex flex-col gap-3 bg-inherit p-4">
+              <div className="flex flex-col gap-4 bg-inherit p-4">
                 {displayMessages.map((message, index) => {
                   if (isUserMessage(message)) {
                     return (
@@ -519,8 +482,25 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 <div ref={optimizerMessagesEndRef} />
               </div>
             </div>
+            {displayMessages.length === 0 && (
+              <div className="px-4 pb-2">
+                <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
+                  <p className="m-0">
+                    Update your agent's goals, tools, instructions, or
+                    sub-agents anytime.
+                  </p>
+                  <p className="m-0 mt-3">
+                    Just tell me what you'd like to change — for example:
+                  </p>
+                  <p className="m-0">
+                    'Add LinkedIn as a tool' or 'Update the agent's tone to be
+                    more casual.'
+                  </p>
+                </div>
+              </div>
+            )}
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-38 items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary mx-4 mt-auto mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea
@@ -529,20 +509,20 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   setFeedbackInput(e.target.value)
                 }
                 onKeyDown={handleKeyDown}
-                placeholder="Enter your feedback..."
+                placeholder="Make changes to your agent"
                 aria-label="Feedback input"
                 excludeDefaultStyles
                 className="w-full text-sm outline-none"
                 maxRows={6}
               />
-              <Button
+              <button
                 type="submit"
-                size="icon"
-                className="flex-shrink-0"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white disabled:opacity-50"
                 disabled={isLoading}
+                aria-label="Submit agent changes"
               >
-                <Send size={14} />
-              </Button>
+                <ChevronUp className="h-5 w-5 text-gray-700" />
+              </button>
             </form>
           </div>
         </div>

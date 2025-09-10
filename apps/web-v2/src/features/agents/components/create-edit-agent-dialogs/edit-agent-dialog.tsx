@@ -21,7 +21,7 @@ import { useTriggers } from "@/hooks/use-triggers";
 import { useMCPContext } from "@/providers/MCP";
 import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
-import { getDefaultsFromAgent } from "./utils";
+import { getDefaultsFromAgent, prepareConfigForSaving } from "./utils";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 
 interface EditAgentDialogProps {
@@ -115,7 +115,10 @@ function EditAgentDialogContent({
     const updatedAgent = await updateAgent(
       agent.assistant_id,
       agent.deploymentId,
-      data,
+      {
+        ...data,
+        config: prepareConfigForSaving(data.config),
+      },
     );
 
     if (!updatedAgent) {

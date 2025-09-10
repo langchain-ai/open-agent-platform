@@ -20,16 +20,17 @@ import { MCPConfig } from "@/types/deep-agent";
 const getInterruptConfig = (
   interruptConfig: Record<string, boolean | HumanInterruptConfig> | undefined,
   label: string,
-): HumanInterruptConfig => {
-  if (!interruptConfig || !(label in interruptConfig)) {
-    return {
-      allow_accept: false,
-      allow_ignore: false,
-      allow_respond: false,
-      allow_edit: false,
-    };
+): HumanInterruptConfig | false => {
+  // if there isn't an interrupt config, the tool doesn't exist yet, or it's set to false, return false.
+  if (
+    !interruptConfig ||
+    !(label in interruptConfig) ||
+    (typeof interruptConfig[label] === "boolean" && !interruptConfig[label])
+  ) {
+    return false;
   }
 
+  // Should always be true in this case
   if (typeof interruptConfig[label] === "boolean") {
     return {
       allow_accept: interruptConfig[label],
@@ -79,13 +80,17 @@ export function ConfigFieldTool({
     setValue(newValue);
   };
 
-  const handleInterruptConfigChange = (newConfig: HumanInterruptConfig) => {
+  const handleInterruptConfigChange = (
+    newConfig: HumanInterruptConfig | boolean,
+  ) => {
+    const allSetToFalse =
+      !newConfig || Object.values(newConfig).every((v) => !v);
     const newValue = {
       ...value,
       // Remove duplicates
       interrupt_config: {
         ...interruptConfig,
-        [label]: newConfig,
+        [label]: allSetToFalse ? false : newConfig,
       },
     };
 
