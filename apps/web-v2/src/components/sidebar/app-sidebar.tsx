@@ -9,7 +9,6 @@ import {
   Inbox,
   Webhook,
 } from "lucide-react";
-import { useFlags } from "launchdarkly-react-client-sdk";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -44,6 +43,7 @@ const data = {
       url: "/inbox",
       icon: Inbox,
     },
+
     {
       title: "Triggers",
       url: "/triggers",
@@ -58,16 +58,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { showTriggersTab } = useFlags();
-
-  const filteredNavItems = React.useMemo(() => {
-    return data.navMain.filter((item) => {
-      if (item.title === "Triggers") {
-        return showTriggersTab;
-      }
-      return true;
-    });
-  }, [showTriggersTab]);
+  const filteredNavItems = React.useMemo(() => data.navMain, []);
 
   return (
     <Sidebar

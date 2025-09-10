@@ -19,6 +19,7 @@ import type { Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
+import { useFlags } from "launchdarkly-react-client-sdk";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -28,8 +29,19 @@ export default function TriggersInterface() {
   >([]);
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
+  const { showTriggersTab } = useFlags<{ showTriggersTab?: boolean }>();
 
   useEffect(() => {
+    // Wait for flag to resolve; show loader meanwhile
+    if (showTriggersTab === false) {
+      // Do not fetch when disabled
+      setTriggersLoading(false);
+      return;
+    }
+    if (showTriggersTab === undefined) {
+      // keep loading while flag initializes
+      return;
+    }
     if (!auth.session?.accessToken) return;
     setTriggersLoading(true);
     listTriggers(auth.session?.accessToken)
@@ -56,7 +68,7 @@ export default function TriggersInterface() {
       .finally(() => {
         setTriggersLoading(false);
       });
-  }, [auth.session?.accessToken]);
+  }, [auth.session?.accessToken, showTriggersTab]);
 
   if (triggersLoading) {
     return (
@@ -81,6 +93,35 @@ export default function TriggersInterface() {
           <CardContent>
             <Loading label="Loading triggers" />
           </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Feature disabled: show coming soon (tab still visible per UX)
+  if (showTriggersTab === false) {
+    return (
+      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+            <p className="text-muted-foreground">
+              Set up triggers to automatically activate your agents
+            </p>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Coming soon
+            </CardTitle>
+            <CardDescription>
+              This feature is under development and will be released. Stay
+              tuned!
+            </CardDescription>
+          </CardHeader>
         </Card>
       </div>
     );
