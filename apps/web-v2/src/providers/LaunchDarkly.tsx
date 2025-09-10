@@ -25,7 +25,7 @@ export default function LaunchDarklyProvider({
 
   return (
     <LDProvider
-      key={user?.id || "anonymous"} // Force re-mount when user changes
+      key={user?.id}
       clientSideID={process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID!}
       context={context}
       reactOptions={{ useCamelCaseFlagKeys: true }}
