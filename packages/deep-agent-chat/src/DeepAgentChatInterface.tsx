@@ -1,15 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
-import { SubAgentPanel } from "./components/SubAgentPanel";
-import type { SubAgent, TodoItem } from "./types";
+import { OptimizationSidebar } from "./components/OptimizationSidebar";
+import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
-import { useQueryState } from "nuqs";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 function DeepAgentChatInterfaceInternal({
@@ -18,15 +17,10 @@ function DeepAgentChatInterfaceInternal({
   accessToken,
   optimizerDeploymentUrl,
   optimizerAccessToken,
-  mode = "standalone",
-  // Optional OAP-specific components (injected by OAP wrapper)
-  SidebarTrigger,
-  DeepAgentChatBreadcrumb,
+  view,
+  onViewChange,
+  hideInternalToggle,
 }: DeepAgentChatConfig) {
-  const [_, setThreadId] = useQueryState("threadId");
-  const [selectedSubAgent, setSelectedSubAgent] = useState<SubAgent | null>(
-    null,
-  );
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
@@ -34,13 +28,6 @@ function DeepAgentChatInterfaceInternal({
   );
   const [assistantError, setAssistantError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
-
-  const onNewThread = useCallback(() => {
-    setThreadId(null);
-    setSelectedSubAgent(null);
-    setTodos([]);
-    setFiles({});
-  }, [setThreadId]);
 
   return (
     <ClientProvider
@@ -56,30 +43,20 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={activeAssistant}
         assistantId={assistantId}
       >
-        <div className="absolute inset-0 flex h-screen overflow-hidden">
-          <div className="flex h-full flex-col">
-            {mode === "oap" && (
-              <header className="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex items-center gap-2 px-4">
-                  {SidebarTrigger && <SidebarTrigger className="-ml-1" />}
-                  {DeepAgentChatBreadcrumb && <DeepAgentChatBreadcrumb />}
-                </div>
-              </header>
-            )}
-            <TasksFilesSidebar
-              todos={todos}
-              files={files}
+        <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
+          <div className="border-border flex h-full flex-col rounded-xl border bg-white p-3">
+            <OptimizationSidebar
               activeAssistant={activeAssistant}
-              setFiles={setFiles}
               setActiveAssistant={setActiveAssistant}
               setAssistantError={setAssistantError}
               assistantError={assistantError}
             />
           </div>
 
-          <div className="flex-1">
+          <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white p-3">
             <ChatInterface
               assistantId={assistantId}
+              activeAssistant={activeAssistant}
               debugMode={debugMode}
               setDebugMode={setDebugMode}
               assistantError={assistantError}
@@ -87,17 +64,17 @@ function DeepAgentChatInterfaceInternal({
               setActiveAssistant={setActiveAssistant}
               setTodos={setTodos}
               setFiles={setFiles}
-              selectedSubAgent={selectedSubAgent}
-              onSelectSubAgent={setSelectedSubAgent}
-              onNewThread={onNewThread}
+              view={view}
+              onViewChange={onViewChange}
+              hideInternalToggle={hideInternalToggle}
             />
-            {selectedSubAgent && (
-              <SubAgentPanel
-                subAgent={selectedSubAgent}
-                onClose={() => setSelectedSubAgent(null)}
-              />
-            )}
           </div>
+
+          <TasksFilesSidebar
+            todos={todos}
+            files={files}
+            setFiles={setFiles}
+          />
         </div>
       </ChatProvider>
     </ClientProvider>

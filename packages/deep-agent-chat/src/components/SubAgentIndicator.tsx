@@ -1,60 +1,46 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, AlertCircle, Clock, Loader } from "lucide-react";
+import { Button } from "./ui/button";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { SubAgent } from "../types";
 
 interface SubAgentIndicatorProps {
   subAgent: SubAgent;
   onClick: () => void;
+  isExpanded?: boolean;
 }
 
 export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
-  ({ subAgent, onClick }) => {
-    const getStatusIcon = () => {
-      switch (subAgent.status) {
-        case "completed":
-          return (
-            <CheckCircle className="h-3.5 w-3.5 flex-shrink-0 text-[#10b981] dark:text-[#34d399]" />
-          );
-        case "error":
-          return (
-            <AlertCircle className="h-3.5 w-3.5 flex-shrink-0 text-[#ef4444] dark:text-[#f87171]" />
-          );
-        case "pending":
-          return (
-            <Loader className="h-3.5 w-3.5 flex-shrink-0 animate-spin text-[#1c3c3c] dark:text-[#2dd4bf]" />
-          );
-        default:
-          return (
-            <Clock className="h-3.5 w-3.5 flex-shrink-0 text-[#9ca3af] dark:text-[#6b7280]" />
-          );
-      }
-    };
-
+  ({ subAgent, onClick, isExpanded = true }) => {
     return (
-      <button
-        onClick={onClick}
-        className="bg-avatar-bg hover:bg-subagent-hover flex w-full cursor-pointer items-start gap-4 rounded-md !px-6 !py-4 text-left transition-all duration-200 ease-in-out hover:translate-x-0.5 active:translate-x-0"
-        aria-label={`View ${subAgent.name} details`}
-      >
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-start gap-2">
-            {getStatusIcon()}
-            <span className="text-lg font-semibold text-[#111827] dark:text-[#f3f4f6]">
-              {subAgent.subAgentName}
-            </span>
+      <div className="bg-card w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none outline-none">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClick}
+          className="flex w-full items-center justify-between gap-2 border-none px-4 py-2 text-left shadow-none transition-colors duration-200 outline-none"
+        >
+          <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-sans text-[15px] leading-[140%] font-bold tracking-[-0.6px] text-[#3F3F46]">
+                {subAgent.subAgentName}
+              </span>
+            </div>
+            {isExpanded ? (
+              <ChevronUp
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ) : (
+              <ChevronDown
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            )}
           </div>
-          <p className="m-0 line-clamp-2 overflow-hidden text-xs leading-normal text-[#6b7280] dark:text-[#9ca3af]">
-            {typeof subAgent.input === "string"
-              ? subAgent.input
-              : subAgent.input.description &&
-                  typeof subAgent.input.description === "string"
-                ? subAgent.input.description
-                : JSON.stringify(subAgent.input)}
-          </p>
-        </div>
-      </button>
+        </Button>
+      </div>
     );
   },
 );

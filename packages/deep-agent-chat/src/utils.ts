@@ -1,3 +1,5 @@
+"use client";
+
 import { Deployment } from "./types";
 import { Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { ToolCall } from "@langchain/core/messages/tool";
@@ -147,4 +149,40 @@ export function formatMessageForLLM(message: Message): string {
 export function formatConversationForLLM(messages: Message[]): string {
   const formattedMessages = messages.map(formatMessageForLLM);
   return formattedMessages.join("\n\n---\n\n");
+}
+
+/**
+ * Extracts displayable content from a subAgent input or output object
+ * @param data - The input or output data object
+ * @returns A string representation suitable for display
+ */
+export function extractSubAgentContent(data: unknown): string {
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (data && typeof data === "object") {
+    const dataObj = data as Record<string, unknown>;
+
+    // Try to extract description first
+    if (dataObj.description && typeof dataObj.description === "string") {
+      return dataObj.description;
+    }
+
+    // Then try prompt
+    if (dataObj.prompt && typeof dataObj.prompt === "string") {
+      return dataObj.prompt;
+    }
+
+    // For output objects, try result
+    if (dataObj.result && typeof dataObj.result === "string") {
+      return dataObj.result;
+    }
+
+    // Fallback to JSON stringification
+    return JSON.stringify(data, null, 2);
+  }
+
+  // Fallback for any other type
+  return JSON.stringify(data, null, 2);
 }

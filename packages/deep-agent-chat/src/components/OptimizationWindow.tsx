@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Expand, X, Send, RotateCcw, Loader2 } from "lucide-react";
+import { X, Loader2, ChevronUp } from "lucide-react";
 import * as Diff from "diff";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { useClients } from "../providers/ClientProvider";
@@ -9,8 +9,6 @@ import { Assistant, type Message } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { prepareOptimizerMessage, formatConversationForLLM } from "../utils";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
-import { TooltipIconButton } from "./ui/tooltip-icon-button";
 import { toast } from "sonner";
 import AutoGrowTextarea from "./ui/auto-grow-textarea";
 import * as yaml from "js-yaml";
@@ -51,7 +49,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
   ({
     deepAgentMessages,
     isExpanded,
-    onToggle,
+    onToggle: _onToggle,
     activeAssistant,
     setActiveAssistant,
     setAssistantError,
@@ -103,6 +101,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           e.preventDefault();
         }
         if (isLoading) return;
+
+        // Silent early return if input is empty or only whitespace
+        if (!feedbackInput.trim()) return;
 
         setFeedbackInput("");
         setDisplayMessages((prev) => [
@@ -277,97 +278,122 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
           sortKeys: true,
         });
 
-        const oldLines = oldStr.split("\n");
-        const newLines = newStr.split("\n");
+        const oldLines = oldStr
+          .split("\n")
+          .filter((line, i, arr) => i < arr.length - 1 || line !== "");
+        const newLines = newStr
+          .split("\n")
+          .filter((line, i, arr) => i < arr.length - 1 || line !== "");
 
-        // Use diff library to get line-level changes
+        // Get line-level diff
         const lineDiff = Diff.diffLines(oldStr, newStr);
 
-        // Build arrays tracking which lines were added/removed/unchanged
-        const oldLineStatuses: ("removed" | "unchanged")[] = [];
-        const newLineStatuses: ("added" | "unchanged")[] = [];
+        const result: {
+          lineNumber: number;
+          oldLine: string;
+          newLine: string;
+          hasChanges: boolean;
+        }[] = [];
+        let oldLineIndex = 0;
+        let newLineIndex = 0;
 
         lineDiff.forEach((part) => {
-          const lines = part.value.split("\n").filter((line) => line !== "");
+          const lines = part.value
+            .split("\n")
+            .filter((line, i, arr) => i < arr.length - 1 || line !== "");
+
           if (part.removed) {
-            oldLineStatuses.push(...lines.map(() => "removed" as const));
+            // These lines exist only in the old version
+            lines.forEach((line) => {
+              const escapedLine = line
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
+                newLine: "",
+                hasChanges: true,
+              });
+              oldLineIndex++;
+            });
           } else if (part.added) {
-            newLineStatuses.push(...lines.map(() => "added" as const));
+            // These lines exist only in the new version
+            lines.forEach((line) => {
+              const escapedLine = line
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: "",
+                newLine: `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedLine}</span>`,
+                hasChanges: true,
+              });
+              newLineIndex++;
+            });
           } else {
-            oldLineStatuses.push(...lines.map(() => "unchanged" as const));
-            newLineStatuses.push(...lines.map(() => "unchanged" as const));
+            // These lines are unchanged, but we still want to check for word-level differences
+            lines.forEach((line) => {
+              const oldLine = oldLines[oldLineIndex] || line;
+              const newLine = newLines[newLineIndex] || line;
+
+              let oldHighlighted = oldLine
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              let newHighlighted = newLine
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+              let hasChanges = false;
+
+              // Check if the lines are actually different (they should be the same in unchanged sections)
+              if (oldLine !== newLine) {
+                // Apply word-level diff for modified lines
+                const wordDiff = Diff.diffWords(oldLine, newLine);
+
+                oldHighlighted = "";
+                newHighlighted = "";
+
+                wordDiff.forEach((wordPart) => {
+                  if (wordPart.removed) {
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
+                    oldHighlighted += `<span class="bg-red-50 text-red-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
+                    hasChanges = true;
+                  } else if (wordPart.added) {
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
+                    newHighlighted += `<span class="bg-green-50 text-green-600 px-1 py-0.5 rounded font-semibold">${escapedValue}</span>`;
+                    hasChanges = true;
+                  } else {
+                    const escapedValue = wordPart.value
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;");
+                    oldHighlighted += escapedValue;
+                    newHighlighted += escapedValue;
+                  }
+                });
+              }
+
+              result.push({
+                lineNumber: result.length + 1,
+                oldLine: oldHighlighted,
+                newLine: newHighlighted,
+                hasChanges,
+              });
+
+              oldLineIndex++;
+              newLineIndex++;
+            });
           }
         });
-
-        // Create aligned arrays for side-by-side display
-        const result = [];
-        let oldIndex = 0;
-        let newIndex = 0;
-
-        while (oldIndex < oldLines.length || newIndex < newLines.length) {
-          const oldLine = oldLines[oldIndex] || "";
-          const newLine = newLines[newIndex] || "";
-          const oldStatus = oldLineStatuses[oldIndex] || "unchanged";
-          const newStatus = newLineStatuses[newIndex] || "unchanged";
-
-          let oldHighlighted = oldLine;
-          let newHighlighted = newLine;
-          let hasChanges = false;
-
-          // Handle removed lines
-          if (oldStatus === "removed" && newStatus !== "added") {
-            oldHighlighted = `<span class="word-removed">${oldLine}</span>`;
-            newHighlighted = "";
-            hasChanges = true;
-            oldIndex++;
-          }
-          // Handle added lines
-          else if (newStatus === "added" && oldStatus !== "removed") {
-            oldHighlighted = "";
-            newHighlighted = `<span class="word-added">${newLine}</span>`;
-            hasChanges = true;
-            newIndex++;
-          }
-          // Handle changed lines (both removed and added at same position)
-          else if (oldStatus === "removed" && newStatus === "added") {
-            // For changed lines, highlight word-level differences
-            const wordDiff = Diff.diffWords(oldLine.trim(), newLine.trim());
-
-            // Preserve indentation
-            const oldIndent = oldLine.match(/^(\s*)/)?.[1] || "";
-            const newIndent = newLine.match(/^(\s*)/)?.[1] || "";
-
-            oldHighlighted = oldIndent;
-            newHighlighted = newIndent;
-
-            wordDiff.forEach((part) => {
-              if (part.removed) {
-                oldHighlighted += `<span class="word-removed">${part.value}</span>`;
-              } else if (part.added) {
-                newHighlighted += `<span class="word-added">${part.value}</span>`;
-              } else {
-                oldHighlighted += part.value;
-                newHighlighted += part.value;
-              }
-            });
-
-            hasChanges = true;
-            oldIndex++;
-            newIndex++;
-          }
-          // Handle unchanged lines
-          else {
-            oldIndex++;
-            newIndex++;
-          }
-
-          result.push({
-            lineNumber: Math.max(oldIndex, newIndex),
-            oldLine: oldHighlighted,
-            newLine: newHighlighted,
-            hasChanges,
-          });
-        }
 
         return result;
       },
@@ -375,65 +401,27 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
     );
 
     useEffect(() => {
-      if (!isExpanded || !displayMessages.length) return;
+      if (!displayMessages.length) return;
       optimizerMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [displayMessages, isExpanded]);
+    }, [displayMessages]);
 
     return (
       <>
         <div
           className={cn(
-            "flex flex-col overflow-hidden rounded-t-[10px] transition-[height] duration-400 ease-out",
-            isExpanded ? "h-full" : "h-12",
+            "flex min-h-0 flex-1 flex-col overflow-hidden",
+            isExpanded ? "" : "",
           )}
         >
-          <div className="bg-primary flex min-h-12 items-center overflow-hidden rounded-t-xl border-none">
-            <Button
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              className="flex h-full flex-1 cursor-pointer items-center justify-between bg-transparent px-4 text-sm font-medium text-white/80 transition-colors duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {optimizerClient
-                ? "Deep Agent Optimizer"
-                : "(Disabled) Deep Agent Optimizer"}
-            </Button>
-
-            {isExpanded && displayMessages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClear}
-                className="ml-auto bg-transparent text-white/80 transition-colors duration-200 hover:bg-transparent hover:text-white"
-              >
-                <RotateCcw size={16} />
-              </Button>
-            )}
-            <TooltipIconButton
-              onClick={onToggle}
-              disabled={!optimizerClient}
-              tooltip={
-                !optimizerClient
-                  ? "Set Optimizer Agent Environment Variables in FE Deployment"
-                  : "Expand Optimizer"
-              }
-              className="cursor-pointer bg-transparent px-6 text-white/80 transition-transform duration-200 ease-in-out hover:bg-transparent hover:text-white"
-            >
-              {isExpanded ? (
-                <X size={16} />
-              ) : (
-                optimizerClient && <Expand size={16} />
-              )}
-            </TooltipIconButton>
+          <div className="flex items-center px-4 py-3">
+            <span className="text-foreground text-md font-semibold tracking-wide">
+              AGENT CREATOR
+            </span>
           </div>
 
-          <div
-            className={cn(
-              "flex min-h-0 flex-1 flex-col transition-opacity delay-100 duration-300 ease-in-out",
-              isExpanded ? "opacity-100" : "opacity-0",
-            )}
-          >
+          <div className="flex min-h-0 flex-1 flex-col justify-between">
             <div className="scrollbar-pretty-auto min-h-0 flex-1">
-              <div className="flex flex-col gap-3 bg-inherit p-4">
+              <div className="flex flex-col gap-4 bg-inherit p-4">
                 {displayMessages.map((message, index) => {
                   if (isUserMessage(message)) {
                     return (
@@ -454,11 +442,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                           className={cn(
                             "flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 ease-in-out",
                             message.status === "pending" &&
-                              "border-[#fbbf244d] bg-[#fbbf241a] text-[#d97706]",
+                              "border-warning/30 bg-warning/10 text-warning-dark",
                             message.status === "approved" &&
-                              "border-[#22c55e4d] bg-[#22c55e1a] text-[#059669]",
+                              "border-success/30 bg-success/10 text-success-dark",
                             !["pending", "approved"].includes(message.status) &&
-                              "border-[#ef44444d] bg-[#ef44441a] text-[#dc2626]",
+                              "border-destructive/30 bg-destructive/10 text-destructive",
                           )}
                           onClick={() => handleOptimizerMessageClick(message)}
                           disabled={message.status !== "pending"}
@@ -494,8 +482,25 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                 <div ref={optimizerMessagesEndRef} />
               </div>
             </div>
+            {displayMessages.length === 0 && (
+              <div className="px-4 pb-2">
+                <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
+                  <p className="m-0">
+                    Update your agent's goals, tools, instructions, or
+                    sub-agents anytime.
+                  </p>
+                  <p className="m-0 mt-3">
+                    Just tell me what you'd like to change — for example:
+                  </p>
+                  <p className="m-0">
+                    'Add LinkedIn as a tool' or 'Update the agent's tone to be
+                    more casual.'
+                  </p>
+                </div>
+              </div>
+            )}
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-2 mb-2 flex max-h-38 items-end gap-3 rounded-2xl border px-4 py-2 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary mx-4 mt-auto mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea
@@ -504,20 +509,20 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   setFeedbackInput(e.target.value)
                 }
                 onKeyDown={handleKeyDown}
-                placeholder="Enter your feedback..."
+                placeholder="Make changes to your agent"
                 aria-label="Feedback input"
                 excludeDefaultStyles
                 className="w-full text-sm outline-none"
                 maxRows={6}
               />
-              <Button
+              <button
                 type="submit"
-                size="icon"
-                className="flex-shrink-0"
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white disabled:opacity-50"
                 disabled={isLoading}
+                aria-label="Submit agent changes"
               >
-                <Send size={14} />
-              </Button>
+                <ChevronUp className="h-5 w-5 text-gray-700" />
+              </button>
             </form>
           </div>
         </div>
@@ -530,54 +535,26 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               className="flex max-h-[85vh] w-[95%] max-w-[1200px] animate-[slideIn_0.3s_cubic-bezier(0.4,0,0.2,1)] flex-col rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.4)]"
               onClick={(e) => e.stopPropagation()}
             >
-              <div
-                className="flex items-center justify-between rounded-t-xl border-b px-6 py-5"
-                style={{
-                  borderBottomColor: "var(--color-border)",
-                  backgroundColor: "var(--color-surface)",
-                }}
-              >
-                <h2
-                  className="m-0 text-lg font-semibold"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+              <div className="border-border bg-card flex items-center justify-between rounded-t-xl border-b px-6 py-5">
+                <h2 className="text-foreground m-0 text-lg font-semibold">
                   Configuration Changes
                 </h2>
                 <button
-                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  style={{ color: "var(--color-text-secondary)" }}
+                  className="hover:bg-muted text-muted-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border-none bg-transparent text-xl transition-all duration-200 hover:rotate-90"
                   onClick={handleCloseDiffDialog}
                   aria-label="Close dialog"
                 >
                   <X size={20} />
                 </button>
               </div>
-              <div
-                className="flex-1 overflow-y-auto bg-white p-6 leading-relaxed"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <div className="bg-background text-foreground flex-1 overflow-y-auto p-6 leading-relaxed">
                 <div className="grid h-full grid-cols-2 gap-6">
                   <div className="flex flex-col">
-                    <h3
-                      className="m-0 mb-3 border-b pb-2 text-base font-semibold"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderBottomColor: "var(--color-border)",
-                      }}
-                    >
+                    <h3 className="border-border text-foreground m-0 mb-3 border-b pb-2 text-base font-semibold">
                       Current Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div
-                        className="overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap"
-                        style={{
-                          backgroundColor: "#0d1117",
-                          borderColor: "var(--color-border)",
-                          color: "#e6edf3",
-                          fontFamily:
-                            '"Monaco", "Menlo", "Ubuntu Mono", monospace',
-                        }}
-                      >
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -597,26 +574,11 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     </div>
                   </div>
                   <div className="flex flex-col">
-                    <h3
-                      className="m-0 mb-3 border-b pb-2 text-base font-semibold"
-                      style={{
-                        color: "var(--color-text-primary)",
-                        borderBottomColor: "var(--color-border)",
-                      }}
-                    >
+                    <h3 className="border-border text-foreground m-0 mb-3 border-b pb-2 text-base font-semibold">
                       Proposed Configuration
                     </h3>
                     <div className="flex-1 overflow-auto">
-                      <div
-                        className="overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap"
-                        style={{
-                          backgroundColor: "#0d1117",
-                          borderColor: "var(--color-border)",
-                          color: "#e6edf3",
-                          fontFamily:
-                            '"Monaco", "Menlo", "Ubuntu Mono", monospace',
-                        }}
-                      >
+                      <div className="border-border bg-muted/30 text-foreground overflow-auto rounded-lg border p-4 font-mono text-xs leading-normal break-words whitespace-pre-wrap">
                         {createSideBySideDiff(
                           selectedOptimizerMessage.old_config,
                           selectedOptimizerMessage.new_config,
@@ -637,19 +599,9 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                   </div>
                 </div>
               </div>
-              <div
-                className="flex justify-end gap-3 rounded-b-xl border-t px-6 py-5"
-                style={{
-                  borderTopColor: "var(--color-border)",
-                  backgroundColor: "var(--color-surface)",
-                }}
-              >
+              <div className="border-border bg-card flex justify-end gap-3 rounded-b-xl border-t px-6 py-5">
                 <button
-                  className="cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-gray-100 active:translate-y-px dark:hover:bg-gray-800"
-                  style={{
-                    color: "var(--color-text-secondary)",
-                    borderColor: "var(--color-border)",
-                  }}
+                  className="hover:bg-muted border-border text-muted-foreground cursor-pointer rounded-md border bg-transparent px-5 py-2.5 text-sm font-medium transition-all duration-200 active:translate-y-px"
                   onClick={handleReject}
                 >
                   Reject Changes

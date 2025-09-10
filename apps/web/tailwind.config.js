@@ -5,6 +5,7 @@ module.exports = {
     "./index.html",
     "./src/**/*.{ts,tsx,js,jsx}",
     "./agent/**/*.{ts,tsx,js,jsx}",
+    "../../packages/deep-agent-chat/src/**/*.{ts,tsx,js,jsx}",
   ],
   theme: {
     extend: {
@@ -91,5 +92,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("tailwind-scrollbar")],
+  plugins: [require("tailwindcss-animate")],
 };

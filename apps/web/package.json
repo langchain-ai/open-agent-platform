@@ -11,7 +11,8 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "clean": "rm -rf .next .turbo || true"
   },
   "dependencies": {
     "@langchain/auth": "^0.0.0",
@@ -42,6 +43,7 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "@types/js-yaml": "^4.0.9",
+    "@xyflow/react": "^12.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -94,7 +96,6 @@
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
-    "tailwind-scrollbar": "3.1.0",
     "tailwindcss": "^4.0.13",
     "tailwindcss-animate": "^1.0.7",
     "turbo": "^2.5.0",

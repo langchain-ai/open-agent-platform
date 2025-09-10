@@ -1,21 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
-import { User, Bot } from "lucide-react";
+import React, { useMemo, useState, useCallback } from "react";
+import { RotateCcw } from "lucide-react";
 import { SubAgentIndicator } from "./SubAgentIndicator";
 import { ToolCallBox } from "./ToolCallBox";
 import { MarkdownContent } from "./MarkdownContent";
 import type { SubAgent, ToolCall } from "../types";
 import { Message } from "@langchain/langgraph-sdk";
-import { extractStringFromMessageContent } from "../utils";
+import {
+  extractStringFromMessageContent,
+  extractSubAgentContent,
+} from "../utils";
 import { cn } from "../lib/utils";
 
 interface ChatMessageProps {
   message: Message;
   toolCalls: ToolCall[];
-  showAvatar: boolean;
-  onSelectSubAgent: (subAgent: SubAgent | null) => void;
-  selectedSubAgent: SubAgent | null;
   onRestartFromAIMessage: (message: Message) => void;
   onRestartFromSubTask: (toolCallId: string) => void;
   debugMode?: boolean;
@@ -27,9 +27,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
   ({
     message,
     toolCalls,
-    showAvatar,
-    onSelectSubAgent,
-    selectedSubAgent,
     onRestartFromAIMessage,
     onRestartFromSubTask,
     debugMode,
@@ -63,71 +60,58 @@ export const ChatMessage = React.memo<ChatMessageProps>(
         });
     }, [toolCalls]);
 
-    const subAgentsString = useMemo(() => {
-      return JSON.stringify(subAgents);
-    }, [subAgents]);
-
-    useEffect(() => {
-      if (subAgents.some((subAgent) => subAgent.id === selectedSubAgent?.id)) {
-        onSelectSubAgent(
-          subAgents.find((subAgent) => subAgent.id === selectedSubAgent?.id)!,
-        );
-      }
-    }, [selectedSubAgent, onSelectSubAgent, subAgentsString, subAgents]);
+    const [expandedSubAgents, setExpandedSubAgents] = useState<
+      Record<string, boolean>
+    >({});
+    const isSubAgentExpanded = useCallback(
+      (id: string) => expandedSubAgents[id] ?? true,
+      [expandedSubAgents],
+    );
+    const toggleSubAgent = useCallback((id: string) => {
+      setExpandedSubAgents((prev) => ({
+        ...prev,
+        [id]: prev[id] === undefined ? false : !prev[id],
+      }));
+    }, []);
 
     return (
       <div
         className={cn(
-          "flex w-full max-w-full gap-2 overflow-x-hidden",
+          "flex w-full max-w-full overflow-x-hidden",
           isUser && "flex-row-reverse",
         )}
       >
-        <div
-          className={cn(
-            "mt-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-            !showAvatar
-              ? "bg-transparent"
-              : isUser
-                ? "bg-user-message"
-                : "bg-avatar-bg",
-          )}
-        >
-          {showAvatar &&
-            (isUser ? (
-              <User className="h-4 w-4 text-white" />
-            ) : (
-              <Bot className="h-4 w-4 text-gray-500" />
-            ))}
-        </div>
         <div className="max-w-[70%] min-w-0 flex-shrink-0">
-          {hasContent && (
-            <div className="flex items-end gap-2">
+          {(hasContent || debugMode) && (
+            <div className={cn("relative flex items-end gap-0")}>
               <div
                 className={cn(
-                  "mt-4 overflow-hidden rounded-lg p-2 break-words",
+                  "mt-4 overflow-hidden text-sm leading-[150%] font-normal break-words text-[#1A1A1E]",
                   isUser
-                    ? "bg-user-message ml-auto text-white"
-                    : "border-border bg-surface text-primary w-[calc(100%-100px)] border",
+                    ? "rounded-full bg-[#F4F3FF] px-4 py-3"
+                    : "rounded-xl bg-[#F4F4F5] p-3",
                 )}
               >
                 {isUser ? (
                   <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
                     {messageContent}
                   </p>
-                ) : (
+                ) : hasContent ? (
                   <MarkdownContent content={messageContent} />
-                )}
+                ) : debugMode ? (
+                  <p className="m-0 text-xs whitespace-nowrap italic">
+                    Empty Message
+                  </p>
+                ) : null}
               </div>
-              <div className="relative mt-4 w-[72px] flex-shrink-0">
-                {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
-                  <button
-                    onClick={() => onRestartFromAIMessage(message)}
-                    className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
-                  >
-                    Regenerate
-                  </button>
-                )}
-              </div>
+              {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
+                <button
+                  onClick={() => onRestartFromAIMessage(message)}
+                  className="absolute right-1 bottom-1 -scale-x-100 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
+                >
+                  <RotateCcw className="h-3 w-3 text-gray-600" />
+                </button>
+              )}
             </div>
           )}
           {hasToolCalls && (
@@ -148,24 +132,51 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               {subAgents.map((subAgent) => (
                 <div
                   key={subAgent.id}
-                  className="flex items-end gap-2"
+                  className="flex w-full flex-col gap-2"
                 >
-                  <div className={"w-[calc(100%-100px)]"}>
-                    <SubAgentIndicator
-                      subAgent={subAgent}
-                      onClick={() => onSelectSubAgent(subAgent)}
-                    />
+                  <div className="flex items-end gap-2">
+                    <div className="w-[calc(100%-100px)]">
+                      <SubAgentIndicator
+                        subAgent={subAgent}
+                        onClick={() => toggleSubAgent(subAgent.id)}
+                        isExpanded={isSubAgentExpanded(subAgent.id)}
+                      />
+                    </div>
+                    <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">
+                      {debugMode && subAgent.status === "completed" && (
+                        <button
+                          onClick={() => onRestartFromSubTask(subAgent.id)}
+                          className="absolute right-1 bottom-1 -scale-x-100 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
+                        >
+                          <RotateCcw className="h-3 w-3 text-gray-600" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="relative h-full min-h-[40px] w-[72px] flex-shrink-0">
-                    {debugMode && subAgent.status === "completed" && (
-                      <button
-                        onClick={() => onRestartFromSubTask(subAgent.id)}
-                        className="absolute bottom-[10px] bg-transparent text-xs whitespace-nowrap text-gray-400 transition-colors duration-200 hover:text-gray-600"
-                      >
-                        Regenerate
-                      </button>
-                    )}
-                  </div>
+                  {isSubAgentExpanded(subAgent.id) && (
+                    <div className="w-full max-w-full">
+                      <div className="bg-surface border-border-light rounded-md border p-4">
+                        <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+                          Input
+                        </h4>
+                        <div className="mb-4">
+                          <MarkdownContent
+                            content={extractSubAgentContent(subAgent.input)}
+                          />
+                        </div>
+                        {subAgent.output && (
+                          <>
+                            <h4 className="text-primary/70 mb-2 text-xs font-semibold tracking-wider uppercase">
+                              Output
+                            </h4>
+                            <MarkdownContent
+                              content={extractSubAgentContent(subAgent.output)}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
