@@ -108,13 +108,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
     return (
       <div className="min-h-0 w-[252px] flex-shrink-0">
-        <div
-          className="bg-background flex h-full w-full flex-col p-0"
-          style={{
-            fontFamily:
-              "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, 'Noto Sans', sans-serif",
-          }}
-        >
+        <div className="bg-background flex h-full w-full flex-col p-0 font-inter">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
             <div className="bg-muted/30 rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
