@@ -23,5 +23,8 @@
   "packageManager": "yarn@3.5.1",
   "resolutions": {
     "nuqs": "^2.4.1"
+  },
+  "dependencies": {
+    "launchdarkly-react-client-sdk": "^3.8.1"
   }
 }
