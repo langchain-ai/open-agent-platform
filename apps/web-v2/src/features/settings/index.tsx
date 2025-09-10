@@ -1,36 +1,66 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Settings, Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
+import { Session } from "@/lib/auth/types";
+
+async function getSavedApiKeys(
+  session: Session,
+): Promise<Record<string, string>> {
+  try {
+    if (!session.accessToken || !session.refreshToken) {
+      toast.error("No session found", { richColors: true });
+      return {};
+    }
+
+    const response = await fetch("/api/settings/api-keys", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "x-access-token": session.accessToken,
+        "x-refresh-token": session.refreshToken,
+      },
+    });
+
+    if (response.status === 404) {
+      const errorData = await response.json();
+      if (errorData.error === "No API keys found") {
+        return {};
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch API keys");
+    }
+
+    const data = await response.json();
+    return data.apiKeys;
+  } catch (error) {
+    console.error("Error fetching API keys:", error);
+    toast.error("Failed to fetch API keys", { richColors: true });
+    return {};
+  }
+}
 
 /**
  * The Settings interface component containing API Keys configuration.
  */
 export default function SettingsInterface(): React.ReactNode {
-  // Use localStorage hooks for each API key
-  const [openaiApiKey, setOpenaiApiKey] = useLocalStorage<string>(
-    "lg:settings:openaiApiKey",
-    "",
-  );
-  const [anthropicApiKey, setAnthropicApiKey] = useLocalStorage<string>(
-    "lg:settings:anthropicApiKey",
-    "",
-  );
-  const [googleApiKey, setGoogleApiKey] = useLocalStorage<string>(
-    "lg:settings:googleApiKey",
-    "",
-  );
-
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [openaiApiKey, setOpenaiApiKey] = useState("");
+  const [anthropicApiKey, setAnthropicApiKey] = useState("");
+  const [googleApiKey, setGoogleApiKey] = useState("");
+
   const { session } = useAuthContext();
+
   const handleSaveApiKeys = async () => {
     if (!session?.accessToken || !session?.refreshToken) {
       toast.error("You must be logged in to save API keys");
@@ -80,6 +110,20 @@ export default function SettingsInterface(): React.ReactNode {
     }
   };
 
+  const hasRequestedInitialApiKeys = useRef(false);
+  useEffect(() => {
+    if (!session || !session.accessToken || !session.refreshToken) return;
+    if (hasRequestedInitialApiKeys.current) return;
+    getSavedApiKeys(session)
+      .then((apiKeys) => {
+        setOpenaiApiKey(apiKeys.OPENAI_API_KEY || "");
+        setAnthropicApiKey(apiKeys.ANTHROPIC_API_KEY || "");
+        setGoogleApiKey(apiKeys.GOOGLE_API_KEY || "");
+      })
+      .finally(() => setLoading(false));
+    hasRequestedInitialApiKeys.current = true;
+  }, [session]);
+
   return (
     <div className="flex w-full flex-col gap-4 p-6">
       <div className="flex w-full items-center justify-start gap-6">
@@ -102,6 +146,7 @@ export default function SettingsInterface(): React.ReactNode {
               placeholder="Enter your OpenAI API key"
               value={openaiApiKey}
               onChange={(e) => setOpenaiApiKey(e.target.value)}
+              disabled={loading || isSaving}
             />
           </div>
 
@@ -113,6 +158,7 @@ export default function SettingsInterface(): React.ReactNode {
               placeholder="Enter your Anthropic API key"
               value={anthropicApiKey}
               onChange={(e) => setAnthropicApiKey(e.target.value)}
+              disabled={loading || isSaving}
             />
           </div>
 
@@ -124,6 +170,7 @@ export default function SettingsInterface(): React.ReactNode {
               placeholder="Enter your Google Gen AI API key"
               value={googleApiKey}
               onChange={(e) => setGoogleApiKey(e.target.value)}
+              disabled={loading || isSaving}
             />
           </div>
         </div>
@@ -132,7 +179,7 @@ export default function SettingsInterface(): React.ReactNode {
         <div className="flex justify-end">
           <Button
             onClick={handleSaveApiKeys}
-            disabled={isSaving}
+            disabled={isSaving || loading}
             className="min-w-[120px]"
           >
             {isSaving ? (
