@@ -23,7 +23,7 @@ function PageHeader({
         <div
           className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border bg-white p-[3px] text-[12px] shadow-sm"
           style={{
-            borderColor: "var(--Colours-Borders-border-primary, #D1D1D6)",
+            borderColor: "D1D1D6",
           }}
         >
           <button
