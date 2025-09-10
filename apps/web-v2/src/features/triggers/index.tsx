@@ -39,6 +39,7 @@ export default function TriggersInterface() {
       return;
     }
     if (showTriggersTab === undefined) {
+      setTriggersLoading(false);
       return;
     }
     if (!auth.session?.accessToken) return;

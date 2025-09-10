@@ -58,8 +58,6 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const filteredNavItems = React.useMemo(() => data.navMain, []);
-
   return (
     <Sidebar
       collapsible="icon"
@@ -67,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={filteredNavItems} />
+        <NavMain items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
