@@ -17,8 +17,8 @@ import { HumanInterruptConfig } from "@/types/inbox";
 interface InterruptConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  config: HumanInterruptConfig;
-  onInterruptChange: (config: HumanInterruptConfig) => void;
+  config: HumanInterruptConfig | boolean;
+  onInterruptChange: (config: HumanInterruptConfig | boolean) => void;
 }
 
 export function InterruptConfigDialog({
@@ -69,9 +69,21 @@ export function InterruptConfigDialog({
 
               <Switch
                 id="allow-accept"
-                checked={config.allow_accept}
+                checked={
+                  typeof config === "boolean" ? config : config.allow_accept
+                }
                 onCheckedChange={(checked) =>
-                  onInterruptChange({ ...config, allow_accept: checked })
+                  onInterruptChange({
+                    ...(typeof config === "boolean"
+                      ? {
+                          allow_edit: config,
+                          allow_ignore: config,
+                          allow_respond: config,
+                          allow_accept: config,
+                        }
+                      : config),
+                    allow_accept: checked,
+                  })
                 }
               />
             </div>
@@ -92,9 +104,21 @@ export function InterruptConfigDialog({
 
               <Switch
                 id="allow-respond"
-                checked={config.allow_respond}
+                checked={
+                  typeof config === "boolean" ? config : config.allow_respond
+                }
                 onCheckedChange={(checked) =>
-                  onInterruptChange({ ...config, allow_respond: checked })
+                  onInterruptChange({
+                    ...(typeof config === "boolean"
+                      ? {
+                          allow_edit: config,
+                          allow_ignore: config,
+                          allow_respond: config,
+                          allow_accept: config,
+                        }
+                      : config),
+                    allow_respond: checked,
+                  })
                 }
               />
             </div>
@@ -115,9 +139,21 @@ export function InterruptConfigDialog({
 
               <Switch
                 id="allow-edit"
-                checked={config.allow_edit}
+                checked={
+                  typeof config === "boolean" ? config : config.allow_edit
+                }
                 onCheckedChange={(checked) =>
-                  onInterruptChange({ ...config, allow_edit: checked })
+                  onInterruptChange({
+                    ...(typeof config === "boolean"
+                      ? {
+                          allow_edit: config,
+                          allow_ignore: config,
+                          allow_respond: config,
+                          allow_accept: config,
+                        }
+                      : config),
+                    allow_edit: checked,
+                  })
                 }
               />
             </div>
