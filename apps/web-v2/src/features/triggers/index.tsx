@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
 import { useFlags } from "launchdarkly-react-client-sdk";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -29,7 +30,7 @@ export default function TriggersInterface() {
   >([]);
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
-  const { showTriggersTab } = useFlags<{ showTriggersTab?: boolean }>();
+  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   useEffect(() => {
     if (showTriggersTab === false) {

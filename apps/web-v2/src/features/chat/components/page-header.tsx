@@ -4,6 +4,7 @@ import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 interface PageHeaderProps {
   view: "chat" | "workflow";
@@ -13,9 +14,7 @@ interface PageHeaderProps {
 
 export function PageHeader({ view, setView, assistantName }: PageHeaderProps) {
   // LaunchDarkly feature flag for workflow
-  const { showAgentVisualizerUi } = useFlags<{
-    showAgentVisualizerUi?: boolean;
-  }>();
+  const { showAgentVisualizerUi } = useFlags<LaunchDarklyFeatureFlags>();
 
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
 
