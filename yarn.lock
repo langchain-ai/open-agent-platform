@@ -2213,6 +2213,7 @@ __metadata:
     eslint-plugin-react-hooks: ^5.1.0
     eslint-plugin-react-refresh: ^0.4.14
     globals: ^15.13.0
+    launchdarkly-react-client-sdk: ^3.8.1
     lucide-react: ^0.542.0
     nuqs: ^2.4.1
     postcss: ^8.5.6
@@ -2388,6 +2389,7 @@ __metadata:
     jsonwebtoken: ^9.0.2
     katex: latest
     langgraph-nextjs-api-passthrough: ^0.1.0
+    launchdarkly-react-client-sdk: ^3.8.1
     lodash: ^4.17.21
     lucide-react: ^0.488.0
     next: ^15.3.1
@@ -6041,7 +6043,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
+"base64-js@npm:^1.3.0, base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 669632eb3745404c2f822a18fc3a0122d2f9a7a13f7fb8b5823ee19d1d2ff9ee5b52c53367176ea4ad093c332fd5ab4bd0ebae5a8e27917a4105a4cfc86b1005
@@ -8353,6 +8355,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fast-deep-equal@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "fast-deep-equal@npm:2.0.1"
+  checksum: b701835a87985e0ec4925bdf1f0c1e7eb56309b5d12d534d5b4b69d95a54d65bb16861c081781ead55f73f12d6c60ba668713391ee7fbf6b0567026f579b7b0b
+  languageName: node
+  linkType: hard
+
 "fast-deep-equal@npm:^3.1.1, fast-deep-equal@npm:^3.1.3":
   version: 3.1.3
   resolution: "fast-deep-equal@npm:3.1.3"
@@ -9456,6 +9465,15 @@ __metadata:
   version: 1.0.0
   resolution: "highlightjs-vue@npm:1.0.0"
   checksum: 895f2dd22c93a441aca7df8d21f18c00697537675af18832e50810a071715f79e45eda677e6244855f325234c6a06f7bd76f8f20bd602040fc350c80ac7725e4
+  languageName: node
+  linkType: hard
+
+"hoist-non-react-statics@npm:^3.3.2":
+  version: 3.3.2
+  resolution: "hoist-non-react-statics@npm:3.3.2"
+  dependencies:
+    react-is: ^16.7.0
+  checksum: b1538270429b13901ee586aa44f4cc3ecd8831c061d06cb8322e50ea17b3f5ce4d0e2e66394761e6c8e152cd8c34fb3b4b690116c6ce2bd45b18c746516cb9e8
   languageName: node
   linkType: hard
 
@@ -11063,6 +11081,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"launchdarkly-js-client-sdk@npm:^3.8.1":
+  version: 3.9.0
+  resolution: "launchdarkly-js-client-sdk@npm:3.9.0"
+  dependencies:
+    escape-string-regexp: ^4.0.0
+    launchdarkly-js-sdk-common: 5.8.0
+  checksum: 5866161bc77eb3c5b316e988fbf0c522c0e18a84de1b0725c24f22db85410649c10ff2e7615ee5640707202e673b7080a722418fd2e539a3a0c66f977ed0cb51
+  languageName: node
+  linkType: hard
+
+"launchdarkly-js-sdk-common@npm:5.8.0":
+  version: 5.8.0
+  resolution: "launchdarkly-js-sdk-common@npm:5.8.0"
+  dependencies:
+    base64-js: ^1.3.0
+    fast-deep-equal: ^2.0.1
+    uuid: ^8.0.0
+  checksum: cf302f07a97068cdf9dd8b48f9fc994f866dc016946fb090e121445379d5e29d4cdc34f266649c4fd838fdaacf244ad65bbdc98b316dac79a3e2722935b9186f
+  languageName: node
+  linkType: hard
+
+"launchdarkly-react-client-sdk@npm:^3.8.1":
+  version: 3.8.1
+  resolution: "launchdarkly-react-client-sdk@npm:3.8.1"
+  dependencies:
+    hoist-non-react-statics: ^3.3.2
+    launchdarkly-js-client-sdk: ^3.8.1
+    lodash.camelcase: ^4.3.0
+  peerDependencies:
+    react: ^16.6.3 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^16.8.4 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 718b0f64c080d8c59b9f73a875a5f2c20b4913b84674809cd30596205ac7e6b8668b512b0b138d6abe5cb6d1c63628c07e3947c6276b747e0d3183e423faf402
+  languageName: node
+  linkType: hard
+
 "lcm@npm:^0.0.3":
   version: 0.0.3
   resolution: "lcm@npm:0.0.3"
@@ -11235,6 +11288,13 @@ __metadata:
   dependencies:
     p-locate: ^5.0.0
   checksum: 72eb661788a0368c099a184c59d2fee760b3831c9c1c33955e8a19ae4a21b4116e53fa736dc086cdeb9fce9f7cc508f2f92d2d3aae516f133e16a2bb59a39f5a
+  languageName: node
+  linkType: hard
+
+"lodash.camelcase@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "lodash.camelcase@npm:4.3.0"
+  checksum: cb9227612f71b83e42de93eccf1232feeb25e705bdb19ba26c04f91e885bfd3dd5c517c4a97137658190581d3493ea3973072ca010aab7e301046d90740393d1
   languageName: node
   linkType: hard
 
@@ -13856,7 +13916,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.13.1":
+"react-is@npm:^16.13.1, react-is@npm:^16.7.0":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: f7a19ac3496de32ca9ae12aa030f00f14a3d45374f1ceca0af707c831b2a6098ef0d6bdae51bd437b0a306d7f01d4677fcc8de7c0d331eb47ad0f46130e53c5f
@@ -16515,6 +16575,15 @@ __metadata:
   bin:
     uuid: dist/esm/bin/uuid
   checksum: 840f19758543c4631e58a29439e51b5b669d5f34b4dd2700b6a1d15c5708c7a6e0c3e2c8c4a2eae761a3a7caa7e9884d00c86c02622ba91137bd3deade6b4b4a
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^8.0.0":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
 

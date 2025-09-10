@@ -18,6 +18,9 @@ import { useEffect, useState } from "react";
 import type { Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
+import Loading from "@/components/ui/loading";
+import { useFlags } from "launchdarkly-react-client-sdk";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -27,8 +30,18 @@ export default function TriggersInterface() {
   >([]);
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
+  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   useEffect(() => {
+    if (showTriggersTab === false) {
+      // Do not fetch when disabled
+      setTriggersLoading(false);
+      return;
+    }
+    if (showTriggersTab === undefined) {
+      setTriggersLoading(false);
+      return;
+    }
     if (!auth.session?.accessToken) return;
     setTriggersLoading(true);
     listTriggers(auth.session?.accessToken)
@@ -55,7 +68,7 @@ export default function TriggersInterface() {
       .finally(() => {
         setTriggersLoading(false);
       });
-  }, [auth.session?.accessToken]);
+  }, [auth.session?.accessToken, showTriggersTab]);
 
   if (triggersLoading) {
     return (
@@ -75,15 +88,40 @@ export default function TriggersInterface() {
               <Zap className="h-5 w-5" />
               Loading Triggers
             </CardTitle>
-            <CardDescription>Loading triggers...</CardDescription>
+            <CardDescription>Loading triggers…</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <Zap className="text-muted-foreground mx-auto h-12 w-12" />
-              <h3 className="mt-4 text-lg font-semibold">Loading Triggers</h3>
-              <p className="text-muted-foreground mt-2">Loading triggers...</p>
-            </div>
+            <Loading label="Loading triggers" />
           </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Feature disabled: show coming soon (tab still visible per UX)
+  if (showTriggersTab === false) {
+    return (
+      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+            <p className="text-muted-foreground">
+              Set up triggers to automatically activate your agents
+            </p>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Coming soon
+            </CardTitle>
+            <CardDescription>
+              This feature is under development and will be released soon. Stay
+              tuned!
+            </CardDescription>
+          </CardHeader>
         </Card>
       </div>
     );

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "../globals.css";
 import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { SidebarLayout } from "@/components/sidebar";
 import { AuthProvider } from "@/providers/Auth";
+import { AuthenticatedApp } from "@/components/AuthenticatedApp";
 
 export const metadata: Metadata = {
   title: "Open Agent Platform",
@@ -29,7 +29,7 @@ export default function RootLayout({
       <body>
         <NuqsAdapter>
           <AuthProvider>
-            <SidebarLayout>{children}</SidebarLayout>
+            <AuthenticatedApp>{children}</AuthenticatedApp>
           </AuthProvider>
         </NuqsAdapter>
       </body>

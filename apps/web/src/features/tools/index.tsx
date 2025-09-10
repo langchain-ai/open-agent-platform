@@ -23,7 +23,7 @@ function TotalToolsBadge({
   return (
     <span className="flex items-center gap-2">
       {loading ? (
-        <Badge variant="outline">Loading...</Badge>
+        <Badge variant="outline">Loading…</Badge>
       ) : (
         <Badge variant="outline">
           {toolsCount}
