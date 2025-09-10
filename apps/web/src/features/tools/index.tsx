@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { ToolCard, ToolCardLoading } from "./components/tool-card";
 import { useMCPContext } from "@/providers/MCP";
 import { Badge } from "@/components/ui/badge";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
 import { Search } from "@/components/ui/tool-search";
@@ -23,7 +24,7 @@ function TotalToolsBadge({
   return (
     <span className="flex items-center gap-2">
       {loading ? (
-        <Badge variant="outline">Loading...</Badge>
+        <Badge variant="outline">Loading…</Badge>
       ) : (
         <Badge variant="outline">
           {toolsCount}

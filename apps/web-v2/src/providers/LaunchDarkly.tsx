@@ -23,10 +23,17 @@ export default function LaunchDarklyProvider({
     },
   };
 
+  const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID;
+  if (!clientSideID) {
+    throw new Error(
+      "Missing NEXT_PUBLIC_LD_CLIENT_SIDE_ID. Add it to apps/web-v2/.env.local and your deploy environment.",
+    );
+  }
+
   return (
     <LDProvider
       key={user?.id}
-      clientSideID={process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID!}
+      clientSideID={clientSideID}
       context={context}
       reactOptions={{ useCamelCaseFlagKeys: true }}
     >

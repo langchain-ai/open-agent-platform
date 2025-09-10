@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import type { Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
+import Loading from "@/components/ui/loading";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -75,14 +76,10 @@ export default function TriggersInterface() {
               <Zap className="h-5 w-5" />
               Loading Triggers
             </CardTitle>
-            <CardDescription>Loading triggers...</CardDescription>
+            <CardDescription>Loading triggers…</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <Zap className="text-muted-foreground mx-auto h-12 w-12" />
-              <h3 className="mt-4 text-lg font-semibold">Loading Triggers</h3>
-              <p className="text-muted-foreground mt-2">Loading triggers...</p>
-            </div>
+            <Loading label="Loading triggers" />
           </CardContent>
         </Card>
       </div>
