@@ -17,6 +17,8 @@ import { useMCPContext } from "@/providers/MCP";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { Controller, useFormContext } from "react-hook-form";
 import { AgentFormValues } from "./types";
+import { useFlags } from "launchdarkly-react-client-sdk";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 interface AgentFieldsFormProps {
   agentId: string;
@@ -24,6 +26,7 @@ interface AgentFieldsFormProps {
 
 export function AgentFieldsForm({ agentId }: AgentFieldsFormProps) {
   const form = useFormContext<AgentFormValues>();
+  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   const { tools, setTools, getTools, cursor, loading } = useMCPContext();
   const { toolSearchTerm, debouncedSetSearchTerm, displayTools } =
@@ -185,20 +188,26 @@ export function AgentFieldsForm({ agentId }: AgentFieldsFormProps) {
           )}
         />
       </div>
-      <Separator />
-      <div className="flex w-full flex-col items-start justify-start gap-2">
-        <p className="text-lg font-semibold tracking-tight">Agent Triggers</p>
-        <Controller
-          control={form.control}
-          name="config.triggers"
-          render={({ field: { value, onChange } }) => (
-            <ConfigFieldTriggers
-              value={value}
-              setValue={onChange}
+      {showTriggersTab !== false && (
+        <>
+          <Separator />
+          <div className="flex w-full flex-col items-start justify-start gap-2">
+            <p className="text-lg font-semibold tracking-tight">
+              Agent Triggers
+            </p>
+            <Controller
+              control={form.control}
+              name="config.triggers"
+              render={({ field: { value, onChange } }) => (
+                <ConfigFieldTriggers
+                  value={value}
+                  setValue={onChange}
+                />
+              )}
             />
-          )}
-        />
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

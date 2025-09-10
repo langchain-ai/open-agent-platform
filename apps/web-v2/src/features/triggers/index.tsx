@@ -117,7 +117,7 @@ export default function TriggersInterface() {
               Coming soon
             </CardTitle>
             <CardDescription>
-              This feature is under development and will be released. Stay
+              This feature is under development and will be released soon. Stay
               tuned!
             </CardDescription>
           </CardHeader>
