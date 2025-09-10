@@ -32,14 +32,12 @@ export default function TriggersInterface() {
   const { showTriggersTab } = useFlags<{ showTriggersTab?: boolean }>();
 
   useEffect(() => {
-    // Wait for flag to resolve; show loader meanwhile
     if (showTriggersTab === false) {
       // Do not fetch when disabled
       setTriggersLoading(false);
       return;
     }
     if (showTriggersTab === undefined) {
-      // keep loading while flag initializes
       return;
     }
     if (!auth.session?.accessToken) return;
