@@ -14,6 +14,7 @@ import type { Trigger } from "@/types/triggers";
 import { Zap, ChevronDown } from "lucide-react";
 import { ListTriggerRegistrationsData } from "@/hooks/use-triggers";
 import { ResourceRenderer } from "./resource-renderer";
+import { cn } from "@/lib/utils";
 
 interface TriggerCardProps {
   trigger: Trigger;
@@ -34,15 +35,17 @@ function ConfiguredAccounts(props: {
       >
         <span>Configured Accounts ({userTriggers.length})</span>
         <ChevronDown
-          className={`h-4 w-4 transition-transform duration-200 ${
-            isAccountsExpanded ? "rotate-180" : ""
-          }`}
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isAccountsExpanded && "rotate-180",
+          )}
         />
       </button>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isAccountsExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          isAccountsExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+        )}
       >
         <div className="space-y-1 pt-2">
           {userTriggers.map((userTrigger) => (

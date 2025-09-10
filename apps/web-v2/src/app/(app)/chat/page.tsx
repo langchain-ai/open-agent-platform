@@ -66,17 +66,20 @@ function PageHeader({
  */
 export default function DeepAgentChatPage(): React.ReactNode {
   const [view, setView] = useState<"chat" | "workflow">("chat");
-  
+
   return (
     <React.Suspense fallback={<div>Loading chat...</div>}>
       <div className="flex h-screen flex-col">
         <AgentsProvider>
-          <PageHeader view={view} setView={setView} />
+          <PageHeader
+            view={view}
+            setView={setView}
+          />
           <div className="flex min-h-0 flex-1 overflow-hidden">
-            <DeepAgentChatPageContent 
-              view={view} 
-              onViewChange={setView} 
-              hideInternalToggle={true} 
+            <DeepAgentChatPageContent
+              view={view}
+              onViewChange={setView}
+              hideInternalToggle={true}
             />
           </div>
         </AgentsProvider>
