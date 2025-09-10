@@ -13,14 +13,12 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ view, setView, assistantName }: PageHeaderProps) {
-  // LaunchDarkly feature flag for workflow
   const { showAgentVisualizerUi } = useFlags<LaunchDarklyFeatureFlags>();
-
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
 
   const handleViewChange = (newView: "chat" | "workflow") => {
     if (newView === "workflow" && !isWorkflowEnabled) {
-      toast.error("Workflow view is coming soon!", {
+      toast.info("Workflow view is coming soon!", {
         richColors: true,
       });
       return;
