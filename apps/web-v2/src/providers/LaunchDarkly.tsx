@@ -11,16 +11,11 @@ export default function LaunchDarklyProvider({
 }) {
   const { user } = useAuthContext();
 
-  const emailDomain = user?.email ? user.email.split("@")[1] : undefined;
-
   const context = {
     kind: "user",
     key: user?.id || "anonymous",
     anonymous: !user?.id,
     email: user?.email,
-    custom: {
-      emailDomain: emailDomain,
-    },
   };
 
   const clientSideID = process.env.NEXT_PUBLIC_LD_CLIENT_SIDE_ID;
