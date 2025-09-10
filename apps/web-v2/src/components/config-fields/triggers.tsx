@@ -60,14 +60,14 @@ export function ConfigFieldTriggers({
         }
       } catch (error) {
         console.error("Failed to fetch triggers:", error);
-        toast.error("Failed to load triggers");
+        toast.error("Failed to load triggers", { richColors: true });
       } finally {
         setLoading(false);
       }
     };
 
     fetchTriggers(auth.session.accessToken);
-  }, [auth.session?.accessToken, listUserTriggers]);
+  }, [auth.session?.accessToken]);
 
   const groupedTriggers = React.useMemo(() => {
     return groupUserRegisteredTriggersByProvider(userTriggers);

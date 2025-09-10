@@ -104,7 +104,7 @@ export default function TriggersInterface() {
             </CardTitle>
             <CardDescription>
               No triggers are currently configured. Please set up the
-              NEXT_PUBLIC_TRIGGERS_CONFIG environment variable to enable
+              NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
               triggers.
             </CardDescription>
           </CardHeader>
