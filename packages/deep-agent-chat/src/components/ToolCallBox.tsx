@@ -3,11 +3,10 @@
 import React, { useState, useMemo, useCallback } from "react";
 import {
   ChevronDown,
-  ChevronRight,
+  ChevronUp,
   Terminal,
-  CheckCircle,
   AlertCircle,
-  Loader,
+  Loader2,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { ToolCall } from "../types";
@@ -42,31 +41,28 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   }, [toolCall]);
 
   const statusIcon = useMemo(() => {
-    const iconStyle = { width: "14px", height: "14px" };
     switch (status) {
       case "completed":
-        return (
-          <CheckCircle
-            style={{ ...iconStyle, color: "var(--color-success)" }}
-          />
-        );
+        return null;
       case "error":
         return (
           <AlertCircle
-            style={{ ...iconStyle, color: "var(--color-destructive)" }}
+            size={14}
+            className="text-destructive"
           />
         );
       case "pending":
         return (
-          <Loader
-            style={{ ...iconStyle, color: "var(--color-primary)" }}
+          <Loader2
+            size={14}
             className="animate-spin"
           />
         );
       default:
         return (
           <Terminal
-            style={{ ...iconStyle, color: "var(--color-muted-foreground)" }}
+            size={14}
+            className="text-muted-foreground"
           />
         );
     }
@@ -86,67 +82,41 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   const hasContent = result || Object.keys(args).length > 0;
 
   return (
-    <div
-      className="border-border bg-card w-fit overflow-hidden rounded-lg border-2 shadow-sm"
-      style={{
-        maxWidth: "70vw",
-      }}
-    >
+    <div className="bg-card w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none outline-none">
       <Button
         variant="ghost"
         size="sm"
         onClick={toggleExpanded}
-        className="flex w-full items-center justify-between text-left transition-colors duration-200 disabled:cursor-default"
-        style={{
-          padding: "0.5rem 1rem",
-          gap: "0.5rem",
-        }}
+        className="hover:bg-accent flex w-full items-center justify-between gap-2 border-none px-4 py-2 text-left shadow-none transition-colors duration-200 outline-none disabled:cursor-default"
         disabled={!hasContent}
-        onMouseEnter={(e) => {
-          if (hasContent) {
-            e.currentTarget.style.backgroundColor = "var(--color-accent)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-        }}
       >
-        <div
-          className="flex items-center"
-          style={{ gap: "0.5rem" }}
-        >
-          {hasContent && isExpanded ? (
-            <ChevronDown
-              size={14}
-              className="shrink-0"
-            />
-          ) : (
-            <ChevronRight
-              size={14}
-              className="shrink-0"
-            />
-          )}
-          {statusIcon}
-          <span className="text-foreground text-sm font-medium">{name}</span>
+        <div className="flex w-full items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {statusIcon}
+            <span className="text-[15px] leading-[140%] font-medium tracking-[-0.6px] text-[#3F3F46]">
+              {name}
+            </span>
+          </div>
+          {hasContent &&
+            (isExpanded ? (
+              <ChevronUp
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ) : (
+              <ChevronDown
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ))}
         </div>
       </Button>
 
       {isExpanded && hasContent && (
-        <div
-          className="border-border border-t"
-          style={{
-            padding: "0 1rem 1rem",
-          }}
-        >
+        <div className="border-border border-t px-4 pb-4">
           {Object.keys(args).length > 0 && (
-            <div style={{ marginTop: "1rem" }}>
-              <h4
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
-                style={{
-                  letterSpacing: "0.05em",
-                  marginBottom: "0.25rem",
-                }}
-              >
+            <div className="mt-4">
+              <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
                 Arguments
               </h4>
               <div className="space-y-2">
@@ -161,22 +131,20 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
                     >
                       <span className="font-mono">{key}</span>
                       {expandedArgs[key] ? (
-                        <ChevronDown size={12} />
+                        <ChevronUp
+                          size={12}
+                          className="text-[#70707B]"
+                        />
                       ) : (
-                        <ChevronRight size={12} />
+                        <ChevronDown
+                          size={12}
+                          className="text-[#70707B]"
+                        />
                       )}
                     </button>
                     {expandedArgs[key] && (
                       <div className="border-border bg-muted/10 border-t p-2">
-                        <pre
-                          className="text-foreground overflow-x-auto font-mono text-xs break-all whitespace-pre-wrap"
-                          style={{
-                            lineHeight: "1.5",
-                            margin: "0",
-                            fontFamily:
-                              '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
-                          }}
-                        >
+                        <pre className="text-foreground m-0 overflow-x-auto font-mono text-xs leading-6 break-all whitespace-pre-wrap">
                           {typeof value === "string"
                             ? value
                             : JSON.stringify(value, null, 2)}
@@ -189,26 +157,11 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
             </div>
           )}
           {result && (
-            <div style={{ marginTop: "1rem" }}>
-              <h4
-                className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
-                style={{
-                  letterSpacing: "0.05em",
-                  marginBottom: "0.25rem",
-                }}
-              >
+            <div className="mt-4">
+              <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
                 Result
               </h4>
-              <pre
-                className="border-border bg-muted/30 text-foreground overflow-x-auto rounded-sm border font-mono text-xs break-all whitespace-pre-wrap"
-                style={{
-                  padding: "0.5rem",
-                  lineHeight: "1.75",
-                  margin: "0",
-                  fontFamily:
-                    '"SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace',
-                }}
-              >
+              <pre className="border-border bg-muted/30 text-foreground m-0 overflow-x-auto rounded-sm border p-2 font-mono text-xs leading-7 break-all whitespace-pre-wrap">
                 {typeof result === "string"
                   ? result
                   : JSON.stringify(result, null, 2)}

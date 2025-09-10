@@ -2206,6 +2206,7 @@ __metadata:
     "@types/react": ^19
     "@types/react-dom": ^19
     "@types/react-syntax-highlighter": ^15.5.13
+    "@xyflow/react": ^12.8.4
     class-variance-authority: ^0.7.1
     clsx: ^2.1.1
     eslint: ^8

@@ -27,3 +27,25 @@ export function getDefaultsFromAgent(agent: Agent): DeepAgentConfiguration {
       DEFAULT_FORM_CONFIG.triggers,
   };
 }
+
+export function prepareConfigForSaving(
+  config: DeepAgentConfiguration,
+): DeepAgentConfiguration {
+  if (!config.tools?.interrupt_config) {
+    return config;
+  }
+
+  if (Object.values(config.tools.interrupt_config).some((v) => !v)) {
+    return {
+      ...config,
+      tools: {
+        ...config.tools,
+        interrupt_config: Object.fromEntries(
+          Object.entries(config.tools.interrupt_config).filter(([_, v]) => v),
+        ),
+      },
+    };
+  }
+
+  return config;
+}
