@@ -16,7 +16,15 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 /**
  * Deep Agent Chat page content that uses nuqs hooks.
  */
-export default function DeepAgentChatPageContent(): React.ReactNode {
+export default function DeepAgentChatPageContent({
+  view,
+  onViewChange,
+  hideInternalToggle,
+}: {
+  view?: "chat" | "workflow";
+  onViewChange?: (view: "chat" | "workflow") => void;
+  hideInternalToggle?: boolean;
+}): React.ReactNode {
   const { session } = useAuthContext();
 
   const { agents, loading } = useAgentsContext();
@@ -103,6 +111,9 @@ export default function DeepAgentChatPageContent(): React.ReactNode {
       mode="oap"
       SidebarTrigger={SidebarTrigger}
       DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+      view={view}
+      onViewChange={onViewChange}
+      hideInternalToggle={hideInternalToggle}
     />
   );
 }

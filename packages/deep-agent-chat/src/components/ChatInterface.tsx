@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useClients } from "../providers/ClientProvider";
 import { useChatContext } from "../providers/ChatContext";
 import { useQueryState } from "nuqs";
+import { cn } from "../lib/utils";
 
 interface ChatInterfaceProps {
   assistantId: string;
@@ -35,6 +36,10 @@ interface ChatInterfaceProps {
   setActiveAssistant: (assistant: Assistant | null) => void;
   setTodos: (todos: TodoItem[]) => void;
   setFiles: (files: Record<string, string>) => void;
+  // Optional controlled view props from host app
+  view?: "chat" | "workflow";
+  onViewChange?: (view: "chat" | "workflow") => void;
+  hideInternalToggle?: boolean;
 }
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(
@@ -48,10 +53,28 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setActiveAssistant,
     setTodos,
     setFiles,
+    view,
+    onViewChange,
+    hideInternalToggle,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [isLoadingThreadState, setIsLoadingThreadState] = useState(false);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
+
+    const isControlledView = typeof view !== "undefined";
+    const workflowView = isControlledView
+      ? view === "workflow"
+      : isWorkflowView;
+
+    const setView = useCallback(
+      (view: "chat" | "workflow") => {
+        onViewChange?.(view);
+        if (!isControlledView) {
+          setIsWorkflowView(view === "workflow");
+        }
+      },
+      [onViewChange, isControlledView],
+    );
 
     const { client } = useClients();
 
@@ -363,43 +386,34 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             </Button>
           </div>
         </div> */}
-        <div className="flex w-full justify-center">
-          <div
-            className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border bg-white p-[3px] text-[12px] shadow-sm"
-            style={{
-              borderColor: "var(--Colours-Borders-border-primary, #D1D1D6)",
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setIsWorkflowView(false)}
-              className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
-              style={
-                !isWorkflowView
-                  ? {
-                      background: "#F4F3FF",
-                    }
-                  : undefined
-              }
+        {!hideInternalToggle && (
+          <div className="flex w-full justify-center">
+            <div
+              className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border bg-white p-[3px] text-[12px] shadow-sm border-[#D1D1D6]"
             >
-              Chat
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsWorkflowView(true)}
-              className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
-              style={
-                isWorkflowView
-                  ? {
-                      background: "#F4F3FF",
-                    }
-                  : undefined
-              }
-            >
-              Workflow
-            </button>
+              <button
+                type="button"
+                onClick={() => setView("chat")}
+                className={cn(
+                  "flex h-full flex-1 items-center justify-center truncate rounded p-[3px]",
+                  { "bg-[#F4F3FF]": !workflowView },
+                )}
+              >
+                Chat
+              </button>
+              <button
+                type="button"
+                onClick={() => setView("workflow")}
+                className={cn(
+                  "flex h-full flex-1 items-center justify-center truncate rounded p-[3px]",
+                  { "bg-[#F4F3FF]": workflowView },
+                )}
+              >
+                Workflow
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex flex-1 overflow-hidden">
           <ThreadHistorySidebar
             open={isThreadHistoryOpen}
@@ -413,7 +427,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               </div>
             )}
             <div className="flex-1 overflow-y-auto px-6 pt-4 pb-4">
-              {!isWorkflowView ? (
+              {!workflowView ? (
                 <>
                   {processedMessages.map((data, index) => (
                     <ChatMessage

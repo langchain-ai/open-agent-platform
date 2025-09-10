@@ -18,6 +18,9 @@ function DeepAgentChatInterfaceInternal({
   accessToken,
   optimizerDeploymentUrl,
   optimizerAccessToken,
+  view,
+  onViewChange,
+  hideInternalToggle,
 }: DeepAgentChatConfig) {
   const [_, __setThreadId] = useQueryState("threadId");
   // SubAgent panel moved inline; no global selection state needed
@@ -43,7 +46,7 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={activeAssistant}
         assistantId={assistantId}
       >
-        <div className="oap-deep-agent-chat absolute inset-0 flex h-screen gap-4 overflow-hidden p-4">
+        <div className="oap-deep-agent-chat flex h-full w-full flex-1 gap-4 overflow-hidden p-4">
           <div className="border-border flex h-full flex-col rounded-xl border bg-white p-3">
             <OptimizationSidebar
               activeAssistant={activeAssistant}
@@ -64,6 +67,9 @@ function DeepAgentChatInterfaceInternal({
               setActiveAssistant={setActiveAssistant}
               setTodos={setTodos}
               setFiles={setFiles}
+              view={view}
+              onViewChange={onViewChange}
+              hideInternalToggle={hideInternalToggle}
             />
             {/* SubAgentPanel removed; details now render inline in ChatMessage */}
           </div>
