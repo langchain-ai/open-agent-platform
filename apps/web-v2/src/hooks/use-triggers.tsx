@@ -188,7 +188,7 @@ export function useTriggers() {
     // For RESTful API, we need to update each registration individually
     for (const triggerId of args.selectedTriggerIds) {
       const triggerApiUrl = constructTriggerUrl(
-        `/api/triggers/registrations/${triggerId}/assistants`,
+        `/api/triggers/registrations/${triggerId}/agents`,
       );
       if (!triggerApiUrl) {
         return false;
