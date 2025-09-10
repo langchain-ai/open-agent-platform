@@ -107,12 +107,15 @@ function configSchemaToToolsConfig(
 
     // Allow MCP configuration if env var exists OR if we're in browser (user might have custom config)
     const mcpServerUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-    const allowMcpConfiguration = mcpServerUrl || (typeof window !== "undefined");
+    const allowMcpConfiguration = mcpServerUrl || typeof window !== "undefined";
 
     if (!allowMcpConfiguration) {
-      toast.error("MCP server not configured. Please set up a tool server in Settings.", {
-        richColors: true,
-      });
+      toast.error(
+        "MCP server not configured. Please set up a tool server in Settings.",
+        {
+          richColors: true,
+        },
+      );
       continue;
     }
 

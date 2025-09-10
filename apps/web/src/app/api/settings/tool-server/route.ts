@@ -39,11 +39,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the URL
-    if (!mcpServer.url || typeof mcpServer.url !== "string" || mcpServer.url.trim() === "") {
-      return NextResponse.json(
-        { error: "URL is required" },
-        { status: 400 },
-      );
+    if (
+      !mcpServer.url ||
+      typeof mcpServer.url !== "string" ||
+      mcpServer.url.trim() === ""
+    ) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
     // Validate URL format
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code !== "PGRST116") { // PGRST116 is "not found"
+    if (error && error.code !== "PGRST116") {
       console.error("Error fetching MCP server configuration:", error);
       return NextResponse.json(
         { error: "Failed to fetch MCP server configuration" },

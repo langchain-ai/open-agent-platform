@@ -61,14 +61,17 @@ export default function SettingsInterface(): React.ReactNode {
           const data = await response.json();
           if (data.mcpServer) {
             const config: McpServerConfig = data.mcpServer;
-            const authHeaders = Object.entries(config.auth || {}).map(([key, value]) => ({
-              key,
-              value,
-            }));
-            
+            const authHeaders = Object.entries(config.auth || {}).map(
+              ([key, value]) => ({
+                key,
+                value,
+              }),
+            );
+
             setToolServerConfig({
               url: config.url || "",
-              authHeaders: authHeaders.length > 0 ? authHeaders : [{ key: "", value: "" }],
+              authHeaders:
+                authHeaders.length > 0 ? authHeaders : [{ key: "", value: "" }],
             });
           }
         }
@@ -162,11 +165,15 @@ export default function SettingsInterface(): React.ReactNode {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save tool server configuration");
+        throw new Error(
+          errorData.error || "Failed to save tool server configuration",
+        );
       }
 
       await response.json();
-      toast.success("Tool server configuration saved successfully", { richColors: true });
+      toast.success("Tool server configuration saved successfully", {
+        richColors: true,
+      });
     } catch (error) {
       console.error("Error saving tool server configuration:", error);
       let errMessage = "Failed to save tool server configuration";
@@ -186,24 +193,28 @@ export default function SettingsInterface(): React.ReactNode {
   };
 
   const addAuthHeader = () => {
-    setToolServerConfig(prev => ({
+    setToolServerConfig((prev) => ({
       ...prev,
       authHeaders: [...prev.authHeaders, { key: "", value: "" }],
     }));
   };
 
   const removeAuthHeader = (index: number) => {
-    setToolServerConfig(prev => ({
+    setToolServerConfig((prev) => ({
       ...prev,
       authHeaders: prev.authHeaders.filter((_, i) => i !== index),
     }));
   };
 
-  const updateAuthHeader = (index: number, field: "key" | "value", value: string) => {
-    setToolServerConfig(prev => ({
+  const updateAuthHeader = (
+    index: number,
+    field: "key" | "value",
+    value: string,
+  ) => {
+    setToolServerConfig((prev) => ({
       ...prev,
       authHeaders: prev.authHeaders.map((header, i) =>
-        i === index ? { ...header, [field]: value } : header
+        i === index ? { ...header, [field]: value } : header,
       ),
     }));
   };
@@ -282,11 +293,17 @@ export default function SettingsInterface(): React.ReactNode {
         <h2 className="text-base font-semibold">Tool Server</h2>
         <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
           <p>
-            <strong>Note:</strong> The following headers are automatically included with all requests to your custom tool server:
+            <strong>Note:</strong> The following headers are automatically
+            included with all requests to your custom tool server:
           </p>
           <ul className="mt-1 list-inside list-disc pl-4">
-            <li><code>x-api-key</code>: LangSmith API key for tool server authentication</li>
-            <li><code>x-supabase-user-id</code>: Your unique user identifier</li>
+            <li>
+              <code>x-api-key</code>: LangSmith API key for tool server
+              authentication
+            </li>
+            <li>
+              <code>x-supabase-user-id</code>: Your unique user identifier
+            </li>
           </ul>
         </div>
         <div className="grid gap-4">
@@ -297,7 +314,12 @@ export default function SettingsInterface(): React.ReactNode {
               id="tool-server-url"
               placeholder="Enter your tool server URL"
               value={toolServerConfig.url}
-              onChange={(e) => setToolServerConfig(prev => ({ ...prev, url: e.target.value }))}
+              onChange={(e) =>
+                setToolServerConfig((prev) => ({
+                  ...prev,
+                  url: e.target.value,
+                }))
+              }
             />
           </div>
 
@@ -312,25 +334,32 @@ export default function SettingsInterface(): React.ReactNode {
                 onClick={addAuthHeader}
                 className="h-8 px-2 text-xs"
               >
-                <Plus className="size-3 mr-1" />
+                <Plus className="mr-1 size-3" />
                 Add Header
               </Button>
             </div>
             <div className="space-y-2">
               {toolServerConfig.authHeaders.map((header, index) => (
-                <div key={index} className="flex gap-2 items-center">
+                <div
+                  key={index}
+                  className="flex items-center gap-2"
+                >
                   <div className="flex-1">
                     <Input
                       placeholder="Header name (e.g. Authorization)"
                       value={header.key}
-                      onChange={(e) => updateAuthHeader(index, "key", e.target.value)}
+                      onChange={(e) =>
+                        updateAuthHeader(index, "key", e.target.value)
+                      }
                     />
                   </div>
                   <div className="flex-1">
                     <PasswordInput
                       placeholder="Header value"
                       value={header.value}
-                      onChange={(e) => updateAuthHeader(index, "value", e.target.value)}
+                      onChange={(e) =>
+                        updateAuthHeader(index, "value", e.target.value)
+                      }
                     />
                   </div>
                   {toolServerConfig.authHeaders.length > 1 && (

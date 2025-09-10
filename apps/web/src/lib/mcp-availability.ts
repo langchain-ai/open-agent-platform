@@ -28,7 +28,9 @@ export async function isMcpServerAvailable(userId?: string): Promise<boolean> {
 
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
-        get() { return undefined; },
+        get() {
+          return undefined;
+        },
         set() {},
         remove() {},
       },
@@ -40,13 +42,13 @@ export async function isMcpServerAvailable(userId?: string): Promise<boolean> {
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code !== "PGRST116") { // PGRST116 is "not found"
+    if (error && error.code !== "PGRST116") {
       console.error("Error checking user MCP server config:", error);
       return false;
     }
 
     const mcpConfig: McpServerConfig | null = data?.mcp_servers || null;
-    return !!(mcpConfig?.url);
+    return !!mcpConfig?.url;
   } catch (error) {
     console.error("Error in isMcpServerAvailable:", error);
     return false;

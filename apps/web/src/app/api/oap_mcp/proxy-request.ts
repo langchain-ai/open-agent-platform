@@ -4,6 +4,7 @@ import { McpServerConfig } from "@/types/mcp-server";
 
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
 const SUPABASE_AUTH_MCP = process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true";
+const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY;
 
 async function getSupabaseSessionInfo(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,13 +29,22 @@ async function getSupabaseSessionInfo(req: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession();
 
-    return session ? { accessToken: session.access_token, supabase, userId: session.user?.id } : null;
+    return session
+      ? {
+          accessToken: session.access_token,
+          supabase,
+          userId: session.user?.id,
+        }
+      : null;
   } catch {
     return null;
   }
 }
 
-async function getUserMcpServerConfig(supabase: any, userId: string): Promise<McpServerConfig | null> {
+async function getUserMcpServerConfig(
+  supabase: any,
+  userId: string,
+): Promise<McpServerConfig | null> {
   try {
     const { data, error } = await supabase
       .from("users_config")
@@ -42,7 +52,7 @@ async function getUserMcpServerConfig(supabase: any, userId: string): Promise<Mc
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code !== "PGRST116") { // PGRST116 is "not found"
+    if (error && error.code !== "PGRST116") {
       console.error("Error fetching user MCP server config:", error);
       return null;
     }
@@ -62,7 +72,10 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   // Try to get user's custom MCP server configuration
   if (sessionInfo?.supabase && sessionInfo?.userId) {
-    const userMcpConfig = await getUserMcpServerConfig(sessionInfo.supabase, sessionInfo.userId);
+    const userMcpConfig = await getUserMcpServerConfig(
+      sessionInfo.supabase,
+      sessionInfo.userId,
+    );
     if (userMcpConfig && userMcpConfig.url) {
       mcpServerUrl = userMcpConfig.url;
       useCustomAuth = true;
@@ -97,16 +110,20 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     });
 
     // Always include LangSmith API key and Supabase user ID for custom tool servers
-    if (process.env.LANGSMITH_API_KEY) {
-      headers.set("x-api-key", process.env.LANGSMITH_API_KEY);
+    if (LANGSMITH_API_KEY) {
+      headers.set("x-api-key", LANGSMITH_API_KEY);
     } else {
-      console.warn("LANGSMITH_API_KEY not available for custom tool server request");
+      console.warn(
+        "LANGSMITH_API_KEY not available for custom tool server request",
+      );
     }
 
     if (sessionInfo?.userId) {
       headers.set("x-supabase-user-id", sessionInfo.userId);
     } else {
-      console.warn("Supabase user ID not available for custom tool server request");
+      console.warn(
+        "Supabase user ID not available for custom tool server request",
+      );
     }
   } else if (SUPABASE_AUTH_MCP) {
     // Use existing supabase auth for default MCP server
