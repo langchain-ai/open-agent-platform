@@ -1,9 +1,14 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import { ChevronDown, ChevronRight, Terminal, AlertCircle } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Terminal,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "./ui/button";
-import { ChromeLoader } from "./ChromeLoader";
 import { ToolCall } from "../types";
 
 interface ToolCallBoxProps {
@@ -47,7 +52,12 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           />
         );
       case "pending":
-        return <ChromeLoader size={14} />;
+        return (
+          <Loader2
+            size={14}
+            className="animate-spin"
+          />
+        );
       default:
         return (
           <Terminal

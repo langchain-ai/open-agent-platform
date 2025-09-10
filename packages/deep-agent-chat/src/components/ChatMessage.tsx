@@ -7,7 +7,10 @@ import { ToolCallBox } from "./ToolCallBox";
 import { MarkdownContent } from "./MarkdownContent";
 import type { SubAgent, ToolCall } from "../types";
 import { Message } from "@langchain/langgraph-sdk";
-import { extractStringFromMessageContent } from "../utils";
+import {
+  extractStringFromMessageContent,
+  extractSubAgentContent,
+} from "../utils";
 import { cn } from "../lib/utils";
 
 interface ChatMessageProps {
@@ -83,33 +86,11 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             <div className={cn("relative flex items-end gap-0")}>
               <div
                 className={cn(
-                  "mt-4 overflow-hidden break-words",
+                  "mt-4 overflow-hidden text-sm leading-[150%] font-normal break-words text-[#1A1A1E]",
                   isUser
-                    ? "text-foreground font-sans"
-                    : "text-foreground p-3 font-sans",
+                    ? "rounded-full bg-[#F4F3FF] px-4 py-3"
+                    : "rounded-xl bg-[#F4F4F5] p-3",
                 )}
-                style={
-                  isUser
-                    ? {
-                        borderRadius: "999px",
-                        background: "#F4F3FF",
-                        padding: "12px 16px",
-                        color: "#1A1A1E",
-                        fontSize: "14px",
-                        fontStyle: "normal",
-                        fontWeight: "400",
-                        lineHeight: "150%",
-                      }
-                    : {
-                        borderRadius: "12px",
-                        background: "#F4F4F5",
-                        color: "#1A1A1E",
-                        fontSize: "14px",
-                        fontStyle: "normal",
-                        fontWeight: "400",
-                        lineHeight: "150%",
-                      }
-                }
               >
                 {isUser ? (
                   <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
@@ -126,8 +107,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
               {debugMode && isAIMessage && !(isLastMessage && isLoading) && (
                 <button
                   onClick={() => onRestartFromAIMessage(message)}
-                  className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
-                  style={{ transform: "scaleX(-1)" }}
+                  className="absolute right-1 bottom-1 -scale-x-100 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
                 >
                   <RotateCcw className="h-3 w-3 text-gray-600" />
                 </button>
@@ -165,8 +145,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                       {debugMode && subAgent.status === "completed" && (
                         <button
                           onClick={() => onRestartFromSubTask(subAgent.id)}
-                          className="absolute right-1 bottom-1 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
-                          style={{ transform: "scaleX(-1)" }}
+                          className="absolute right-1 bottom-1 -scale-x-100 rounded-full bg-black/10 p-1 transition-colors duration-200 hover:bg-black/20"
                         >
                           <RotateCcw className="h-3 w-3 text-gray-600" />
                         </button>
@@ -181,18 +160,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                         </h4>
                         <div className="mb-4">
                           <MarkdownContent
-                            content={
-                              typeof subAgent.input === "string"
-                                ? subAgent.input
-                                : subAgent.input.description &&
-                                    typeof subAgent.input.description ===
-                                      "string"
-                                  ? subAgent.input.description
-                                  : subAgent.input.prompt &&
-                                      typeof subAgent.input.prompt === "string"
-                                    ? subAgent.input.prompt
-                                    : JSON.stringify(subAgent.input, null, 2)
-                            }
+                            content={extractSubAgentContent(subAgent.input)}
                           />
                         </div>
                         {subAgent.output && (
@@ -201,14 +169,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                               Output
                             </h4>
                             <MarkdownContent
-                              content={
-                                typeof subAgent.output === "string"
-                                  ? subAgent.output
-                                  : subAgent.output.result &&
-                                      typeof subAgent.output.result === "string"
-                                    ? subAgent.output.result
-                                    : JSON.stringify(subAgent.output, null, 2)
-                              }
+                              content={extractSubAgentContent(subAgent.output)}
                             />
                           </>
                         )}

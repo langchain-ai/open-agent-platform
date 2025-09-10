@@ -46,7 +46,7 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={activeAssistant}
         assistantId={assistantId}
       >
-        <div className="oap-deep-agent-chat flex h-full w-full flex-1 gap-4 overflow-hidden p-4">
+        <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
           <div className="border-border flex h-full flex-col rounded-xl border bg-white p-3">
             <OptimizationSidebar
               activeAssistant={activeAssistant}

@@ -388,9 +388,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         </div> */}
         {!hideInternalToggle && (
           <div className="flex w-full justify-center">
-            <div
-              className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border bg-white p-[3px] text-[12px] shadow-sm border-[#D1D1D6]"
-            >
+            <div className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border border-[#D1D1D6] bg-white p-[3px] text-[12px] shadow-sm">
               <button
                 type="button"
                 onClick={() => setView("chat")}

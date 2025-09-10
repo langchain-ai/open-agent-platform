@@ -28,20 +28,23 @@ export const OptimizationSidebar = React.memo<OptimizationSidebarProps>(
       setIsTrainingModeExpanded((prev) => !prev);
     }, []);
 
+    // Early return if assistant is not available or there's an error
+    if (!activeAssistant || assistantError) {
+      return null;
+    }
+
     return (
       <div className="min-h-0 w-[25vw] flex-1">
         <div className="bg-background flex h-full w-full flex-col">
-          {activeAssistant && !assistantError && (
-            <OptimizationWindow
-              threadId={threadId}
-              deepAgentMessages={messages}
-              isExpanded={isTrainingModeExpanded}
-              onToggle={handleToggleTrainingMode}
-              activeAssistant={activeAssistant}
-              setActiveAssistant={setActiveAssistant}
-              setAssistantError={setAssistantError}
-            />
-          )}
+          <OptimizationWindow
+            threadId={threadId}
+            deepAgentMessages={messages}
+            isExpanded={isTrainingModeExpanded}
+            onToggle={handleToggleTrainingMode}
+            activeAssistant={activeAssistant}
+            setActiveAssistant={setActiveAssistant}
+            setAssistantError={setAssistantError}
+          />
         </div>
       </div>
     );

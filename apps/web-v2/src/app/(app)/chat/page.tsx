@@ -29,7 +29,7 @@ function PageHeader({
           <button
             type="button"
             onClick={() => setView("chat")}
-            className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
+            className="flex h-full flex-1 items-center justify-center truncate rounded p-[3px]"
             style={
               view === "chat"
                 ? {
@@ -43,7 +43,7 @@ function PageHeader({
           <button
             type="button"
             onClick={() => setView("workflow")}
-            className={`flex h-full flex-1 items-center justify-center truncate rounded p-[3px]`}
+            className="flex h-full flex-1 items-center justify-center truncate rounded p-[3px]"
             style={
               view === "workflow"
                 ? {
@@ -69,17 +69,19 @@ export default function DeepAgentChatPage(): React.ReactNode {
   
   return (
     <React.Suspense fallback={<div>Loading chat...</div>}>
-      <AgentsProvider>
-        <PageHeader view={view} setView={setView} />
-        <div className="flex min-h-0 flex-1">
-          <DeepAgentChatPageContent 
-            view={view} 
-            onViewChange={setView} 
-            hideInternalToggle={true} 
-          />
-        </div>
-      </AgentsProvider>
-      <Toaster />
+      <div className="flex h-screen flex-col">
+        <AgentsProvider>
+          <PageHeader view={view} setView={setView} />
+          <div className="flex min-h-0 flex-1 overflow-hidden">
+            <DeepAgentChatPageContent 
+              view={view} 
+              onViewChange={setView} 
+              hideInternalToggle={true} 
+            />
+          </div>
+        </AgentsProvider>
+        <Toaster />
+      </div>
     </React.Suspense>
   );
 }
