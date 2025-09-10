@@ -48,13 +48,13 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     }, [todos.length]);
 
     // Auto-expand when files go from empty to having content
+    const filesCount = Object.keys(files).length;
     useEffect(() => {
-      const filesCount = Object.keys(files).length;
       if (prevFilesCount.current === 0 && filesCount > 0) {
         setFilesOpen(true);
       }
       prevFilesCount.current = filesCount;
-    }, [Object.keys(files).length]);
+    }, [filesCount]);
 
     const handleCloseFileDialog = useCallback(() => {
       setIsFileCreationDialogOpen(false);
@@ -108,7 +108,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
     return (
       <div className="min-h-0 w-[252px] flex-shrink-0">
-        <div className="bg-background flex h-full w-full flex-col p-0 font-inter">
+        <div className="bg-background font-inter flex h-full w-full flex-col p-0">
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
             <div className="bg-muted/30 rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
