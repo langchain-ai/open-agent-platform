@@ -2,6 +2,8 @@
 
 import React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useFlags } from "launchdarkly-react-client-sdk";
+import { toast } from "sonner";
 
 interface PageHeaderProps {
   view: "chat" | "workflow";
@@ -10,6 +12,23 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ view, setView, assistantName }: PageHeaderProps) {
+  // LaunchDarkly feature flag for workflow
+  const { showAgentVisualizerUi } = useFlags<{
+    showAgentVisualizerUi?: boolean;
+  }>();
+
+  const isWorkflowEnabled = showAgentVisualizerUi !== false;
+
+  const handleViewChange = (newView: "chat" | "workflow") => {
+    if (newView === "workflow" && !isWorkflowEnabled) {
+      toast.error("Workflow view is coming soon!", {
+        richColors: true,
+      });
+      return;
+    }
+    setView(newView);
+  };
+
   return (
     <header className="relative flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       <div className="flex items-center gap-2 px-4">
@@ -28,7 +47,7 @@ export function PageHeader({ view, setView, assistantName }: PageHeaderProps) {
         >
           <button
             type="button"
-            onClick={() => setView("chat")}
+            onClick={() => handleViewChange("chat")}
             className="flex h-full flex-1 items-center justify-center truncate rounded p-[3px]"
             style={
               view === "chat"
@@ -42,15 +61,21 @@ export function PageHeader({ view, setView, assistantName }: PageHeaderProps) {
           </button>
           <button
             type="button"
-            onClick={() => setView("workflow")}
+            onClick={() => handleViewChange("workflow")}
             className="flex h-full flex-1 items-center justify-center truncate rounded p-[3px]"
-            style={
-              view === "workflow"
+            style={{
+              ...(view === "workflow"
                 ? {
                     background: "#F4F3FF",
                   }
-                : undefined
-            }
+                : undefined),
+              ...(isWorkflowEnabled
+                ? undefined
+                : {
+                    opacity: 0.5,
+                    cursor: "not-allowed",
+                  }),
+            }}
           >
             Workflow
           </button>

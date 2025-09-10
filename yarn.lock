@@ -2213,6 +2213,7 @@ __metadata:
     eslint-plugin-react-hooks: ^5.1.0
     eslint-plugin-react-refresh: ^0.4.14
     globals: ^15.13.0
+    launchdarkly-react-client-sdk: ^3.8.1
     lucide-react: ^0.542.0
     nuqs: ^2.4.1
     postcss: ^8.5.6

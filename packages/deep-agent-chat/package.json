@@ -29,6 +29,7 @@
     "@xyflow/react": "^12.8.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "launchdarkly-react-client-sdk": "^3.8.1",
     "lucide-react": "^0.542.0",
     "nuqs": "^2.4.1",
     "react": "^19",
