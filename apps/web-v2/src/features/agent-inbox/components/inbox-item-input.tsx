@@ -10,6 +10,7 @@ import React from "react";
 import { haveArgsChanged, prettifyText } from "../utils";
 import { MarkdownText } from "@/components/ui/markdown-text";
 import { Button } from "@/components/ui/button";
+import { AcceptScheduleButton } from "@/components/ui/accept-schedule-button";
 import { CircleX, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { logger } from "../utils/logger";
@@ -83,6 +84,7 @@ interface InboxItemInputProps {
   handleSubmit: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
+  handleSchedule?: (scheduledDate: Date) => Promise<void>;
 }
 
 function ResponseComponent({
@@ -161,26 +163,45 @@ function AcceptComponent({
   streaming,
   actionRequestArgs,
   handleSubmit,
+  handleSchedule,
 }: {
   streaming: boolean;
   actionRequestArgs: Record<string, any>;
   handleSubmit: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
+  handleSchedule?: (scheduledDate: Date) => Promise<void>;
 }) {
+  const handleAcceptClick = () => {
+    const syntheticEvent = {
+      preventDefault: () => {},
+    } as React.MouseEvent<HTMLButtonElement, MouseEvent>;
+    handleSubmit(syntheticEvent);
+  };
+
+  const handleScheduleClick = async (scheduledDate: Date) => {
+    if (handleSchedule) {
+      await handleSchedule(scheduledDate);
+    } else {
+      toast.error(
+        "Scheduling functionality is not available for this interrupt.",
+      );
+    }
+  };
+
   return (
     <div className="flex w-full flex-col items-start gap-4 rounded-lg border-[1px] border-gray-300 p-6">
       {actionRequestArgs && Object.keys(actionRequestArgs).length > 0 && (
         <ArgsRenderer args={actionRequestArgs} />
       )}
-      <Button
-        variant="brand"
-        disabled={streaming}
-        onClick={handleSubmit}
-        className="w-full"
-      >
-        Accept
-      </Button>
+      <div className="flex w-full justify-center">
+        <AcceptScheduleButton
+          onAccept={handleAcceptClick}
+          onSchedule={handleScheduleClick}
+          acceptDisabled={streaming}
+          scheduleDisabled={streaming}
+        />
+      </div>
     </div>
   );
 }
@@ -191,6 +212,7 @@ function EditAndOrAcceptComponent({
   initialValues,
   onEditChange,
   handleSubmit,
+  handleSchedule,
   interruptValue,
 }: {
   humanResponse: HumanResponseWithEdits[];
@@ -205,6 +227,7 @@ function EditAndOrAcceptComponent({
   handleSubmit: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => Promise<void>;
+  handleSchedule?: (scheduledDate: Date) => Promise<void>;
 }) {
   const defaultRows = React.useRef<Record<string, number>>({});
   const editResponse = humanResponse.find((r) => r.type === "edit");
@@ -220,6 +243,7 @@ function EditAndOrAcceptComponent({
           actionRequestArgs={interruptValue?.action_request?.args || {}}
           streaming={streaming}
           handleSubmit={handleSubmit}
+          handleSchedule={handleSchedule}
         />
       );
     }
@@ -339,6 +363,7 @@ export function InboxItemInput({
   setHasEdited,
   setHasAddedResponse,
   handleSubmit,
+  handleSchedule,
 }: InboxItemInputProps) {
   const isEditAllowed = interruptValue?.config?.allow_edit ?? false;
   const isResponseAllowed = interruptValue?.config?.allow_respond ?? false;
@@ -516,6 +541,7 @@ export function InboxItemInput({
           interruptValue={interruptValue}
           onEditChange={onEditChange}
           handleSubmit={handleSubmit}
+          handleSchedule={handleSchedule}
         />
         {supportsMultipleMethods ? (
           <div className="mt-4 mb-2 flex w-full items-center justify-center">

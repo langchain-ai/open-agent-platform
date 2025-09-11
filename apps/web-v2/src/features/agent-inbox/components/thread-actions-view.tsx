@@ -547,6 +547,7 @@ export function ThreadActionsView<
               | React.KeyboardEvent,
           ) => {})
         }
+        handleSchedule={actions?.handleSchedule}
       />
     </div>
   );
