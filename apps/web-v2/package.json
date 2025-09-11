@@ -12,7 +12,8 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "rm -rf .next .turbo || true"
+    "clean": "rm -rf .next .turbo || true",
+    "gen:supabase-types": "npx supabase gen types typescript --project-id \"juxhkpoaqdfzsrqcnoqa\" --schema public > src/types/supabase/database.types.ts"
   },
   "dependencies": {
     "@langchain/auth": "^0.0.0",
@@ -97,6 +98,7 @@
     "postcss": "^8.5.3",
     "prettier": "^3.5.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
+    "supabase": ">=1.8.1",
     "tailwindcss": "^4.0.13",
     "tailwindcss-animate": "^1.0.7",
     "turbo": "^2.5.0",
