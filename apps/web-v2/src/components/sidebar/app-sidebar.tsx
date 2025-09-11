@@ -42,16 +42,10 @@ const data = {
   ],
   workspace: [
     {
-      title: "Recruiter Agent",
-      url: "/agents/recruiter",
+      title: "Select Agent",
+      url: "/agents/select",
       icon: Bot,
       isDropdown: true,
-      subItems: [
-        {
-          title: "Recruiter Agent",
-          url: "/agents/recruiter",
-        },
-      ],
     },
     {
       title: "Chat",
