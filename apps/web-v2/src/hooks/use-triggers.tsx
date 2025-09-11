@@ -83,7 +83,7 @@ export function useTriggers() {
   const listTriggerRegistrations = async (
     accessToken: string,
   ): Promise<ListTriggerRegistrationsData[] | undefined> => {
-    const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
+    const triggersApiUrl = constructTriggerUrl("/api/user-triggers");
     if (!triggersApiUrl) {
       return;
     }

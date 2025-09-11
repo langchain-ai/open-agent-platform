@@ -15,6 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CreateAgentToolsSelection } from "@/features/agents/components/create-agent-tools-selection";
+import { CreateAgentTriggersSelection } from "@/features/agents/components/create-agent-triggers-selection";
+import { useAgents } from "@/hooks/use-agents";
+import { useTriggers } from "@/hooks/use-triggers";
+import { useAgentsContext } from "@/providers/Agents";
+import { useAuthContext } from "@/providers/Auth";
+import { toast } from "sonner";
+import { LoaderCircle } from "lucide-react";
 
 const sections = [
   {
@@ -26,14 +33,14 @@ const sections = [
   },
   {
     id: 2,
-    title: "Tools",
-    description: "Select the tools your agent should have access to",
+    title: "Triggers",
+    description: "Set up triggers for your agent",
     completed: false,
   },
   {
     id: 3,
-    title: "Triggers",
-    description: "Set up triggers for your agent",
+    title: "Tools",
+    description: "Select the tools your agent should have access to",
     completed: false,
   },
   {
@@ -46,13 +53,101 @@ const sections = [
 
 export default function CreateAgentPage(): React.ReactNode {
   const [currentSection, setCurrentSection] = useState(1);
+  const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
+  const [isCreating, setIsCreating] = useState(false);
   
   // Form state
   const [agentName, setAgentName] = useState("");
   const [agentDescription, setAgentDescription] = useState("");
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [interruptConfig, setInterruptConfig] = useState<{[toolName: string]: {allow_accept: boolean; allow_respond: boolean; allow_edit: boolean}}>({});
+  const [interruptConfig, setInterruptConfig] = useState<{[toolName: string]: {allow_accept: boolean; allow_respond: boolean; allow_edit: boolean; allow_ignore: boolean}}>({});
+  const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
+
+  // Hooks
+  const auth = useAuthContext();
+  const { createAgent } = useAgents();
+  const { setupAgentTrigger } = useTriggers();
+  const { refreshAgents } = useAgentsContext();
+
+  // Handle section completion
+  const handleSectionComplete = (sectionId: number) => {
+    setCompletedSections(prev => new Set([...prev, sectionId]));
+  };
+
+  // Check if all sections are completed
+  const allSectionsCompleted = completedSections.size === 4;
+
+  // Handle agent creation
+  const handleCreateAgent = async () => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found");
+      return;
+    }
+
+    if (!agentName.trim() || !agentDescription.trim() || !systemPrompt.trim()) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      // For now, we'll use a default deployment and graph
+      // In a real implementation, you'd want to get these from context or props
+      const defaultDeploymentId = "default"; // This should come from your app's context
+      const defaultGraphId = "default"; // This should come from your app's context
+
+      // Prepare the config object
+      const config = {
+        tools: {
+          tools: selectedTools,
+          interrupt_config: interruptConfig,
+        },
+        triggers: selectedTriggers,
+        system_prompt: systemPrompt,
+      };
+
+      // Create the agent
+      const newAgent = await createAgent(defaultDeploymentId, defaultGraphId, {
+        name: agentName,
+        description: agentDescription,
+        config,
+      });
+
+      if (!newAgent) {
+        toast.error("Failed to create agent");
+        return;
+      }
+
+      // Set up triggers if any are selected
+      if (selectedTriggers.length > 0) {
+        const success = await setupAgentTrigger(auth.session.accessToken, {
+          selectedTriggerIds: selectedTriggers,
+          agentId: newAgent.assistant_id,
+        });
+
+        if (!success) {
+          toast.error("Failed to set up triggers");
+          return;
+        }
+      }
+
+      toast.success("Agent created successfully!");
+      
+      // Refresh the agents list
+      refreshAgents();
+      
+      // TODO: Navigate to the new agent or close the dialog
+      // For now, we'll just show success
+      
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      toast.error("Failed to create agent");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -69,7 +164,19 @@ export default function CreateAgentPage(): React.ReactNode {
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Cancel</Button>
-          <Button>Create</Button>
+          <Button 
+            disabled={currentSection !== 4 || !systemPrompt.trim() || isCreating}
+            onClick={handleCreateAgent}
+          >
+            {isCreating ? (
+              <>
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Create"
+            )}
+          </Button>
         </div>
       </div>
 
@@ -167,21 +274,19 @@ export default function CreateAgentPage(): React.ReactNode {
                 )}
               
                 {currentSection === 2 && (
+                  <CreateAgentTriggersSelection
+                    selectedTriggers={selectedTriggers}
+                    onTriggersChange={setSelectedTriggers}
+                  />
+                )}
+                
+                {currentSection === 3 && (
                   <CreateAgentToolsSelection
                     selectedTools={selectedTools}
                     onToolsChange={setSelectedTools}
                     interruptConfig={interruptConfig}
                     onInterruptConfigChange={setInterruptConfig}
                   />
-                )}
-                
-                {currentSection === 3 && (
-                  <div>
-                    <h3 className="font-semibold mb-4">Agent Triggers</h3>
-                    <p className="text-muted-foreground">
-                      Set up triggers that will activate your agent.
-                    </p>
-                  </div>
                 )}
                 
                 {currentSection === 4 && (
@@ -205,34 +310,37 @@ export default function CreateAgentPage(): React.ReactNode {
           </div>
           
           {/* Fixed bottom buttons */}
-          <div className="p-6">
-            <div className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => setCurrentSection(Math.max(1, currentSection - 1))}
-                disabled={currentSection === 1}
-              >
-                Back
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (currentSection === 1) {
-                    setCurrentSection(2); // Go to tools
-                  } else if (currentSection === 2) {
-                    setCurrentSection(3); // Go to triggers
-                  } else if (currentSection === 3) {
-                    setCurrentSection(4); // Go to system prompt
-                  }
-                }}
-                disabled={currentSection === 4}
-              >
-                {currentSection === 1 ? "Configure tools →" : 
-                 currentSection === 2 ? "Configure triggers →" :
-                 currentSection === 3 ? "Configure system prompt →" :
-                 "Create Agent"}
-              </Button>
+          {currentSection !== 4 && (
+            <div className="p-6">
+              <div className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setCurrentSection(Math.max(1, currentSection - 1))}
+                  disabled={currentSection === 1}
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (currentSection === 1) {
+                      handleSectionComplete(1); // Mark configure section as completed
+                      setCurrentSection(2); // Go to triggers
+                    } else if (currentSection === 2) {
+                      handleSectionComplete(2); // Mark triggers section as completed
+                      setCurrentSection(3); // Go to tools
+                    } else if (currentSection === 3) {
+                      handleSectionComplete(3); // Mark tools section as completed
+                      setCurrentSection(4); // Go to system prompt
+                    }
+                  }}
+                >
+                  {currentSection === 1 ? "Configure triggers →" : 
+                   currentSection === 2 ? "Configure tools →" :
+                   "Configure system prompt →"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

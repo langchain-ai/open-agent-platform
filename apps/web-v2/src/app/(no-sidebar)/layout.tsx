@@ -6,6 +6,7 @@ import { AuthProvider } from "@/providers/Auth";
 import { useAuthContext } from "@/providers/Auth";
 import LaunchDarklyProvider from "@/providers/LaunchDarkly";
 import { MCPProvider } from "@/providers/MCP";
+import { AgentsProvider } from "@/providers/Agents";
 import Loading from "@/components/ui/loading";
 
 function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) {
@@ -20,13 +21,15 @@ function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // Only render the app with LaunchDarkly and MCP after auth is complete
+  // Only render the app with LaunchDarkly, MCP, and Agents after auth is complete
   return (
     <LaunchDarklyProvider>
       <MCPProvider>
-        <div className="min-h-screen bg-background">
-          {children}
-        </div>
+        <AgentsProvider>
+          <div className="min-h-screen bg-background">
+            {children}
+          </div>
+        </AgentsProvider>
       </MCPProvider>
     </LaunchDarklyProvider>
   );
