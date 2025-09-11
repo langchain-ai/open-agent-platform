@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       {
         user_id: userId,
         mcp_servers: mcpServer,
-      },
+      } as any,
       {
         onConflict: "user_id",
       },
