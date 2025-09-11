@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CreateAgentToolsSelection } from "@/features/agents/components/create-agent-tools-selection";
 
 const sections = [
   {
@@ -45,6 +46,13 @@ const sections = [
 
 export default function CreateAgentPage(): React.ReactNode {
   const [currentSection, setCurrentSection] = useState(1);
+  
+  // Form state
+  const [agentName, setAgentName] = useState("");
+  const [agentDescription, setAgentDescription] = useState("");
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [interruptConfig, setInterruptConfig] = useState<{[toolName: string]: {allow_accept: boolean; allow_respond: boolean; allow_edit: boolean}}>({});
+  const [systemPrompt, setSystemPrompt] = useState("");
 
   return (
     <div className="flex flex-col h-screen">
@@ -132,7 +140,9 @@ export default function CreateAgentPage(): React.ReactNode {
                         <Input
                           id="agent-name"
                           className="mt-1"
-                          placeholder=""
+                          placeholder="Enter agent name"
+                          value={agentName}
+                          onChange={(e) => setAgentName(e.target.value)}
                         />
                       </div>
                       
@@ -144,6 +154,8 @@ export default function CreateAgentPage(): React.ReactNode {
                           id="agent-description"
                           className="mt-1 min-h-[197px]"
                           placeholder="e.g. Handles common customer questions, provides troubleshooting steps, and escalates complex issues to a human."
+                          value={agentDescription}
+                          onChange={(e) => setAgentDescription(e.target.value)}
                         />
                       </div>
                     </div>
@@ -155,12 +167,12 @@ export default function CreateAgentPage(): React.ReactNode {
                 )}
               
                 {currentSection === 2 && (
-                  <div>
-                    <h3 className="font-semibold mb-4">Tools Selection</h3>
-                    <p className="text-muted-foreground">
-                      Choose which tools your agent should have access to.
-                    </p>
-                  </div>
+                  <CreateAgentToolsSelection
+                    selectedTools={selectedTools}
+                    onToolsChange={setSelectedTools}
+                    interruptConfig={interruptConfig}
+                    onInterruptConfigChange={setInterruptConfig}
+                  />
                 )}
                 
                 {currentSection === 3 && (
@@ -175,9 +187,15 @@ export default function CreateAgentPage(): React.ReactNode {
                 {currentSection === 4 && (
                   <div className="space-y-6">                    
                     <div>
+                      <Label htmlFor="system-prompt" className="text-sm font-medium">
+                        System Prompt
+                      </Label>
                       <Textarea
-                        className="min-h-[678px] text-gray-400"
-                        placeholder="e.g. placeholder prompt"
+                        id="system-prompt"
+                        className="mt-1 min-h-[400px]"
+                        placeholder="Enter the system prompt for your agent..."
+                        value={systemPrompt}
+                        onChange={(e) => setSystemPrompt(e.target.value)}
                       />
                     </div>
                   </div>
@@ -187,10 +205,32 @@ export default function CreateAgentPage(): React.ReactNode {
           </div>
           
           {/* Fixed bottom buttons */}
-          <div className= "p-6">
-            <div className="flex justify-end gap-2">
-              <Button variant="outline">Back</Button>
-              <Button>Configure tools →</Button>
+          <div className="p-6">
+            <div className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => setCurrentSection(Math.max(1, currentSection - 1))}
+                disabled={currentSection === 1}
+              >
+                Back
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (currentSection === 1) {
+                    setCurrentSection(2); // Go to tools
+                  } else if (currentSection === 2) {
+                    setCurrentSection(3); // Go to triggers
+                  } else if (currentSection === 3) {
+                    setCurrentSection(4); // Go to system prompt
+                  }
+                }}
+                disabled={currentSection === 4}
+              >
+                {currentSection === 1 ? "Configure tools →" : 
+                 currentSection === 2 ? "Configure triggers →" :
+                 currentSection === 3 ? "Configure system prompt →" :
+                 "Create Agent"}
+              </Button>
             </div>
           </div>
         </div>

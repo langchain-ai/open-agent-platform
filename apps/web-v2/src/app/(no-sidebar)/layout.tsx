@@ -5,6 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AuthProvider } from "@/providers/Auth";
 import { useAuthContext } from "@/providers/Auth";
 import LaunchDarklyProvider from "@/providers/LaunchDarkly";
+import { MCPProvider } from "@/providers/MCP";
 import Loading from "@/components/ui/loading";
 
 function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) {
@@ -19,12 +20,14 @@ function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) 
     );
   }
 
-  // Only render the app with LaunchDarkly after auth is complete
+  // Only render the app with LaunchDarkly and MCP after auth is complete
   return (
     <LaunchDarklyProvider>
-      <div className="min-h-screen bg-background">
-        {children}
-      </div>
+      <MCPProvider>
+        <div className="min-h-screen bg-background">
+          {children}
+        </div>
+      </MCPProvider>
     </LaunchDarklyProvider>
   );
 }
