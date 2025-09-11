@@ -413,21 +413,16 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
             isExpanded ? "" : "",
           )}
         >
-          <div className="flex items-center px-4 py-3">
-            <span className="text-foreground text-md font-semibold tracking-wide">
-              AGENT CREATOR
-            </span>
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col justify-between">
-            <div className="scrollbar-pretty-auto min-h-0 flex-1">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="scrollbar-pretty-auto min-h-0 flex-1 overflow-y-auto">
               <div className="flex flex-col gap-4 bg-inherit p-4">
                 {displayMessages.map((message, index) => {
                   if (isUserMessage(message)) {
                     return (
                       <div
                         key={`user-${index}`}
-                        className="bg-user-message mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
+                        className="mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
+                        style={{ backgroundColor: '#2F6868' }}
                       >
                         {message.content}
                       </div>
@@ -483,7 +478,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               </div>
             </div>
             {displayMessages.length === 0 && (
-              <div className="px-4 pb-2">
+              <div className="px-0 pb-2">
                 <div className="font-inter rounded-xl bg-[#F4F4F5] p-4 text-sm leading-[150%] font-normal text-[#3F3F46]">
                   <p className="m-0">
                     Update your agent's goals, tools, instructions, or
@@ -500,7 +495,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               </div>
             )}
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mx-4 mt-auto mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+              className="border-border focus-within:border-primary focus-within:ring-primary mt-2 mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2 flex-shrink-0"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea

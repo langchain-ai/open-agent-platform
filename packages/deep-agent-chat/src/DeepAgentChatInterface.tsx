@@ -44,8 +44,11 @@ function DeepAgentChatInterfaceInternal({
         assistantId={assistantId}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
-          <div className="border-border flex h-full flex-col rounded-xl border bg-white p-3">
-            <OptimizationSidebar
+          <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
+            <TasksFilesSidebar
+              todos={todos}
+              files={files}
+              setFiles={setFiles}
               activeAssistant={activeAssistant}
               setActiveAssistant={setActiveAssistant}
               setAssistantError={setAssistantError}
@@ -69,12 +72,6 @@ function DeepAgentChatInterfaceInternal({
               hideInternalToggle={hideInternalToggle}
             />
           </div>
-
-          <TasksFilesSidebar
-            todos={todos}
-            files={files}
-            setFiles={setFiles}
-          />
         </div>
       </ChatProvider>
     </ClientProvider>

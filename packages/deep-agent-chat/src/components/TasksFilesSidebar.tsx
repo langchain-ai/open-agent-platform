@@ -19,21 +19,34 @@ import type { TodoItem, FileItem } from "../types";
 import { useChatContext } from "../providers/ChatContext";
 import { cn } from "../lib/utils";
 import { FileViewDialog } from "./FileViewDialog";
+import { OptimizationSidebar } from "./OptimizationSidebar";
+import type { Assistant } from "@langchain/langgraph-sdk";
 
 interface TasksFilesSidebarProps {
   todos: TodoItem[];
   files: Record<string, string>;
   setFiles: (files: Record<string, string>) => void;
+  activeAssistant: Assistant | null;
+  setActiveAssistant: (assistant: Assistant | null) => void;
+  setAssistantError: (error: string | null) => void;
+  assistantError: string | null;
 }
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
-  ({ todos, files, setFiles }) => {
+  ({ todos, files, setFiles, activeAssistant, setActiveAssistant, setAssistantError, assistantError }) => {
     const { isLoading, interrupt } = useChatContext();
     const [isFileCreationDialogOpen, setIsFileCreationDialogOpen] =
       useState(false);
     const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
     const [tasksOpen, setTasksOpen] = useState(false);
     const [filesOpen, setFilesOpen] = useState(false);
+
+    const handleOptimizerToggle = useCallback((isOptimizerOpen: boolean) => {
+      if (isOptimizerOpen) {
+        setTasksOpen(false);
+        setFilesOpen(false);
+      }
+    }, []);
 
     // Track previous counts to detect when content goes from empty to having items
     const prevTodosCount = useRef(todos.length);
@@ -107,12 +120,12 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     }, [todos]);
 
     return (
-      <div className="min-h-0 w-[252px] flex-shrink-0">
-        <div className="bg-background font-inter flex h-full w-full flex-col p-0">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-            <div className="bg-muted/30 rounded-xl">
+      <div className="min-h-0 w-full flex-1">
+        <div className="font-inter flex h-full w-full flex-col p-0">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
+            <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#3F3F46' }}>
                   AGENT TASKS
                 </span>
                 <button
@@ -200,9 +213,9 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
               )}
             </div>
 
-            <div className="bg-muted/30 rounded-xl">
+            <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-muted-foreground text-xs font-semibold tracking-wide">
+                <span className="text-xs font-semibold tracking-wide" style={{ color: '#3F3F46' }}>
                   FILE SYSTEM
                 </span>
                 <button
@@ -280,6 +293,14 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                 </div>
               )}
             </div>
+
+            <OptimizationSidebar
+              activeAssistant={activeAssistant}
+              setActiveAssistant={setActiveAssistant}
+              setAssistantError={setAssistantError}
+              assistantError={assistantError}
+              onOptimizerToggle={handleOptimizerToggle}
+            />
           </div>
         </div>
       </div>
