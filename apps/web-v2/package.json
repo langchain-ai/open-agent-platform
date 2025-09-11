@@ -12,7 +12,8 @@
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "rm -rf .next .turbo || true"
+    "clean": "rm -rf .next .turbo || true",
+    "gen:supabase-types": "npx supabase gen types typescript --project-id \"juxhkpoaqdfzsrqcnoqa\" --schema public > src/types/supabase/database.types.ts"
   },
   "dependencies": {
     "@langchain/auth": "^0.0.0",
