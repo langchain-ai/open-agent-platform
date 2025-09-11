@@ -67,7 +67,8 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [showCreateAgentDialog, setShowCreateAgentDialog] = React.useState(false);
+  const [showCreateAgentDialog, setShowCreateAgentDialog] =
+    React.useState(false);
 
   return (
     <>
@@ -77,18 +78,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       >
         <SiteHeader />
         <SidebarContent className="gap-0.5">
-          <NavMain 
-            items={data.topNav} 
+          <NavMain
+            items={data.topNav}
             onNewAgentClick={() => setShowCreateAgentDialog(true)}
           />
-          <NavMain items={data.workspace} groupLabel="Workspace" />
+          <NavMain
+            items={data.workspace}
+            groupLabel="Workspace"
+          />
         </SidebarContent>
         <SidebarFooter>
           <NavUser />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      
+
       <CreateAgentDialog
         open={showCreateAgentDialog}
         onOpenChange={setShowCreateAgentDialog}
@@ -96,4 +100,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </>
   );
 }
-

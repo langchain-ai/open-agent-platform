@@ -4,7 +4,6 @@ import { type LucideIcon, ChevronDown } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
-import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 import { useEffect, useState } from "react";
 
@@ -26,10 +25,13 @@ import {
 import NextLink from "next/link";
 import { cn } from "@/lib/utils";
 
-function AgentDropdown({ item }: { item: { title: string; icon?: LucideIcon } }) {
+function AgentDropdown({
+  item,
+}: {
+  item: { title: string; icon?: LucideIcon };
+}) {
   const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [open, setOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const router = useRouter();
 
@@ -53,17 +55,21 @@ function AgentDropdown({ item }: { item: { title: string; icon?: LucideIcon } })
     const agentValue = Array.isArray(value) ? value[0] : value;
     const [assistantId, deploymentId] = agentValue.split(":");
     // Navigate to chat page with the selected agent
-    router.push(`/chat?agentId=${assistantId}:${deploymentId}&deploymentId=${deploymentId}`);
+    router.push(
+      `/chat?agentId=${assistantId}:${deploymentId}&deploymentId=${deploymentId}`,
+    );
   };
 
-  const selectedAgent = agentId ? (() => {
-    const [selectedAssistantId, selectedDeploymentId] = agentId.split(":");
-    return agents.find(
-      (agent) =>
-        agent.assistant_id === selectedAssistantId &&
-        agent.deploymentId === selectedDeploymentId,
-    );
-  })() : null;
+  const selectedAgent = agentId
+    ? (() => {
+        const [selectedAssistantId, selectedDeploymentId] = agentId.split(":");
+        return agents.find(
+          (agent) =>
+            agent.assistant_id === selectedAssistantId &&
+            agent.deploymentId === selectedDeploymentId,
+        );
+      })()
+    : null;
 
   return (
     <Collapsible defaultOpen>
@@ -71,7 +77,7 @@ function AgentDropdown({ item }: { item: { title: string; icon?: LucideIcon } })
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
             className={cn(
-              "border border-gray-200 rounded-lg bg-white shadow-sm hover:bg-gray-50",
+              "rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50",
             )}
           >
             {item.icon && <item.icon />}
@@ -86,7 +92,7 @@ function AgentDropdown({ item }: { item: { title: string; icon?: LucideIcon } })
             {loading ? (
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton>
-                  <span style={{ fontSize: '13px' }}>Loading agents...</span>
+                  <span style={{ fontSize: "13px" }}>Loading agents...</span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             ) : (
@@ -99,10 +105,11 @@ function AgentDropdown({ item }: { item: { title: string; icon?: LucideIcon } })
                       onClick={() => handleAgentChange(agentValue)}
                       className={cn(
                         "cursor-pointer",
-                        isSelected && "bg-sidebar-accent text-sidebar-accent-foreground font-bold"
+                        isSelected &&
+                          "bg-sidebar-accent text-sidebar-accent-foreground font-bold",
                       )}
                     >
-                      <span style={{ fontSize: '13px' }}>{agent.name}</span>
+                      <span style={{ fontSize: "13px" }}>{agent.name}</span>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 );
@@ -137,14 +144,21 @@ export function NavMain({
 
   return (
     <SidebarGroup className="gap-1">
-      {groupLabel && <SidebarGroupLabel className="mb-1 text-xs">{groupLabel}</SidebarGroupLabel>}
+      {groupLabel && (
+        <SidebarGroupLabel className="mb-1 text-xs">
+          {groupLabel}
+        </SidebarGroupLabel>
+      )}
       <SidebarMenu className="gap-0.5">
-        {items.map((item, index) => (
+        {items.map((item, index) =>
           item.isDropdown ? (
-            <AgentDropdown key={`${item.title}-${index}`} item={item} />
+            <AgentDropdown
+              key={`${item.title}-${index}`}
+              item={item}
+            />
           ) : item.title === "New Agent" && onNewAgentClick ? (
             <SidebarMenuItem key={`${item.title}-${index}`}>
-              <SidebarMenuButton 
+              <SidebarMenuButton
                 tooltip={item.title}
                 onClick={onNewAgentClick}
               >
@@ -165,14 +179,14 @@ export function NavMain({
               >
                 <SidebarMenuButton tooltip={item.title}>
                   {item.icon && <item.icon />}
-                  <span className={cn(
-                    pathname === item.url && "font-bold"
-                  )}>{item.title}</span>
+                  <span className={cn(pathname === item.url && "font-bold")}>
+                    {item.title}
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </NextLink>
-          )
-        ))}
+          ),
+        )}
       </SidebarMenu>
     </SidebarGroup>
   );

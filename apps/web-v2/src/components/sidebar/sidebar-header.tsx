@@ -6,10 +6,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { OAPLogoGreen } from "../icons/oap-logo-green";
-import { PanelLeftIcon, Plus } from "lucide-react";
+import { OAPLogoGreen } from "@/components/icons/oap-logo-green";
+import { PanelLeftIcon } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import NextLink from "next/link";
 
 export function SiteHeader() {
@@ -22,23 +21,23 @@ export function SiteHeader() {
           <SidebarMenuButton
             size="lg"
             asChild
-            className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center justify-between"
+            className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center"
           >
             <NextLink href="/chat">
               {/* Show only trigger icon when collapsed */}
-              <PanelLeftIcon 
-                className="!h-4 !w-4 flex-shrink-0 group-data-[collapsible=icon]:block hidden cursor-pointer" 
+              <PanelLeftIcon
+                className="hidden !h-4 !w-4 flex-shrink-0 cursor-pointer group-data-[collapsible=icon]:block"
                 onClick={(e) => {
                   e.preventDefault();
                   toggleSidebar();
                 }}
               />
-              
+
               {/* Show logo and trigger when expanded */}
-              <div className="flex items-center justify-between w-full group-data-[collapsible=icon]:hidden">
+              <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:hidden">
                 <OAPLogoGreen className="!h-4 !w-auto flex-shrink-0" />
-                <PanelLeftIcon 
-                  className="!h-4 !w-4 flex-shrink-0 cursor-pointer" 
+                <PanelLeftIcon
+                  className="!h-4 !w-4 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.preventDefault();
                     toggleSidebar();
@@ -48,7 +47,6 @@ export function SiteHeader() {
             </NextLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        
       </SidebarMenu>
     </SidebarHeader>
   );
