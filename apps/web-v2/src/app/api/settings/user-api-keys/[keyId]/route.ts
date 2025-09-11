@@ -53,7 +53,7 @@ export async function DELETE(
       .from("user_api_keys")
       .delete()
       .eq("id", keyId)
-      .eq("user_id", userId);
+      .eq("user_id", userId) as any;
 
     if (error) {
       console.error("Error deleting user API key:", error);

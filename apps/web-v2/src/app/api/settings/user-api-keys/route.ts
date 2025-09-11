@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         key_hash: encryptedApiKey,
         created_at: new Date().toISOString(),
-      })
+      } as any)
       .select()
       .single();
 
@@ -101,10 +101,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "API key created successfully",
       apiKey: {
-        id: data.id,
-        name: data.name,
+        id: (data as any).id,
+        name: (data as any).name,
         key: apiKey, // Return the plain key only on creation
-        created_at: data.created_at,
+        created_at: (data as any).created_at,
       },
     });
   } catch (error) {
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       .from("user_api_keys")
       .select("id, name, key_hash, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false }) as any;
 
     if (error) {
       console.error("Error fetching user API keys:", error);
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Decrypt the API keys for display
-    const apiKeys = data.map((key) => ({
+    const apiKeys = (data as any[]).map((key: any) => ({
       id: key.id,
       name: key.name,
       key: decryptApiKey(key.key_hash),
