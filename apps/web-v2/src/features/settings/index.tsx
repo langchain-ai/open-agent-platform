@@ -21,6 +21,8 @@ import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
 import { Session } from "@/lib/auth/types";
 import { McpServerFormData, McpServerConfig } from "@/types/mcp-server";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { useFlags } from "launchdarkly-react-client-sdk";
 
 interface UserApiKey {
   id: string;
@@ -167,6 +169,10 @@ async function getSavedApiKeys(
  * The Settings interface component containing API Keys configuration.
  */
 export default function SettingsInterface(): React.ReactNode {
+  const { showCustomToolServerSettings } = useFlags<LaunchDarklyFeatureFlags>();
+  const isShowCustomToolServerSettingsEnabled =
+    showCustomToolServerSettings !== false;
+
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingToolServer, setIsSavingToolServer] = useState(false);
@@ -629,115 +635,116 @@ export default function SettingsInterface(): React.ReactNode {
       </div>
       <Separator />
 
-      {/* Tool Server Section */}
-      <div className="flex w-full flex-col gap-4">
-        <h2 className="text-base font-semibold">Tool Server</h2>
-        <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-          <p>
-            <strong>Note:</strong> The following headers are automatically
-            included with all requests to your custom tool server:
-          </p>
-          <ul className="mt-1 list-inside list-disc pl-4">
-            <li>
-              <code>x-api-key</code>: LangSmith API key for tool server
-              authentication
-            </li>
-            <li>
-              <code>x-supabase-user-id</code>: Your unique user identifier
-            </li>
-          </ul>
-        </div>
-        <div className="grid gap-4">
-          {/* Tool Server URL */}
-          <div className="grid gap-2">
-            <Label htmlFor="tool-server-url">Tool Server URL</Label>
-            <Input
-              id="tool-server-url"
-              placeholder="Enter your tool server URL"
-              value={toolServerConfig.url}
-              onChange={(e) =>
-                setToolServerConfig((prev) => ({
-                  ...prev,
-                  url: e.target.value,
-                }))
-              }
-            />
+      {isShowCustomToolServerSettingsEnabled && (
+        <div className="flex w-full flex-col gap-4">
+          <h2 className="text-base font-semibold">Tool Server</h2>
+          <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+            <p>
+              <strong>Note:</strong> The following headers are automatically
+              included with all requests to your custom tool server:
+            </p>
+            <ul className="mt-1 list-inside list-disc pl-4">
+              <li>
+                <code>x-api-key</code>: LangSmith API key for tool server
+                authentication
+              </li>
+              <li>
+                <code>x-supabase-user-id</code>: Your unique user identifier
+              </li>
+            </ul>
           </div>
-
-          {/* Auth Headers */}
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between">
-              <Label>Authentication Headers (Optional)</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addAuthHeader}
-                className="h-8 px-2 text-xs"
-              >
-                <Plus className="mr-1 size-3" />
-                Add Header
-              </Button>
+          <div className="grid gap-4">
+            {/* Tool Server URL */}
+            <div className="grid gap-2">
+              <Label htmlFor="tool-server-url">Tool Server URL</Label>
+              <Input
+                id="tool-server-url"
+                placeholder="Enter your tool server URL"
+                value={toolServerConfig.url}
+                onChange={(e) =>
+                  setToolServerConfig((prev) => ({
+                    ...prev,
+                    url: e.target.value,
+                  }))
+                }
+              />
             </div>
-            <div className="space-y-2">
-              {toolServerConfig.authHeaders.map((header, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-2"
+
+            {/* Auth Headers */}
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between">
+                <Label>Authentication Headers (Optional)</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addAuthHeader}
+                  className="h-8 px-2 text-xs"
                 >
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Header name (e.g. Authorization)"
-                      value={header.key}
-                      onChange={(e) =>
-                        updateAuthHeader(index, "key", e.target.value)
-                      }
-                    />
+                  <Plus className="mr-1 size-3" />
+                  Add Header
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {toolServerConfig.authHeaders.map((header, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Header name (e.g. Authorization)"
+                        value={header.key}
+                        onChange={(e) =>
+                          updateAuthHeader(index, "key", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <PasswordInput
+                        placeholder="Header value"
+                        value={header.value}
+                        onChange={(e) =>
+                          updateAuthHeader(index, "value", e.target.value)
+                        }
+                      />
+                    </div>
+                    {toolServerConfig.authHeaders.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAuthHeader(index)}
+                        className="h-10 w-10 p-0"
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <PasswordInput
-                      placeholder="Header value"
-                      value={header.value}
-                      onChange={(e) =>
-                        updateAuthHeader(index, "value", e.target.value)
-                      }
-                    />
-                  </div>
-                  {toolServerConfig.authHeaders.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeAuthHeader(index)}
-                      className="h-10 w-10 p-0"
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSaveToolServer}
-            disabled={isSavingToolServer}
-            className="min-w-[120px]"
-          >
-            {isSavingToolServer ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Tool Server"
-            )}
-          </Button>
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSaveToolServer}
+              disabled={isSavingToolServer}
+              className="min-w-[120px]"
+            >
+              {isSavingToolServer ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Tool Server"
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
