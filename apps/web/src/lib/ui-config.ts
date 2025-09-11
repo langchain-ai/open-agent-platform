@@ -2,8 +2,6 @@ import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
-  ConfigurableFieldSubAgentsMetadata,
-  ConfigurableFieldTriggersMetadata,
   ConfigurableFieldUIMetadata,
 } from "@/types/configurable";
 import { Assistant, GraphSchema } from "@langchain/langgraph-sdk";
@@ -66,10 +64,7 @@ function configSchemaToConfigurableFields(
   const fields: ConfigurableFieldUIMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
     const uiConfig = getUiConfig(value);
-    if (
-      uiConfig &&
-      ["mcp", "rag", "hidden", "sub_agents", "triggers"].includes(uiConfig.type)
-    ) {
+    if (uiConfig && ["mcp", "rag", "hidden"].includes(uiConfig.type)) {
       continue;
     }
 
@@ -105,17 +100,10 @@ function configSchemaToToolsConfig(
       continue;
     }
 
-    // Allow MCP configuration if env var exists OR if we're in browser (user might have custom config)
-    const mcpServerUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-    const allowMcpConfiguration = mcpServerUrl || typeof window !== "undefined";
-
-    if (!allowMcpConfiguration) {
-      toast.error(
-        "MCP server not configured. Please set up a tool server in Settings.",
-        {
-          richColors: true,
-        },
-      );
+    if (!process.env.NEXT_PUBLIC_MCP_SERVER_URL) {
+      toast.error("Can not configure MCP tool without MCP server URL", {
+        richColors: true,
+      });
       continue;
     }
 
@@ -123,7 +111,7 @@ function configSchemaToToolsConfig(
       label: key,
       type: uiConfig.type,
       default: {
-        url: mcpServerUrl || "", // Will be empty if no env var, but proxy will use user config
+        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
         tools: [],
         auth_required: process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true",
         ...(uiConfig.default ?? {}),
@@ -181,61 +169,11 @@ function configSchemaToAgentsConfig(
   return agentsField;
 }
 
-function configSchemaToSubAgentsConfig(
-  schema: GraphSchema["config_schema"],
-): ConfigurableFieldSubAgentsMetadata | undefined {
-  if (!schema || !schema.properties) {
-    return undefined;
-  }
-
-  let subAgentsField: ConfigurableFieldSubAgentsMetadata | undefined;
-  for (const [key, value] of Object.entries(schema.properties)) {
-    const uiConfig = getUiConfig(value);
-    if (!uiConfig || uiConfig.type !== "sub_agents") {
-      continue;
-    }
-
-    subAgentsField = {
-      label: key,
-      type: uiConfig.type,
-      default: uiConfig.default,
-    };
-    break;
-  }
-  return subAgentsField;
-}
-
-function configSchemaToTriggersConfig(
-  schema: GraphSchema["config_schema"],
-): ConfigurableFieldTriggersMetadata | undefined {
-  if (!schema || !schema.properties) {
-    return undefined;
-  }
-
-  let triggersField: ConfigurableFieldTriggersMetadata | undefined;
-  for (const [key, value] of Object.entries(schema.properties)) {
-    const uiConfig = getUiConfig(value);
-    if (!uiConfig || uiConfig.type !== "triggers") {
-      continue;
-    }
-
-    triggersField = {
-      label: key,
-      type: uiConfig.type,
-      default: uiConfig.default,
-    };
-    break;
-  }
-  return triggersField;
-}
-
 type ExtractedConfigs = {
   configFields: ConfigurableFieldUIMetadata[];
   toolConfig: ConfigurableFieldMCPMetadata[];
   ragConfig: ConfigurableFieldRAGMetadata[];
   agentsConfig: ConfigurableFieldAgentsMetadata[];
-  subAgentsConfig: ConfigurableFieldSubAgentsMetadata[];
-  triggersConfig: ConfigurableFieldTriggersMetadata[];
 };
 
 export function extractConfigurationsFromAgent({
@@ -249,8 +187,6 @@ export function extractConfigurationsFromAgent({
   const toolConfig = configSchemaToToolsConfig(schema);
   const ragConfig = configSchemaToRagConfig(schema);
   const agentsConfig = configSchemaToAgentsConfig(schema);
-  const subAgentsConfig = configSchemaToSubAgentsConfig(schema);
-  const triggersConfig = configSchemaToTriggersConfig(schema);
 
   const configFieldsWithDefaults = configFields.map((f) => {
     const defaultConfig = agent.config?.configurable?.[f.label] ?? f.default;
@@ -313,51 +249,12 @@ export function extractConfigurationsFromAgent({
       }
     : undefined;
 
-  const configurableSubAgentsWithDefaults = subAgentsConfig
-    ? {
-        ...subAgentsConfig,
-        default:
-          Array.isArray(configurable[subAgentsConfig.label]) &&
-          (configurable[subAgentsConfig.label] as any[]).length > 0
-            ? (configurable[subAgentsConfig.label] as {
-                agent_id?: string;
-                deployment_url?: string;
-                name?: string;
-                description?: string;
-                prompt?: string;
-                tools?: string[];
-              }[])
-            : Array.isArray(subAgentsConfig.default)
-              ? subAgentsConfig.default
-              : [],
-      }
-    : undefined;
-
-  const configurableTriggersWithDefaults = triggersConfig
-    ? {
-        ...triggersConfig,
-        default:
-          Array.isArray(configurable[triggersConfig.label]) &&
-          (configurable[triggersConfig.label] as any[]).length > 0
-            ? (configurable[triggersConfig.label] as string[])
-            : Array.isArray(triggersConfig.default)
-              ? triggersConfig.default
-              : [],
-      }
-    : undefined;
-
   return {
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
     ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
     agentsConfig: configurableAgentsWithDefaults
       ? [configurableAgentsWithDefaults]
-      : [],
-    subAgentsConfig: configurableSubAgentsWithDefaults
-      ? [configurableSubAgentsWithDefaults]
-      : [],
-    triggersConfig: configurableTriggersWithDefaults
-      ? [configurableTriggersWithDefaults]
       : [],
   };
 }
@@ -367,8 +264,6 @@ export function getConfigurableDefaults(
   toolConfig: ConfigurableFieldMCPMetadata[],
   ragConfig: ConfigurableFieldRAGMetadata[],
   agentsConfig: ConfigurableFieldAgentsMetadata[],
-  subAgentsConfig: ConfigurableFieldSubAgentsMetadata[],
-  triggersConfig: ConfigurableFieldTriggersMetadata[],
 ): Record<string, any> {
   const defaults: Record<string, any> = {};
   configFields.forEach((field) => {
@@ -381,12 +276,6 @@ export function getConfigurableDefaults(
     defaults[field.label] = field.default;
   });
   agentsConfig.forEach((field) => {
-    defaults[field.label] = field.default;
-  });
-  subAgentsConfig.forEach((field) => {
-    defaults[field.label] = field.default;
-  });
-  triggersConfig.forEach((field) => {
     defaults[field.label] = field.default;
   });
   return defaults;

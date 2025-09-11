@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { McpServerConfig } from "@/types/mcp-server";
 
+// This will contain the object which contains the access token
+const MCP_TOKENS = process.env.MCP_TOKENS;
 const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-const SUPABASE_AUTH_MCP = process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true";
-const LANGSMITH_API_KEY = process.env.LANGSMITH_API_KEY;
+const MCP_AUTH_REQUIRED = process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true";
 
-async function getSupabaseSessionInfo(req: NextRequest) {
+async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -15,174 +15,227 @@ async function getSupabaseSessionInfo(req: NextRequest) {
   }
 
   try {
+    // Create a Supabase client using the server client with cookies from the request
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         get(name: string) {
           return req.cookies.get(name)?.value;
         },
-        set() {},
-        remove() {},
+        set() {}, // Not needed for token retrieval
+        remove() {}, // Not needed for token retrieval
       },
     });
 
+    // Get the session which contains the access token
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
-    return session
-      ? {
-          accessToken: session.access_token,
-          supabase,
-          userId: session.user?.id,
-        }
-      : null;
-  } catch {
-    return null;
-  }
-}
-
-async function getUserMcpServerConfig(
-  supabase: any,
-  userId: string,
-): Promise<McpServerConfig | null> {
-  try {
-    const { data, error } = await supabase
-      .from("users_config")
-      .select("mcp_servers")
-      .eq("user_id", userId)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      console.error("Error fetching user MCP server config:", error);
+    if (!session) {
       return null;
     }
 
-    return data?.mcp_servers || null;
+    return session.access_token;
   } catch (error) {
-    console.error("Error getting user MCP server config:", error);
+    console.error("Error getting Supabase token:", error);
     return null;
   }
 }
 
-export async function proxyRequest(req: NextRequest): Promise<Response> {
-  const sessionInfo = await getSupabaseSessionInfo(req);
-  let mcpServerUrl = MCP_SERVER_URL;
-  let useCustomAuth = false;
-  let customAuthHeaders: Record<string, string> = {};
+async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: URL) {
+  const mcpUrl = `${mcpServerUrl.href}/mcp`;
+  const mcpOauthUrl = `${mcpServerUrl.href}/oauth/token`;
 
-  // Try to get user's custom MCP server configuration
-  if (sessionInfo?.supabase && sessionInfo?.userId) {
-    const userMcpConfig = await getUserMcpServerConfig(
-      sessionInfo.supabase,
-      sessionInfo.userId,
+  try {
+    // Exchange Supabase token for MCP access token
+    const formData = new URLSearchParams();
+    formData.append("client_id", "mcp_default");
+    formData.append("subject_token", supabaseToken);
+    formData.append(
+      "grant_type",
+      "urn:ietf:params:oauth:grant-type:token-exchange",
     );
-    if (userMcpConfig && userMcpConfig.url) {
-      mcpServerUrl = userMcpConfig.url;
-      useCustomAuth = true;
-      customAuthHeaders = userMcpConfig.auth || {};
-    }
-  }
+    formData.append("resource", mcpUrl);
+    formData.append(
+      "subject_token_type",
+      "urn:ietf:params:oauth:token-type:access_token",
+    );
 
-  if (!mcpServerUrl) {
+    const tokenResponse = await fetch(mcpOauthUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData.toString(),
+    });
+
+    if (tokenResponse.ok) {
+      const tokenData = await tokenResponse.json();
+      return tokenData.access_token;
+    } else {
+      console.error("Token exchange failed:", await tokenResponse.text());
+    }
+  } catch (e) {
+    console.error("Error during token exchange:", e);
+  }
+}
+
+/**
+ * Proxies requests from the client to the MCP server.
+ * Extracts the path after '/api/oap_mcp', constructs the target URL,
+ * forwards the request with necessary headers and body, and injects
+ * the MCP authorization token.
+ *
+ * @param req The incoming NextRequest.
+ * @returns The response from the MCP server.
+ */
+export async function proxyRequest(req: NextRequest): Promise<Response> {
+  if (!MCP_SERVER_URL) {
     return new Response(
-      JSON.stringify({ message: "MCP server URL not configured" }),
+      JSON.stringify({
+        message:
+          "MCP_SERVER_URL environment variable is not set. Please set it to the URL of your MCP server, or NEXT_PUBLIC_MCP_SERVER_URL if you do not want to use the proxy route.",
+      }),
       { status: 500, headers: { "Content-Type": "application/json" } },
     );
   }
 
+  // Extract the path after '/api/oap_mcp/'
+  // Example: /api/oap_mcp/foo/bar -> /foo/bar
   const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/oap_mcp\/?/, "");
-  const baseUrl = mcpServerUrl.replace(/\/$/, "");
-  const targetUrl = `${baseUrl}/mcp${path ? "/" + path : ""}${url.search}`;
+  const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
 
+  // Construct the target URL
+  const targetUrlObj = new URL(MCP_SERVER_URL);
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path}${url.search}`;
+  const targetUrl = targetUrlObj.toString();
+
+  // Prepare headers, forwarding original headers except Host
+  // and adding Authorization
   const headers = new Headers();
   req.headers.forEach((value, key) => {
+    // Some headers like 'host' should not be forwarded
     if (key.toLowerCase() !== "host") {
       headers.append(key, value);
     }
   });
 
-  // Apply authentication logic
-  if (useCustomAuth) {
-    // Use custom auth headers if user has configured custom MCP server
-    Object.entries(customAuthHeaders).forEach(([key, value]) => {
-      headers.set(key, value);
-    });
+  const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
+  // Authentication priority:
+  // 1. X-MCP-Access-Token header
+  // 2. X-MCP-Access-Token cookie
+  // 3. MCP_TOKENS environment variable
+  // 4. Supabase-JWT token exchange
+  let accessToken: string | null = null;
 
-    // Always include LangSmith API key and Supabase user ID for custom tool servers
-    if (LANGSMITH_API_KEY) {
-      headers.set("x-api-key", LANGSMITH_API_KEY);
-    } else {
-      console.warn(
-        "LANGSMITH_API_KEY not available for custom tool server request",
+  if (MCP_AUTH_REQUIRED) {
+    const supabaseToken = await getSupabaseToken(req);
+
+    if (mcpAccessTokenCookie) {
+      accessToken = mcpAccessTokenCookie;
+    } else if (MCP_TOKENS) {
+      // Try to use MCP_TOKENS environment variable
+      try {
+        const { access_token } = JSON.parse(MCP_TOKENS);
+        if (access_token) {
+          accessToken = access_token;
+        }
+      } catch (e) {
+        console.error("Failed to parse MCP_TOKENS env variable", e);
+      }
+    }
+
+    // If no token yet, try Supabase-JWT token exchange
+    if (!accessToken && supabaseToken && MCP_SERVER_URL) {
+      accessToken = await getMcpAccessToken(
+        supabaseToken,
+        new URL(MCP_SERVER_URL),
       );
     }
 
-    if (sessionInfo?.userId) {
-      headers.set("x-supabase-user-id", sessionInfo.userId);
-    } else {
-      console.warn(
-        "Supabase user ID not available for custom tool server request",
-      );
-    }
-  } else if (SUPABASE_AUTH_MCP) {
-    // Use existing supabase auth for default MCP server
-    const supabaseToken = sessionInfo?.accessToken;
-
-    if (supabaseToken) {
-      headers.set("Authorization", `Bearer ${supabaseToken}`);
-    } else {
+    // If we still don't have a token, return an error
+    if (!accessToken) {
       return new Response(
-        JSON.stringify({ message: "Authentication required" }),
+        JSON.stringify({
+          message: "Failed to obtain access token from any source.",
+        }),
         { status: 401, headers: { "Content-Type": "application/json" } },
       );
     }
+
+    // Set the Authorization header with the token
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
   headers.set("Accept", "application/json, text/event-stream");
 
-  const body =
-    req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined;
+  // Determine body based on method
+  let body: BodyInit | null | undefined = undefined;
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    // For POST, PUT, PATCH, DELETE etc., forward the body
+    body = req.body;
+  }
 
   try {
+    // Make the proxied request
     const response = await fetch(targetUrl, {
       method: req.method,
       headers,
       body,
     });
-
+    // Clone the response to create a new one we can modify
     const responseClone = response.clone();
+
+    // Create a new response with the same status, headers, and body
     let newResponse: NextResponse;
 
-    if (response.status === 204) {
-      newResponse = new NextResponse(null, { status: 204 });
-    } else {
-      try {
-        const responseData = await responseClone.json();
-        newResponse = NextResponse.json(responseData, {
-          status: response.status,
-          statusText: response.statusText,
-        });
-      } catch (_) {
-        const responseBody = await response.text();
-        newResponse = new NextResponse(responseBody, {
-          status: response.status,
-          statusText: response.statusText,
-        });
-      }
+    try {
+      // Try to parse as JSON first
+      const responseData = await responseClone.json();
+      newResponse = NextResponse.json(responseData, {
+        status: response.status,
+        statusText: response.statusText,
+      });
+    } catch (_) {
+      // If not JSON, use the raw response body
+      const responseBody = await response.text();
+      newResponse = new NextResponse(responseBody, {
+        status: response.status,
+        statusText: response.statusText,
+      });
     }
 
+    // Copy all headers from the original response
     response.headers.forEach((value, key) => {
       newResponse.headers.set(key, value);
     });
 
+    if (MCP_AUTH_REQUIRED) {
+      // If we used the Supabase token exchange, add the access token to the response
+      // so it can be used in future requests
+      if (!mcpAccessTokenCookie && !MCP_TOKENS && accessToken) {
+        // Set a cookie with the access token that will be included in future requests
+        newResponse.cookies.set({
+          name: "X-MCP-Access-Token",
+          value: accessToken,
+          httpOnly: false, // Allow JavaScript access so it can be read for headers
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 3600, // 1 hour expiration
+        });
+      }
+    }
+
     return newResponse;
   } catch (error) {
+    console.error("MCP Proxy Error:", error);
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ message: "Proxy request failed", error: errorMessage }),
-      { status: 502, headers: { "Content-Type": "application/json" } },
+      {
+        status: 502, // Bad Gateway
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 }

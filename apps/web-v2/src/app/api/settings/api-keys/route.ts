@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
+import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
 
 function encryptApiKeys(
   apiKeys: Record<string, string>,
@@ -33,11 +34,6 @@ function decryptApiKeys(
     }),
   );
   return decryptedApiKeys;
-}
-
-function isTokenExpired(exp: number): boolean {
-  const currentTime = Date.now() / 1000;
-  return currentTime > exp;
 }
 
 export async function POST(request: NextRequest) {

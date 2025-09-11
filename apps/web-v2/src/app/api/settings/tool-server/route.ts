@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { McpServerConfig } from "@/types/mcp-server";
+import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const payload = decodeJWT(accessToken, jwtSecret);
-    if (!payload || !payload.sub) {
+    if (!payload || !payload.sub || isTokenExpired(payload.exp)) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 401 },
@@ -119,7 +120,7 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = decodeJWT(accessToken, jwtSecret);
-    if (!payload || !payload.sub) {
+    if (!payload || !payload.sub || isTokenExpired(payload.exp)) {
       return NextResponse.json(
         { error: "Invalid or expired token" },
         { status: 401 },
