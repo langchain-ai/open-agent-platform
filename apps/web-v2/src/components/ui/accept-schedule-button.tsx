@@ -61,9 +61,10 @@ export function AcceptScheduleButton({
           <Button
             variant="outline"
             disabled={scheduleDisabled}
-            className="rounded-l-none border-l-0 bg-white px-2 font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-l-none border-l-0 bg-white px-3 font-medium text-gray-700 hover:bg-gray-50 border-gray-300"
             size="sm"
           >
+            <span className="mr-1">{scheduleText}</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
@@ -72,15 +73,10 @@ export function AcceptScheduleButton({
           align="end"
         >
           <div className="space-y-4 p-4">
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="h-4 w-4" />
-              <h4 className="text-sm font-medium">Schedule for later</h4>
-            </div>
             <DateTimePicker
               date={scheduledDate}
               setDate={setScheduledDate}
               placeholder="Select date and time"
-              className="w-full"
             />
             <div className="flex justify-end gap-2">
               <Button

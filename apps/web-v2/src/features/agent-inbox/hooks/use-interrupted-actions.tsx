@@ -405,17 +405,25 @@ export default function useInterruptedActions<
       return;
     }
 
-    // Calculate afterSeconds from the scheduled date
+    // Get current time and validate scheduled date is in the future
     const now = new Date();
-    const afterSeconds = Math.max(
-      0,
-      Math.floor((scheduledDate.getTime() - now.getTime()) / 1000),
-    );
-
-    if (afterSeconds <= 0) {
-      toast.error("Scheduled time must be in the future");
+    
+    // Check if scheduled date is in the past
+    if (scheduledDate <= now) {
+      const formattedScheduledDate = scheduledDate.toLocaleDateString();
+      const formattedScheduledTime = scheduledDate.toLocaleTimeString();
+      const formattedCurrentDate = now.toLocaleDateString();
+      const formattedCurrentTime = now.toLocaleTimeString();
+      
+      toast.error("Cannot schedule in the past", {
+        description: `Selected: ${formattedScheduledDate} at ${formattedScheduledTime}\nCurrent: ${formattedCurrentDate} at ${formattedCurrentTime}`,
+        duration: 5000,
+      });
       return;
     }
+
+    // Calculate afterSeconds from the scheduled date
+    const afterSeconds = Math.floor((scheduledDate.getTime() - now.getTime()) / 1000);
 
     try {
       // Create the human response similar to handleSubmit

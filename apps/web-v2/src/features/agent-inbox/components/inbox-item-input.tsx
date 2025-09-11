@@ -334,13 +334,28 @@ function EditAndOrAcceptComponent({
       })}
 
       <div className="flex w-full items-center justify-end gap-2">
-        <Button
-          variant="brand"
-          disabled={streaming}
-          onClick={handleSubmit}
-        >
-          {buttonText}
-        </Button>
+        {buttonText === "Accept" ? (
+          <AcceptScheduleButton
+            onAccept={() => {
+              const syntheticEvent = {
+                preventDefault: () => {},
+              } as React.MouseEvent<HTMLButtonElement, MouseEvent>;
+              handleSubmit(syntheticEvent);
+            }}
+            onSchedule={handleSchedule || (() => {})}
+            acceptDisabled={streaming}
+            scheduleDisabled={streaming || !handleSchedule}
+            acceptText={buttonText}
+          />
+        ) : (
+          <Button
+            variant="brand"
+            disabled={streaming}
+            onClick={handleSubmit}
+          >
+            {buttonText}
+          </Button>
+        )}
       </div>
     </div>
   );
