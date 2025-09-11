@@ -49,11 +49,11 @@ export async function DELETE(
     });
 
     // Delete the API key, ensuring it belongs to the authenticated user
-    const { error } = await supabase
+    const { error } = (await supabase
       .from("user_api_keys")
       .delete()
       .eq("id", keyId)
-      .eq("user_id", userId) as any;
+      .eq("user_id", userId)) as any;
 
     if (error) {
       console.error("Error deleting user API key:", error);

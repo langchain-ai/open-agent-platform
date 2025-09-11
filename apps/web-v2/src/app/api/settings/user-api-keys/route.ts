@@ -146,11 +146,11 @@ export async function GET(request: NextRequest) {
       refresh_token: refreshToken,
     });
 
-    const { data, error } = await supabase
+    const { data, error } = (await supabase
       .from("user_api_keys")
       .select("id, name, key_hash, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false }) as any;
+      .order("created_at", { ascending: false })) as any;
 
     if (error) {
       console.error("Error fetching user API keys:", error);
