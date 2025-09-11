@@ -140,7 +140,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
           }}
         >
           <div
-            className="flex h-full flex-col border-l bg-background"
+            className="bg-background flex h-full flex-col border-l"
             style={{
               width: "100%",
               maxWidth: "100%",
@@ -150,7 +150,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             }}
           >
             <div className="flex items-center justify-between border-b p-4">
-              <h3 className="text-base font-semibold text-foreground m-0">
+              <h3 className="text-foreground m-0 text-base font-semibold">
                 Thread History
               </h3>
               <div className="flex items-center gap-2">
@@ -158,7 +158,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   variant="ghost"
                   size="icon"
                   onClick={() => setOpen(false)}
-                  className="transition-colors duration-200 p-1 hover:bg-muted"
+                  className="hover:bg-muted p-1 transition-colors duration-200"
                 >
                   <X size={20} />
                 </Button>
@@ -166,21 +166,19 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
             </div>
             <ScrollArea className="flex-1 overflow-y-auto">
               {isLoadingThreadHistory ? (
-                <div className="flex flex-col items-center justify-center text-center p-12 text-muted-foreground">
+                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
                   Loading threads...
                 </div>
               ) : threads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center p-12 text-muted-foreground">
-                  <MessageSquare
-                    className="w-8 h-8 mb-2 opacity-50"
-                  />
+                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
+                  <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
                   <p>No threads yet</p>
                 </div>
               ) : (
-                <div className="p-2 w-full max-w-full overflow-hidden box-border">
+                <div className="box-border w-full max-w-full overflow-hidden p-2">
                   {groupedThreads.today.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold tracking-wider uppercase text-xs text-muted-foreground tracking-wide p-2 m-0">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
                         Today
                       </h4>
                       {groupedThreads.today.map((thread) => (
@@ -195,7 +193,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.yesterday.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold tracking-wider uppercase text-xs text-muted-foreground tracking-wide p-2 m-0">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
                         Yesterday
                       </h4>
                       {groupedThreads.yesterday.map((thread) => (
@@ -210,7 +208,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.week.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold tracking-wider uppercase text-xs text-muted-foreground tracking-wide p-2 m-0">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
                         This Week
                       </h4>
                       {groupedThreads.week.map((thread) => (
@@ -225,7 +223,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.older.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold tracking-wider uppercase text-xs text-muted-foreground tracking-wide p-2 m-0">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
                         Older
                       </h4>
                       {groupedThreads.older.map((thread) => (
@@ -256,13 +254,13 @@ const ThreadItem = React.memo<{
   return (
     <button
       onClick={onClick}
-      className={`flex cursor-pointer items-start rounded-md border-none text-left transition-colors duration-200 w-full max-w-full gap-2 p-2 overflow-hidden hover:bg-muted ${
+      className={`hover:bg-muted flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200 ${
         isActive ? "bg-muted" : "bg-transparent"
       }`}
     >
-      <MessageSquare className="shrink-0 w-4 h-4 text-muted-foreground mt-0.5" />
-      <div className="flex-1 min-w-0 overflow-hidden w-[calc(20vw-3rem)]">
-        <div className="font-medium text-xs text-foreground mb-1 overflow-hidden text-ellipsis whitespace-nowrap w-full max-w-full">
+      <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+      <div className="w-[calc(20vw-3rem)] min-w-0 flex-1 overflow-hidden">
+        <div className="text-foreground mb-1 w-full max-w-full overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
           {thread.title}
         </div>
       </div>

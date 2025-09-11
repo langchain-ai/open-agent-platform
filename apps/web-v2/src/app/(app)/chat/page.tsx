@@ -26,7 +26,7 @@ function DeepAgentChatPageInner(): React.ReactNode {
         showToggle={!!agentId}
         selectedAgent={selectedAgent}
       />
-      <div className="flex min-h-0 flex-1 overflow-hidden -mt-3">
+      <div className="-mt-3 flex min-h-0 flex-1 overflow-hidden">
         <DeepAgentChatPageContent
           view={view}
           onViewChange={setView}

@@ -5,7 +5,7 @@ import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { cn } from "@/lib/utils";
-import { Inbox, Settings, Edit3, RotateCw } from "lucide-react";
+import { Inbox, Settings, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -75,13 +75,16 @@ export function PageHeader({
     setIsThreadHistoryOpen((prev) => !prev);
   }, []);
 
-  const handleThreadSelect = useCallback((threadId: string) => {
-    if (selectedAgent) {
-      const newUrl = `/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${selectedAgent.deploymentId}&threadId=${threadId}`;
-      window.location.href = newUrl;
-    }
-    setIsThreadHistoryOpen(false);
-  }, [selectedAgent]);
+  const handleThreadSelect = useCallback(
+    (threadId: string) => {
+      if (selectedAgent) {
+        const newUrl = `/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${selectedAgent.deploymentId}&threadId=${threadId}`;
+        window.location.href = newUrl;
+      }
+      setIsThreadHistoryOpen(false);
+    },
+    [selectedAgent],
+  );
 
   const handleNewThreadClick = () => {
     // Start a new thread with the same agent
@@ -92,11 +95,14 @@ export function PageHeader({
     }
   };
 
-  const handleAgentSelection = useCallback((agentId: string, deploymentId: string) => {
-    // Clear all query params and set only the new agent params
-    const newUrl = `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
-    window.location.href = newUrl;
-  }, []);
+  const handleAgentSelection = useCallback(
+    (agentId: string, deploymentId: string) => {
+      // Clear all query params and set only the new agent params
+      const newUrl = `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
+      window.location.href = newUrl;
+    },
+    [],
+  );
 
   return (
     <header className="relative flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -106,20 +112,28 @@ export function PageHeader({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-8 text-sm font-medium border-none shadow-none bg-transparent hover:bg-muted/50 focus:ring-0 p-2"
+                className="hover:bg-muted/50 h-8 border-none bg-transparent p-2 text-sm font-medium shadow-none focus:ring-0"
               >
                 {assistantName || "main agent"}
                 <ChevronDown className="ml-1 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[200px]">
+            <DropdownMenuContent
+              align="start"
+              className="min-w-[200px]"
+            >
               {loading ? (
                 <DropdownMenuItem disabled>Loading agents...</DropdownMenuItem>
               ) : (
                 agents.map((agent) => (
                   <DropdownMenuItem
                     key={`${agent.assistant_id}:${agent.deploymentId}`}
-                    onClick={() => handleAgentSelection(agent.assistant_id, agent.deploymentId)}
+                    onClick={() =>
+                      handleAgentSelection(
+                        agent.assistant_id,
+                        agent.deploymentId,
+                      )
+                    }
                     className="cursor-pointer"
                   >
                     {agent.name}
@@ -163,8 +177,8 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleHistoryClick}
-            className="h-8 w-8 p-2 rounded border border-[#E4E4E7] bg-white shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: '4px' }}
+            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
+            style={{ borderRadius: "4px" }}
           >
             <RotateCw className="h-4 w-4" />
           </Button>
@@ -172,8 +186,8 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleInboxClick}
-            className="h-8 w-8 p-2 rounded border border-[#E4E4E7] bg-white shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: '4px' }}
+            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
+            style={{ borderRadius: "4px" }}
           >
             <Inbox className="h-4 w-4" />
           </Button>
@@ -181,8 +195,8 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleSettingsClick}
-            className="h-8 w-8 p-2 rounded border border-[#E4E4E7] bg-white shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: '4px' }}
+            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
+            style={{ borderRadius: "4px" }}
           >
             <Settings className="h-4 w-4" />
           </Button>
@@ -190,8 +204,8 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleNewThreadClick}
-            className="h-8 w-8 p-2 rounded border border-[#2F6868] bg-[#2F6868] hover:bg-[#2F6868] shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: '4px' }}
+            className="h-8 w-8 rounded border border-[#2F6868] bg-[#2F6868] p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)] hover:bg-[#2F6868]"
+            style={{ borderRadius: "4px" }}
           >
             <EditIcon />
           </Button>
