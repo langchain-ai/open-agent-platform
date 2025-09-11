@@ -35,6 +35,7 @@ interface UseInterruptedActionsValue {
   handleResolve: (
     _e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => Promise<void>;
+  handleSchedule: (scheduledDate: Date) => Promise<void>;
 
   // State values
   streaming: boolean;
@@ -386,10 +387,111 @@ export default function useInterruptedActions<
     await setSelectedThreadId(null);
   };
 
+  const handleSchedule = async (scheduledDate: Date) => {
+    if (!agentInboxId) {
+      toast.error("No agent inbox ID found");
+      return;
+    }
+    if (!threadData || !setThreadData) {
+      toast.error("Thread data is not available");
+      return;
+    }
+    if (!humanResponse) {
+      toast.error("Please enter a response.");
+      return;
+    }
+    if (!selectedInbox) {
+      toast.error("No inbox selected");
+      return;
+    }
+
+    // Get current time and validate scheduled date is in the future
+    const now = new Date();
+    
+    // Check if scheduled date is in the past
+    if (scheduledDate <= now) {
+      const formattedScheduledDate = scheduledDate.toLocaleDateString();
+      const formattedScheduledTime = scheduledDate.toLocaleTimeString();
+      const formattedCurrentDate = now.toLocaleDateString();
+      const formattedCurrentTime = now.toLocaleTimeString();
+      
+      toast.error("Cannot schedule in the past", {
+        description: `Selected: ${formattedScheduledDate} at ${formattedScheduledTime}\nCurrent: ${formattedCurrentDate} at ${formattedCurrentTime}`,
+        duration: 5000,
+      });
+      return;
+    }
+
+    // Calculate afterSeconds from the scheduled date
+    const afterSeconds = Math.floor((scheduledDate.getTime() - now.getTime()) / 1000);
+
+    try {
+      // Create the human response similar to handleSubmit
+      const humanResponseInput: HumanResponse[] = humanResponse.flatMap((r) => {
+        if (r.type === "edit") {
+          if (r.acceptAllowed && !r.editsMade) {
+            return {
+              type: "accept",
+              args: r.args,
+            };
+          } else {
+            return {
+              type: "edit",
+              args: r.args,
+            };
+          }
+        }
+
+        if (r.type === "response" && !r.args) {
+          // If response was allowed but no response was given, do not include in the response
+          return [];
+        }
+        return {
+          type: r.type,
+          args: r.args,
+        };
+      });
+
+      const input = humanResponseInput.find(
+        (r) => r.type === selectedSubmitType,
+      );
+      if (!input) {
+        toast.error("No response found.");
+        return;
+      }
+
+      setLoading(true);
+
+      // Send the human response with afterSeconds for scheduling
+      await sendHumanResponse(threadData.thread.thread_id, [input], {
+        afterSeconds,
+      });
+
+      const formattedDate = scheduledDate.toLocaleDateString();
+      const formattedTime = scheduledDate.toLocaleTimeString();
+
+      toast.success(`Thread scheduled successfully!`, {
+        description: `This interrupt will be processed on ${formattedDate} at ${formattedTime}`,
+        duration: 5000,
+      });
+
+      // Clear the selected thread ID to go back to inbox view
+      await setSelectedThreadId(null);
+    } catch (e: any) {
+      logger.error("Error scheduling response", e);
+      toast.error("Failed to schedule response.", {
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     handleSubmit,
     handleIgnore,
     handleResolve,
+    handleSchedule,
     streaming,
     streamFinished,
     currentNode,

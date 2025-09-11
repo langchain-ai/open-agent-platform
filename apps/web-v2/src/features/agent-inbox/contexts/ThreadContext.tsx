@@ -35,6 +35,7 @@ type ThreadContentType<
     _response: HumanResponse[],
     _options?: {
       stream?: TStream;
+      afterSeconds?: number;
     },
   ) => TStream extends true
     ?
@@ -406,6 +407,7 @@ function ThreadsProviderInternal<
     response: HumanResponse[],
     options?: {
       stream?: TStream;
+      afterSeconds?: number;
     },
   ): TStream extends true
     ?
@@ -432,19 +434,20 @@ function ThreadsProviderInternal<
     const client = createClient(deploymentId, session.accessToken);
 
     try {
-      if (options?.stream) {
-        return client.runs.stream(threadId, assistantId, {
-          command: {
-            resume: response,
-          },
-          streamMode: "events",
-        }) as any; // Type assertion needed due to conditional return type
-      }
-      return client.runs.create(threadId, assistantId, {
+      const payload = {
         command: {
           resume: response,
         },
-      }) as any; // Type assertion needed due to conditional return type
+        ...(options?.afterSeconds && { afterSeconds: options.afterSeconds }),
+      };
+
+      if (options?.stream) {
+        return client.runs.stream(threadId, assistantId, {
+          ...payload,
+          streamMode: "events",
+        }) as any; // Type assertion needed due to conditional return type
+      }
+      return client.runs.create(threadId, assistantId, payload) as any; // Type assertion needed due to conditional return type
     } catch (e: any) {
       logger.error("Error sending human response", e);
       throw e;
