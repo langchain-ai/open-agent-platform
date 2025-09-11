@@ -2,16 +2,17 @@
 
 import * as React from "react";
 import {
-  Wrench,
-  Bot,
+  Settings,
+  Puzzle,
   MessageCircle,
-  Brain,
   Inbox,
-  Webhook,
+  Bot,
+  Plus,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { CreateAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/create-agent-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -20,57 +21,79 @@ import {
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
 
-// This is sample data.
+// Sidebar navigation data
 const data = {
-  navMain: [
+  topNav: [
+    {
+      title: "New Agent",
+      url: "/agents/new",
+      icon: Plus,
+    },
+    {
+      title: "Agent Library",
+      url: "/agents",
+      icon: Puzzle,
+    },
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
+    },
+  ],
+  workspace: [
+    {
+      title: "Recruiter Agent",
+      url: "/agents/recruiter",
+      icon: Bot,
+      isDropdown: true,
+      subItems: [
+        {
+          title: "Recruiter Agent",
+          url: "/agents/recruiter",
+        },
+      ],
+    },
     {
       title: "Chat",
       url: "/chat",
       icon: MessageCircle,
     },
     {
-      title: "Agents",
-      url: "/agents",
-      icon: Bot,
-    },
-    {
-      title: "Tools",
-      url: "/tools",
-      icon: Wrench,
-    },
-    {
       title: "Inbox",
       url: "/inbox",
       icon: Inbox,
-    },
-
-    {
-      title: "Triggers",
-      url: "/triggers",
-      icon: Webhook,
-    },
-    {
-      title: "RAG",
-      url: "/rag",
-      icon: Brain,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [showCreateAgentDialog, setShowCreateAgentDialog] = React.useState(false);
+
   return (
-    <Sidebar
-      collapsible="icon"
-      {...props}
-    >
-      <SiteHeader />
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <>
+      <Sidebar
+        collapsible="icon"
+        {...props}
+      >
+        <SiteHeader />
+        <SidebarContent className="gap-0.5">
+          <NavMain 
+            items={data.topNav} 
+            onNewAgentClick={() => setShowCreateAgentDialog(true)}
+          />
+          <NavMain items={data.workspace} groupLabel="Workspace" />
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+      
+      <CreateAgentDialog
+        open={showCreateAgentDialog}
+        onOpenChange={setShowCreateAgentDialog}
+      />
+    </>
   );
 }
+
