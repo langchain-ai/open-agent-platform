@@ -20,17 +20,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { Agent } from "@/types/agent";
 
 interface PageHeaderProps {
   view: "chat" | "workflow";
   setView: (v: "chat" | "workflow") => void;
   assistantName?: string;
   showToggle?: boolean;
-  selectedAgent?: {
-    assistant_id: string;
-    deploymentId: string;
-    name?: string;
-  };
+  selectedAgent?: Agent;
 }
 
 export function PageHeader({
