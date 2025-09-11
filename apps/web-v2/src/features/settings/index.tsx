@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Settings, Loader2, Key, Plus, Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import {
+  Settings,
+  Loader2,
+  Key,
+  Plus,
+  Copy,
+  Trash2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +59,10 @@ async function getUserApiKeys(session: Session): Promise<UserApiKey[]> {
   }
 }
 
-async function createUserApiKey(session: Session, name: string): Promise<UserApiKey | null> {
+async function createUserApiKey(
+  session: Session,
+  name: string,
+): Promise<UserApiKey | null> {
   try {
     if (!session.accessToken || !session.refreshToken) {
       throw new Error("No session found");
@@ -80,7 +92,10 @@ async function createUserApiKey(session: Session, name: string): Promise<UserApi
   }
 }
 
-async function deleteUserApiKey(session: Session, keyId: string): Promise<boolean> {
+async function deleteUserApiKey(
+  session: Session,
+  keyId: string,
+): Promise<boolean> {
   try {
     if (!session.accessToken || !session.refreshToken) {
       throw new Error("No session found");
@@ -180,14 +195,14 @@ export default function SettingsInterface(): React.ReactNode {
 
     setIsCreatingKey(true);
     const newKey = await createUserApiKey(session, newKeyName.trim());
-    
+
     if (newKey) {
-      setUserApiKeys(prev => [...prev, newKey]);
+      setUserApiKeys((prev) => [...prev, newKey]);
       setNewKeyName("");
       setShowCreateForm(false);
       toast.success("API key created successfully", { richColors: true });
     }
-    
+
     setIsCreatingKey(false);
   };
 
@@ -199,7 +214,7 @@ export default function SettingsInterface(): React.ReactNode {
 
     const success = await deleteUserApiKey(session, keyId);
     if (success) {
-      setUserApiKeys(prev => prev.filter(key => key.id !== keyId));
+      setUserApiKeys((prev) => prev.filter((key) => key.id !== keyId));
       toast.success("API key deleted successfully", { richColors: true });
     }
   };
@@ -210,7 +225,7 @@ export default function SettingsInterface(): React.ReactNode {
   };
 
   const toggleKeyVisibility = (keyId: string) => {
-    setVisibleKeys(prev => {
+    setVisibleKeys((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(keyId)) {
         newSet.delete(keyId);
@@ -274,11 +289,8 @@ export default function SettingsInterface(): React.ReactNode {
   useEffect(() => {
     if (!session || !session.accessToken || !session.refreshToken) return;
     if (hasRequestedInitialApiKeys.current) return;
-    
-    Promise.all([
-      getUserApiKeys(session),
-      getSavedApiKeys(session)
-    ])
+
+    Promise.all([getUserApiKeys(session), getSavedApiKeys(session)])
       .then(([userKeys, externalKeys]) => {
         setUserApiKeys(userKeys);
         setOpenaiApiKey(externalKeys.OPENAI_API_KEY || "");
@@ -313,7 +325,7 @@ export default function SettingsInterface(): React.ReactNode {
             Create API Key
           </Button>
         </div>
-        
+
         {showCreateForm && (
           <div className="flex gap-2">
             <Input
@@ -352,15 +364,20 @@ export default function SettingsInterface(): React.ReactNode {
         {userApiKeys.length > 0 && (
           <div className="space-y-2">
             {userApiKeys.map((apiKey) => (
-              <div key={apiKey.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div
+                key={apiKey.id}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <Key className="size-4 text-muted-foreground" />
+                    <Key className="text-muted-foreground size-4" />
                     <span className="font-medium">{apiKey.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="text-sm bg-muted px-2 py-1 rounded">
-                      {visibleKeys.has(apiKey.id) ? apiKey.key : `${apiKey.key.substring(0, 8)}${"*".repeat(24)}`}
+                  <div className="mt-1 flex items-center gap-2">
+                    <code className="bg-muted rounded px-2 py-1 text-sm">
+                      {visibleKeys.has(apiKey.id)
+                        ? apiKey.key
+                        : `${apiKey.key.substring(0, 8)}${"*".repeat(24)}`}
                     </code>
                     <Button
                       onClick={() => toggleKeyVisibility(apiKey.id)}
@@ -383,7 +400,7 @@ export default function SettingsInterface(): React.ReactNode {
                       <Copy className="size-3" />
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Created {new Date(apiKey.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -401,10 +418,13 @@ export default function SettingsInterface(): React.ReactNode {
         )}
 
         {userApiKeys.length === 0 && !showCreateForm && (
-          <div className="text-center py-8 text-muted-foreground">
-            <Key className="size-8 mx-auto mb-2 opacity-50" />
+          <div className="text-muted-foreground py-8 text-center">
+            <Key className="mx-auto mb-2 size-8 opacity-50" />
             <p>No API keys created yet</p>
-            <p className="text-sm">Create an API key to authenticate with webhooks and external services</p>
+            <p className="text-sm">
+              Create an API key to authenticate with webhooks and external
+              services
+            </p>
           </div>
         )}
       </div>

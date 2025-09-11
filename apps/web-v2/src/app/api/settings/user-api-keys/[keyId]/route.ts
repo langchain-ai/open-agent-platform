@@ -9,7 +9,7 @@ function isTokenExpired(exp: number): boolean {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { keyId: string } }
+  { params }: { params: { keyId: string } },
 ) {
   try {
     const supabase = getSupabaseClient();

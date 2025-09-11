@@ -5,7 +5,8 @@ import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
 function generateApiKey(): string {
   const prefix = "oap_";
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = prefix;
   for (let i = 0; i < 32; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
