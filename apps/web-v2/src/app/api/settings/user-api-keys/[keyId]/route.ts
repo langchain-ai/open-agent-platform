@@ -9,7 +9,7 @@ function isTokenExpired(exp: number): boolean {
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { keyId: string } },
+  { params }: { params: Promise<{ keyId: string }> },
 ) {
   try {
     const supabase = getSupabaseClient();
@@ -34,7 +34,7 @@ export async function DELETE(
     }
 
     const userId = payload.sub;
-    const keyId = params.keyId;
+    const { keyId } = await params;
 
     if (!keyId) {
       return NextResponse.json(

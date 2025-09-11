@@ -33,7 +33,7 @@ function ConfiguredAccounts(props: {
         onClick={() => setIsAccountsExpanded(!isAccountsExpanded)}
         className="text-muted-foreground hover:text-foreground flex w-full cursor-pointer items-center justify-between text-left text-sm font-medium transition-colors"
       >
-        <span>Configured Accounts ({userTriggers.length})</span>
+        <span>Trigger Registrations ({userTriggers.length})</span>
         <ChevronDown
           className={cn(
             "h-4 w-4 transition-transform duration-200",
