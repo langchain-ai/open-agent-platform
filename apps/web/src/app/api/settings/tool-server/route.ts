@@ -149,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        mcpServer: data?.mcp_servers || null,
+        mcpServer: (data as any)?.mcp_servers || null,
       },
       { status: 200 },
     );
