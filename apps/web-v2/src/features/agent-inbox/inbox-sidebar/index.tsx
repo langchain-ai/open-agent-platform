@@ -32,6 +32,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { Agent } from "@/types/agent";
 import { useThreadsContext } from "../contexts/ThreadContext";
 import { useAuthContext } from "@/providers/Auth";
+import { useRouter } from "next/navigation";
 
 // Internal component that uses the context
 function InboxSidebarInternal() {
@@ -40,6 +41,7 @@ function InboxSidebarInternal() {
   const { session } = useAuthContext();
   const [agentInboxId, setAgentInboxId] = useQueryState("agentInbox");
   const deployments = getDeployments();
+  const router = useRouter();
 
   const [_offset, setOffset] = useQueryState(
     "offset",
@@ -77,6 +79,9 @@ function InboxSidebarInternal() {
     if (session) {
       await fetchThreads(agent.assistant_id, agent.deploymentId, session);
     }
+
+    // Refresh the page to ensure clean state
+    router.refresh();
   };
 
   return (
