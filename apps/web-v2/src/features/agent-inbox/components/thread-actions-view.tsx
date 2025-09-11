@@ -529,7 +529,7 @@ export function ThreadActionsView<
         hasEdited={actions?.hasEdited ?? false}
         hasAddedResponse={actions?.hasAddedResponse ?? false}
         interruptValue={firstInterrupt!}
-        humanResponse={actions?.humanResponse as any}
+        humanResponse={actions?.humanResponse}
         initialValues={actions?.initialHumanInterruptEditValue.current || {}}
         setHumanResponse={actions?.setHumanResponse ?? (() => {})}
         streaming={actions?.streaming ?? false}
