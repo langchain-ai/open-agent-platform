@@ -5,11 +5,10 @@ import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { cn } from "@/lib/utils";
-import { Inbox, Settings, RotateCw } from "lucide-react";
+import { Inbox, Settings, RotateCw, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { EditIcon } from "@/components/icons/edit-icon";
 import { EditAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/edit-agent-dialog";
 import { ThreadHistorySidebar } from "./thread-history-sidebar";
 import { useAgentsContext } from "@/providers/Agents";
@@ -174,37 +173,33 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleHistoryClick}
-            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: "4px" }}
+            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
           >
-            <RotateCw className="h-4 w-4" />
+            <RotateCw className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleInboxClick}
-            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: "4px" }}
+            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
           >
-            <Inbox className="h-4 w-4" />
+            <Inbox className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleSettingsClick}
-            className="h-8 w-8 rounded border border-[#E4E4E7] bg-white p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)]"
-            style={{ borderRadius: "4px" }}
+            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
           >
-            <Settings className="h-4 w-4" />
+            <Settings className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleNewThreadClick}
-            className="h-8 w-8 rounded border border-[#2F6868] bg-[#2F6868] p-2 shadow-[0_1px_2px_0_rgba(16,24,40,0.05)] hover:bg-[#2F6868]"
-            style={{ borderRadius: "4px" }}
+            className="size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 shadow-icon-button hover:bg-[#2F6868] text-white hover:text-gray-50"
           >
-            <EditIcon />
+            <SquarePen className="size-4" />
           </Button>
         </div>
       )}
