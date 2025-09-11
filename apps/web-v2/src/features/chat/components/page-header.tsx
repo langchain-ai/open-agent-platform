@@ -86,14 +86,12 @@ export function PageHeader({
     // Start a new thread with the same agent
     if (selectedAgent) {
       const agentUrl = `/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${selectedAgent.deploymentId}`;
-      // Force a refresh to start a new thread
       window.location.href = agentUrl;
     }
   };
 
   const handleAgentSelection = useCallback(
     (agentId: string, deploymentId: string) => {
-      // Clear all query params and set only the new agent params
       const newUrl = `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
       window.location.href = newUrl;
     },
