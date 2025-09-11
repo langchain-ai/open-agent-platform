@@ -188,14 +188,14 @@ export function useTriggers() {
     // For RESTful API, we need to update each registration individually
     for (const triggerId of args.selectedTriggerIds) {
       const triggerApiUrl = constructTriggerUrl(
-        `/api/triggers/registrations/${triggerId}/agents`,
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
       if (!triggerApiUrl) {
         return false;
       }
 
       const response = await fetch(triggerApiUrl, {
-        method: "PUT",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
