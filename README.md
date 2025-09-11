@@ -19,11 +19,11 @@ Open Agent Platform provides a modern, web-based interface for creating, managin
 
 ## Documentation
 
-For detailed setup instructions, guides, and API references, please visit our **[full documentation site](https://docs.oap.langchain.com)**.
+For detailed setup instructions, guides, and API references, please visit our **[full documentation site](https://docs.langchain.com/labs/oap)**.
 
 ## Getting Started
 
-To quickly get started with Open Agent Platform, check out the [Quickstart Guide](https://docs.oap.langchain.com/quickstart) in our documentation.
+To quickly get started with Open Agent Platform, check out the [Quickstart Guide](https://docs.langchain.com/labs/oap/quickstart) in our documentation.
 
 ## Community and Support
 
@@ -50,7 +50,7 @@ However, if you want to use the RAG features, you will need to have the LangConn
 
 ### How can I build my own agents?
 
-Yes! See the [Building Your Own Agents](https://docs.oap.langchain.com/custom-agents/overview#building-your-own-agents) section for more information.
+Yes! See the [Building Your Own Agents](https://docs.langchain.com/labs/oap/custom-agents/overview#building-your-own-agents) section for more information.
 
 ### How can I use non-supabase auth?
 
