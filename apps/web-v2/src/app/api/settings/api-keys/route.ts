@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { decryptSecret, encryptSecret } from "@/lib/crypto";
 import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
@@ -38,7 +38,7 @@ function decryptApiKeys(
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       {
         user_id: userId,
         api_keys: encryptedApiKeys,
-      } as any,
+      },
       {
         onConflict: "user_id",
       },
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
