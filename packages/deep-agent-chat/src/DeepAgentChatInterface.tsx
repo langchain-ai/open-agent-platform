@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
-import { OptimizationSidebar } from "./components/OptimizationSidebar";
 import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";

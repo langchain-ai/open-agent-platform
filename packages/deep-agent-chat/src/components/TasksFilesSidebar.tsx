@@ -33,7 +33,15 @@ interface TasksFilesSidebarProps {
 }
 
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
-  ({ todos, files, setFiles, activeAssistant, setActiveAssistant, setAssistantError, assistantError }) => {
+  ({
+    todos,
+    files,
+    setFiles,
+    activeAssistant,
+    setActiveAssistant,
+    setAssistantError,
+    assistantError,
+  }) => {
     const { isLoading, interrupt } = useChatContext();
     const [isFileCreationDialogOpen, setIsFileCreationDialogOpen] =
       useState(false);
@@ -125,7 +133,10 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#3F3F46' }}>
+                <span
+                  className="text-xs font-semibold tracking-wide"
+                  style={{ color: "#3F3F46" }}
+                >
                   AGENT TASKS
                 </span>
                 <button
@@ -215,7 +226,10 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
             <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-xs font-semibold tracking-wide" style={{ color: '#3F3F46' }}>
+                <span
+                  className="text-xs font-semibold tracking-wide"
+                  style={{ color: "#3F3F46" }}
+                >
                   FILE SYSTEM
                 </span>
                 <button

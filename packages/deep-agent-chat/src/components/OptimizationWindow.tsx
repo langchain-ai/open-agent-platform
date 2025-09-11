@@ -422,7 +422,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                       <div
                         key={`user-${index}`}
                         className="mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white"
-                        style={{ backgroundColor: '#2F6868' }}
+                        style={{ backgroundColor: "#2F6868" }}
                       >
                         {message.content}
                       </div>
@@ -495,7 +495,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
               </div>
             )}
             <form
-              className="border-border focus-within:border-primary focus-within:ring-primary mt-2 mb-0 flex max-h-38 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2 flex-shrink-0"
+              className="border-border focus-within:border-primary focus-within:ring-primary mt-2 mb-0 flex max-h-38 flex-shrink-0 items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
               onSubmit={handleSubmitFeedback}
             >
               <AutoGrowTextarea

@@ -48,9 +48,12 @@ export const OptimizationSidebar = React.memo<OptimizationSidebarProps>(
     }
 
     return (
-      <div className="rounded-xl flex flex-col flex-1 min-h-0">
-        <div className="flex items-center justify-between px-3 pt-2 pb-1.5 flex-shrink-0">
-          <span className="text-xs font-semibold tracking-wide" style={{ color: '#3F3F46' }}>
+      <div className="flex min-h-0 flex-1 flex-col rounded-xl">
+        <div className="flex flex-shrink-0 items-center justify-between px-3 pt-2 pb-1.5">
+          <span
+            className="text-xs font-semibold tracking-wide"
+            style={{ color: "#3F3F46" }}
+          >
             AGENT CREATOR
           </span>
           <button
@@ -65,7 +68,7 @@ export const OptimizationSidebar = React.memo<OptimizationSidebarProps>(
           </button>
         </div>
         {isOptimizerOpen && (
-          <div className="flex-1 min-h-0 flex flex-col pt-2">
+          <div className="flex min-h-0 flex-1 flex-col pt-2">
             <OptimizationWindow
               threadId={threadId}
               deepAgentMessages={messages}
