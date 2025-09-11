@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { McpServerConfig } from "@/types/mcp-server";
 import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
     const { error: upsertError } = await supabase.from("users_config").upsert(
       {
         user_id: userId,
-        mcp_servers: mcpServer,
-      } as any,
+        mcp_servers: mcpServer as Record<string, any>,
+      },
       {
         onConflict: "user_id",
       },
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        mcpServer: (data as any)?.mcp_servers || null,
+        mcpServer: data?.mcp_servers || null,
       },
       { status: 200 },
     );
