@@ -5,7 +5,7 @@ import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { cn } from "@/lib/utils";
-import { Inbox, Settings, RotateCw, SquarePen } from "lucide-react";
+import { Inbox, Settings, MessagesSquare, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
@@ -173,15 +173,15 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleHistoryClick}
-            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
+            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
           >
-            <RotateCw className="size-4" />
+            <MessagesSquare className="size-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleInboxClick}
-            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
+            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
           >
             <Inbox className="size-4" />
           </Button>
@@ -189,7 +189,7 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleSettingsClick}
-            className="size-6 rounded border border-[#E4E4E7] bg-white p-2 shadow-icon-button"
+            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
           >
             <Settings className="size-4" />
           </Button>
@@ -197,7 +197,8 @@ export function PageHeader({
             variant="ghost"
             size="icon"
             onClick={handleNewThreadClick}
-            className="size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 shadow-icon-button hover:bg-[#2F6868] text-white hover:text-gray-50"
+            disabled={!threadId}
+            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
           >
             <SquarePen className="size-4" />
           </Button>
