@@ -55,9 +55,7 @@ function AgentDropdown({
     const agentValue = Array.isArray(value) ? value[0] : value;
     const [assistantId, deploymentId] = agentValue.split(":");
     // Navigate to chat page with the selected agent
-    router.push(
-      `/chat?agentId=${assistantId}:${deploymentId}&deploymentId=${deploymentId}`,
-    );
+    router.push(`/chat?agentId=${assistantId}&deploymentId=${deploymentId}`);
   };
 
   const selectedAgent = agentId
