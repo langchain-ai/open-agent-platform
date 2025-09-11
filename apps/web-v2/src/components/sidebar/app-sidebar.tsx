@@ -71,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {...props}
       >
         <SiteHeader />
-        <SidebarContent className="gap-0.5">
+        <SidebarContent>
           <NavMain
             items={data.topNav}
             onNewAgentClick={() => setShowCreateAgentDialog(true)}
