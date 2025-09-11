@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { AgentsProvider, useAgentsContext } from "@/providers/Agents";
+import { MCPProvider } from "@/providers/MCP";
 import DeepAgentChatPageContent from "@/features/chat";
 import { PageHeader } from "@/features/chat/components";
 import { Toaster } from "@/components/ui/sonner";
@@ -23,8 +24,9 @@ function DeepAgentChatPageInner(): React.ReactNode {
         setView={setView}
         assistantName={selectedAgent?.name}
         showToggle={!!agentId}
+        selectedAgent={selectedAgent}
       />
-      <div className="flex min-h-0 flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden -mt-3">
         <DeepAgentChatPageContent
           view={view}
           onViewChange={setView}
@@ -44,7 +46,9 @@ export default function DeepAgentChatPage(): React.ReactNode {
     <React.Suspense fallback={<div>Loading chat...</div>}>
       <div className="flex h-screen flex-col">
         <AgentsProvider>
-          <DeepAgentChatPageInner />
+          <MCPProvider>
+            <DeepAgentChatPageInner />
+          </MCPProvider>
         </AgentsProvider>
         <Toaster />
       </div>
