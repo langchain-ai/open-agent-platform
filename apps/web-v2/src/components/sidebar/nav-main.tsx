@@ -61,25 +61,28 @@ export function NavMain({
   groupLabel,
   onNewAgentClick,
 }: {
-  items: ({
-    title: string;
-    url: string;
-    icon?: LucideIcon;
-    isDropdown?: false;
-    subItems?: {
-      title: string;
-      url: string;
-    }[];
-  } | {
-    title: string;
-    url?: string;
-    icon?: LucideIcon;
-    isDropdown: true;
-    subItems?: {
-      title: string;
-      url: string;
-    }[];
-  })[];
+  items: (
+    | {
+        title: string;
+        url: string;
+        icon?: LucideIcon;
+        isDropdown?: false;
+        subItems?: {
+          title: string;
+          url: string;
+        }[];
+      }
+    | {
+        title: string;
+        url?: string;
+        icon?: LucideIcon;
+        isDropdown: true;
+        subItems?: {
+          title: string;
+          url: string;
+        }[];
+      }
+  )[];
   groupLabel?: string;
   onNewAgentClick?: () => void;
 }) {

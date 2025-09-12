@@ -29,16 +29,19 @@ const data: {
     url: string;
     icon: LucideIcon;
   }[];
-  workspace: ({
-    title: string;
-    url: string;
-    icon: LucideIcon;
-    isDropdown?: false;
-  } | {
-    title: string;
-    icon: LucideIcon;
-    isDropdown: true;
-  })[];
+  workspace: (
+    | {
+        title: string;
+        url: string;
+        icon: LucideIcon;
+        isDropdown?: false;
+      }
+    | {
+        title: string;
+        icon: LucideIcon;
+        isDropdown: true;
+      }
+  )[];
 } = {
   topNav: [
     {
