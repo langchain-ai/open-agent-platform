@@ -131,7 +131,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       <div className="min-h-0 w-full flex-1">
         <div className="font-inter flex h-full w-full flex-col p-0">
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-            <div className="rounded-xl">
+            <div className="bg-muted/30 rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
                 <span className="text-xs font-semibold tracking-wide text-zinc-600">
                   AGENT TASKS
@@ -221,7 +221,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
               )}
             </div>
 
-            <div className="rounded-xl">
+            <div className="bg-muted/30 rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
                 <span className="text-xs font-semibold tracking-wide text-zinc-600">
                   FILE SYSTEM

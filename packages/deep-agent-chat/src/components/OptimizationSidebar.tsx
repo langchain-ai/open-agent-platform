@@ -51,7 +51,7 @@ export const OptimizationSidebar = React.memo<OptimizationSidebarProps>(
       <div className="flex min-h-0 flex-1 flex-col rounded-xl">
         <div className="flex flex-shrink-0 items-center justify-between px-3 pt-2 pb-1.5">
           <span className="text-xs font-semibold tracking-wide text-zinc-600">
-            AGENT CREATOR
+            AGENT OPTIMIZER
           </span>
           <button
             onClick={handleToggleOptimizer}
