@@ -12,6 +12,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
 
 function RegistrationsBadge(props: {
   registrations: ListTriggerRegistrationsData[];
@@ -121,9 +122,7 @@ export function TriggerAccordionItem(props: {
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />
                 ) : null}
-                <button className="cursor-pointer rounded border border-green-600 px-2 py-1 text-sm text-green-700 transition-colors ease-in-out hover:border-green-700 hover:bg-green-50 hover:text-green-800">
-                  Authenticate
-                </button>
+                <AuthenticateTriggerDialog trigger={trigger} />
               </div>
             </div>
             {index < arr.length - 1 && <hr />}

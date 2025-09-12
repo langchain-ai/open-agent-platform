@@ -176,9 +176,10 @@ export default function TriggersInterface() {
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+          <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
           <p className="text-muted-foreground">
-            Set up triggers to automatically activate your agents
+            Authenticate with the following apps and set up triggers to
+            automatically activate your agents.
           </p>
         </div>
       </div>
