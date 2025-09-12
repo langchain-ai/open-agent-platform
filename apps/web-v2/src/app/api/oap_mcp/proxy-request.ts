@@ -59,8 +59,7 @@ async function getUserMcpServerConfig(
 
     return data?.mcp_servers || null;
   } catch (error) {
-    console.error(error);
-    const errorMessage = "Error getting user MCP server config";
+    console.error("Error getting user MCP server config:", error);
     return null;
   }
 }
