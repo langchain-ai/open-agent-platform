@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/providers/Auth";
-import { useTriggers, ListTriggerRegistrationsData } from "@/hooks/use-triggers";
+import {
+  useTriggers,
+  ListTriggerRegistrationsData,
+} from "@/hooks/use-triggers";
 import { Trigger } from "@/types/triggers";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { GoogleIcon } from "@/components/icons/google-icon";
@@ -21,16 +21,18 @@ export function CreateAgentTriggersSelection({
   onTriggersChange,
 }: CreateAgentTriggersSelectionProps) {
   const [triggers, setTriggers] = useState<Trigger[]>([]);
-  const [userTriggers, setUserTriggers] = useState<ListTriggerRegistrationsData[]>([]);
+  const [userTriggers, setUserTriggers] = useState<
+    ListTriggerRegistrationsData[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
 
   useEffect(() => {
     if (!auth.session?.accessToken) return;
-    
+
     setLoading(true);
-    
+
     // Fetch available triggers
     listTriggers(auth.session.accessToken)
       .then((triggersRes) => {
@@ -63,19 +65,18 @@ export function CreateAgentTriggersSelection({
     if (checked) {
       onTriggersChange([...selectedTriggers, triggerId]);
     } else {
-      onTriggersChange(selectedTriggers.filter(id => id !== triggerId));
+      onTriggersChange(selectedTriggers.filter((id) => id !== triggerId));
     }
   };
 
   const isTriggerRegistered = (triggerId: string) => {
-    return userTriggers.some(ut => ut.template_id === triggerId);
+    return userTriggers.some((ut) => ut.template_id === triggerId);
   };
 
   if (loading) {
     return (
       <div className="space-y-4">
-        <div>
-        </div>
+        <div></div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
             <TriggerSelectionCardLoading key={i} />
@@ -87,7 +88,6 @@ export function CreateAgentTriggersSelection({
 
   return (
     <div className="space-y-4">
-      
       <div className="space-y-3">
         {triggers.map((trigger) => (
           <TriggerSelectionCard
@@ -110,55 +110,51 @@ interface TriggerSelectionCardProps {
   onToggle: (triggerId: string, checked: boolean) => void;
 }
 
-function TriggerSelectionCard({ 
-  trigger, 
-  isSelected, 
+function TriggerSelectionCard({
+  trigger,
+  isSelected,
   isRegistered,
-  onToggle 
+  onToggle,
 }: TriggerSelectionCardProps) {
   // Get the appropriate icon based on trigger name
   const getTriggerIcon = (triggerName: string) => {
     const name = triggerName.toLowerCase();
-    if (name.includes('gmail') || name.includes('google')) {
+    if (name.includes("gmail") || name.includes("google")) {
       return (
-        <div className="w-8 h-8 flex items-center justify-center">
+        <div className="flex h-8 w-8 items-center justify-center">
           <GoogleIcon />
         </div>
       );
     }
-    if (name.includes('slack')) {
+    if (name.includes("slack")) {
       return (
-        <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">S</span>
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600">
+          <span className="text-sm font-bold text-white">S</span>
         </div>
       );
     }
     // Default icon
     return (
-      <div className="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center">
-        <span className="text-white font-bold text-sm">T</span>
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-500">
+        <span className="text-sm font-bold text-white">T</span>
       </div>
     );
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors">
+    <div className="rounded-lg border border-gray-200 bg-white p-4 transition-colors hover:bg-gray-50">
       <div className="flex items-center gap-3">
         {/* Icon */}
-        <div>
-          {getTriggerIcon(trigger.displayName)}
-        </div>
-        
+        <div>{getTriggerIcon(trigger.displayName)}</div>
+
         {/* Content */}
         <div className="flex-1">
-          <h3 className="text-gray-700 mb-1">
-            {trigger.displayName}
-          </h3>
+          <h3 className="mb-1 text-gray-700">{trigger.displayName}</h3>
           <p className="text-sm text-gray-600">
-            {trigger.description || 'No description available'}
+            {trigger.description || "No description available"}
           </p>
         </div>
-        
+
         {/* Setup Button */}
         <Button
           variant="outline"
@@ -178,16 +174,16 @@ function TriggerSelectionCard({
 
 function TriggerSelectionCardLoading() {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="flex items-start gap-3">
-        <div className="h-4 w-4 bg-gray-200 rounded animate-pulse mt-1" />
+        <div className="mt-1 h-4 w-4 animate-pulse rounded bg-gray-200" />
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-32" />
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-48" />
+              <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
+              <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
             </div>
-            <div className="h-6 w-6 bg-gray-200 rounded animate-pulse" />
+            <div className="h-6 w-6 animate-pulse rounded bg-gray-200" />
           </div>
         </div>
       </div>

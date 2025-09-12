@@ -77,7 +77,7 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       method: req.method,
       headers,
       body,
-      duplex: 'half',
+      duplex: "half",
     });
 
     const responseClone = response.clone();

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AuthProvider } from "@/providers/Auth";
 import { useAuthContext } from "@/providers/Auth";
 import LaunchDarklyProvider from "@/providers/LaunchDarkly";
@@ -9,7 +8,11 @@ import { MCPProvider } from "@/providers/MCP";
 import { AgentsProvider } from "@/providers/Agents";
 import Loading from "@/components/ui/loading";
 
-function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) {
+function NoSidebarAuthenticatedApp({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { isLoading } = useAuthContext();
 
   // Show loading until auth is complete
@@ -26,9 +29,7 @@ function NoSidebarAuthenticatedApp({ children }: { children: React.ReactNode }) 
     <LaunchDarklyProvider>
       <MCPProvider>
         <AgentsProvider>
-          <div className="min-h-screen bg-background">
-            {children}
-          </div>
+          <div className="bg-background min-h-screen">{children}</div>
         </AgentsProvider>
       </MCPProvider>
     </LaunchDarklyProvider>

@@ -3,14 +3,6 @@
 import React, { useState } from "react";
 import { ArrowLeft, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,14 +45,20 @@ const sections = [
 
 export default function CreateAgentPage(): React.ReactNode {
   const [currentSection, setCurrentSection] = useState(1);
-  const [completedSections, setCompletedSections] = useState<Set<number>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
-  
+
   // Form state
   const [agentName, setAgentName] = useState("");
   const [agentDescription, setAgentDescription] = useState("");
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [interruptConfig, setInterruptConfig] = useState<{[toolName: string]: {allow_accept: boolean; allow_respond: boolean; allow_edit: boolean; allow_ignore: boolean}}>({});
+  const [interruptConfig, setInterruptConfig] = useState<{
+    [toolName: string]: {
+      allow_accept: boolean;
+      allow_respond: boolean;
+      allow_edit: boolean;
+      allow_ignore: boolean;
+    };
+  }>({});
   const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
 
@@ -69,14 +67,6 @@ export default function CreateAgentPage(): React.ReactNode {
   const { createAgent } = useAgents();
   const { setupAgentTrigger } = useTriggers();
   const { refreshAgents } = useAgentsContext();
-
-  // Handle section completion
-  const handleSectionComplete = (sectionId: number) => {
-    setCompletedSections(prev => new Set([...prev, sectionId]));
-  };
-
-  // Check if all sections are completed
-  const allSectionsCompleted = completedSections.size === 4;
 
   // Handle agent creation
   const handleCreateAgent = async () => {
@@ -93,10 +83,24 @@ export default function CreateAgentPage(): React.ReactNode {
     setIsCreating(true);
 
     try {
-      // For now, we'll use a default deployment and graph
-      // In a real implementation, you'd want to get these from context or props
-      const defaultDeploymentId = "default"; // This should come from your app's context
-      const defaultGraphId = "default"; // This should come from your app's context
+      // Get the default deployment and graph from environment configuration
+      const { getDeployments } = await import("@/lib/environment/deployments");
+      const deployments = getDeployments();
+      const defaultDeployment = deployments.find((d) => d.isDefault);
+
+      if (!defaultDeployment) {
+        toast.error("No default deployment found");
+        return;
+      }
+
+      const defaultGraph = defaultDeployment.graphs.find((g) => g.isDefault);
+      if (!defaultGraph) {
+        toast.error("No default graph found");
+        return;
+      }
+
+      const defaultDeploymentId = defaultDeployment.id;
+      const defaultGraphId = defaultGraph.id;
 
       // Prepare the config object
       const config = {
@@ -134,13 +138,12 @@ export default function CreateAgentPage(): React.ReactNode {
       }
 
       toast.success("Agent created successfully!");
-      
+
       // Refresh the agents list
       refreshAgents();
-      
-      // TODO: Navigate to the new agent or close the dialog
-      // For now, we'll just show success
-      
+
+      // Navigate back to chat
+      window.location.href = "/chat";
     } catch (error) {
       console.error("Error creating agent:", error);
       toast.error("Failed to create agent");
@@ -150,22 +153,28 @@ export default function CreateAgentPage(): React.ReactNode {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex h-screen flex-col">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between p-4 border-b bg-background">
+      <div className="bg-background flex items-center justify-between border-b p-4">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" className="p-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-0"
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-md">Create new agent</h1>
-          <div className="ml-[12px] p-1 border border-gray-300 rounded">
+          <h1 className="text-md tracking-tight">Create new agent</h1>
+          <div className="ml-[8px] rounded border border-gray-300 p-1">
             <FileText className="h-4 w-4 text-gray-500" />
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">Cancel</Button>
-          <Button 
-            disabled={currentSection !== 4 || !systemPrompt.trim() || isCreating}
+          <Button
+            disabled={
+              currentSection !== 4 || !systemPrompt.trim() || isCreating
+            }
             onClick={handleCreateAgent}
           >
             {isCreating ? (
@@ -183,17 +192,15 @@ export default function CreateAgentPage(): React.ReactNode {
       {/* Main Content Area */}
       <div className="flex flex-1">
         {/* Left Sidebar with sections */}
-        <div className="w-80 border-r bg-muted/50">
+        <div className="bg-muted/50 w-80 border-r">
           {/* Section List */}
           <div className="p-6">
             <div>
               {sections.map((section, index) => (
                 <div
                   key={section.id}
-                  className={`cursor-pointer transition-colors hover:opacity-70 p-4 rounded ${
-                    currentSection === section.id
-                      ? "bg-gray-100"
-                      : ""
+                  className={`cursor-pointer rounded p-4 transition-colors hover:opacity-70 ${
+                    currentSection === section.id ? "bg-gray-100" : ""
                   }`}
                   onClick={() => setCurrentSection(section.id)}
                 >
@@ -208,11 +215,15 @@ export default function CreateAgentPage(): React.ReactNode {
                       {section.id}
                     </div>
                     <div>
-                      <h3 className={`text-base font-normal ${
-                        currentSection === section.id
-                          ? "text-black"
-                          : "text-black"
-                      }`}>{section.title}</h3>
+                      <h3
+                        className={`text-base font-normal ${
+                          currentSection === section.id
+                            ? "text-black"
+                            : "text-black"
+                        }`}
+                      >
+                        {section.title}
+                      </h3>
                     </div>
                   </div>
                 </div>
@@ -222,14 +233,15 @@ export default function CreateAgentPage(): React.ReactNode {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex flex-1 flex-col">
           <div className="flex-1 p-6">
             <div className="mx-auto">
               <div className="mb-6">
-                <h2 className="text-md font-medium mb-2">
-                  {sections.find((s) => s.id === currentSection)?.pageTitle || sections.find((s) => s.id === currentSection)?.title}
+                <h2 className="text-md mb-2 font-medium">
+                  {sections.find((s) => s.id === currentSection)?.pageTitle ||
+                    sections.find((s) => s.id === currentSection)?.title}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground text-gray-500">
                   {sections.find((s) => s.id === currentSection)?.description}
                 </p>
               </div>
@@ -238,23 +250,28 @@ export default function CreateAgentPage(): React.ReactNode {
               <div className="space-y-8">
                 {currentSection === 1 && (
                   <div className="space-y-6">
-                    
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="agent-name" className="text-sm font-medium">
+                        <Label
+                          htmlFor="agent-name"
+                          className="text-sm font-medium text-gray-700"
+                        >
                           Name
                         </Label>
                         <Input
                           id="agent-name"
-                          className="mt-1"
+                          className="mt-1 h-10"
                           placeholder="Enter agent name"
                           value={agentName}
                           onChange={(e) => setAgentName(e.target.value)}
                         />
                       </div>
-                      
+
                       <div>
-                        <Label htmlFor="agent-description" className="text-sm font-medium">
+                        <Label
+                          htmlFor="agent-description"
+                          className="text-sm font-medium text-gray-700"
+                        >
                           Description
                         </Label>
                         <Textarea
@@ -266,20 +283,21 @@ export default function CreateAgentPage(): React.ReactNode {
                         />
                       </div>
                     </div>
-                    
+
                     <p className="text-sm text-gray-500">
-                      The clearer you are, the better your agent will match your needs.
+                      The clearer you are, the better your agent will match your
+                      needs.
                     </p>
                   </div>
                 )}
-              
+
                 {currentSection === 2 && (
                   <CreateAgentTriggersSelection
                     selectedTriggers={selectedTriggers}
                     onTriggersChange={setSelectedTriggers}
                   />
                 )}
-                
+
                 {currentSection === 3 && (
                   <CreateAgentToolsSelection
                     selectedTools={selectedTools}
@@ -288,13 +306,10 @@ export default function CreateAgentPage(): React.ReactNode {
                     onInterruptConfigChange={setInterruptConfig}
                   />
                 )}
-                
+
                 {currentSection === 4 && (
-                  <div className="space-y-6">                    
+                  <div className="space-y-6">
                     <div>
-                      <Label htmlFor="system-prompt" className="text-sm font-medium">
-                        System Prompt
-                      </Label>
                       <Textarea
                         id="system-prompt"
                         className="mt-1 min-h-[400px]"
@@ -308,19 +323,21 @@ export default function CreateAgentPage(): React.ReactNode {
               </div>
             </div>
           </div>
-          
+
           {/* Fixed bottom buttons */}
           {currentSection !== 4 && (
             <div className="p-6">
               <div className="flex justify-between">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setCurrentSection(Math.max(1, currentSection - 1))}
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setCurrentSection(Math.max(1, currentSection - 1))
+                  }
                   disabled={currentSection === 1}
                 >
                   Back
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     if (currentSection === 1) {
                       handleSectionComplete(1); // Mark configure section as completed
@@ -333,10 +350,16 @@ export default function CreateAgentPage(): React.ReactNode {
                       setCurrentSection(4); // Go to system prompt
                     }
                   }}
+                  disabled={
+                    currentSection === 1 &&
+                    (!agentName.trim() || !agentDescription.trim())
+                  }
                 >
-                  {currentSection === 1 ? "Configure triggers →" : 
-                   currentSection === 2 ? "Configure tools →" :
-                   "Configure system prompt →"}
+                  {currentSection === 1
+                    ? "Configure triggers →"
+                    : currentSection === 2
+                      ? "Configure tools →"
+                      : "Configure system prompt →"}
                 </Button>
               </div>
             </div>
