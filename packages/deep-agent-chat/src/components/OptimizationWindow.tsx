@@ -421,7 +421,7 @@ export const OptimizationWindow = React.memo<OptimizationWindowProps>(
                     return (
                       <div
                         key={`user-${index}`}
-                        className="mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl px-3.5 py-2.5 text-sm break-words text-white bg-teal-700"
+                        className="mb-2 ml-auto flex max-w-[80%] justify-end rounded-2xl bg-teal-700 px-3.5 py-2.5 text-sm break-words text-white"
                       >
                         {message.content}
                       </div>
