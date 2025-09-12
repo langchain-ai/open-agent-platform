@@ -4,6 +4,10 @@ export interface Trigger {
    */
   id: string;
   /**
+   * The provider of the trigger (e.g., "google")
+   */
+  provider: string;
+  /**
    * The name of the trigger
    */
   displayName: string;

@@ -21,6 +21,8 @@ import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { TriggerAccordionItem } from "./components/trigger-accordion-item";
+import { Accordion } from "@/components/ui/accordion";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
@@ -177,19 +179,25 @@ export default function TriggersInterface() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {triggers.map((trigger) => (
-          <TriggerCard
-            key={trigger.id}
-            trigger={trigger}
-            userTriggers={
-              groupUserRegisteredTriggersByProvider(userTriggers)?.[
-                trigger.id
-              ] || []
-            }
-          />
+      <Accordion
+      type="single"
+      collapsible
+      className="w-full"
+      defaultValue="item-1"
+    >
+      {triggers.map((trigger) => (
+          // <TriggerCard
+          //   key={trigger.id}
+          //   trigger={trigger}
+          //   userTriggers={
+          //     groupUserRegisteredTriggersByProvider(userTriggers)?.[
+          //       trigger.id
+          //     ] || []
+          //   }
+          // />
+          <TriggerAccordionItem key={trigger.id} trigger={trigger} />
         ))}
-      </div>
-    </div>
+    </Accordion>
+            </div>
   );
 }
