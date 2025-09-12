@@ -28,3 +28,21 @@ export interface Trigger {
    */
   payloadSchema: Record<string, any> | null;
 }
+
+export interface ListTriggerRegistrationsData {
+  id: string;
+  user_id: string;
+  template_id: string;
+  resource: unknown;
+  linked_assistant_ids?: string[];
+  created_at: string;
+}
+
+export interface GroupedTriggerRegistrationsByProvider {
+  [provider: string]: {
+    registrations: {
+      [templateId: string]: ListTriggerRegistrationsData[];
+    };
+    triggers: Trigger[];
+  };
+}
