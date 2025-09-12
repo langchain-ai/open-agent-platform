@@ -59,7 +59,6 @@ function ChatNavItem({
 export function NavMain({
   items,
   groupLabel,
-  onNewAgentClick,
 }: {
   items: (
     | {
@@ -84,7 +83,6 @@ export function NavMain({
       }
   )[];
   groupLabel?: string;
-  onNewAgentClick?: () => void;
 }) {
   return (
     <SidebarGroup className="gap-1">
@@ -100,16 +98,6 @@ export function NavMain({
               key={`${item.title}-${index}`}
               item={item}
             />
-          ) : item.title === "New Agent" && onNewAgentClick ? (
-            <SidebarMenuItem key={`${item.title}-${index}`}>
-              <SidebarMenuButton
-                tooltip={item.title}
-                onClick={onNewAgentClick}
-              >
-                {item.icon && <item.icon />}
-                <p className="text-sm">{item.title}</p>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           ) : (
             <ChatNavItem
               key={`${item.title}-${index}`}

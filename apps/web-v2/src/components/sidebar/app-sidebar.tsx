@@ -13,7 +13,6 @@ import {
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { CreateAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/create-agent-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -46,7 +45,7 @@ const data: {
   topNav: [
     {
       title: "New Agent",
-      url: "/agents/new",
+      url: "/agents/create",
       icon: Plus,
     },
     {
@@ -80,36 +79,23 @@ const data: {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [showCreateAgentDialog, setShowCreateAgentDialog] =
-    React.useState(false);
-
   return (
-    <>
-      <Sidebar
-        collapsible="icon"
-        {...props}
-      >
-        <SiteHeader />
-        <SidebarContent>
-          <NavMain
-            items={data.topNav}
-            onNewAgentClick={() => setShowCreateAgentDialog(true)}
-          />
-          <NavMain
-            items={data.workspace}
-            groupLabel="Workspace"
-          />
-        </SidebarContent>
-        <SidebarFooter>
-          <NavUser />
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-
-      <CreateAgentDialog
-        open={showCreateAgentDialog}
-        onOpenChange={setShowCreateAgentDialog}
-      />
-    </>
+    <Sidebar
+      collapsible="icon"
+      {...props}
+    >
+      <SiteHeader />
+      <SidebarContent>
+        <NavMain items={data.topNav} />
+        <NavMain
+          items={data.workspace}
+          groupLabel="Workspace"
+        />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }
