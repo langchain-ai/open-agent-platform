@@ -1,11 +1,17 @@
-export function GoogleIcon() {
+interface GoogleIconProps {
+  className?: string;
+  size?: number;
+}
+
+export function GoogleIcon({ className, size = 28 }: GoogleIconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="28"
-      height="29"
+      width={size}
+      height={Math.round((size * 29) / 28)}
       viewBox="0 0 28 29"
       fill="none"
+      className={className}
     >
       <path
         d="M27.44 14.6287C27.44 13.636 27.3509 12.6815 27.1855 11.7651H14V17.1869H21.5345C21.2036 18.9305 20.2109 20.4069 18.7218 21.3996V24.9251H23.2655C25.9127 22.4815 27.44 18.8924 27.44 14.6287Z"

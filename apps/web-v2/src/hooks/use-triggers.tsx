@@ -12,6 +12,10 @@ type RegisterTriggerResponse =
   | {
       success: boolean;
       registered: true;
+    }
+  | {
+      authUrl: string;
+      registered: false;
     };
 
 export interface ListTriggerRegistrationsData {
