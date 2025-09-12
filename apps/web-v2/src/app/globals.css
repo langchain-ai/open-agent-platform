@@ -206,11 +206,17 @@
   .dark .scrollbar-pretty-auto::-webkit-scrollbar-thumb {
     background-color: rgb(95 105 119);
   }
+
   .shadow-icon-button {
     box-shadow: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
   }
+
   .bg-muted-secondary {
     background-color: #fafafa;
+  }
+
+  .bg-sidebar-accent {
+    background-color: #f0f9ff;
   }
 }
 

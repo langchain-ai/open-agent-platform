@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./app-sidebar";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AgentsProvider } from "@/providers/Agents";
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -20,7 +21,9 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
       open={sidebarOpen}
       onOpenChange={setSidebarOpen}
     >
-      <AppSidebar />
+      <AgentsProvider>
+        <AppSidebar />
+      </AgentsProvider>
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
