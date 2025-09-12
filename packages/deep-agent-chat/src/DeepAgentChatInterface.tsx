@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
-import { OptimizationSidebar } from "./components/OptimizationSidebar";
 import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
-import { useQueryState } from "nuqs";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 function DeepAgentChatInterfaceInternal({
@@ -18,9 +16,10 @@ function DeepAgentChatInterfaceInternal({
   accessToken,
   optimizerDeploymentUrl,
   optimizerAccessToken,
+  view,
+  onViewChange,
+  hideInternalToggle,
 }: DeepAgentChatConfig) {
-  const [_, __setThreadId] = useQueryState("threadId");
-  // SubAgent panel moved inline; no global selection state needed
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
@@ -43,9 +42,12 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={activeAssistant}
         assistantId={assistantId}
       >
-        <div className="oap-deep-agent-chat absolute inset-0 flex h-screen gap-4 overflow-hidden p-4">
-          <div className="border-border flex h-full flex-col rounded-xl border bg-white p-3">
-            <OptimizationSidebar
+        <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
+          <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
+            <TasksFilesSidebar
+              todos={todos}
+              files={files}
+              setFiles={setFiles}
               activeAssistant={activeAssistant}
               setActiveAssistant={setActiveAssistant}
               setAssistantError={setAssistantError}
@@ -64,14 +66,20 @@ function DeepAgentChatInterfaceInternal({
               setActiveAssistant={setActiveAssistant}
               setTodos={setTodos}
               setFiles={setFiles}
+              view={view}
+              onViewChange={onViewChange}
+              hideInternalToggle={hideInternalToggle}
             />
-            {/* SubAgentPanel removed; details now render inline in ChatMessage */}
           </div>
 
           <TasksFilesSidebar
             todos={todos}
             files={files}
             setFiles={setFiles}
+            activeAssistant={activeAssistant}
+            setActiveAssistant={setActiveAssistant}
+            setAssistantError={setAssistantError}
+            assistantError={assistantError}
           />
         </div>
       </ChatProvider>

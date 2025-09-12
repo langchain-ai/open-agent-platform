@@ -2,66 +2,42 @@
 
 import React from "react";
 import { Button } from "./ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import type { SubAgent } from "../types";
 
 interface SubAgentIndicatorProps {
   subAgent: SubAgent;
   onClick: () => void;
+  isExpanded?: boolean;
 }
 
 export const SubAgentIndicator = React.memo<SubAgentIndicatorProps>(
-  ({ subAgent, onClick }) => {
+  ({ subAgent, onClick, isExpanded = true }) => {
     return (
-      <div
-        className="bg-card w-fit overflow-hidden rounded-lg"
-        style={{
-          maxWidth: "70vw",
-          border: "none",
-          boxShadow: "none",
-          outline: "none",
-        }}
-      >
+      <div className="bg-card w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none outline-none">
         <Button
           variant="ghost"
           size="sm"
           onClick={onClick}
-          className="flex w-full items-center justify-between text-left transition-colors duration-200"
-          style={{
-            padding: "0.5rem 1rem",
-            gap: "0.5rem",
-            border: "none",
-            outline: "none",
-            boxShadow: "none",
-          }}
+          className="flex w-full items-center justify-between gap-2 border-none px-4 py-2 text-left shadow-none transition-colors duration-200 outline-none"
         >
-          <div
-            className="flex w-full items-center justify-between"
-            style={{ gap: "0.5rem" }}
-          >
-            <div
-              className="flex items-center"
-              style={{ gap: "0.5rem" }}
-            >
-              <span
-                className="font-sans"
-                style={{
-                  color: "#3F3F46",
-                  fontSize: "15px",
-                  fontStyle: "normal",
-                  fontWeight: "700",
-                  lineHeight: "140%",
-                  letterSpacing: "-0.6px",
-                }}
-              >
+          <div className="flex w-full items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-sans text-[15px] leading-[140%] font-bold tracking-[-0.6px] text-[#3F3F46]">
                 {subAgent.subAgentName}
               </span>
             </div>
-            <ChevronDown
-              size={14}
-              className="shrink-0"
-              style={{ color: "#70707B" }}
-            />
+            {isExpanded ? (
+              <ChevronUp
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            ) : (
+              <ChevronDown
+                size={14}
+                className="shrink-0 text-[#70707B]"
+              />
+            )}
           </div>
         </Button>
       </div>
