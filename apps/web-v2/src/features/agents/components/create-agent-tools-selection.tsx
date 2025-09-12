@@ -18,6 +18,7 @@ import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Tool } from "@/types/tool";
 import _ from "lodash";
+import { ChevronDown } from "lucide-react";
 
 interface HumanInterruptConfig {
   allow_ignore: boolean;
