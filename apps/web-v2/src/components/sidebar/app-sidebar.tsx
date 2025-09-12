@@ -8,6 +8,7 @@ import {
   Inbox,
   Bot,
   Plus,
+  type LucideIcon,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -22,7 +23,23 @@ import {
 import { SiteHeader } from "./sidebar-header";
 
 // Sidebar navigation data
-const data = {
+const data: {
+  topNav: {
+    title: string;
+    url: string;
+    icon: LucideIcon;
+  }[];
+  workspace: ({
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isDropdown?: false;
+  } | {
+    title: string;
+    icon: LucideIcon;
+    isDropdown: true;
+  })[];
+} = {
   topNav: [
     {
       title: "New Agent",
