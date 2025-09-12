@@ -1,5 +1,6 @@
 "use client";
 
+import NextLink from "next/link";
 import React, { useState, useCallback } from "react";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
@@ -7,7 +8,6 @@ import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { cn } from "@/lib/utils";
 import { Inbox, Settings, MessagesSquare, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { EditAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/edit-agent-dialog";
 import { ThreadHistorySidebar } from "./thread-history-sidebar";
@@ -38,10 +38,11 @@ export function PageHeader({
 }: PageHeaderProps) {
   const { showAgentVisualizerUi } = useFlags<LaunchDarklyFeatureFlags>();
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
-  const router = useRouter();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
-  const [threadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useQueryState("threadId");
+  const [_agentId, setAgentId] = useQueryState("agentId");
+  const [_deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const { agents, loading } = useAgentsContext();
 
   const handleViewChange = (newView: "chat" | "workflow") => {
@@ -54,17 +55,12 @@ export function PageHeader({
     setView(newView);
   };
 
-  const handleInboxClick = () => {
-    if (selectedAgent) {
-      const agentInboxId = `${selectedAgent.assistant_id}:${selectedAgent.deploymentId}`;
-      router.push(`/inbox?agentInbox=${agentInboxId}`);
-    }
-  };
-
   const handleSettingsClick = () => {
-    if (selectedAgent) {
-      setShowEditDialog(true);
+    if (!selectedAgent) {
+      toast.info("Please select an agent", { richColors: true });
+      return;
     }
+    setShowEditDialog(true);
   };
 
   const handleHistoryClick = useCallback(() => {
@@ -72,30 +68,33 @@ export function PageHeader({
   }, []);
 
   const handleThreadSelect = useCallback(
-    (threadId: string) => {
-      if (selectedAgent) {
-        const newUrl = `/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${selectedAgent.deploymentId}&threadId=${threadId}`;
-        window.location.href = newUrl;
+    async (newThreadId: string) => {
+      if (!selectedAgent) {
+        toast.info("Please select an agent", { richColors: true });
+        return;
       }
+      await setThreadId(newThreadId);
       setIsThreadHistoryOpen(false);
     },
-    [selectedAgent],
+    [selectedAgent, setThreadId],
   );
 
-  const handleNewThreadClick = () => {
-    // Start a new thread with the same agent
-    if (selectedAgent) {
-      const agentUrl = `/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${selectedAgent.deploymentId}`;
-      window.location.href = agentUrl;
+  const handleNewThreadClick = async () => {
+    if (!selectedAgent) {
+      toast.info("Please select an agent", { richColors: true });
+      return;
     }
+    // Start a new thread with the same agent
+    await setThreadId(null);
   };
 
   const handleAgentSelection = useCallback(
-    (agentId: string, deploymentId: string) => {
-      const newUrl = `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
-      window.location.href = newUrl;
+    async (newAgentId: string, newDeploymentId: string) => {
+      await setAgentId(newAgentId);
+      await setDeploymentId(newDeploymentId);
+      await setThreadId(null); // Clear thread ID when switching agents
     },
-    [],
+    [setAgentId, setDeploymentId, setThreadId],
   );
 
   return (
@@ -178,10 +177,14 @@ export function PageHeader({
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleInboxClick}
             className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
+            asChild
           >
-            <Inbox className="size-4" />
+            <NextLink
+              href={`/inbox?agentInbox=${selectedAgent.assistant_id}:${selectedAgent.deploymentId}`}
+            >
+              <Inbox className="size-4" />
+            </NextLink>
           </Button>
           <Button
             variant="ghost"

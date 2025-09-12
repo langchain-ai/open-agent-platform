@@ -5,11 +5,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, X } from "lucide-react";
 import { createClient } from "@/lib/client";
-import type { Thread } from "../types";
+import type { ChatHistoryItem } from "../types";
 import { extractStringFromMessageContent } from "../utils";
 import { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
+import { cn } from "@/lib/utils";
 
 interface ThreadHistorySidebarProps {
   open: boolean;
@@ -21,7 +22,7 @@ interface ThreadHistorySidebarProps {
 export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
   ({ open, setOpen, currentThreadId, onThreadSelect }) => {
     const { session } = useAuthContext();
-    const [threads, setThreads] = useState<Thread[]>([]);
+    const [threads, setThreads] = useState<ChatHistoryItem[]>([]);
     const [isLoadingThreadHistory, setIsLoadingThreadHistory] = useState(true);
     const [deploymentId] = useQueryState("deploymentId");
 
@@ -39,50 +40,42 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
           sortBy: "created_at",
           sortOrder: "desc",
         });
-        const threadList: Thread[] = response.map(
-          (thread: {
-            thread_id: string;
-            values?: unknown;
-            created_at: string;
-            updated_at?: string;
-            status?: string;
-          }) => {
-            let displayContent =
-              thread.status === "busy"
-                ? "Current Thread"
-                : `Thread ${thread.thread_id.slice(0, 8)}`;
-            try {
+        const threadList: ChatHistoryItem[] = response.map((thread) => {
+          let displayContent =
+            thread.status === "busy"
+              ? "Current Thread"
+              : `Thread ${thread.thread_id.slice(0, 8)}`;
+          try {
+            if (
+              thread.values &&
+              typeof thread.values === "object" &&
+              "messages" in thread.values
+            ) {
+              const messages = (thread.values as { messages?: unknown[] })
+                .messages;
               if (
-                thread.values &&
-                typeof thread.values === "object" &&
-                "messages" in thread.values
+                Array.isArray(messages) &&
+                messages.length > 0 &&
+                thread.status !== "busy"
               ) {
-                const messages = (thread.values as { messages?: unknown[] })
-                  .messages;
-                if (
-                  Array.isArray(messages) &&
-                  messages.length > 0 &&
-                  thread.status !== "busy"
-                ) {
-                  displayContent = extractStringFromMessageContent(
-                    messages[0] as Message,
-                  );
-                }
+                displayContent = extractStringFromMessageContent(
+                  messages[0] as Message,
+                );
               }
-            } catch (error) {
-              console.warn(
-                `Failed to get first message for thread ${thread.thread_id}:`,
-                error,
-              );
             }
-            return {
-              id: thread.thread_id,
-              title: displayContent,
-              createdAt: new Date(thread.created_at),
-              updatedAt: new Date(thread.updated_at || thread.created_at),
-            } as Thread;
-          },
-        );
+          } catch (error) {
+            console.warn(
+              `Failed to get first message for thread ${thread.thread_id}:`,
+              error,
+            );
+          }
+          return {
+            id: thread.thread_id,
+            title: displayContent,
+            createdAt: new Date(thread.created_at),
+            updatedAt: new Date(thread.updated_at || thread.created_at),
+          };
+        });
         setThreads(
           threadList.sort(
             (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
@@ -100,7 +93,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     }, [fetchThreads, currentThreadId]);
 
     const groupedThreads = useMemo(() => {
-      const groups: Record<string, Thread[]> = {
+      const groups: Record<string, ChatHistoryItem[]> = {
         today: [],
         yesterday: [],
         week: [],
@@ -178,7 +171,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                 <div className="box-border w-full max-w-full overflow-hidden p-2">
                   {groupedThreads.today.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
                         Today
                       </h4>
                       {groupedThreads.today.map((thread) => (
@@ -193,7 +186,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.yesterday.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
                         Yesterday
                       </h4>
                       {groupedThreads.yesterday.map((thread) => (
@@ -208,7 +201,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.week.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
                         This Week
                       </h4>
                       {groupedThreads.week.map((thread) => (
@@ -223,7 +216,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                   )}
                   {groupedThreads.older.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide tracking-wider uppercase">
+                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
                         Older
                       </h4>
                       {groupedThreads.older.map((thread) => (
@@ -247,16 +240,17 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
 );
 
 const ThreadItem = React.memo<{
-  thread: Thread;
+  thread: ChatHistoryItem;
   isActive: boolean;
   onClick: () => void;
 }>(({ thread, isActive, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className={`hover:bg-muted flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200 ${
-        isActive ? "bg-muted" : "bg-transparent"
-      }`}
+      className={cn(
+        "hover:bg-muted flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
+        isActive ? "bg-muted" : "bg-transparent",
+      )}
     >
       <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
       <div className="w-[calc(20vw-3rem)] min-w-0 flex-1 overflow-hidden">

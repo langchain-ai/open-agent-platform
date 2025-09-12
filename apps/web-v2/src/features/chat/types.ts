@@ -1,4 +1,4 @@
-export interface Thread {
+export interface ChatHistoryItem {
   id: string;
   title: string;
   createdAt: Date;
