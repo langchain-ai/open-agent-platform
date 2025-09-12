@@ -1,6 +1,6 @@
 "use client";
 
-import { type LucideIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, type LucideIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
@@ -22,6 +22,7 @@ export function AgentDropdown({
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [initialized, setInitialized] = useState(false);
+  const [selectOpen, setSelectOpen] = useState(false);
 
   // Set default agent on first page load or handle missing deploymentId
   useEffect(() => {
@@ -92,16 +93,23 @@ export function AgentDropdown({
           handleAgentChange(singleValue);
         }}
         disableDeselect
-        className="w-full rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+        className="w-full rounded-lg border border-gray-200 bg-white hover:bg-gray-50"
         trigger={
-          <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-2 py-1 text-left shadow-sm hover:bg-gray-50">
-            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-            <span className="flex-1 truncate">
+          <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-2 py-1 text-left hover:bg-gray-50">
+            {item.icon && <item.icon className="mr-2 size-4" />}
+            <p className="flex-1 truncate text-sm">
               {loading ? "Loading..." : selectedAgent?.name || item.title}
-            </span>
+            </p>
+            {selectOpen ? (
+              <ChevronDown className="size-4" />
+            ) : (
+              <ChevronUp className="size-4" />
+            )}
           </div>
         }
         triggerAsChild
+        open={selectOpen}
+        setOpen={setSelectOpen}
       />
     </SidebarMenuItem>
   );

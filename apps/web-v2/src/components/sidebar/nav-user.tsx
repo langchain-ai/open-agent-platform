@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronsUpDown, LogOut, User, Loader2, Settings } from "lucide-react";
+import { ChevronsUpDown, LogOut, User, Loader2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -131,11 +131,6 @@ export function NavUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
 
             {isAuthenticated ? (
               <DropdownMenuItem
