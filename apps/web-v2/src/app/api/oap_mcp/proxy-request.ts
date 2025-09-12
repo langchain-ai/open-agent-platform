@@ -141,8 +141,14 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
 
   headers.set("Accept", "application/json, text/event-stream");
 
-  const body =
-    req.method !== "GET" && req.method !== "HEAD" ? req.body : undefined;
+  let body: string | undefined = undefined;
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    try {
+      body = await req.text();
+    } catch (error) {
+      console.error("Error reading request body:", error);
+    }
+  }
 
   try {
     const response = await fetch(targetUrl, {
@@ -172,8 +178,16 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       }
     }
 
+    // Bruh! https://github.com/sveltejs/kit/issues/12197
     response.headers.forEach((value, key) => {
-      newResponse.headers.set(key, value);
+      const lowerKey = key.toLowerCase();
+      if (
+        lowerKey !== "content-encoding" &&
+        lowerKey !== "content-length" &&
+        lowerKey !== "transfer-encoding"
+      ) {
+        newResponse.headers.set(key, value);
+      }
     });
 
     return newResponse;
