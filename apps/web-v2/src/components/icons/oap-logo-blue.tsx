@@ -1,4 +1,4 @@
-export function OAPLogoGreen({
+export function OAPLogoBlue({
   className,
   width,
   height,

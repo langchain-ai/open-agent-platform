@@ -1,6 +1,6 @@
 "use client";
 
-import { type LucideIcon, ChevronDown } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useAgentsContext } from "@/providers/Agents";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
@@ -8,17 +8,10 @@ import { useEffect, useState } from "react";
 
 import {
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
 
 export function AgentDropdown({
   item,
@@ -56,9 +49,8 @@ export function AgentDropdown({
     initialized,
   ]);
 
-  const handleAgentChange = (value: string | string[]) => {
-    const agentValue = Array.isArray(value) ? value[0] : value;
-    const [assistantId, deploymentIdFromValue] = agentValue.split(":");
+  const handleAgentChange = (value: string) => {
+    const [assistantId, deploymentIdFromValue] = value.split(":");
     setAgentId(assistantId);
     setDeploymentId(deploymentIdFromValue);
   };
@@ -72,56 +64,44 @@ export function AgentDropdown({
         )
       : null;
 
-  return (
-    <Collapsible defaultOpen>
+  const currentValue =
+    agentId && deploymentId ? `${agentId}:${deploymentId}` : "";
+  const { state } = useSidebar();
+
+  // When sidebar is collapsed, show a simple button with icon and tooltip
+  if (state === "collapsed") {
+    return (
       <SidebarMenuItem>
-        <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50">
-            {item.icon && <item.icon />}
-            <span className="flex-1 text-left">
+        <SidebarMenuButton tooltip={selectedAgent?.name || item.title}>
+          {item.icon && <item.icon />}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  // When sidebar is expanded, show the full combobox
+  return (
+    <SidebarMenuItem className="[&_[cmdk-list]]:max-h-[400px] [&_[cmdk-list]]:overflow-y-auto">
+      <AgentsCombobox
+        agents={agents}
+        agentsLoading={loading}
+        placeholder={item.title}
+        value={currentValue}
+        setValue={(value) =>
+          handleAgentChange(Array.isArray(value) ? value[0] : value)
+        }
+        disableDeselect
+        className="w-full rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+        trigger={
+          <div className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-2 py-1 text-left shadow-sm hover:bg-gray-50">
+            {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+            <span className="flex-1 truncate">
               {loading ? "Loading..." : selectedAgent?.name || item.title}
             </span>
-            <ChevronDown className="ml-auto h-4 w-4" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <SidebarMenuSub>
-            {loading ? (
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton>
-                  <span className="text-xs">Loading agents...</span>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            ) : (
-              agents.map((agent) => {
-                const agentValue = `${agent.assistant_id}:${agent.deploymentId}`;
-                const isSelected =
-                  agentId === agent.assistant_id &&
-                  deploymentId === agent.deploymentId;
-                return (
-                  <SidebarMenuSubItem key={agentValue}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleAgentChange(agentValue);
-                      }}
-                      className={cn(
-                        "w-full cursor-pointer rounded px-2 py-1 text-left hover:bg-gray-100",
-                        isSelected &&
-                          "bg-sidebar-accent text-sidebar-accent-foreground font-bold",
-                      )}
-                    >
-                      <span className="text-xs">{agent.name}</span>
-                    </button>
-                  </SidebarMenuSubItem>
-                );
-              })
-            )}
-          </SidebarMenuSub>
-        </CollapsibleContent>
-      </SidebarMenuItem>
-    </Collapsible>
+          </div>
+        }
+        triggerAsChild
+      />
+    </SidebarMenuItem>
   );
 }

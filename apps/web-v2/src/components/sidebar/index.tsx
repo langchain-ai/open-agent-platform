@@ -5,7 +5,6 @@ import { AppSidebar } from "./app-sidebar";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AgentsProvider } from "@/providers/Agents";
-import { MCPProvider } from "@/providers/MCP";
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,16 +17,14 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <AgentsProvider>
-      <MCPProvider>
-        <SidebarProvider
-          open={sidebarOpen}
-          onOpenChange={setSidebarOpen}
-        >
-          <AppSidebar />
-          <SidebarInset>{children}</SidebarInset>
-        </SidebarProvider>
-      </MCPProvider>
-    </AgentsProvider>
+    <SidebarProvider
+      open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
+    >
+      <AgentsProvider>
+        <AppSidebar />
+      </AgentsProvider>
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 }

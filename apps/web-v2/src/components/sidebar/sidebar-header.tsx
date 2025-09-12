@@ -6,7 +6,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { OAPLogoGreen } from "@/components/icons/oap-logo-green";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 import { PanelLeftIcon } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import NextLink from "next/link";
@@ -35,7 +35,7 @@ export function SiteHeader() {
 
               {/* Show logo and trigger when expanded */}
               <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:hidden">
-                <OAPLogoGreen className="!h-4 !w-auto flex-shrink-0" />
+                <OAPLogoBlue className="!h-4 !w-auto flex-shrink-0" />
                 <PanelLeftIcon
                   className="!h-4 !w-4 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {

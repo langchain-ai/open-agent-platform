@@ -43,7 +43,6 @@ const data = {
   workspace: [
     {
       title: "Select Agent",
-      url: "/agents/select",
       icon: Bot,
       isDropdown: true,
     },
