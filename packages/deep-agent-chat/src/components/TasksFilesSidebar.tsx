@@ -131,116 +131,113 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       <div className="min-h-0 w-full flex-1">
         <div className="font-inter flex h-full w-full flex-col p-0">
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
-            <div className="bg-muted/30 rounded-xl">
-              <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-xs font-semibold tracking-wide text-zinc-600">
-                  AGENT TASKS
-                </span>
-                <button
-                  onClick={() => setTasksOpen((v) => !v)}
-                  className={cn(
-                    "hover:bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-md transition-transform duration-200",
-                    tasksOpen ? "rotate-180" : "rotate-0",
-                  )}
-                  aria-label="Toggle tasks panel"
-                >
-                  <ChevronDown size={14} />
-                </button>
-              </div>
-              {tasksOpen && (
-                <div className="px-3 pb-2">
-                  <ScrollArea className="h-full">
-                    {todos.length === 0 ? (
-                      <div className="flex h-full items-center justify-center p-4 text-center">
-                        <p className="text-muted-foreground text-xs">
-                          No tasks created yet
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="ml-1 p-0.5">
-                        {groupedTodos.in_progress.length > 0 && (
-                          <div className="mb-4">
-                            <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                              In Progress
-                            </h3>
-                            {groupedTodos.in_progress.map((todo, index) => (
-                              <div
-                                key={`in_progress_${todo.id}_${index}`}
-                                className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
-                              >
-                                {getStatusIcon(todo.status)}
-                                <span className="flex-1 leading-relaxed break-words text-inherit">
-                                  {todo.content}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {groupedTodos.pending.length > 0 && (
-                          <div className="mb-4">
-                            <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                              Pending
-                            </h3>
-                            {groupedTodos.pending.map((todo, index) => (
-                              <div
-                                key={`pending_${todo.id}_${index}`}
-                                className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
-                              >
-                                {getStatusIcon(todo.status)}
-                                <span className="flex-1 leading-relaxed break-words text-inherit">
-                                  {todo.content}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {groupedTodos.completed.length > 0 && (
-                          <div className="mb-0">
-                            <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                              Completed
-                            </h3>
-                            {groupedTodos.completed.map((todo, index) => (
-                              <div
-                                key={`completed_${todo.id}_${index}`}
-                                className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
-                              >
-                                {getStatusIcon(todo.status)}
-                                <span className="flex-1 leading-relaxed break-words text-inherit">
-                                  {todo.content}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </ScrollArea>
-                </div>
-              )}
+            <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
+              <span className="text-xs font-semibold tracking-wide text-zinc-600">
+                AGENT TASKS
+              </span>
+              <button
+                onClick={() => setTasksOpen((v) => !v)}
+                className={cn(
+                  "hover:bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-md transition-transform duration-200",
+                  tasksOpen ? "rotate-180" : "rotate-0",
+                )}
+                aria-label="Toggle tasks panel"
+              >
+                <ChevronDown size={14} />
+              </button>
             </div>
+            {tasksOpen && (
+              <div className="bg-muted-secondary rounded-xl px-3 pb-2">
+                <ScrollArea className="h-full">
+                  {todos.length === 0 ? (
+                    <div className="flex h-full items-center justify-center p-4 text-center">
+                      <p className="text-muted-foreground text-xs">
+                        No tasks created yet
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="ml-1 p-0.5">
+                      {groupedTodos.in_progress.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
+                            In Progress
+                          </h3>
+                          {groupedTodos.in_progress.map((todo, index) => (
+                            <div
+                              key={`in_progress_${todo.id}_${index}`}
+                              className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
+                            >
+                              {getStatusIcon(todo.status)}
+                              <span className="flex-1 leading-relaxed break-words text-inherit">
+                                {todo.content}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
-            <div className="bg-muted/30 rounded-xl">
-              <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span className="text-xs font-semibold tracking-wide text-zinc-600">
-                  FILE SYSTEM
-                </span>
-                <button
-                  onClick={() => setFilesOpen((v) => !v)}
-                  className={cn(
-                    "hover:bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-md transition-transform duration-200",
-                    filesOpen ? "rotate-180" : "rotate-0",
+                      {groupedTodos.pending.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
+                            Pending
+                          </h3>
+                          {groupedTodos.pending.map((todo, index) => (
+                            <div
+                              key={`pending_${todo.id}_${index}`}
+                              className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
+                            >
+                              {getStatusIcon(todo.status)}
+                              <span className="flex-1 leading-relaxed break-words text-inherit">
+                                {todo.content}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {groupedTodos.completed.length > 0 && (
+                        <div className="mb-0">
+                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
+                            Completed
+                          </h3>
+                          {groupedTodos.completed.map((todo, index) => (
+                            <div
+                              key={`completed_${todo.id}_${index}`}
+                              className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
+                            >
+                              {getStatusIcon(todo.status)}
+                              <span className="flex-1 leading-relaxed break-words text-inherit">
+                                {todo.content}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
-                  aria-label="Toggle files panel"
-                >
-                  <ChevronDown size={14} />
-                </button>
+                </ScrollArea>
               </div>
-              {filesOpen && (
-                <div className="px-3 pb-2">
-                  <div className="hidden justify-end pb-2">
-                    {/* <Button
+            )}
+
+            <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
+              <span className="text-xs font-semibold tracking-wide text-zinc-600">
+                FILE SYSTEM
+              </span>
+              <button
+                onClick={() => setFilesOpen((v) => !v)}
+                className={cn(
+                  "hover:bg-muted text-muted-foreground flex h-6 w-6 items-center justify-center rounded-md transition-transform duration-200",
+                  filesOpen ? "rotate-180" : "rotate-0",
+                )}
+                aria-label="Toggle files panel"
+              >
+                <ChevronDown size={14} />
+              </button>
+            </div>
+            {filesOpen && (
+              <div className="bg-muted-secondary rounded-xl px-3 pb-2">
+                <div className="hidden justify-end pb-2">
+                  {/* <Button
                       onClick={handleClickCreateButton}
                       variant="ghost"
                       size="sm"
@@ -250,57 +247,54 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                       <Plus size={16} className="mr-1" />
                       Create New File
                     </Button> */}
-                  </div>
-                  <ScrollArea className="h-full">
-                    {Object.keys(files).length === 0 ? (
-                      <div className="flex h-full items-center justify-center p-4 text-center">
-                        <p className="text-muted-foreground text-xs">
-                          No files created yet
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="p-1">
-                        {Object.keys(files).map((file) => (
-                          <div
-                            key={file}
-                            className="mb-1"
-                          >
-                            <div
-                              className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
-                              onClick={() => {
-                                setSelectedFile({
-                                  path: file,
-                                  content: files[file],
-                                });
-                                setIsFileCreationDialogOpen(true);
-                              }}
-                            >
-                              <FileText
-                                size={12}
-                                className="text-muted-foreground flex-shrink-0"
-                              />
-                              <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
-                                {file}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </ScrollArea>
-                  {isFileCreationDialogOpen && (
-                    <FileViewDialog
-                      file={selectedFile}
-                      onSaveFile={handleSaveFile}
-                      onClose={handleCloseFileDialog}
-                      editDisabled={
-                        isLoading === true || interrupt !== undefined
-                      }
-                    />
-                  )}
                 </div>
-              )}
-            </div>
+                <ScrollArea className="h-full">
+                  {Object.keys(files).length === 0 ? (
+                    <div className="flex h-full items-center justify-center p-4 text-center">
+                      <p className="text-muted-foreground text-xs">
+                        No files created yet
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-1">
+                      {Object.keys(files).map((file) => (
+                        <div
+                          key={file}
+                          className="mb-1"
+                        >
+                          <div
+                            className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
+                            onClick={() => {
+                              setSelectedFile({
+                                path: file,
+                                content: files[file],
+                              });
+                              setIsFileCreationDialogOpen(true);
+                            }}
+                          >
+                            <FileText
+                              size={12}
+                              className="text-muted-foreground flex-shrink-0"
+                            />
+                            <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
+                              {file}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+                {isFileCreationDialogOpen && (
+                  <FileViewDialog
+                    file={selectedFile}
+                    onSaveFile={handleSaveFile}
+                    onClose={handleCloseFileDialog}
+                    editDisabled={isLoading === true || interrupt !== undefined}
+                  />
+                )}
+              </div>
+            )}
 
             <OptimizationSidebar
               activeAssistant={activeAssistant}
