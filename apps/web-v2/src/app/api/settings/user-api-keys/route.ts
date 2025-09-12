@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
 import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
@@ -37,7 +37,7 @@ function decryptApiKey(encryptedApiKey: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         name: name.trim(),
         key_hash: encryptedApiKey,
         created_at: new Date().toISOString(),
-      } as any)
+      })
       .select()
       .single();
 
@@ -101,10 +101,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: "API key created successfully",
       apiKey: {
-        id: (data as any).id,
-        name: (data as any).name,
+        id: data.id,
+        name: data.name,
         key: apiKey, // Return the plain key only on creation
-        created_at: (data as any).created_at,
+        created_at: data.created_at,
       },
     });
   } catch (error) {
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseServerClient();
 
     const accessToken = request.headers.get("x-access-token");
     const refreshToken = request.headers.get("x-refresh-token");
@@ -146,11 +146,11 @@ export async function GET(request: NextRequest) {
       refresh_token: refreshToken,
     });
 
-    const { data, error } = (await supabase
+    const { data, error } = await supabase
       .from("user_api_keys")
       .select("id, name, key_hash, created_at")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false })) as any;
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching user API keys:", error);
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Decrypt the API keys for display
-    const apiKeys = (data as any[]).map((key: any) => ({
+    const apiKeys = data.map((key: any) => ({
       id: key.id,
       name: key.name,
       key: decryptApiKey(key.key_hash),
