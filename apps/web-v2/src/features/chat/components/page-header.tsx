@@ -107,7 +107,7 @@ export function PageHeader({
                 variant="ghost"
                 className="hover:bg-muted/50 h-8 border-none bg-transparent p-2 text-sm font-medium shadow-none focus:ring-0"
               >
-                {assistantName || "main agent"}
+                {assistantName || "Agent"}
                 <ChevronDown className="ml-1 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

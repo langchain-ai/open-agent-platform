@@ -12,6 +12,56 @@ import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
 import { cn } from "@/lib/utils";
 
+const fetchThreadsData = async (client: ReturnType<typeof createClient>) => {
+  if (!client) return [];
+
+  const response = await client.threads.search({
+    limit: 30,
+    sortBy: "created_at",
+    sortOrder: "desc",
+  });
+
+  const threadList: ChatHistoryItem[] = response.map((thread) => {
+    let displayContent =
+      thread.status === "busy"
+        ? "Current Thread"
+        : `Thread ${thread.thread_id.slice(0, 8)}`;
+    try {
+      if (
+        thread.values &&
+        typeof thread.values === "object" &&
+        "messages" in thread.values
+      ) {
+        const messages = (thread.values as { messages?: unknown[] }).messages;
+        if (
+          Array.isArray(messages) &&
+          messages.length > 0 &&
+          thread.status !== "busy"
+        ) {
+          displayContent = extractStringFromMessageContent(
+            messages[0] as Message,
+          );
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to get first message for thread ${thread.thread_id}:`,
+        error,
+      );
+    }
+    return {
+      id: thread.thread_id,
+      title: displayContent,
+      createdAt: new Date(thread.created_at),
+      updatedAt: new Date(thread.updated_at || thread.created_at),
+    };
+  });
+
+  return threadList.sort(
+    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+  );
+};
+
 interface ThreadHistorySidebarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -35,52 +85,8 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
       if (!client) return;
       setIsLoadingThreadHistory(true);
       try {
-        const response = await client.threads.search({
-          limit: 30,
-          sortBy: "created_at",
-          sortOrder: "desc",
-        });
-        const threadList: ChatHistoryItem[] = response.map((thread) => {
-          let displayContent =
-            thread.status === "busy"
-              ? "Current Thread"
-              : `Thread ${thread.thread_id.slice(0, 8)}`;
-          try {
-            if (
-              thread.values &&
-              typeof thread.values === "object" &&
-              "messages" in thread.values
-            ) {
-              const messages = (thread.values as { messages?: unknown[] })
-                .messages;
-              if (
-                Array.isArray(messages) &&
-                messages.length > 0 &&
-                thread.status !== "busy"
-              ) {
-                displayContent = extractStringFromMessageContent(
-                  messages[0] as Message,
-                );
-              }
-            }
-          } catch (error) {
-            console.warn(
-              `Failed to get first message for thread ${thread.thread_id}:`,
-              error,
-            );
-          }
-          return {
-            id: thread.thread_id,
-            title: displayContent,
-            createdAt: new Date(thread.created_at),
-            updatedAt: new Date(thread.updated_at || thread.created_at),
-          };
-        });
-        setThreads(
-          threadList.sort(
-            (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-          ),
-        );
+        const threadList = await fetchThreadsData(client);
+        setThreads(threadList);
       } catch (error) {
         console.error("Failed to fetch threads:", error);
       } finally {
@@ -114,127 +120,114 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     if (!open) return null;
 
     return (
-      <>
-        <style jsx>{`
-          @keyframes slideIn {
-            from {
-              transform: translateX(100%);
-            }
-            to {
-              transform: translateX(0);
-            }
-          }
-        `}</style>
+      <div
+        className="animate-in slide-in-from-right fixed top-0 right-0 z-50 h-screen duration-300"
+        style={{
+          width: "20vw",
+        }}
+      >
         <div
-          className="fixed top-0 right-0 z-50 h-screen"
+          className="bg-background flex h-full flex-col border-l"
           style={{
-            width: "20vw",
-            animation: "slideIn 300ms ease-out",
+            width: "100%",
+            maxWidth: "100%",
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+            overflow: "hidden",
           }}
         >
-          <div
-            className="bg-background flex h-full flex-col border-l"
-            style={{
-              width: "100%",
-              maxWidth: "100%",
-              boxShadow:
-                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              overflow: "hidden",
-            }}
-          >
-            <div className="flex items-center justify-between border-b p-4">
-              <h3 className="text-foreground m-0 text-base font-semibold">
-                Thread History
-              </h3>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setOpen(false)}
-                  className="hover:bg-muted p-1 transition-colors duration-200"
-                >
-                  <X size={20} />
-                </Button>
-              </div>
+          <div className="flex items-center justify-between border-b p-4">
+            <h3 className="text-foreground m-0 text-base font-semibold">
+              Thread History
+            </h3>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setOpen(false)}
+                className="hover:bg-muted p-1 transition-colors duration-200"
+              >
+                <X size={20} />
+              </Button>
             </div>
-            <ScrollArea className="flex-1 overflow-y-auto">
-              {isLoadingThreadHistory ? (
-                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
-                  Loading threads...
-                </div>
-              ) : threads.length === 0 ? (
-                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
-                  <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
-                  <p>No threads yet</p>
-                </div>
-              ) : (
-                <div className="box-border w-full max-w-full overflow-hidden p-2">
-                  {groupedThreads.today.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
-                        Today
-                      </h4>
-                      {groupedThreads.today.map((thread) => (
-                        <ThreadItem
-                          key={thread.id}
-                          thread={thread}
-                          isActive={thread.id === currentThreadId}
-                          onClick={() => onThreadSelect(thread.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  {groupedThreads.yesterday.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
-                        Yesterday
-                      </h4>
-                      {groupedThreads.yesterday.map((thread) => (
-                        <ThreadItem
-                          key={thread.id}
-                          thread={thread}
-                          isActive={thread.id === currentThreadId}
-                          onClick={() => onThreadSelect(thread.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  {groupedThreads.week.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
-                        This Week
-                      </h4>
-                      {groupedThreads.week.map((thread) => (
-                        <ThreadItem
-                          key={thread.id}
-                          thread={thread}
-                          isActive={thread.id === currentThreadId}
-                          onClick={() => onThreadSelect(thread.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  {groupedThreads.older.length > 0 && (
-                    <div className="mb-6">
-                      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
-                        Older
-                      </h4>
-                      {groupedThreads.older.map((thread) => (
-                        <ThreadItem
-                          key={thread.id}
-                          thread={thread}
-                          isActive={thread.id === currentThreadId}
-                          onClick={() => onThreadSelect(thread.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </ScrollArea>
           </div>
+          <ScrollArea className="flex-1 overflow-y-auto">
+            {isLoadingThreadHistory ? (
+              <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
+                Loading threads...
+              </div>
+            ) : threads.length === 0 ? (
+              <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
+                <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
+                <p>No threads yet</p>
+              </div>
+            ) : (
+              <div className="box-border w-full max-w-full overflow-hidden p-2">
+                {groupedThreads.today.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
+                      Today
+                    </h4>
+                    {groupedThreads.today.map((thread) => (
+                      <ThreadItem
+                        key={thread.id}
+                        thread={thread}
+                        isActive={thread.id === currentThreadId}
+                        onClick={() => onThreadSelect(thread.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {groupedThreads.yesterday.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
+                      Yesterday
+                    </h4>
+                    {groupedThreads.yesterday.map((thread) => (
+                      <ThreadItem
+                        key={thread.id}
+                        thread={thread}
+                        isActive={thread.id === currentThreadId}
+                        onClick={() => onThreadSelect(thread.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {groupedThreads.week.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
+                      This Week
+                    </h4>
+                    {groupedThreads.week.map((thread) => (
+                      <ThreadItem
+                        key={thread.id}
+                        thread={thread}
+                        isActive={thread.id === currentThreadId}
+                        onClick={() => onThreadSelect(thread.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+                {groupedThreads.older.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
+                      Older
+                    </h4>
+                    {groupedThreads.older.map((thread) => (
+                      <ThreadItem
+                        key={thread.id}
+                        thread={thread}
+                        isActive={thread.id === currentThreadId}
+                        onClick={() => onThreadSelect(thread.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
         </div>
-      </>
+      </div>
     );
   },
 );
