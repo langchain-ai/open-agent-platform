@@ -87,9 +87,10 @@ export function AgentDropdown({
         agentsLoading={loading}
         placeholder={item.title}
         value={currentValue}
-        setValue={(value) =>
-          handleAgentChange(Array.isArray(value) ? value[0] : value)
-        }
+        setValue={(value) => {
+          const singleValue = Array.isArray(value) ? value[0] : value;
+          handleAgentChange(singleValue);
+        }}
         disableDeselect
         className="w-full rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
         trigger={
