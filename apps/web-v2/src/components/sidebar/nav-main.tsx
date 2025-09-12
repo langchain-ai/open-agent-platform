@@ -47,7 +47,7 @@ function ChatNavItem({
       >
         <SidebarMenuButton tooltip={item.title}>
           {item.icon && <item.icon />}
-          <span className={cn(pathname === item.url && "font-bold")}>
+          <span className={cn(pathname === item.url && "font-semibold")}>
             {item.title}
           </span>
         </SidebarMenuButton>
@@ -93,7 +93,7 @@ export function NavMain({
           {groupLabel}
         </SidebarGroupLabel>
       )}
-      <SidebarMenu className="gap-0.5">
+      <SidebarMenu className="gap-2">
         {items.map((item, index) =>
           item.isDropdown ? (
             <AgentDropdown
@@ -107,7 +107,7 @@ export function NavMain({
                 onClick={onNewAgentClick}
               >
                 {item.icon && <item.icon />}
-                <span>{item.title}</span>
+                <p className="text-sm">{item.title}</p>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
