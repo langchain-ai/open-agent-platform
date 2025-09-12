@@ -76,11 +76,7 @@ export function AgentDropdown({
     <Collapsible defaultOpen>
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton
-            className={cn(
-              "rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50",
-            )}
-          >
+          <SidebarMenuButton className="rounded-lg border border-gray-200 bg-white shadow-sm hover:bg-gray-50">
             {item.icon && <item.icon />}
             <span className="flex-1 text-left">
               {loading ? "Loading..." : selectedAgent?.name || item.title}
@@ -93,7 +89,7 @@ export function AgentDropdown({
             {loading ? (
               <SidebarMenuSubItem>
                 <SidebarMenuSubButton>
-                  <span style={{ fontSize: "13px" }}>Loading agents...</span>
+                  <span className="text-xs">Loading agents...</span>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             ) : (
@@ -117,7 +113,7 @@ export function AgentDropdown({
                           "bg-sidebar-accent text-sidebar-accent-foreground font-bold",
                       )}
                     >
-                      <span style={{ fontSize: "13px" }}>{agent.name}</span>
+                      <span className="text-xs">{agent.name}</span>
                     </button>
                   </SidebarMenuSubItem>
                 );
