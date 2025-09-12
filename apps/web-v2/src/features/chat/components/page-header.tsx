@@ -109,7 +109,10 @@ export function PageHeader({
     <header className="relative flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       {showToggle && (
         <div className="flex items-center gap-2 px-4">
-          <Popover open={isAgentSelectorOpen} onOpenChange={setIsAgentSelectorOpen}>
+          <Popover
+            open={isAgentSelectorOpen}
+            onOpenChange={setIsAgentSelectorOpen}
+          >
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
@@ -121,12 +124,17 @@ export function PageHeader({
                 <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-[300px] p-0">
+            <PopoverContent
+              align="start"
+              className="w-[300px] p-0"
+            >
               <Command
                 filter={(value: string, search: string) => {
                   const [assistantId, deploymentId] = value.split(":");
                   const agent = agents.find(
-                    (a) => a.assistant_id === assistantId && a.deploymentId === deploymentId
+                    (a) =>
+                      a.assistant_id === assistantId &&
+                      a.deploymentId === deploymentId,
                   );
                   if (!agent) return 0;
                   if (agent.name.toLowerCase().includes(search.toLowerCase())) {
@@ -143,14 +151,19 @@ export function PageHeader({
                   <CommandGroup>
                     {agents.map((agent) => {
                       const agentValue = `${agent.assistant_id}:${agent.deploymentId}`;
-                      const isSelected = selectedAgent?.assistant_id === agent.assistant_id && selectedAgent?.deploymentId === agent.deploymentId;
-                      
+                      const isSelected =
+                        selectedAgent?.assistant_id === agent.assistant_id &&
+                        selectedAgent?.deploymentId === agent.deploymentId;
+
                       return (
                         <CommandItem
                           key={agentValue}
                           value={agentValue}
                           onSelect={() => {
-                            handleAgentSelection(agent.assistant_id, agent.deploymentId);
+                            handleAgentSelection(
+                              agent.assistant_id,
+                              agent.deploymentId,
+                            );
                             setIsAgentSelectorOpen(false);
                           }}
                           className="flex items-center justify-between"
@@ -158,7 +171,7 @@ export function PageHeader({
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              isSelected ? "opacity-100" : "opacity-0"
+                              isSelected ? "opacity-100" : "opacity-0",
                             )}
                           />
                           <span className="flex-1">{agent.name}</span>
