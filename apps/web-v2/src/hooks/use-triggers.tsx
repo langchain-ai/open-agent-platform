@@ -183,7 +183,7 @@ export function useTriggers() {
     args: {
       agentId: string;
       selectedTriggerIds: string[];
-      currentTriggerIds?: string[]; // Current trigger links to compare against
+      currentTriggerIds?: string[];
     },
   ): Promise<boolean> => {
     const currentTriggerIds = args.currentTriggerIds || [];
@@ -205,7 +205,7 @@ export function useTriggers() {
         `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
       if (!triggerApiUrl) {
-        return false;
+        continue;
       }
 
       const response = await fetch(triggerApiUrl, {
@@ -219,7 +219,7 @@ export function useTriggers() {
         toast.error("Failed to remove agent from trigger", {
           richColors: true,
         });
-        return false;
+        continue;
       }
     }
 
@@ -229,7 +229,7 @@ export function useTriggers() {
         `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
       if (!triggerApiUrl) {
-        return false;
+        continue;
       }
 
       const response = await fetch(triggerApiUrl, {
@@ -247,7 +247,7 @@ export function useTriggers() {
         toast.error("Failed to add agent to trigger", {
           richColors: true,
         });
-        return false;
+        continue;
       }
     }
 
