@@ -13,12 +13,19 @@ import { EditAgentDialog } from "@/features/agents/components/create-edit-agent-
 import { ThreadHistorySidebar } from "./thread-history-sidebar";
 import { useAgentsContext } from "@/providers/Agents";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Agent } from "@/types/agent";
 
 interface PageHeaderProps {
@@ -40,6 +47,7 @@ export function PageHeader({
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
+  const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_deploymentId, setDeploymentId] = useQueryState("deploymentId");
@@ -101,40 +109,67 @@ export function PageHeader({
     <header className="relative flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
       {showToggle && (
         <div className="flex items-center gap-2 px-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <Popover open={isAgentSelectorOpen} onOpenChange={setIsAgentSelectorOpen}>
+            <PopoverTrigger asChild>
               <Button
                 variant="ghost"
+                role="combobox"
+                aria-expanded={isAgentSelectorOpen}
                 className="hover:bg-muted/50 h-8 border-none bg-transparent p-2 text-sm font-medium shadow-none focus:ring-0"
               >
                 {assistantName || "Agent"}
-                <ChevronDown className="ml-1 h-4 w-4" />
+                <ChevronsUpDown className="ml-1 h-4 w-4 opacity-50" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="min-w-[200px]"
-            >
-              {loading ? (
-                <DropdownMenuItem disabled>Loading agents...</DropdownMenuItem>
-              ) : (
-                agents.map((agent) => (
-                  <DropdownMenuItem
-                    key={`${agent.assistant_id}:${agent.deploymentId}`}
-                    onClick={() =>
-                      handleAgentSelection(
-                        agent.assistant_id,
-                        agent.deploymentId,
-                      )
-                    }
-                    className="cursor-pointer"
-                  >
-                    {agent.name}
-                  </DropdownMenuItem>
-                ))
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-[300px] p-0">
+              <Command
+                filter={(value: string, search: string) => {
+                  const [assistantId, deploymentId] = value.split(":");
+                  const agent = agents.find(
+                    (a) => a.assistant_id === assistantId && a.deploymentId === deploymentId
+                  );
+                  if (!agent) return 0;
+                  if (agent.name.toLowerCase().includes(search.toLowerCase())) {
+                    return 1;
+                  }
+                  return 0;
+                }}
+              >
+                <CommandInput placeholder="Search agents..." />
+                <CommandList>
+                  <CommandEmpty>
+                    {loading ? "Loading agents..." : "No agents found."}
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {agents.map((agent) => {
+                      const agentValue = `${agent.assistant_id}:${agent.deploymentId}`;
+                      const isSelected = selectedAgent?.assistant_id === agent.assistant_id && selectedAgent?.deploymentId === agent.deploymentId;
+                      
+                      return (
+                        <CommandItem
+                          key={agentValue}
+                          value={agentValue}
+                          onSelect={() => {
+                            handleAgentSelection(agent.assistant_id, agent.deploymentId);
+                            setIsAgentSelectorOpen(false);
+                          }}
+                          className="flex items-center justify-between"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          <span className="flex-1">{agent.name}</span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       )}
       {showToggle && (

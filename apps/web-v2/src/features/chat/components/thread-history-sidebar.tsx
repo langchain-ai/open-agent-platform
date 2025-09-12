@@ -120,22 +120,8 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     if (!open) return null;
 
     return (
-      <div
-        className="animate-in slide-in-from-right fixed top-0 right-0 z-50 h-screen duration-300"
-        style={{
-          width: "20vw",
-        }}
-      >
-        <div
-          className="bg-background flex h-full flex-col border-l"
-          style={{
-            width: "100%",
-            maxWidth: "100%",
-            boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-            overflow: "hidden",
-          }}
-        >
+      <div className="animate-in slide-in-from-right fixed top-0 right-0 z-50 h-screen w-[20vw] duration-300">
+        <div className="bg-background flex h-full w-full max-w-full flex-col overflow-hidden border-l shadow-xl">
           <div className="flex items-center justify-between border-b p-4">
             <h3 className="text-foreground m-0 text-base font-semibold">
               Thread History
