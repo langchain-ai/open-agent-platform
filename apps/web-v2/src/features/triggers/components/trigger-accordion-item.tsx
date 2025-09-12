@@ -101,12 +101,19 @@ export function TriggerAccordionItem(props: {
       </AccordionTrigger>
       <AccordionContent className="flex flex-col gap-0 pl-8 text-balance">
         {props.triggers.map((trigger, index, arr) => (
-          <span className="flex flex-col">
-            <div
-              key={trigger.id}
-              className="flex items-center justify-between py-4"
-            >
-              <p>{prettifyText(trigger.id)}</p>
+          <span
+            className="flex flex-col"
+            key={trigger.id}
+          >
+            <div className="flex items-center justify-between py-4">
+              <div className="flex flex-col items-start gap-2">
+                <p className="text-sm font-medium">
+                  {prettifyText(trigger.id)}
+                </p>
+                <p className="text-muted-foreground text-sm font-normal">
+                  {trigger.description}
+                </p>
+              </div>
 
               <div className="flex items-center gap-3">
                 {getRegistrationsFromTriggerId(trigger.id)?.length ? (
