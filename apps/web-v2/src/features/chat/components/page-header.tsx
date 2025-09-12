@@ -6,7 +6,7 @@ import { useFlags } from "launchdarkly-react-client-sdk";
 import { toast } from "sonner";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { cn } from "@/lib/utils";
-import { Inbox, Settings, MessagesSquare, SquarePen } from "lucide-react";
+import { Inbox, Settings, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryState } from "nuqs";
 import { EditAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/edit-agent-dialog";
@@ -46,7 +46,6 @@ export function PageHeader({
   const { showAgentVisualizerUi } = useFlags<LaunchDarklyFeatureFlags>();
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
@@ -71,10 +70,6 @@ export function PageHeader({
     setShowEditDialog(true);
   };
 
-  const handleHistoryClick = useCallback(() => {
-    setIsThreadHistoryOpen((prev) => !prev);
-  }, []);
-
   const handleThreadSelect = useCallback(
     async (newThreadId: string) => {
       if (!selectedAgent) {
@@ -82,7 +77,6 @@ export function PageHeader({
         return;
       }
       await setThreadId(newThreadId);
-      setIsThreadHistoryOpen(false);
     },
     [selectedAgent, setThreadId],
   );
@@ -214,14 +208,10 @@ export function PageHeader({
       )}
       {showToggle && selectedAgent && (
         <div className="absolute right-4 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleHistoryClick}
-            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
-          >
-            <MessagesSquare className="size-4" />
-          </Button>
+          <ThreadHistorySidebar
+            currentThreadId={threadId}
+            onThreadSelect={handleThreadSelect}
+          />
           <Button
             variant="ghost"
             size="icon"
@@ -258,14 +248,6 @@ export function PageHeader({
           agent={selectedAgent}
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
-        />
-      )}
-      {selectedAgent && (
-        <ThreadHistorySidebar
-          open={isThreadHistoryOpen}
-          setOpen={setIsThreadHistoryOpen}
-          currentThreadId={threadId}
-          onThreadSelect={handleThreadSelect}
         />
       )}
     </header>

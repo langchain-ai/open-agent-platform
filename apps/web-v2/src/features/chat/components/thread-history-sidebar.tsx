@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, X } from "lucide-react";
+import { MessageSquare, MessagesSquare } from "lucide-react";
 import { createClient } from "@/lib/client";
 import type { ChatHistoryItem } from "../types";
 import { extractStringFromMessageContent } from "../utils";
@@ -11,6 +11,13 @@ import { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const fetchThreadsData = async (client: ReturnType<typeof createClient>) => {
   if (!client) return [];
@@ -63,14 +70,13 @@ const fetchThreadsData = async (client: ReturnType<typeof createClient>) => {
 };
 
 interface ThreadHistorySidebarProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
   currentThreadId: string | null;
   onThreadSelect: (threadId: string) => void;
 }
 
 export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
-  ({ open, setOpen, currentThreadId, onThreadSelect }) => {
+  ({ currentThreadId, onThreadSelect }) => {
+    const [isOpen, setIsOpen] = useState(false);
     const { session } = useAuthContext();
     const [threads, setThreads] = useState<ChatHistoryItem[]>([]);
     const [isLoadingThreadHistory, setIsLoadingThreadHistory] = useState(true);
@@ -117,27 +123,31 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
       return groups;
     }, [threads]);
 
-    if (!open) return null;
-
     return (
-      <div className="animate-in slide-in-from-right fixed top-0 right-0 z-50 h-screen w-[20vw] duration-300">
-        <div className="bg-background flex h-full w-full max-w-full flex-col overflow-hidden border-l shadow-xl">
-          <div className="flex items-center justify-between border-b p-4">
-            <h3 className="text-foreground m-0 text-base font-semibold">
+      <Sheet
+        open={isOpen}
+        onOpenChange={setIsOpen}
+      >
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
+            onClick={() => setIsOpen(true)}
+          >
+            <MessagesSquare className="size-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="right"
+          className="w-[20vw] p-0"
+        >
+          <SheetHeader className="border-b p-4">
+            <SheetTitle className="text-base font-semibold">
               Thread History
-            </h3>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(false)}
-                className="hover:bg-muted p-1 transition-colors duration-200"
-              >
-                <X size={20} />
-              </Button>
-            </div>
-          </div>
-          <ScrollArea className="flex-1 overflow-y-auto">
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-80px)] flex-1 overflow-y-auto">
             {isLoadingThreadHistory ? (
               <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
                 Loading threads...
@@ -159,7 +169,10 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                         key={thread.id}
                         thread={thread}
                         isActive={thread.id === currentThreadId}
-                        onClick={() => onThreadSelect(thread.id)}
+                        onClick={() => {
+                          onThreadSelect(thread.id);
+                          setIsOpen(false);
+                        }}
                       />
                     ))}
                   </div>
@@ -174,7 +187,10 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                         key={thread.id}
                         thread={thread}
                         isActive={thread.id === currentThreadId}
-                        onClick={() => onThreadSelect(thread.id)}
+                        onClick={() => {
+                          onThreadSelect(thread.id);
+                          setIsOpen(false);
+                        }}
                       />
                     ))}
                   </div>
@@ -189,7 +205,10 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                         key={thread.id}
                         thread={thread}
                         isActive={thread.id === currentThreadId}
-                        onClick={() => onThreadSelect(thread.id)}
+                        onClick={() => {
+                          onThreadSelect(thread.id);
+                          setIsOpen(false);
+                        }}
                       />
                     ))}
                   </div>
@@ -204,7 +223,10 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
                         key={thread.id}
                         thread={thread}
                         isActive={thread.id === currentThreadId}
-                        onClick={() => onThreadSelect(thread.id)}
+                        onClick={() => {
+                          onThreadSelect(thread.id);
+                          setIsOpen(false);
+                        }}
                       />
                     ))}
                   </div>
@@ -212,8 +234,8 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
               </div>
             )}
           </ScrollArea>
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
     );
   },
 );
