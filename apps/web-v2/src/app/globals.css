@@ -206,6 +206,10 @@
   .dark .scrollbar-pretty-auto::-webkit-scrollbar-thumb {
     background-color: rgb(95 105 119);
   }
+
+  .bg-muted-secondary {
+    background-color: #fafafa;
+  }
 }
 
 .word-added {
