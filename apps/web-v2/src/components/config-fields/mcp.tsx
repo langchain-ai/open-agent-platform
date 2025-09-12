@@ -69,11 +69,12 @@ export function ConfigFieldTool({
     const newValue = checked
       ? {
           ...value,
-          // Remove duplicates
+          url: value.url || process.env.NEXT_PUBLIC_MCP_SERVER_URL,
           tools: Array.from(new Set<string>([...(value.tools || []), label])),
         }
       : {
           ...value,
+          url: value.url || process.env.NEXT_PUBLIC_MCP_SERVER_URL,
           tools: value.tools?.filter((t) => t !== label),
         };
 
