@@ -199,10 +199,9 @@ export default function CreateAgentPage(): React.ReactNode {
               {sections.map((section, index) => (
                 <div
                   key={section.id}
-                  className={`cursor-pointer rounded p-4 transition-colors hover:opacity-70 ${
+                  className={`rounded p-4 ${
                     currentSection === section.id ? "bg-gray-100" : ""
                   }`}
-                  onClick={() => setCurrentSection(section.id)}
                 >
                   <div className="flex items-center gap-6">
                     <div
@@ -340,13 +339,10 @@ export default function CreateAgentPage(): React.ReactNode {
                 <Button
                   onClick={() => {
                     if (currentSection === 1) {
-                      handleSectionComplete(1); // Mark configure section as completed
                       setCurrentSection(2); // Go to triggers
                     } else if (currentSection === 2) {
-                      handleSectionComplete(2); // Mark triggers section as completed
                       setCurrentSection(3); // Go to tools
                     } else if (currentSection === 3) {
-                      handleSectionComplete(3); // Mark tools section as completed
                       setCurrentSection(4); // Go to system prompt
                     }
                   }}
