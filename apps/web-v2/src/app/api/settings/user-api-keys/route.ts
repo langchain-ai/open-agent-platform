@@ -1,39 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
-import { decryptSecret, encryptSecret } from "@/lib/crypto";
-import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
+import { encryptSecret, decryptSecret } from "@/lib/crypto";
 
-function encryptApiKeys(
-  apiKeys: Record<string, string>,
-): Record<string, string> {
-  const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
-  if (!encryptionKey) {
-    throw new Error("Encryption key not found");
+function generateApiKey(): string {
+  const prefix = "oap_";
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = prefix;
+  for (let i = 0; i < 32; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-
-  const encryptedApiKeys = Object.fromEntries(
-    Object.entries(apiKeys).map(([key, value]) => {
-      return [key, encryptSecret(value, encryptionKey)];
-    }),
-  );
-  return encryptedApiKeys;
+  return result;
 }
 
-function decryptApiKeys(
-  apiKeys: Record<string, string>,
-): Record<string, string> {
+function isTokenExpired(exp: number): boolean {
+  const currentTime = Date.now() / 1000;
+  return currentTime > exp;
+}
+
+function encryptApiKey(apiKey: string): string {
   const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
   if (!encryptionKey) {
     throw new Error("Encryption key not found");
   }
+  return encryptSecret(apiKey, encryptionKey);
+}
 
-  const decryptedApiKeys = Object.fromEntries(
-    Object.entries(apiKeys).map(([key, value]) => {
-      return [key, decryptSecret(value, encryptionKey)];
-    }),
-  );
-  return decryptedApiKeys;
+function decryptApiKey(encryptedApiKey: string): string {
+  const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
+  if (!encryptionKey) {
+    throw new Error("Encryption key not found");
+  }
+  return decryptSecret(encryptedApiKey, encryptionKey);
 }
 
 export async function POST(request: NextRequest) {
@@ -60,57 +59,56 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = payload.sub;
-
     const body = await request.json();
-    const { apiKeys } = body;
+    const { name } = body;
 
-    if (!apiKeys || typeof apiKeys !== "object") {
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json(
-        { error: "Invalid API keys data" },
+        { error: "API key name is required" },
         { status: 400 },
       );
     }
-
-    // Filter out null, undefined, or empty string values
-    const nonNullApiKeys = Object.fromEntries(
-      Object.entries<string>(apiKeys).filter(([_, value]) => {
-        return value && typeof value === "string" && value.trim() !== "";
-      }),
-    );
-    const encryptedApiKeys = encryptApiKeys(nonNullApiKeys);
 
     await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
 
-    const { error: upsertError } = await supabase.from("users_config").upsert(
-      {
-        user_id: userId,
-        api_keys: encryptedApiKeys,
-      },
-      {
-        onConflict: "user_id",
-      },
-    );
+    // Generate a new API key
+    const apiKey = generateApiKey();
+    const encryptedApiKey = encryptApiKey(apiKey);
 
-    if (upsertError) {
-      console.error("Error saving API keys:", upsertError);
+    // Insert into user_api_keys table
+    const { data, error } = await supabase
+      .from("user_api_keys")
+      .insert({
+        user_id: userId,
+        name: name.trim(),
+        key_hash: encryptedApiKey,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating user API key:", error);
       return NextResponse.json(
-        { error: "Failed to save API keys" },
+        { error: "Failed to create API key" },
         { status: 500 },
       );
     }
 
-    return NextResponse.json(
-      {
-        message: "API keys saved successfully",
-        savedKeys: Object.keys(nonNullApiKeys),
+    return NextResponse.json({
+      message: "API key created successfully",
+      apiKey: {
+        id: data.id,
+        name: data.name,
+        key: apiKey, // Return the plain key only on creation
+        created_at: data.created_at,
       },
-      { status: 200 },
-    );
+    });
   } catch (error) {
-    console.error("API keys save error:", error);
+    console.error("User API key creation error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -149,40 +147,30 @@ export async function GET(request: NextRequest) {
     });
 
     const { data, error } = await supabase
-      .from("users_config")
-      .select("api_keys")
+      .from("user_api_keys")
+      .select("id, name, key_hash, created_at")
       .eq("user_id", userId)
-      .single();
+      .order("created_at", { ascending: false });
 
-    if (error && error.code === "PGRST116") {
-      return NextResponse.json({ error: "No API keys found" }, { status: 404 });
-    }
-
-    if (!data || error) {
+    if (error) {
+      console.error("Error fetching user API keys:", error);
       return NextResponse.json(
         { error: "Failed to fetch API keys" },
         { status: 500 },
       );
     }
 
-    if (!("api_keys" in data)) {
-      return NextResponse.json(
-        { error: "API keys not found" },
-        { status: 404 },
-      );
-    }
+    // Decrypt the API keys for display
+    const apiKeys = data.map((key: any) => ({
+      id: key.id,
+      name: key.name,
+      key: decryptApiKey(key.key_hash),
+      created_at: key.created_at,
+    }));
 
-    const encryptedApiKeys = (data as Record<string, any>).api_keys;
-    const decryptedApiKeys = decryptApiKeys(encryptedApiKeys);
-
-    return NextResponse.json(
-      {
-        apiKeys: decryptedApiKeys,
-      },
-      { status: 200 },
-    );
+    return NextResponse.json({ apiKeys });
   } catch (error) {
-    console.error("API keys save error:", error);
+    console.error("User API key fetch error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

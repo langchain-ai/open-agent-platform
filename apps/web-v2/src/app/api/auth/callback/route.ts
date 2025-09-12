@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseClient } from "@/lib/auth/supabase-client";
+import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     if (code) {
       // Get Supabase client
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseServerClient();
 
       // Exchange the code for a session
       const { error } = await supabase.auth.exchangeCodeForSession(code);

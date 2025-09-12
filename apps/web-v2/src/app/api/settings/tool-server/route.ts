@@ -1,40 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServerClient } from "@/lib/auth/supabase-client";
 import { decodeJWT } from "@/lib/jwt-utils";
-import { decryptSecret, encryptSecret } from "@/lib/crypto";
+import { McpServerConfig } from "@/types/mcp-server";
 import { isTokenExpired } from "@/app/api/settings/utils/token-expired";
-
-function encryptApiKeys(
-  apiKeys: Record<string, string>,
-): Record<string, string> {
-  const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
-  if (!encryptionKey) {
-    throw new Error("Encryption key not found");
-  }
-
-  const encryptedApiKeys = Object.fromEntries(
-    Object.entries(apiKeys).map(([key, value]) => {
-      return [key, encryptSecret(value, encryptionKey)];
-    }),
-  );
-  return encryptedApiKeys;
-}
-
-function decryptApiKeys(
-  apiKeys: Record<string, string>,
-): Record<string, string> {
-  const encryptionKey = process.env.SECRETS_ENCRYPTION_KEY;
-  if (!encryptionKey) {
-    throw new Error("Encryption key not found");
-  }
-
-  const decryptedApiKeys = Object.fromEntries(
-    Object.entries(apiKeys).map(([key, value]) => {
-      return [key, decryptSecret(value, encryptionKey)];
-    }),
-  );
-  return decryptedApiKeys;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,22 +30,41 @@ export async function POST(request: NextRequest) {
     const userId = payload.sub;
 
     const body = await request.json();
-    const { apiKeys } = body;
+    const { mcpServer } = body as { mcpServer: McpServerConfig };
 
-    if (!apiKeys || typeof apiKeys !== "object") {
+    if (!mcpServer || typeof mcpServer !== "object") {
       return NextResponse.json(
-        { error: "Invalid API keys data" },
+        { error: "Invalid MCP server configuration data" },
         { status: 400 },
       );
     }
 
-    // Filter out null, undefined, or empty string values
-    const nonNullApiKeys = Object.fromEntries(
-      Object.entries<string>(apiKeys).filter(([_, value]) => {
-        return value && typeof value === "string" && value.trim() !== "";
-      }),
-    );
-    const encryptedApiKeys = encryptApiKeys(nonNullApiKeys);
+    // Validate the URL
+    if (
+      !mcpServer.url ||
+      typeof mcpServer.url !== "string" ||
+      mcpServer.url.trim() === ""
+    ) {
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
+    }
+
+    // Validate URL format
+    try {
+      new URL(mcpServer.url.trim());
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid URL format" },
+        { status: 400 },
+      );
+    }
+
+    // Validate auth headers
+    if (!mcpServer.auth || typeof mcpServer.auth !== "object") {
+      return NextResponse.json(
+        { error: "Invalid auth headers" },
+        { status: 400 },
+      );
+    }
 
     await supabase.auth.setSession({
       access_token: accessToken,
@@ -87,7 +74,7 @@ export async function POST(request: NextRequest) {
     const { error: upsertError } = await supabase.from("users_config").upsert(
       {
         user_id: userId,
-        api_keys: encryptedApiKeys,
+        mcp_servers: mcpServer as Record<string, any>,
       },
       {
         onConflict: "user_id",
@@ -95,22 +82,21 @@ export async function POST(request: NextRequest) {
     );
 
     if (upsertError) {
-      console.error("Error saving API keys:", upsertError);
+      console.error("Error saving MCP server configuration:", upsertError);
       return NextResponse.json(
-        { error: "Failed to save API keys" },
+        { error: "Failed to save MCP server configuration" },
         { status: 500 },
       );
     }
 
     return NextResponse.json(
       {
-        message: "API keys saved successfully",
-        savedKeys: Object.keys(nonNullApiKeys),
+        message: "MCP server configuration saved successfully",
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("API keys save error:", error);
+    console.error("MCP server configuration save error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -150,39 +136,26 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from("users_config")
-      .select("api_keys")
+      .select("mcp_servers")
       .eq("user_id", userId)
       .single();
 
-    if (error && error.code === "PGRST116") {
-      return NextResponse.json({ error: "No API keys found" }, { status: 404 });
-    }
-
-    if (!data || error) {
+    if (error && error.code !== "PGRST116") {
+      console.error("Error fetching MCP server configuration:", error);
       return NextResponse.json(
-        { error: "Failed to fetch API keys" },
+        { error: "Failed to fetch MCP server configuration" },
         { status: 500 },
       );
     }
 
-    if (!("api_keys" in data)) {
-      return NextResponse.json(
-        { error: "API keys not found" },
-        { status: 404 },
-      );
-    }
-
-    const encryptedApiKeys = (data as Record<string, any>).api_keys;
-    const decryptedApiKeys = decryptApiKeys(encryptedApiKeys);
-
     return NextResponse.json(
       {
-        apiKeys: decryptedApiKeys,
+        mcpServer: data?.mcp_servers || null,
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("API keys save error:", error);
+    console.error("MCP server configuration fetch error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

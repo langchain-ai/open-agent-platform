@@ -32,7 +32,7 @@ function AgentInboxWithProvider<
 
   const [selectedInbox, setSelectedInbox] = useQueryState(
     INBOX_PARAM,
-    parseAsString.withDefault("interrupted") as any,
+    parseAsString.withDefault("interrupted"),
   );
 
   // Use useQueryStates for pagination params
