@@ -133,10 +133,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
             <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span
-                  className="text-xs font-semibold tracking-wide"
-                  style={{ color: "#3F3F46" }}
-                >
+                <span className="text-xs font-semibold tracking-wide text-zinc-600">
                   AGENT TASKS
                 </span>
                 <button
@@ -226,10 +223,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
 
             <div className="rounded-xl">
               <div className="flex items-center justify-between px-3 pt-2 pb-1.5">
-                <span
-                  className="text-xs font-semibold tracking-wide"
-                  style={{ color: "#3F3F46" }}
-                >
+                <span className="text-xs font-semibold tracking-wide text-zinc-600">
                   FILE SYSTEM
                 </span>
                 <button
