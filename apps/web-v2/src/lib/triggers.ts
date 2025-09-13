@@ -26,15 +26,6 @@ export function generateFormFields(schema: Record<string, any>) {
   return fields;
 }
 
-type DDData = {
-  [provider: string]: {
-    registrations: {
-      [templateId: string]: ListTriggerRegistrationsData[];
-    };
-    triggers: Trigger[];
-  };
-};
-
 export function groupTriggerRegistrationsByTemplate(
   registrations: ListTriggerRegistrationsData[],
 ): Record<string, ListTriggerRegistrationsData[]> {
@@ -75,16 +66,10 @@ export function groupTriggerRegistrationsByProvider(
   registrations.forEach((registration) => {
     const provider = templateToProvider[registration.template_id];
     if (!provider) {
-      console.log(
-        "no provider found for template_id",
-        provider,
-        registration.template_id,
-      );
       return;
     }
 
     if (!groupedByProvider[provider]) {
-      console.log("no provider in group", provider);
       groupedByProvider[provider] = {
         registrations: {},
         triggers: [],
@@ -92,11 +77,6 @@ export function groupTriggerRegistrationsByProvider(
     }
 
     if (!groupedByProvider[provider].registrations[registration.template_id]) {
-      console.log(
-        "no templates in provider group",
-        provider,
-        registration.template_id,
-      );
       groupedByProvider[provider].registrations[registration.template_id] = [];
     }
 

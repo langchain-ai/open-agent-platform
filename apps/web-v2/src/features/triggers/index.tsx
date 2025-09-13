@@ -11,11 +11,7 @@ import {
 import { Zap } from "lucide-react";
 import { useTriggers } from "@/hooks/use-triggers";
 import { useEffect, useState } from "react";
-import type {
-  GroupedTriggerRegistrationsByProvider,
-  ListTriggerRegistrationsData,
-  Trigger,
-} from "@/types/triggers";
+import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 import { toast } from "sonner";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
@@ -28,9 +24,6 @@ export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [groupedTriggers, setGroupedTriggers] =
     useState<GroupedTriggerRegistrationsByProvider>();
-  const [userTriggers, setUserTriggers] = useState<
-    ListTriggerRegistrationsData[]
-  >([]);
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
@@ -63,7 +56,6 @@ export default function TriggersInterface() {
         // User has not registered any triggers
         return;
       }
-      setUserTriggers(registrations);
       setGroupedTriggers(
         groupTriggerRegistrationsByProvider(registrations, triggers),
       );
@@ -169,8 +161,6 @@ export default function TriggersInterface() {
       </div>
     );
   }
-
-  console.log("groupedTriggers", groupedTriggers);
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
