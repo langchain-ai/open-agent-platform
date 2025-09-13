@@ -26,6 +26,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { getDeployments } from "@/lib/environment/deployments";
 import { useHasApiKeys } from "@/hooks/use-api-keys";
 import { checkApiKeysWarning } from "@/lib/agent-utils";
+import { useLastSelectedAgent } from "@/hooks/use-last-selected-agent";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -120,16 +121,32 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const { session } = useAuthContext();
   const hasApiKeys = useHasApiKeys();
   const warningShownRef = useRef<string>("");
+  const [lastSelectedAgent, setLastSelectedAgent] = useLastSelectedAgent();
 
   useEffect(() => {
     if (value || !agents.length) {
       return;
     }
+    
+    // First, try to use the last selected agent from local storage
+    if (lastSelectedAgent) {
+      const [storedAgentId, storedDeploymentId] = lastSelectedAgent.split(":");
+      // Verify the stored agent still exists in the current agents list
+      const storedAgent = agents.find(
+        (agent) => agent.assistant_id === storedAgentId && agent.deploymentId === storedDeploymentId
+      );
+      if (storedAgent) {
+        setValue(lastSelectedAgent);
+        return;
+      }
+    }
+    
+    // Fallback to default agent if no last selected agent or it doesn't exist anymore
     const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
     if (defaultAgent) {
       setValue(`${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`);
     }
-  }, [agents]);
+  }, [agents, lastSelectedAgent]);
 
   useEffect(() => {
     if (agentId && deploymentId) {
@@ -154,6 +171,9 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     const [agentId_, deploymentId_] = value.split(":");
     setAgentId(agentId_);
     setDeploymentId(deploymentId_);
+    
+    // Save the selected agent to local storage
+    setLastSelectedAgent(value);
   };
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
