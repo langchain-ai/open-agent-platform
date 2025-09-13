@@ -70,13 +70,13 @@ export function TemplatesList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="text-muted-foreground absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2" />
+        <div className="relative max-w-md flex-1">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search by graph or agent name..."
-            className="pl-8"
+            className="bg-background/50 border-border/50 focus:bg-background pl-10 transition-colors"
             value={searchQueryState}
             onChange={(e) => setSearchQueryState(e.target.value)}
           />
@@ -84,12 +84,14 @@ export function TemplatesList() {
       </div>
 
       {filteredGraphGroupsState.length === 0 ? (
-        <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <Search className="text-muted-foreground h-10 w-10" />
+        <div className="animate-in fade-in-50 border-border/50 from-muted/30 to-muted/10 flex flex-col items-center justify-center rounded-xl border border-dashed bg-gradient-to-br p-12 text-center">
+          <div className="bg-muted/50 border-border/50 mx-auto flex h-24 w-24 items-center justify-center rounded-full border">
+            <Search className="text-muted-foreground h-12 w-12" />
           </div>
-          <h2 className="mt-6 text-xl font-semibold">No graphs found</h2>
-          <p className="text-muted-foreground mt-2 mb-8 text-center">
+          <h2 className="text-foreground mt-6 text-2xl font-semibold">
+            No graphs found
+          </h2>
+          <p className="text-muted-foreground mt-3 mb-8 max-w-md text-center leading-relaxed">
             {searchQueryState
               ? "We couldn't find any graphs matching your search."
               : "There are no agent graphs configured yet."}

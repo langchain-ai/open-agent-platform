@@ -13,15 +13,22 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   const [showCreateAgentDialog, setShowCreateAgentDialog] = useState(false);
   return (
-    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
+    <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+      <div className="space-y-2">
+        <h1 className="text-foreground text-3xl font-bold tracking-tight">
+          {title}
+        </h1>
         {description && (
-          <p className="text-muted-foreground mt-1">{description}</p>
+          <p className="text-muted-foreground text-lg leading-relaxed">
+            {description}
+          </p>
         )}
       </div>
       {action || (
-        <Button onClick={() => setShowCreateAgentDialog(true)}>
+        <Button
+          onClick={() => setShowCreateAgentDialog(true)}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md"
+        >
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Agent
         </Button>
