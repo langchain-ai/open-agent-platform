@@ -17,11 +17,8 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  useTriggers,
-  ListTriggerRegistrationsData,
-} from "@/hooks/use-triggers";
-import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
+import { useTriggers } from "@/hooks/use-triggers";
+import { groupTriggerRegistrationsByTemplate } from "@/lib/triggers";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useAuthContext } from "@/providers/Auth";
@@ -29,6 +26,7 @@ import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { ResourceRenderer } from "@/components/ui/resource-renderer";
 import { ConfigFieldProps } from "./types";
 import { TriggersConfig } from "@/types/deep-agent";
+import { ListTriggerRegistrationsData } from "@/types/triggers";
 
 export function ConfigFieldTriggers({
   className,
@@ -70,7 +68,7 @@ export function ConfigFieldTriggers({
   }, [auth.session?.accessToken]);
 
   const groupedTriggers = React.useMemo(() => {
-    return groupUserRegisteredTriggersByProvider(userTriggers);
+    return groupTriggerRegistrationsByTemplate(userTriggers);
   }, [userTriggers]);
 
   const handleTriggerToggle = async (triggerId: string) => {

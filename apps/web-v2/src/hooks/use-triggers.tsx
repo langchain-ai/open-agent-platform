@@ -1,4 +1,4 @@
-import { Trigger } from "@/types/triggers";
+import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 
 type RegisterTriggerResponse =
@@ -13,15 +13,6 @@ type RegisterTriggerResponse =
       success: boolean;
       registered: true;
     };
-
-export interface ListTriggerRegistrationsData {
-  id: string;
-  user_id: string;
-  template_id: string;
-  resource: unknown;
-  linked_assistant_ids?: string[];
-  created_at: string;
-}
 
 const constructTriggerUrl = (
   path: string,

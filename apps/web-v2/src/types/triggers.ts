@@ -4,6 +4,10 @@ export interface Trigger {
    */
   id: string;
   /**
+   * The provider of the trigger (e.g., "google")
+   */
+  provider: string;
+  /**
    * The name of the trigger
    */
   displayName: string;
@@ -23,4 +27,22 @@ export interface Trigger {
    * A JSON schema for the payload of the trigger registration
    */
   payloadSchema: Record<string, any> | null;
+}
+
+export interface ListTriggerRegistrationsData {
+  id: string;
+  user_id: string;
+  template_id: string;
+  resource: unknown;
+  linked_assistant_ids?: string[];
+  created_at: string;
+}
+
+export interface GroupedTriggerRegistrationsByProvider {
+  [provider: string]: {
+    registrations: {
+      [templateId: string]: ListTriggerRegistrationsData[];
+    };
+    triggers: Trigger[];
+  };
 }
