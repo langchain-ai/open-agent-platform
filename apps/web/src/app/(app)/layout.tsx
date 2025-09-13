@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Open Agent Platform",
-  description: "Open Agent Platform by LangChain",
+  title: "AI Reference Core",
+  description: "AI Reference Core by M2M Tech",
 };
 
 export default function RootLayout({

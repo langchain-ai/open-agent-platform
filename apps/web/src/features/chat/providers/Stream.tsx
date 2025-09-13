@@ -165,11 +165,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <div className="flex flex-col items-start gap-2">
               <LangGraphLogoSVG className="h-7" />
               <h1 className="text-xl font-semibold tracking-tight">
-                Open Agent Platform
+                AI Reference Core
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to Open Agent Platform's chat! To continue, please select
+              Welcome to AI Reference Core's chat! To continue, please select
               an agent to chat with.
             </p>
           </div>

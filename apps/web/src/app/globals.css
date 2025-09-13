@@ -165,3 +165,19 @@
     box-shadow: inset 9px 0 6px -1px rgb(0 0 0 / 0.02);
   }
 }
+
+/* Custom CSS By Sumeet Starts here */
+body > main > div > div > div.fixed.inset-y-0.z-10.hidden.h-svh.w-\(--sidebar-width\).transition-\[left\,right\,width\].duration-200.ease-linear.md\:flex.left-0.group-data-\[collapsible\=offcanvas\]\:left-\[calc\(var\(--sidebar-width\)\*-1\)\].group-data-\[collapsible\=icon\]\:w-\(--sidebar-width-icon\).group-data-\[side\=left\]\:border-r.group-data-\[side\=right\]\:border-l > div > div:nth-child(1) > ul > li > a {
+  height: 80px;
+}
+
+.bg-\[\#2F6868\] {
+  background-color: #525fe1;
+  transition: all 0.2s;
+  &:hover {
+    background-color: #231f40;
+  }
+}
+
+
+/* Custom CSS By Sumeet Ends here */

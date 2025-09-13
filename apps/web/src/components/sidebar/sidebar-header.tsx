@@ -21,11 +21,11 @@ export function SiteHeader() {
           >
             <NextLink href="/">
               <LangGraphLogoSVG className="!h-4 !w-auto flex-shrink-0" />
-              <div className="grid flex-1 pl-2 text-left text-sm leading-tight transition-all group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:opacity-0">
+              {/* <div className="grid flex-1 pl-2 text-left text-sm leading-tight transition-all group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:opacity-0">
                 <span className="truncate font-semibold">
                   Open Agent Platform
                 </span>
-              </div>
+              </div> */}
             </NextLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
