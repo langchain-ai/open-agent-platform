@@ -6,7 +6,7 @@ import { AgentDashboard } from "./components/agent-dashboard";
 
 export default function AgentsInterfaceV2() {
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-8">
       <PageHeader
         title="Agents"
         description="Manage your agents across different templates"
@@ -14,27 +14,49 @@ export default function AgentsInterfaceV2() {
 
       <Tabs
         defaultValue="templates"
-        className="mt-6"
+        className="mt-8"
       >
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="all-agents">All Agents</TabsTrigger>
+        <TabsList className="bg-muted/50 border-border/50 grid w-full max-w-md grid-cols-2 border">
+          <TabsTrigger
+            value="templates"
+            className="data-[state=active]:bg-background transition-all duration-200 data-[state=active]:shadow-sm"
+          >
+            Templates
+          </TabsTrigger>
+          <TabsTrigger
+            value="all-agents"
+            className="data-[state=active]:bg-background transition-all duration-200 data-[state=active]:shadow-sm"
+          >
+            All Agents
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent
           value="templates"
-          className="mt-6"
+          className="mt-8"
         >
-          <Suspense fallback={<p>Loading...</p>}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+              </div>
+            }
+          >
             <TemplatesList />
           </Suspense>
         </TabsContent>
 
         <TabsContent
           value="all-agents"
-          className="mt-6"
+          className="mt-8"
         >
-          <Suspense fallback={<p>Loading...</p>}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <div className="border-primary h-8 w-8 animate-spin rounded-full border-b-2"></div>
+              </div>
+            }
+          >
             <AgentDashboard />
           </Suspense>
         </TabsContent>
