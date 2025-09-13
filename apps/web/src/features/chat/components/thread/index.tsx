@@ -45,6 +45,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./messages/ContentBlocksPreview";
 import { useApiKeys, useHasApiKeys } from "@/hooks/use-api-keys";
+import { useLastSelectedAgent } from "@/hooks/use-last-selected-agent";
 import {
   Tooltip,
   TooltipContent,
@@ -100,6 +101,7 @@ function NewThreadButton(props: { hasMessages: boolean }) {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_, setThreadId] = useQueryState("threadId");
+  const [lastSelectedAgent, setLastSelectedAgent] = useLastSelectedAgent();
 
   const handleNewThread = useCallback(() => {
     setThreadId(null);
@@ -135,8 +137,11 @@ function NewThreadButton(props: { hasMessages: boolean }) {
       setAgentId(agentId);
       setDeploymentId(deploymentId);
       setThreadId(null);
+      
+      // Save the selected agent to local storage
+      setLastSelectedAgent(nextValue);
     },
-    [setAgentId, setDeploymentId, setThreadId],
+    [setAgentId, setDeploymentId, setThreadId, setLastSelectedAgent],
   );
 
   const agentValue =
@@ -146,13 +151,28 @@ function NewThreadButton(props: { hasMessages: boolean }) {
     if (agentValue || !agents.length) {
       return;
     }
+    
+    // First, try to use the last selected agent from local storage
+    if (lastSelectedAgent) {
+      const [storedAgentId, storedDeploymentId] = lastSelectedAgent.split(":");
+      // Verify the stored agent still exists in the current agents list
+      const storedAgent = agents.find(
+        (agent) => agent.assistant_id === storedAgentId && agent.deploymentId === storedDeploymentId
+      );
+      if (storedAgent) {
+        onAgentChange(lastSelectedAgent);
+        return;
+      }
+    }
+    
+    // Fallback to default agent if no last selected agent or it doesn't exist anymore
     const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
     if (defaultAgent) {
       onAgentChange(
         `${defaultAgent.assistant_id}:${defaultAgent.deploymentId}`,
       );
     }
-  }, [agents, agentValue, onAgentChange]);
+  }, [agents, agentValue, onAgentChange, lastSelectedAgent]);
 
   if (!props.hasMessages) {
     return (
