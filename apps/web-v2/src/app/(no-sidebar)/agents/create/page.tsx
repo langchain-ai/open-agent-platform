@@ -7,13 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CreateAgentToolsSelection } from "@/features/agents/components/create-agent-tools-selection";
-import { CreateAgentTriggersSelection } from "@/features/agents/components/create-agent-triggers-selection";
 import { useAgents } from "@/hooks/use-agents";
-import { useTriggers } from "@/hooks/use-triggers";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
+import { TriggersContent } from "@/features/triggers/triggers-content";
 
 const sections = [
   {
@@ -59,13 +58,11 @@ export default function CreateAgentPage(): React.ReactNode {
       allow_ignore: boolean;
     };
   }>({});
-  const [selectedTriggers, setSelectedTriggers] = useState<string[]>([]);
   const [systemPrompt, setSystemPrompt] = useState("");
 
   // Hooks
   const auth = useAuthContext();
   const { createAgent } = useAgents();
-  const { setupAgentTrigger } = useTriggers();
   const { refreshAgents } = useAgentsContext();
 
   // Handle agent creation
@@ -108,7 +105,7 @@ export default function CreateAgentPage(): React.ReactNode {
           tools: selectedTools,
           interrupt_config: interruptConfig,
         },
-        triggers: selectedTriggers,
+        triggers: [], // Triggers are now managed separately via TriggersInterface
         system_prompt: systemPrompt,
       };
 
@@ -124,18 +121,8 @@ export default function CreateAgentPage(): React.ReactNode {
         return;
       }
 
-      // Set up triggers if any are selected
-      if (selectedTriggers.length > 0) {
-        const success = await setupAgentTrigger(auth.session.accessToken, {
-          selectedTriggerIds: selectedTriggers,
-          agentId: newAgent.assistant_id,
-        });
-
-        if (!success) {
-          toast.error("Failed to set up triggers");
-          return;
-        }
-      }
+      // Note: Triggers are now managed separately via the TriggersInterface
+      // Users can set up triggers after creating the agent
 
       toast.success("Agent created successfully!");
 
@@ -291,10 +278,9 @@ export default function CreateAgentPage(): React.ReactNode {
                 )}
 
                 {currentSection === 2 && (
-                  <CreateAgentTriggersSelection
-                    selectedTriggers={selectedTriggers}
-                    onTriggersChange={setSelectedTriggers}
-                  />
+                  <div className="space-y-4">
+                    <TriggersContent />
+                  </div>
                 )}
 
                 {currentSection === 3 && (

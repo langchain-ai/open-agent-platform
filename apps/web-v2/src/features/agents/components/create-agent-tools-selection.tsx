@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ChevronRightIcon, Check } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -28,9 +29,9 @@ interface HumanInterruptConfig {
 }
 
 const INTERRUPT_OPTIONS = [
-  { value: "accept", label: "allow accept" },
-  { value: "respond", label: "allow respond" },
-  { value: "edit", label: "allow edit" },
+  { value: "accept", label: "allow accept", disabled: false },
+  { value: "respond", label: "allow respond", disabled: false },
+  { value: "edit", label: "allow edit", disabled: false },
   { value: "ignore", label: "allow ignore", disabled: true },
 ] as const;
 
