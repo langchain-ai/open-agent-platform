@@ -2,7 +2,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type ConnectServicesStepProps = {
   onSkip: () => void;
@@ -94,13 +94,7 @@ export default function ConnectServicesStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <button

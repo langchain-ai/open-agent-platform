@@ -2,11 +2,11 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Button } from "@/components/ui/button";
 import _ from "lodash";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type ToolsSelectionStepProps = {
   onSkip: () => void;
@@ -35,13 +35,7 @@ export default function ToolsSelectionStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <button

@@ -2,9 +2,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import TriggersInterface from "@/features/triggers";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type TriggersStepProps = {
   onSkip: () => void;
@@ -27,13 +27,7 @@ export default function TriggersStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <button

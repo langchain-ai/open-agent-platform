@@ -2,8 +2,8 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { OnboardingCard } from "./components/OnboardingCard";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type IntroGuidedStepProps = {
   className?: string;
@@ -28,13 +28,7 @@ export function IntroGuidedStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <h1 className="mt-[125px] text-start text-[48px] leading-[120%] font-normal tracking-[-1.2px] text-[var(--colors-text-text-primary-900,#101828)]">

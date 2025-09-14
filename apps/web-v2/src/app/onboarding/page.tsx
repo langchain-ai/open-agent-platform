@@ -5,7 +5,7 @@ import OnboardingDialog from "@/features/onboarding/OnboardingDialog";
 import { MCPProvider } from "@/providers/MCP";
 import { AuthProvider } from "@/providers/Auth";
 
-export default function DummyOnboardingPage() {
+export default function OnboardingPage() {
   return (
     <AuthProvider>
       <MCPProvider>

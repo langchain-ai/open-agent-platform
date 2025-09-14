@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Check, ArrowRight, ArrowLeft } from "lucide-react";
 import { Roles, roleToText } from "./constants";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type RoleStepProps = {
   onSkip: () => void;
@@ -26,13 +26,7 @@ export function RoleStep({ onSkip, onBack, onNext }: RoleStepProps) {
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <button

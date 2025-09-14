@@ -2,11 +2,11 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type DescribeAgentStepProps = {
   onSkip: () => void;
@@ -35,13 +35,7 @@ export default function DescribeAgentStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <h1 className="font-weight-[400] line-height-[120%] letter-spacing-[-7px] mt-[40px] pb-[12px] text-start text-[58px] leading-[120%] tracking-[-1.2px] text-[var(--colors-text-text-primary-900,#101828)]">

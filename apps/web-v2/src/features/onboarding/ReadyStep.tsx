@@ -2,9 +2,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type ReadyStepProps = {
   onOpenWorkspace: () => void;
@@ -21,13 +21,7 @@ export function ReadyStep({ onOpenWorkspace, onBack }: ReadyStepProps) {
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <div className="mt-[60px] flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF3F6]">

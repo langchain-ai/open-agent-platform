@@ -2,9 +2,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { Audience, audienceToText } from "./constants";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
 
 type AudienceStepProps = {
   onBack: () => void;
@@ -22,13 +22,7 @@ export function AudienceStep({ onBack, onSelect }: AudienceStepProps) {
         )}
       >
         <div className={cn("shrink-0")}>
-          <Image
-            src="/oap-onboarding-logo.svg"
-            alt="Onboarding logo"
-            width={146}
-            height={38}
-            priority
-          />
+          <OAPLogoBlue width={146} height={38} />
         </div>
 
         <button
