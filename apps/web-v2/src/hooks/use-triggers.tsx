@@ -12,10 +12,6 @@ type RegisterTriggerResponse =
   | {
       success: boolean;
       registered: true;
-    }
-  | {
-      authUrl: string;
-      registered: false;
     };
 
 const constructTriggerUrl = (
@@ -78,7 +74,7 @@ export function useTriggers() {
   const listTriggerRegistrations = async (
     accessToken: string,
   ): Promise<ListTriggerRegistrationsData[] | undefined> => {
-    const triggersApiUrl = constructTriggerUrl("/api/user-triggers");
+    const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
     if (!triggersApiUrl) {
       return;
     }

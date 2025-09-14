@@ -12,7 +12,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
-import { TriggersContent } from "@/features/triggers/triggers-content";
+import TriggersInterface from "@/features/triggers";
 
 const sections = [
   {
@@ -223,7 +223,7 @@ export default function CreateAgentPage(): React.ReactNode {
           <div className="flex-1 p-6">
             <div className="mx-auto">
               <div className="mb-6">
-                <h2 className="text-md mb-2 font-">
+                <h2 className="text-md font- mb-2">
                   {sections.find((s) => s.id === currentSection)?.pageTitle ||
                     sections.find((s) => s.id === currentSection)?.title}
                 </h2>
@@ -279,7 +279,7 @@ export default function CreateAgentPage(): React.ReactNode {
 
                 {currentSection === 2 && (
                   <div className="space-y-4">
-                    <TriggersContent />
+                    <TriggersInterface showTitle={false} />
                   </div>
                 )}
 
@@ -318,7 +318,7 @@ export default function CreateAgentPage(): React.ReactNode {
                     <Button
                       variant="outline"
                       onClick={() => setCurrentSection(currentSection - 1)}
-                      className="bg-white text-black border-gray-300 hover:bg-gray-50"
+                      className="border-gray-300 bg-white text-black hover:bg-gray-50"
                     >
                       Back
                     </Button>

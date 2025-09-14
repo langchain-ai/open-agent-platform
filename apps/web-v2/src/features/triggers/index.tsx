@@ -20,7 +20,13 @@ import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
 
-export default function TriggersInterface() {
+interface TriggersInterfaceProps {
+  showTitle?: boolean;
+}
+
+export default function TriggersInterface({
+  showTitle = true,
+}: TriggersInterfaceProps) {
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [groupedTriggers, setGroupedTriggers] =
     useState<GroupedTriggerRegistrationsByProvider>();
@@ -67,6 +73,14 @@ export default function TriggersInterface() {
   }, [auth.session?.accessToken, showTriggersTab]);
 
   if (triggersLoading) {
+    if (!showTitle) {
+      return (
+        <div className="py-8 text-center">
+          <div className="text-sm text-gray-500">Loading triggers...</div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
@@ -96,6 +110,16 @@ export default function TriggersInterface() {
 
   // Feature disabled: show coming soon (tab still visible per UX)
   if (showTriggersTab === false) {
+    if (!showTitle) {
+      return (
+        <div className="py-8 text-center">
+          <div className="text-sm text-gray-500">
+            Triggers feature coming soon
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
@@ -124,6 +148,18 @@ export default function TriggersInterface() {
   }
 
   if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
+    if (!showTitle) {
+      return (
+        <div className="py-8 text-center">
+          <div className="text-sm text-gray-500">
+            No triggers are currently configured. Please set up the
+            NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
+            triggers.
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
@@ -158,6 +194,28 @@ export default function TriggersInterface() {
             </div>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (!showTitle) {
+    return (
+      <div className="space-y-4">
+        <Accordion
+          type="multiple"
+          className="w-full"
+        >
+          {Object.entries(groupedTriggers).map(
+            ([provider, { registrations, triggers }]) => (
+              <TriggerAccordionItem
+                key={provider}
+                provider={provider}
+                groupedRegistrations={registrations}
+                triggers={triggers}
+              />
+            ),
+          )}
+        </Accordion>
       </div>
     );
   }
