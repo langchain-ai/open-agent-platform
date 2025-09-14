@@ -68,102 +68,69 @@ export default function TriggersInterface() {
 
   if (triggersLoading) {
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Loading Triggers
-            </CardTitle>
-            <CardDescription>Loading triggers…</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Loading label="Loading triggers" />
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Loading Triggers
+          </CardTitle>
+          <CardDescription>Loading triggers…</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Loading label="Loading triggers" />
+        </CardContent>
+      </Card>
     );
   }
 
   // Feature disabled: show coming soon (tab still visible per UX)
   if (showTriggersTab === false) {
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Coming soon
-            </CardTitle>
-            <CardDescription>
-              This feature is under development and will be released soon. Stay
-              tuned!
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Coming soon
+          </CardTitle>
+          <CardDescription>
+            This feature is under development and will be released soon. Stay
+            tuned!
+          </CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            No Triggers Available
+          </CardTitle>
+          <CardDescription>
+            No triggers are currently configured. Please set up the
+            NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
+            triggers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <Zap className="text-muted-foreground mx-auto h-12 w-12" />
+            <h3 className="mt-4 text-lg font-semibold">Configure Triggers</h3>
+            <p className="text-muted-foreground mt-2">
+              Add trigger configurations to your environment variables to get
+              started.
             </p>
           </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              No Triggers Available
-            </CardTitle>
-            <CardDescription>
-              No triggers are currently configured. Please set up the
-              NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
-              triggers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <Zap className="text-muted-foreground mx-auto h-12 w-12" />
-              <h3 className="mt-4 text-lg font-semibold">Configure Triggers</h3>
-              <p className="text-muted-foreground mt-2">
-                Add trigger configurations to your environment variables to get
-                started.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
