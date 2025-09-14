@@ -152,7 +152,7 @@ export default function CreateAgentPage(): React.ReactNode {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <h1 className="text-md tracking-tight">Create new agent</h1>
-          <div className="ml-[8px] rounded border border-gray-300 p-1">
+          <div className="ml-[8px] rounded border border-gray-300 p-2">
             <FileText className="h-4 w-4 text-gray-500" />
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function CreateAgentPage(): React.ReactNode {
         {/* Left Sidebar with sections */}
         <div className="bg-muted/50 w-80 border-r">
           {/* Section List */}
-          <div className="p-6">
+          <div className="p-3">
             <div>
               {sections.map((section, index) => (
                 <div
@@ -223,7 +223,7 @@ export default function CreateAgentPage(): React.ReactNode {
           <div className="flex-1 p-6">
             <div className="mx-auto">
               <div className="mb-6">
-                <h2 className="text-md mb-2 font-medium">
+                <h2 className="text-md mb-2 font-">
                   {sections.find((s) => s.id === currentSection)?.pageTitle ||
                     sections.find((s) => s.id === currentSection)?.title}
                 </h2>
@@ -312,37 +312,39 @@ export default function CreateAgentPage(): React.ReactNode {
           {/* Fixed bottom buttons */}
           {currentSection !== 4 && (
             <div className="p-6">
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentSection(Math.max(1, currentSection - 1))
-                  }
-                  disabled={currentSection === 1}
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (currentSection === 1) {
-                      setCurrentSection(2); // Go to triggers
-                    } else if (currentSection === 2) {
-                      setCurrentSection(3); // Go to tools
-                    } else if (currentSection === 3) {
-                      setCurrentSection(4); // Go to system prompt
+              <div className="flex justify-end">
+                <div className="flex gap-2">
+                  {(currentSection === 2 || currentSection === 3) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setCurrentSection(currentSection - 1)}
+                      className="bg-white text-black border-gray-300 hover:bg-gray-50"
+                    >
+                      Back
+                    </Button>
+                  )}
+                  <Button
+                    onClick={() => {
+                      if (currentSection === 1) {
+                        setCurrentSection(2); // Go to triggers
+                      } else if (currentSection === 2) {
+                        setCurrentSection(3); // Go to tools
+                      } else if (currentSection === 3) {
+                        setCurrentSection(4); // Go to system prompt
+                      }
+                    }}
+                    disabled={
+                      currentSection === 1 &&
+                      (!agentName.trim() || !agentDescription.trim())
                     }
-                  }}
-                  disabled={
-                    currentSection === 1 &&
-                    (!agentName.trim() || !agentDescription.trim())
-                  }
-                >
-                  {currentSection === 1
-                    ? "Configure triggers →"
-                    : currentSection === 2
-                      ? "Configure tools →"
-                      : "Configure system prompt →"}
-                </Button>
+                  >
+                    {currentSection === 1
+                      ? "Configure triggers →"
+                      : currentSection === 2
+                        ? "Configure tools →"
+                        : "Configure system prompt →"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
