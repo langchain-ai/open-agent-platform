@@ -71,16 +71,6 @@ function DeepAgentChatInterfaceInternal({
               hideInternalToggle={hideInternalToggle}
             />
           </div>
-
-          <TasksFilesSidebar
-            todos={todos}
-            files={files}
-            setFiles={setFiles}
-            activeAssistant={activeAssistant}
-            setActiveAssistant={setActiveAssistant}
-            setAssistantError={setAssistantError}
-            assistantError={assistantError}
-          />
         </div>
       </ChatProvider>
     </ClientProvider>

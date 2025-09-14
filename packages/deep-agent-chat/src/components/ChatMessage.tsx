@@ -91,28 +91,6 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                     ? "rounded-full bg-[#F4F3FF] px-4 py-3"
                     : "rounded-xl bg-[#F4F4F5] p-3",
                 )}
-                style={
-                  isUser
-                    ? {
-                        borderRadius: "999px",
-                        background: "#F4F3FF",
-                        padding: "12px 16px",
-                        color: "#1A1A1E",
-                        fontSize: "14px",
-                        fontStyle: "normal",
-                        fontWeight: "400",
-                        lineHeight: "150%",
-                      }
-                    : {
-                        borderRadius: "12px",
-                        background: "#F4F4F5",
-                        color: "#1A1A1E",
-                        fontSize: "14px",
-                        fontStyle: "normal",
-                        fontWeight: "400",
-                        lineHeight: "150%",
-                      }
-                }
               >
                 {isUser ? (
                   <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
