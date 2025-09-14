@@ -98,7 +98,7 @@ export default function ToolsSelectionStep({
             className="h-[56px] rounded-full bg-[#0A5982] px-6 text-white hover:bg-[#0A5982]/90"
             onClick={() => (onCreate ? onCreate(selected) : onContinue())}
           >
-            Create Agent
+            Select triggers
           </Button>
         </div>
       </div>

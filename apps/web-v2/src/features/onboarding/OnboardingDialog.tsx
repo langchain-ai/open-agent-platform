@@ -6,6 +6,7 @@ import VideoBackgroundPageWrapper from "@/components/VideoBackgroundPageWrapper"
 import DescribeAgentStep from "./DescribeAgentStep";
 import ConnectServicesStep from "./ConnectServicesStep";
 import ToolsSelectionStep from "./ToolsSelectionStep";
+import TriggersStep from "./TriggersStep";
 import ReadyStep from "./ReadyStep";
 
 type OnboardingDialogProps = {
@@ -19,7 +20,7 @@ export function OnboardingDialog({
 }: OnboardingDialogProps) {
   const [open, setOpen] = React.useState<boolean>(initialOpen);
   const [step, setStep] = React.useState<
-    "describe" | "connect" | "tools" | "ready"
+    "describe" | "connect" | "tools" | "triggers" | "ready"
   >("describe");
   const [agentName, setAgentName] = React.useState("");
   const [agentDescription, setAgentDescription] = React.useState("");
@@ -61,9 +62,15 @@ export function OnboardingDialog({
         ) : step === "tools" ? (
           <ToolsSelectionStep
             onSkip={close}
-            onContinue={() => setStep("ready")}
+            onContinue={() => setStep("triggers")}
             onBack={() => setStep("connect")}
-            onCreate={() => setStep("ready")}
+            onCreate={() => setStep("triggers")}
+          />
+        ) : step === "triggers" ? (
+          <TriggersStep
+            onSkip={close}
+            onContinue={() => setStep("ready")}
+            onBack={() => setStep("tools")}
           />
         ) : null}
       </div>
