@@ -1,4 +1,4 @@
-import { Trigger } from "@/types/triggers";
+import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 
 type RegisterTriggerResponse =
@@ -17,15 +17,6 @@ type RegisterTriggerResponse =
       authUrl: string;
       registered: false;
     };
-
-export interface ListTriggerRegistrationsData {
-  id: string;
-  user_id: string;
-  template_id: string;
-  resource: unknown;
-  linked_assistant_ids?: string[];
-  created_at: string;
-}
 
 const constructTriggerUrl = (
   path: string,
@@ -187,15 +178,53 @@ export function useTriggers() {
     args: {
       agentId: string;
       selectedTriggerIds: string[];
+      currentTriggerIds?: string[];
     },
   ): Promise<boolean> => {
-    // For RESTful API, we need to update each registration individually
-    for (const triggerId of args.selectedTriggerIds) {
+    const currentTriggerIds = args.currentTriggerIds || [];
+    const selectedTriggerIds = args.selectedTriggerIds;
+
+    // Determine which triggers to remove (in current but not in selected)
+    const triggersToRemove = currentTriggerIds.filter(
+      (id) => !selectedTriggerIds.includes(id),
+    );
+
+    // Determine which triggers to add (in selected but not in current)
+    const triggersToAdd = selectedTriggerIds.filter(
+      (id) => !currentTriggerIds.includes(id),
+    );
+
+    // First, remove unselected trigger links
+    for (const triggerId of triggersToRemove) {
       const triggerApiUrl = constructTriggerUrl(
         `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
       if (!triggerApiUrl) {
-        return false;
+        continue;
+      }
+
+      const response = await fetch(triggerApiUrl, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to remove agent from trigger", {
+          richColors: true,
+        });
+        continue;
+      }
+    }
+
+    // Then, add new trigger links
+    for (const triggerId of triggersToAdd) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+      );
+      if (!triggerApiUrl) {
+        continue;
       }
 
       const response = await fetch(triggerApiUrl, {
@@ -210,10 +239,10 @@ export function useTriggers() {
       });
 
       if (!response.ok) {
-        toast.error("Failed to update agent triggers", {
+        toast.error("Failed to add agent to trigger", {
           richColors: true,
         });
-        return false;
+        continue;
       }
     }
 
