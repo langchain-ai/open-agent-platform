@@ -10,7 +10,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-manrope)", "system-ui", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",
