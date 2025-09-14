@@ -45,7 +45,7 @@ const data: {
   topNav: [
     {
       title: "New Agent",
-      url: "/agents/create",
+      url: "/agents/new",
       icon: Plus,
     },
     {
