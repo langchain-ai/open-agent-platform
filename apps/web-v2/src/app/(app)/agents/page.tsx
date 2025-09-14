@@ -39,34 +39,43 @@ export default function AgentsPage(): React.ReactNode {
             <h2 className="text-3xl font-bold tracking-tight">Agent Library</h2>
           </div>
         </div>
-        
-        <Tabs defaultValue="agents" className="w-full">
+
+        <Tabs
+          defaultValue="agents"
+          className="w-full"
+        >
           <div className="flex items-center gap-8">
             <TabsList className="h-auto bg-transparent p-0">
-              <TabsTrigger 
-                value="agents" 
-                className="relative border-none bg-transparent px-0 py-2 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-muted-foreground/30 after:content-[''] data-[state=active]:after:bg-foreground data-[state=active]:after:h-1"
+              <TabsTrigger
+                value="agents"
+                className="text-muted-foreground data-[state=active]:text-foreground after:bg-muted-foreground/30 data-[state=active]:after:bg-foreground relative border-none bg-transparent px-0 py-2 text-sm font-medium after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:content-[''] focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=active]:shadow-none data-[state=active]:after:h-1"
               >
                 My Agents
               </TabsTrigger>
-              <TabsTrigger 
-                value="triggers" 
-                className="relative border-none bg-transparent px-0 py-2 ml-8 text-sm font-medium text-muted-foreground data-[state=active]:text-foreground data-[state=active]:shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-muted-foreground/30 after:content-[''] data-[state=active]:after:bg-foreground data-[state=active]:after:h-1"
+              <TabsTrigger
+                value="triggers"
+                className="text-muted-foreground data-[state=active]:text-foreground after:bg-muted-foreground/30 data-[state=active]:after:bg-foreground relative ml-8 border-none bg-transparent px-0 py-2 text-sm font-medium after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:content-[''] focus-visible:ring-0 focus-visible:ring-offset-0 data-[state=active]:shadow-none data-[state=active]:after:h-1"
               >
                 Triggers
               </TabsTrigger>
             </TabsList>
           </div>
-          
-          <TabsContent value="agents" className="mt-6">
+
+          <TabsContent
+            value="agents"
+            className="mt-6"
+          >
             <AgentsProvider>
               <MCPProvider>
                 <AgentsInterface />
               </MCPProvider>
             </AgentsProvider>
           </TabsContent>
-          
-          <TabsContent value="triggers" className="mt-6">
+
+          <TabsContent
+            value="triggers"
+            className="mt-6"
+          >
             <TriggersInterface />
           </TabsContent>
         </Tabs>
