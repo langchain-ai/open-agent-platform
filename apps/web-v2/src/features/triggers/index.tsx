@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuthContext } from "@/providers/Auth";
-import { TriggerCard } from "./components/trigger-card";
 import {
   Card,
   CardContent,
@@ -10,24 +9,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Zap } from "lucide-react";
-import {
-  ListTriggerRegistrationsData,
-  useTriggers,
-} from "@/hooks/use-triggers";
+import { useTriggers } from "@/hooks/use-triggers";
 import { useEffect, useState } from "react";
-import type { Trigger } from "@/types/triggers";
+import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 import { toast } from "sonner";
-import { groupUserRegisteredTriggersByProvider } from "@/lib/triggers";
+import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { TriggerAccordionItem } from "./components/trigger-accordion-item";
+import { Accordion } from "@/components/ui/accordion";
 
 export default function TriggersInterface() {
   const [triggersLoading, setTriggersLoading] = useState(true);
-  const [triggers, setTriggers] = useState<Trigger[]>([]);
-  const [userTriggers, setUserTriggers] = useState<
-    ListTriggerRegistrationsData[]
-  >([]);
+  const [groupedTriggers, setGroupedTriggers] =
+    useState<GroupedTriggerRegistrationsByProvider>();
   const auth = useAuthContext();
   const { listTriggers, listUserTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
@@ -44,30 +40,30 @@ export default function TriggersInterface() {
     }
     if (!auth.session?.accessToken) return;
     setTriggersLoading(true);
-    listTriggers(auth.session?.accessToken)
-      .then((listTriggersRes) => {
-        if (!listTriggersRes) {
-          toast.warning("No triggers found", {
-            richColors: true,
-          });
-          return;
-        }
-        setTriggers(listTriggersRes);
-      })
-      .finally(() => {
-        setTriggersLoading(false);
-      });
-    listUserTriggers(auth.session?.accessToken)
-      .then((listUserTriggersRes) => {
-        if (!listUserTriggersRes) {
-          // User has not registered any triggers
-          return;
-        }
-        setUserTriggers(listUserTriggersRes);
-      })
-      .finally(() => {
-        setTriggersLoading(false);
-      });
+
+    async function fetchTriggersAndRegistrations(accessToken: string) {
+      const [triggers, registrations] = await Promise.all([
+        listTriggers(accessToken),
+        listUserTriggers(accessToken),
+      ]);
+      if (!triggers) {
+        toast.warning("No triggers found", {
+          richColors: true,
+        });
+        return;
+      }
+      if (!registrations) {
+        // User has not registered any triggers
+        return;
+      }
+      setGroupedTriggers(
+        groupTriggerRegistrationsByProvider(registrations, triggers),
+      );
+    }
+
+    fetchTriggersAndRegistrations(auth.session.accessToken).finally(() => {
+      setTriggersLoading(false);
+    });
   }, [auth.session?.accessToken, showTriggersTab]);
 
   if (triggersLoading) {
@@ -127,7 +123,7 @@ export default function TriggersInterface() {
     );
   }
 
-  if (triggers.length === 0) {
+  if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
@@ -170,26 +166,29 @@ export default function TriggersInterface() {
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+          <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
           <p className="text-muted-foreground">
-            Set up triggers to automatically activate your agents
+            Authenticate with the following apps and set up triggers to
+            automatically activate your agents.
           </p>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {triggers.map((trigger) => (
-          <TriggerCard
-            key={trigger.id}
-            trigger={trigger}
-            userTriggers={
-              groupUserRegisteredTriggersByProvider(userTriggers)?.[
-                trigger.id
-              ] || []
-            }
-          />
-        ))}
-      </div>
+      <Accordion
+        type="multiple"
+        className="w-full"
+      >
+        {Object.entries(groupedTriggers).map(
+          ([provider, { registrations, triggers }]) => (
+            <TriggerAccordionItem
+              key={provider}
+              provider={provider}
+              groupedRegistrations={registrations}
+              triggers={triggers}
+            />
+          ),
+        )}
+      </Accordion>
     </div>
   );
 }

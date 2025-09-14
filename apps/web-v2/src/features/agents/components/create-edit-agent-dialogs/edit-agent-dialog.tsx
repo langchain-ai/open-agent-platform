@@ -92,6 +92,7 @@ function EditAgentDialogContent({
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: agent.assistant_id,
         selectedTriggerIds,
+        currentTriggerIds: defaultConfigValues.triggers ?? [],
       });
       if (!success) {
         toast.error("Failed to update agent triggers", {
@@ -161,6 +162,7 @@ function EditAgentDialogContent({
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: agent.assistant_id,
         selectedTriggerIds: [],
+        currentTriggerIds: defaultConfigValues.triggers ?? [],
       });
       if (!success) {
         toast.error("Failed to update agent triggers", {

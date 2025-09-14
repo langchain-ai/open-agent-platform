@@ -1,4 +1,8 @@
-import { ListTriggerRegistrationsData } from "@/hooks/use-triggers";
+import {
+  GroupedTriggerRegistrationsByProvider,
+  ListTriggerRegistrationsData,
+  Trigger,
+} from "@/types/triggers";
 
 export function generateFormFields(schema: Record<string, any>) {
   const fields: Array<{
@@ -22,17 +26,64 @@ export function generateFormFields(schema: Record<string, any>) {
   return fields;
 }
 
-export function groupUserRegisteredTriggersByProvider(
-  triggers: ListTriggerRegistrationsData[],
+export function groupTriggerRegistrationsByTemplate(
+  registrations: ListTriggerRegistrationsData[],
 ): Record<string, ListTriggerRegistrationsData[]> {
-  const groupedTriggers: Record<string, ListTriggerRegistrationsData[]> = {};
+  const groupedRegistrations: Record<string, ListTriggerRegistrationsData[]> =
+    {};
 
-  triggers.forEach((trigger) => {
-    if (!groupedTriggers[trigger.template_id]) {
-      groupedTriggers[trigger.template_id] = [];
+  registrations.forEach((registration) => {
+    if (!groupedRegistrations[registration.template_id]) {
+      groupedRegistrations[registration.template_id] = [];
     }
-    groupedTriggers[trigger.template_id].push(trigger);
+    groupedRegistrations[registration.template_id].push(registration);
   });
 
-  return groupedTriggers;
+  return groupedRegistrations;
+}
+
+export function groupTriggerRegistrationsByProvider(
+  registrations: ListTriggerRegistrationsData[],
+  triggers: Trigger[],
+): GroupedTriggerRegistrationsByProvider {
+  const groupedByProvider: GroupedTriggerRegistrationsByProvider = {};
+
+  const templateToProvider: Record<string, string> = {};
+
+  // Initialize provider groups and create template-to-provider mapping
+  triggers.forEach((trigger) => {
+    if (!groupedByProvider[trigger.provider]) {
+      groupedByProvider[trigger.provider] = {
+        registrations: {},
+        triggers: [],
+      };
+    }
+    groupedByProvider[trigger.provider].triggers.push(trigger);
+    templateToProvider[trigger.id] = trigger.provider;
+  });
+
+  // Group registrations by provider and template
+  registrations.forEach((registration) => {
+    const provider = templateToProvider[registration.template_id];
+    if (!provider) {
+      return;
+    }
+
+    if (!groupedByProvider[provider]) {
+      groupedByProvider[provider] = {
+        registrations: {},
+        triggers: [],
+      };
+    }
+
+    if (!groupedByProvider[provider].registrations[registration.template_id]) {
+      groupedByProvider[provider].registrations[registration.template_id] = [];
+    }
+
+    groupedByProvider[provider].registrations[registration.template_id].push(
+      registration,
+    );
+  });
+
+  return groupedByProvider;
 }
