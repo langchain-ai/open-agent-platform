@@ -34,20 +34,19 @@ export function GenericInboxItem<
     VIEW_STATE_THREAD_QUERY_PARAM,
     parseAsString,
   );
-  const [agentInboxId] = useQueryState("agentInbox");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
 
   const handleOpenInStudio = () => {
-    if (!agentInboxId) {
+    if (!agentId || !deploymentId) {
       toast.error("No agent inbox selected.", {
         duration: 5000,
       });
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
-
     const studioUrl = constructOpenInStudioURL(
-      assistantId,
+      agentId,
       deploymentId,
       threadData.thread.thread_id,
     );
@@ -102,7 +101,7 @@ export function GenericInboxItem<
       <div
         className={cn(
           "col-span-6 flex items-center justify-start gap-2",
-          !agentInboxId && "col-span-9",
+          !agentId || (!deploymentId && "col-span-9"),
         )}
       >
         <p className="text-sm font-semibold text-black">Thread ID:</p>
@@ -112,7 +111,7 @@ export function GenericInboxItem<
         />
       </div>
 
-      {agentInboxId && (
+      {agentId && deploymentId && (
         <div className="col-span-2 flex items-center">
           <Button
             size="sm"
@@ -128,7 +127,7 @@ export function GenericInboxItem<
       <div
         className={cn(
           "col-span-2 flex items-center",
-          !agentInboxId && "col-start-10",
+          !agentId || (!deploymentId && "col-start-10"),
         )}
       >
         <InboxItemStatuses status={threadData.status} />
