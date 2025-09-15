@@ -26,7 +26,7 @@ export default function DescribeAgentStep({
   setDescription,
 }: DescribeAgentStepProps) {
   return (
-    <div className={cn("grid h-screen grid-cols-2 overflow-y-hidden")}>
+    <div className="grid h-screen grid-cols-2 overflow-y-hidden">
       <div
         className={cn(
           "z-10",
@@ -34,8 +34,11 @@ export default function DescribeAgentStep({
           "shadow-[0_675px_189px_0_rgba(138,118,158,0.00),0_432px_173px_0_rgba(138,118,158,0.01),0_243px_146px_0_rgba(138,118,158,0.05),0_108px_108px_0_rgba(138,118,158,0.09),0_27px_59px_0_rgba(138,118,158,0.10)]",
         )}
       >
-        <div className={cn("shrink-0")}>
-          <OAPLogoBlue width={146} height={38} />
+        <div className="shrink-0">
+          <OAPLogoBlue
+            width={146}
+            height={38}
+          />
         </div>
 
         <h1 className="font-weight-[400] line-height-[120%] letter-spacing-[-7px] mt-[40px] pb-[12px] text-start text-[58px] leading-[120%] tracking-[-1.2px] text-[var(--colors-text-text-primary-900,#101828)]">

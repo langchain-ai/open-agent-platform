@@ -35,7 +35,10 @@ export function QuestionPillStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <OAPLogoBlue width={146} height={38} />
+          <OAPLogoBlue
+            width={146}
+            height={38}
+          />
         </div>
 
         <button

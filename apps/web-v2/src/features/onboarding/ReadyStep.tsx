@@ -21,7 +21,10 @@ export function ReadyStep({ onOpenWorkspace, onBack }: ReadyStepProps) {
         )}
       >
         <div className={cn("shrink-0")}>
-          <OAPLogoBlue width={146} height={38} />
+          <OAPLogoBlue
+            width={146}
+            height={38}
+          />
         </div>
 
         <div className="mt-[60px] flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF3F6]">

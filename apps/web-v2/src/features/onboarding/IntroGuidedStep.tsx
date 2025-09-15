@@ -28,7 +28,10 @@ export function IntroGuidedStep({
         )}
       >
         <div className={cn("shrink-0")}>
-          <OAPLogoBlue width={146} height={38} />
+          <OAPLogoBlue
+            width={146}
+            height={38}
+          />
         </div>
 
         <h1 className="mt-[125px] text-start text-[48px] leading-[120%] font-normal tracking-[-1.2px] text-[var(--colors-text-text-primary-900,#101828)]">
