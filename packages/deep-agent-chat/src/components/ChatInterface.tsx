@@ -464,16 +464,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     </div>
                   )}
                   {interrupt && debugMode && (
-                    <div className="flex w-full max-w-full gap-2">
-                      <div className="mt-4 flex h-8 w-8 shrink-0 items-center justify-center"></div>
-                      <div className="mt-4 flex items-center gap-2">
-                        <Button
-                          onClick={handleContinue}
-                          className="border-success text-success rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-green-500/10 active:scale-95"
-                        >
-                          Continue
-                        </Button>
-                      </div>
+                    <div className="mt-4">
+                      <Button
+                        onClick={handleContinue}
+                        variant="outline"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
+                        Continue
+                      </Button>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
