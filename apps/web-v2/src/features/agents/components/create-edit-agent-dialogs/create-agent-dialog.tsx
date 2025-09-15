@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { Bot, LoaderCircle, X } from "lucide-react";
+import { Bot, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -28,6 +28,7 @@ import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 import { AgentFormValues } from "./types";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 import { DEFAULT_FORM_CONFIG, prepareConfigForSaving } from "./utils";
+import Loading from "@/components/ui/loading";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -86,51 +87,61 @@ function CreateAgentFormContent(props: {
     }
 
     setSubmitting(true);
-    const newAgent = await createAgent(
-      props.selectedDeployment.id,
-      props.selectedGraph.graph_id,
-      {
-        name,
-        description,
-        config: prepareConfigForSaving(config),
-      },
-    );
+    try {
+      const newAgent = await createAgent(
+        props.selectedDeployment.id,
+        props.selectedGraph.graph_id,
+        {
+          name,
+          description,
+          config: prepareConfigForSaving(config),
+        },
+      );
 
-    if (!newAgent) {
-      toast.error("Failed to create agent", {
-        description: "Please try again",
-        richColors: true,
-      });
-      return;
-    }
-
-    if (config.triggers?.length) {
-      const success = await setupAgentTrigger(auth.session.accessToken, {
-        selectedTriggerIds: config.triggers,
-        agentId: newAgent.assistant_id,
-      });
-
-      if (!success) {
-        toast.error("Failed to set up triggers", {
+      if (!newAgent) {
+        toast.error("Failed to create agent", {
+          description: "Please try again",
           richColors: true,
         });
         return;
       }
+
+      if (config.triggers?.length) {
+        const success = await setupAgentTrigger(auth.session.accessToken, {
+          selectedTriggerIds: config.triggers,
+          agentId: newAgent.assistant_id,
+        });
+
+        if (!success) {
+          toast.error("Failed to set up triggers", {
+            richColors: true,
+          });
+          return;
+        }
+      }
+
+      toast.success(
+        `Agent${config?.triggers?.length ? " with triggers" : ""} created successfully!`,
+        {
+          richColors: true,
+        },
+      );
+
+      props.onClose();
+      // Do not await so that the refresh is non-blocking
+      refreshAgents();
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
-
-    toast.success(
-      `Agent${config?.triggers?.length ? " with triggers" : ""} created successfully!`,
-      {
-        richColors: true,
-      },
-    );
-
-    props.onClose();
-    // Do not await so that the refresh is non-blocking
-    refreshAgents();
   };
+
+  if (submitting) {
+    return (
+      <div className="py-6">
+        <Loading label="Creating your workspace" />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -147,17 +158,15 @@ function CreateAgentFormContent(props: {
             props.onClose();
           }}
           variant="outline"
-          disabled={submitting}
         >
           Cancel
         </Button>
         <Button
           type="submit"
           className="flex w-full items-center justify-center gap-1"
-          disabled={submitting}
         >
-          {submitting ? <LoaderCircle className="animate-spin" /> : <Bot />}
-          <span>{submitting ? "Creating..." : "Create Agent"}</span>
+          <Bot />
+          <span>Create Agent</span>
         </Button>
       </AlertDialogFooter>
     </form>

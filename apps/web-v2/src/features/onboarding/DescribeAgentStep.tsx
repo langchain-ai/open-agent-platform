@@ -25,6 +25,7 @@ export default function DescribeAgentStep({
   setName,
   setDescription,
 }: DescribeAgentStepProps) {
+  const canContinue = name.trim().length > 0 && description.trim().length > 0;
   return (
     <div className="grid h-screen grid-cols-2 overflow-y-hidden">
       <div
@@ -84,8 +85,9 @@ export default function DescribeAgentStep({
           </button>
           <Button
             type="button"
-            className="h-[56px] rounded-full bg-[#0A5982] px-6 text-white hover:bg-[#0A5982]/90"
+            className="h-[56px] rounded-full bg-[#0A5982] px-6 text-white hover:bg-[#0A5982]/90 disabled:opacity-50"
             onClick={onContinue}
+            disabled={!canContinue}
           >
             Select tools
           </Button>

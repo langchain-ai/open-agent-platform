@@ -8,6 +8,9 @@ import ConnectServicesStep from "./ConnectServicesStep";
 import ToolsSelectionStep from "./ToolsSelectionStep";
 import TriggersStep from "./TriggersStep";
 import ReadyStep from "./ReadyStep";
+import { getDeployments } from "@/lib/environment/deployments";
+import { useAgents } from "@/hooks/use-agents";
+import Loading from "@/components/ui/loading";
 
 type OnboardingDialogProps = {
   initialOpen?: boolean;
@@ -24,7 +27,16 @@ export function OnboardingDialog({
   >("describe");
   const [agentName, setAgentName] = React.useState("");
   const [agentDescription, setAgentDescription] = React.useState("");
+  const [selectedTools, setSelectedTools] = React.useState<string[]>([]);
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [createdAgentId, setCreatedAgentId] = React.useState<string | null>(
+    null,
+  );
   const router = useRouter();
+  const deployments = getDeployments();
+  const defaultDeployment = deployments.find((d) => d.isDefault);
+  const defaultGraphId = defaultDeployment?.graphs.find((g) => g.isDefault)?.id;
+  const { createAgent } = useAgents();
   const close = () => {
     setOpen(false);
     onClose?.();
@@ -36,10 +48,56 @@ export function OnboardingDialog({
   if (step === "ready") {
     return (
       <div className="min-h-screen w-full bg-white">
-        <ReadyStep onOpenWorkspace={() => router.push("/")} />
+        <ReadyStep
+          onOpenWorkspace={() => {
+            if (createdAgentId && defaultDeployment?.id) {
+              router.push(
+                `/chat?agentId=${createdAgentId}&deploymentId=${defaultDeployment.id}`,
+              );
+            } else {
+              router.push("/chat");
+            }
+          }}
+        />
       </div>
     );
   }
+
+  // Global creating state
+  if (isCreating) {
+    return (
+      <div className="min-h-screen w-full bg-white">
+        <Loading label="Creating your workspace" />
+      </div>
+    );
+  }
+
+  const handleCreateAgent = async () => {
+    if (!defaultDeployment?.id || !defaultGraphId) {
+      // If env isn't configured, just proceed to ready to avoid blocking UX
+      setStep("ready");
+      return;
+    }
+    setIsCreating(true);
+    try {
+      const agent = await createAgent(defaultDeployment.id, defaultGraphId, {
+        name: agentName || "My Agent",
+        description: agentDescription || "",
+        config: {
+          instructions: agentDescription || "",
+          subagents: [],
+          tools: { tools: selectedTools },
+          triggers: [],
+        },
+      });
+      if (agent?.assistant_id) {
+        setCreatedAgentId(agent.assistant_id);
+      }
+    } finally {
+      setIsCreating(false);
+      setStep("ready");
+    }
+  };
 
   return (
     <VideoBackgroundPageWrapper className="relative h-screen overflow-hidden">
@@ -64,12 +122,15 @@ export function OnboardingDialog({
             onSkip={close}
             onContinue={() => setStep("triggers")}
             onBack={() => setStep("connect")}
-            onCreate={() => setStep("triggers")}
+            onCreate={(selected) => {
+              setSelectedTools(selected);
+              setStep("triggers");
+            }}
           />
         ) : step === "triggers" ? (
           <TriggersStep
             onSkip={close}
-            onContinue={() => setStep("ready")}
+            onContinue={handleCreateAgent}
             onBack={() => setStep("tools")}
           />
         ) : null}
