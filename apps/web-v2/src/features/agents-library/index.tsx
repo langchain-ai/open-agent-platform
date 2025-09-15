@@ -40,8 +40,7 @@ export default function AgentsLibrary(): React.ReactNode {
 
   useEffect(() => {
     if (!session?.accessToken) return;
-    getAgents(deployments, session.accessToken)
-      .then((a) => setAgents(a));
+    getAgents(deployments, session.accessToken).then((a) => setAgents(a));
   }, [session?.accessToken]);
 
   useEffect(() => {

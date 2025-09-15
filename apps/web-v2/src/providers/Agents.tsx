@@ -150,7 +150,11 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({
   useEffect(() => {
     if (firstRequestMade.current) return;
     if (initialAgents && initialAgents.length > 0) {
-      // Seed with initial agents and prevent first auto-fetch
+      // When initialAgents are provided (e.g., from AgentsLibrary), we should:
+      // 1. Use them as the initial state instead of making a duplicate API call
+      // 2. Filter out system-created default assistants to maintain consistency
+      // 3. Mark firstRequestMade as true to prevent the useEffect from triggering
+      //    another fetch when the component mounts
       firstRequestMade.current = true;
       setAgents(
         initialAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)),
