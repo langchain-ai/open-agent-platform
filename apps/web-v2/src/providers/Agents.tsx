@@ -57,7 +57,7 @@ async function getOrCreateDefaultAssistants(
   }
 }
 
-async function getAgents(
+export async function getAgents(
   deployments: Deployment[],
   accessToken: string,
 ): Promise<Agent[]> {
@@ -129,21 +129,35 @@ type AgentsContextType = {
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
-export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
+type AgentsProviderProps = {
+  children: ReactNode;
+  initialAgents?: Agent[];
+};
+
+export const AgentsProvider: React.FC<AgentsProviderProps> = ({
   children,
+  initialAgents,
 }) => {
   const { session } = useAuthContext();
   const deployments = getDeployments();
 
-  const [agents, setAgents] = useState<Agent[]>([]);
+  const [agents, setAgents] = useState<Agent[]>(initialAgents ?? []);
   const [loading, setLoading] = useState(false);
   const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
 
   const firstRequestMade = useRef(false);
 
   useEffect(() => {
-    if (agents.length > 0 || firstRequestMade.current || !session?.accessToken)
+    if (firstRequestMade.current) return;
+    if (initialAgents && initialAgents.length > 0) {
+      // Seed with initial agents and prevent first auto-fetch
+      firstRequestMade.current = true;
+      setAgents(
+        initialAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)),
+      );
       return;
+    }
+    if (agents.length > 0 || !session?.accessToken) return;
 
     firstRequestMade.current = true;
     setLoading(true);
@@ -153,7 +167,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
         setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a))),
       )
       .finally(() => setLoading(false));
-  }, [session?.accessToken]);
+  }, [session?.accessToken, initialAgents]);
 
   async function refreshAgents() {
     if (!session?.accessToken) {

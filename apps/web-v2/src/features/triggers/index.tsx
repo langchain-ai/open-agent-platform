@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/providers/Auth";
 import {
   Card,
   CardContent,
@@ -9,64 +8,23 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Zap } from "lucide-react";
-import { useTriggers } from "@/hooks/use-triggers";
-import { useEffect, useState } from "react";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
-import { toast } from "sonner";
-import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
-import { useFlags } from "launchdarkly-react-client-sdk";
-import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
 
-export default function TriggersInterface() {
-  const [triggersLoading, setTriggersLoading] = useState(true);
-  const [groupedTriggers, setGroupedTriggers] =
-    useState<GroupedTriggerRegistrationsByProvider>();
-  const auth = useAuthContext();
-  const { listTriggers, listUserTriggers } = useTriggers();
-  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
+type TriggersInterfaceProps = {
+  groupedTriggers?: GroupedTriggerRegistrationsByProvider;
+  loading?: boolean;
+  showTriggersTab?: boolean;
+};
 
-  useEffect(() => {
-    if (showTriggersTab === false) {
-      // Do not fetch when disabled
-      setTriggersLoading(false);
-      return;
-    }
-    if (showTriggersTab === undefined) {
-      setTriggersLoading(false);
-      return;
-    }
-    if (!auth.session?.accessToken) return;
-    setTriggersLoading(true);
-
-    async function fetchTriggersAndRegistrations(accessToken: string) {
-      const [triggers, registrations] = await Promise.all([
-        listTriggers(accessToken),
-        listUserTriggers(accessToken),
-      ]);
-      if (!triggers) {
-        toast.warning("No triggers found", {
-          richColors: true,
-        });
-        return;
-      }
-      if (!registrations) {
-        // User has not registered any triggers
-        return;
-      }
-      setGroupedTriggers(
-        groupTriggerRegistrationsByProvider(registrations, triggers),
-      );
-    }
-
-    fetchTriggersAndRegistrations(auth.session.accessToken).finally(() => {
-      setTriggersLoading(false);
-    });
-  }, [auth.session?.accessToken, showTriggersTab]);
-
-  if (triggersLoading) {
+export default function TriggersInterface({
+  groupedTriggers,
+  loading = false,
+  showTriggersTab,
+}: TriggersInterfaceProps) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
