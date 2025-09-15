@@ -15,7 +15,6 @@ function NoSidebarAuthenticatedApp({
 }) {
   const { isLoading } = useAuthContext();
 
-  // Show loading until auth is complete
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-8">
@@ -24,7 +23,6 @@ function NoSidebarAuthenticatedApp({
     );
   }
 
-  // Only render the app with LaunchDarkly, MCP, and Agents after auth is complete
   return (
     <LaunchDarklyProvider>
       <MCPProvider>

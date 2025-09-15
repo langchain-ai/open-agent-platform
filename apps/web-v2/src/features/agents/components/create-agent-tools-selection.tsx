@@ -20,6 +20,7 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 import { Tool } from "@/types/tool";
 import _ from "lodash";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface HumanInterruptConfig {
   allow_ignore: boolean;
@@ -96,30 +97,28 @@ export function CreateAgentToolsSelection({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-
-      {/* Tools List */}
       <div className="space-y-4">
-        {loading &&
-          !filteredTools.length &&
-          Array.from({ length: 4 }).map((_, index) => (
-            <ToolSelectionCardLoading key={`tool-loading-${index}`} />
+        {loading && !filteredTools.length && (
+          <div className="py-8 text-center">
+            <span className="text-muted-foreground">Loading tools...</span>
+          </div>
+        )}
+
+        {!loading &&
+          filteredTools.map((tool, index) => (
+            <ToolSelectionCard
+              key={`${tool.name}-${index}`}
+              tool={tool}
+              isSelected={isToolSelected(tool.name)}
+              onToggle={handleToolToggle}
+              interruptConfig={interruptConfig[tool.name]}
+              onInterruptConfigChange={(config) =>
+                handleInterruptConfigChange(tool.name, config)
+              }
+            />
           ))}
 
-        {filteredTools.map((tool, index) => (
-          <ToolSelectionCard
-            key={`${tool.name}-${index}`}
-            tool={tool}
-            isSelected={isToolSelected(tool.name)}
-            onToggle={handleToolToggle}
-            interruptConfig={interruptConfig[tool.name]}
-            onInterruptConfigChange={(config) =>
-              handleInterruptConfigChange(tool.name, config)
-            }
-          />
-        ))}
-
-        {filteredTools.length === 0 && toolSearchTerm && (
+        {filteredTools.length === 0 && toolSearchTerm && !loading && (
           <div className="py-8 text-center">
             <p className="text-muted-foreground">
               No tools found matching "{toolSearchTerm}".
@@ -134,7 +133,6 @@ export function CreateAgentToolsSelection({
         )}
       </div>
 
-      {/* Load More Button */}
       {!toolSearchTerm && cursor && (
         <div className="flex justify-center">
           <Button
@@ -151,10 +149,8 @@ export function CreateAgentToolsSelection({
 
       {/* Loading More Tools */}
       {loadingMore && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <ToolSelectionCardLoading key={`tool-loading-more-${index}`} />
-          ))}
+        <div className="py-4 text-center">
+          <span className="text-muted-foreground">Loading more tools...</span>
         </div>
       )}
     </div>
@@ -181,9 +177,10 @@ function ToolSelectionCard({
 
   return (
     <div
-      className={`cursor-pointer rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50 ${
-        showMore ? "bg-gray-50" : "bg-white"
-      }`}
+      className={cn(
+        "cursor-pointer rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50",
+        showMore ? "bg-gray-50" : "bg-white",
+      )}
       onClick={() => setShowMore(!showMore)}
     >
       <div className="flex items-start gap-3">
@@ -211,12 +208,10 @@ function ToolSelectionCard({
               </h3>
               <p className="mb-2 text-sm text-gray-600">
                 {!showMore ? (
-                  // Show only the part before "Args:" when collapsed
                   tool.description?.split("Args:")[0]?.trim() ||
                   tool.description ||
                   ""
                 ) : (
-                  // When card is expanded, show truncated or full description
                   <>
                     {!showFullDescription && tool.description?.includes("Args:")
                       ? tool.description?.split("Args:")[0]?.trim() ||
@@ -239,7 +234,6 @@ function ToolSelectionCard({
                 )}
               </p>
 
-              {/* Interrupt Configuration - only when expanded */}
               {showMore && (
                 <div
                   className="mt-3 border-t border-gray-100 pt-3"
@@ -257,31 +251,14 @@ function ToolSelectionCard({
               )}
             </div>
 
-            {/* Chevron icon - visual indicator */}
             <div className="flex items-center">
               <ChevronDown
-                className={`h-6 w-6 text-gray-400 transition-transform ${showMore ? "rotate-180" : ""}`}
+                className={cn(
+                  `h-6 w-6 text-gray-400 transition-transform`,
+                  showMore ? "rotate-180" : "",
+                )}
               />
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ToolSelectionCardLoading() {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <div className="flex items-start gap-3">
-        <div className="mt-1 h-4 w-4 animate-pulse rounded bg-gray-200" />
-        <div className="flex-1">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-32 animate-pulse rounded bg-gray-200" />
-              <div className="h-3 w-48 animate-pulse rounded bg-gray-200" />
-            </div>
-            <div className="h-6 w-6 animate-pulse rounded bg-gray-200" />
           </div>
         </div>
       </div>
@@ -303,7 +280,6 @@ function InterruptMultiSelect({
   const [open, setOpen] = useState(false);
 
   const getSelectedOptions = () => {
-    // Default to all three options if no config is provided
     if (!interruptConfig) {
       return ["accept", "respond", "edit"];
     }
@@ -324,7 +300,7 @@ function InterruptMultiSelect({
       : [...selected, option];
 
     const newConfig: HumanInterruptConfig = {
-      allow_ignore: false, // always false as per requirements
+      allow_ignore: false, // always use false
       allow_accept: newSelected.includes("accept"),
       allow_respond: newSelected.includes("respond"),
       allow_edit: newSelected.includes("edit"),
@@ -371,14 +347,17 @@ function InterruptMultiSelect({
                   onSelect={() =>
                     !option.disabled && handleSelect(option.value)
                   }
-                  className={`${option.disabled ? "cursor-not-allowed opacity-50" : ""} data-[selected]:bg-gray-50 data-[selected]:text-gray-500`}
+                  className={cn(
+                    `${option.disabled ? "cursor-not-allowed opacity-50" : ""} data-[selected]:bg-gray-50 data-[selected]:text-gray-500`,
+                  )}
                 >
                   <Check
-                    className={`mr-2 h-4 w-4 ${
+                    className={cn(
+                      `mr-2 h-4 w-4`,
                       selectedOptions.includes(option.value)
                         ? "opacity-100"
-                        : "opacity-0"
-                    }`}
+                        : "opacity-0",
+                    )}
                   />
                   <span className="text-gray-500">{option.label}</span>
                 </CommandItem>

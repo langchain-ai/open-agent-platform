@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowLeft, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,7 +47,6 @@ export default function CreateAgentPage(): React.ReactNode {
   const [currentSection, setCurrentSection] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
 
-  // Form state
   const [agentName, setAgentName] = useState("");
   const [agentDescription, setAgentDescription] = useState("");
   const [selectedTools, setSelectedTools] = useState<string[]>([]);
@@ -60,7 +60,6 @@ export default function CreateAgentPage(): React.ReactNode {
   }>({});
   const [systemPrompt, setSystemPrompt] = useState("");
 
-  // Hooks
   const auth = useAuthContext();
   const { createAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
@@ -99,13 +98,12 @@ export default function CreateAgentPage(): React.ReactNode {
       const defaultDeploymentId = defaultDeployment.id;
       const defaultGraphId = defaultGraph.id;
 
-      // Prepare the config object
       const config = {
         tools: {
           tools: selectedTools,
           interrupt_config: interruptConfig,
         },
-        triggers: [], // Triggers are now managed separately via TriggersInterface
+        triggers: [],
         system_prompt: systemPrompt,
       };
 
@@ -121,15 +119,11 @@ export default function CreateAgentPage(): React.ReactNode {
         return;
       }
 
-      // Note: Triggers are now managed separately via the TriggersInterface
-      // Users can set up triggers after creating the agent
-
       toast.success("Agent created successfully!");
 
       // Refresh the agents list
       refreshAgents();
 
-      // Navigate back to chat
       window.location.href = "/chat";
     } catch (error) {
       console.error("Error creating agent:", error);
@@ -176,37 +170,37 @@ export default function CreateAgentPage(): React.ReactNode {
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex flex-1">
-        {/* Left Sidebar with sections */}
         <div className="bg-muted/50 w-80 border-r">
-          {/* Section List */}
           <div className="p-3">
             <div>
               {sections.map((section, index) => (
                 <div
                   key={section.id}
-                  className={`rounded p-4 ${
-                    currentSection === section.id ? "bg-gray-100" : ""
-                  }`}
+                  className={cn(
+                    `rounded p-4`,
+                    currentSection === section.id ? "bg-gray-100" : "",
+                  )}
                 >
                   <div className="flex items-center gap-6">
                     <div
-                      className={`text-base font-light ${
+                      className={cn(
+                        `text-base font-light`,
                         currentSection === section.id
                           ? "text-gray-500"
-                          : "text-gray-300"
-                      }`}
+                          : "text-gray-300",
+                      )}
                     >
                       {section.id}
                     </div>
                     <div>
                       <h3
-                        className={`text-base font-normal ${
+                        className={cn(
+                          `text-base font-normal`,
                           currentSection === section.id
                             ? "text-black"
-                            : "text-black"
-                        }`}
+                            : "text-black",
+                        )}
                       >
                         {section.title}
                       </h3>
@@ -218,7 +212,6 @@ export default function CreateAgentPage(): React.ReactNode {
           </div>
         </div>
 
-        {/* Main Content Area */}
         <div className="flex flex-1 flex-col">
           <div className="flex-1 p-6">
             <div className="mx-auto">
@@ -232,7 +225,6 @@ export default function CreateAgentPage(): React.ReactNode {
                 </p>
               </div>
 
-              {/* Content based on selected section */}
               <div className="space-y-8">
                 {currentSection === 1 && (
                   <div className="space-y-6">
@@ -326,11 +318,11 @@ export default function CreateAgentPage(): React.ReactNode {
                   <Button
                     onClick={() => {
                       if (currentSection === 1) {
-                        setCurrentSection(2); // Go to triggers
+                        setCurrentSection(2);
                       } else if (currentSection === 2) {
-                        setCurrentSection(3); // Go to tools
+                        setCurrentSection(3);
                       } else if (currentSection === 3) {
-                        setCurrentSection(4); // Go to system prompt
+                        setCurrentSection(4);
                       }
                     }}
                     disabled={
