@@ -76,7 +76,8 @@ export default function useInterruptedActions<
     INBOX_PARAM,
     parseAsString.withDefault("interrupted"),
   );
-  const [agentInboxId] = useQueryState("agentInbox");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [, setSelectedThreadId] = useQueryState(
     VIEW_STATE_THREAD_QUERY_PARAM,
     parseAsString,
@@ -135,8 +136,8 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
   ) => {
     e.preventDefault();
-    if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+    if (!agentId || !deploymentId) {
+      toast.error("No agent ID or deployment ID found");
       return;
     }
     if (!threadData || !setThreadData) {
@@ -273,9 +274,9 @@ export default function useInterruptedActions<
         setCurrentNode("");
         setStreaming(false);
 
-        if (!agentInboxId) {
+        if (!agentId || !deploymentId) {
           console.warn(
-            "No agentInboxId found after successful submission, redirecting to inbox",
+            "No agent ID or deployment ID found after successful submission, redirecting to inbox",
           );
           await setSelectedThreadId(null);
           setStreamFinished(false);
@@ -285,7 +286,6 @@ export default function useInterruptedActions<
         // Fetch updated thread data BEFORE any navigation/redirect
         const updatedThreadData = await fetchSingleThread(
           threadData.thread.thread_id,
-          agentInboxId,
         );
 
         if (updatedThreadData && updatedThreadData?.status === "interrupted") {
@@ -293,9 +293,8 @@ export default function useInterruptedActions<
           setThreadData(updatedThreadData as ThreadData<ThreadValues>);
         } else {
           // Thread is resolved or no longer interrupted, redirect to inbox
-          const [assistantId, deploymentId] = agentInboxId.split(":");
           if (session) {
-            await fetchThreads(assistantId, deploymentId, session);
+            await fetchThreads(agentId, deploymentId, session);
           }
           await setSelectedThreadId(null);
         }
@@ -317,8 +316,8 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
-    if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+    if (!agentId || !deploymentId) {
+      toast.error("No agent ID or deployment ID found");
       return;
     }
     if (!threadData || !setThreadData) {
@@ -341,10 +340,9 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await sendHumanResponse(threadData.thread.thread_id, [ignoreResponse]);
-    const [assistantId, deploymentId] = agentInboxId.split(":");
     // Re-fetch threads before routing back so the inbox is up to date
     if (session) {
-      await fetchThreads(assistantId, deploymentId, session);
+      await fetchThreads(agentId, deploymentId, session);
     }
 
     setLoading(false);
@@ -359,8 +357,8 @@ export default function useInterruptedActions<
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
-    if (!agentInboxId) {
-      toast.error("No agent inbox ID found");
+    if (!agentId || !deploymentId) {
+      toast.error("No agent ID or deployment ID found");
       return;
     }
     if (!threadData || !setThreadData) {
@@ -376,9 +374,8 @@ export default function useInterruptedActions<
     initialHumanInterruptEditValue.current = {};
 
     await ignoreThread(threadData.thread.thread_id);
-    const [assistantId, deploymentId] = agentInboxId.split(":");
     if (session) {
-      await fetchThreads(assistantId, deploymentId, session);
+      await fetchThreads(agentId, deploymentId, session);
     }
 
     setLoading(false);

@@ -41,7 +41,8 @@ function AgentInboxWithProvider<
     [LIMIT_PARAM]: parseAsInteger.withDefault(10),
   });
 
-  const [agentInboxId] = useQueryState("agentInbox");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -65,12 +66,13 @@ function AgentInboxWithProvider<
   // Effect to update parameters when selectedAgentId changes
   React.useEffect(() => {
     // Skip if no selectedAgentId or if we've already processed this agent ID
-    if (
-      !agentInboxId ||
-      agentInboxId === processedAgentIdRef.current ||
-      updateInProgress.current
-    )
+    if (!agentId || !deploymentId || updateInProgress.current) {
       return;
+    }
+    const agentInboxId = `${agentId}:${deploymentId}`;
+    if (agentInboxId === processedAgentIdRef.current) {
+      return;
+    }
 
     // Update ref to prevent processing the same agent multiple times
     processedAgentIdRef.current = agentInboxId;
@@ -90,7 +92,7 @@ function AgentInboxWithProvider<
         updateInProgress.current = false;
       }
     }, 0);
-  }, [agentInboxId, setSelectedInbox, setPaginationParams]);
+  }, [agentId, deploymentId, setSelectedInbox, setPaginationParams]);
 
   // Effect to handle transitions between list and thread views
   React.useEffect(() => {
@@ -196,14 +198,16 @@ export function AgentInbox<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >() {
   const { agents } = useAgentsContext();
-  const [agentId, setAgentId] = useQueryState("agentInbox");
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
 
   useEffect(() => {
     if (!agents.length || agentId) return;
 
     const firstAgent = agents[0];
-    setAgentId(`${firstAgent.assistant_id}:${firstAgent.deploymentId}`);
-  }, [agents, agentId, agents]);
+    setDeploymentId(firstAgent.deploymentId);
+    setAgentId(firstAgent.assistant_id);
+  }, [agents, agentId, deploymentId]);
 
   return <AgentInboxWithProvider<ThreadValues> />;
 }
