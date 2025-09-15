@@ -1,6 +1,6 @@
 "use client";
 
-import AgentsInterface from "@/features/agents";
+import AgentsLibrary from "@/features/agents-library";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,12 +9,11 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
-import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 
 /**
  * The /agents page.
- * Contains the list of all agents the user has access to.
+ * Contains the list of all agents the user has access to and triggers.
  */
 export default function AgentsPage(): React.ReactNode {
   return (
@@ -25,17 +24,17 @@ export default function AgentsPage(): React.ReactNode {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Agents</BreadcrumbPage>
+                <BreadcrumbPage>Agent Library</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
       </header>
-      <AgentsProvider>
+      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
         <MCPProvider>
-          <AgentsInterface />
+          <AgentsLibrary />
         </MCPProvider>
-      </AgentsProvider>
+      </div>
     </React.Suspense>
   );
 }
