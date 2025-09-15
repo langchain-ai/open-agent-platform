@@ -4,6 +4,7 @@ import React from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AuthProvider } from "@/providers/Auth";
 import { AuthenticatedApp } from "@/components/AuthenticatedApp";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "Open Agent Platform",
@@ -17,22 +18,19 @@ export default function RootLayout({
 }>) {
   const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
   return (
-    <html lang="en">
-      <head>
-        {process.env.NODE_ENV !== "production" && isDebugMode && (
-          <script
-            crossOrigin="anonymous"
-            src="//unpkg.com/react-scan/dist/auto.global.js"
-          />
-        )}
-      </head>
-      <body>
-        <NuqsAdapter>
-          <AuthProvider>
-            <AuthenticatedApp>{children}</AuthenticatedApp>
-          </AuthProvider>
-        </NuqsAdapter>
-      </body>
-    </html>
+    <>
+      {process.env.NODE_ENV !== "production" && isDebugMode && (
+        <Script
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+      )}
+      <NuqsAdapter>
+        <AuthProvider>
+          <AuthenticatedApp>{children}</AuthenticatedApp>
+        </AuthProvider>
+      </NuqsAdapter>
+    </>
   );
 }

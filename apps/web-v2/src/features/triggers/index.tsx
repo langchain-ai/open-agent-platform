@@ -20,7 +20,13 @@ import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
 
-export default function TriggersInterface() {
+interface TriggersInterfaceProps {
+  hideHeader?: boolean;
+}
+
+export default function TriggersInterface({
+  hideHeader = false,
+}: TriggersInterfaceProps) {
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [groupedTriggers, setGroupedTriggers] =
     useState<GroupedTriggerRegistrationsByProvider>();
@@ -69,14 +75,16 @@ export default function TriggersInterface() {
   if (triggersLoading) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
+        {!hideHeader && (
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+              <p className="text-muted-foreground">
+                Set up triggers to automatically activate your agents
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <Card>
           <CardHeader>
@@ -98,14 +106,16 @@ export default function TriggersInterface() {
   if (showTriggersTab === false) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
+        {!hideHeader && (
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+              <p className="text-muted-foreground">
+                Set up triggers to automatically activate your agents
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <Card>
           <CardHeader>
@@ -126,14 +136,16 @@ export default function TriggersInterface() {
   if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
     return (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
+        {!hideHeader && (
+          <div className="flex items-center justify-between space-y-2">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
+              <p className="text-muted-foreground">
+                Set up triggers to automatically activate your agents
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <Card>
           <CardHeader>
@@ -164,15 +176,17 @@ export default function TriggersInterface() {
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
-          <p className="text-muted-foreground">
-            Authenticate with the following apps and set up triggers to
-            automatically activate your agents.
-          </p>
+      {!hideHeader && (
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
+            <p className="text-muted-foreground">
+              Authenticate with the following apps and set up triggers to
+              automatically activate your agents.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <Accordion
         type="multiple"

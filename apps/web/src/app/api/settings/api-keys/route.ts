@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
       refresh_token: refreshToken,
     });
 
-    const { error: upsertError } = await supabase.from("users_config").upsert(
+    const usersConfig = supabase.from("users_config") as any;
+    const { error: upsertError } = await usersConfig.upsert(
       {
         user_id: userId,
         api_keys: nonNullApiKeys,
-      } as any,
+      },
       {
         onConflict: "user_id",
       },
