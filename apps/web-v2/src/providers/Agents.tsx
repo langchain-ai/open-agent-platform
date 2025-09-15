@@ -57,7 +57,7 @@ async function getOrCreateDefaultAssistants(
   }
 }
 
-export async function getAgents(
+async function getAgents(
   deployments: Deployment[],
   accessToken: string,
 ): Promise<Agent[]> {
@@ -129,39 +129,21 @@ type AgentsContextType = {
 };
 const AgentsContext = createContext<AgentsContextType | undefined>(undefined);
 
-type AgentsProviderProps = {
-  children: ReactNode;
-  initialAgents?: Agent[];
-};
-
-export const AgentsProvider: React.FC<AgentsProviderProps> = ({
+export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   children,
-  initialAgents,
 }) => {
   const { session } = useAuthContext();
   const deployments = getDeployments();
 
-  const [agents, setAgents] = useState<Agent[]>(initialAgents ?? []);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
 
   const firstRequestMade = useRef(false);
 
   useEffect(() => {
-    if (firstRequestMade.current) return;
-    if (initialAgents && initialAgents.length > 0) {
-      // When initialAgents are provided (e.g., from AgentsLibrary), we should:
-      // 1. Use them as the initial state instead of making a duplicate API call
-      // 2. Filter out system-created default assistants to maintain consistency
-      // 3. Mark firstRequestMade as true to prevent the useEffect from triggering
-      //    another fetch when the component mounts
-      firstRequestMade.current = true;
-      setAgents(
-        initialAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)),
-      );
+    if (agents.length > 0 || firstRequestMade.current || !session?.accessToken)
       return;
-    }
-    if (agents.length > 0 || !session?.accessToken) return;
 
     firstRequestMade.current = true;
     setLoading(true);
@@ -171,7 +153,7 @@ export const AgentsProvider: React.FC<AgentsProviderProps> = ({
         setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a))),
       )
       .finally(() => setLoading(false));
-  }, [session?.accessToken, initialAgents]);
+  }, [session?.accessToken]);
 
   async function refreshAgents() {
     if (!session?.accessToken) {

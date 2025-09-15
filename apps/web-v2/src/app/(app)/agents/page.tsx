@@ -10,6 +10,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
 import { MCPProvider } from "@/providers/MCP";
+import { AgentsProvider } from "@/providers/Agents";
 
 /**
  * The /agents page.
@@ -31,13 +32,10 @@ export default function AgentsPage(): React.ReactNode {
         </div>
       </header>
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Agent Library</h2>
-          </div>
-        </div>
         <MCPProvider>
-          <AgentsLibrary />
+          <AgentsProvider>
+            <AgentsLibrary />
+          </AgentsProvider>
         </MCPProvider>
       </div>
     </React.Suspense>
