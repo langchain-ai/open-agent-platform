@@ -9,6 +9,7 @@ import React, {
   FormEvent,
 } from "react";
 import { Button } from "./ui/button";
+import { Switch } from "./ui/switch";
 import { LoaderCircle, Square, ArrowUp } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { AgentGraphVisualization } from "./AgentGraphVisualization";
@@ -47,7 +48,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     assistantId,
     activeAssistant: _activeAssistant,
     debugMode,
-    setDebugMode: _setDebugMode,
+    setDebugMode,
     assistantError,
     setAssistantError,
     setActiveAssistant,
@@ -463,16 +464,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     </div>
                   )}
                   {interrupt && debugMode && (
-                    <div className="flex w-full max-w-full gap-2">
-                      <div className="mt-4 flex h-8 w-8 shrink-0 items-center justify-center"></div>
-                      <div className="mt-4 flex items-center gap-2">
-                        <Button
-                          onClick={handleContinue}
-                          className="border-success text-success rounded-sm border bg-transparent p-2 text-sm font-medium transition-all duration-200 hover:scale-105 hover:bg-green-500/10 active:scale-95"
-                        >
-                          Continue
-                        </Button>
-                      </div>
+                    <div className="mt-4">
+                      <Button
+                        onClick={handleContinue}
+                        variant="outline"
+                        className="rounded-full px-3 py-1 text-xs"
+                      >
+                        Continue
+                      </Button>
                     </div>
                   )}
                   <div ref={messagesEndRef} />
@@ -514,6 +513,19 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               className="font-inherit text-primary placeholder:text-tertiary flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm leading-6 outline-none"
               rows={1}
             />
+            <div className="flex items-center gap-2 pr-2">
+              <label
+                htmlFor="debug-toggle"
+                className="text-xs text-[#3F3F46]"
+              >
+                Debug
+              </label>
+              <Switch
+                id="debug-toggle"
+                checked={debugMode}
+                onCheckedChange={setDebugMode}
+              />
+            </div>
             <Button
               type={isLoading ? "button" : "submit"}
               variant={isLoading ? "destructive" : "default"}

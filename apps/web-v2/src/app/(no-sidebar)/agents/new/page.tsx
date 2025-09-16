@@ -220,7 +220,7 @@ export default function CreateAgentPage(): React.ReactNode {
                   {sections.find((s) => s.id === currentSection)?.pageTitle ||
                     sections.find((s) => s.id === currentSection)?.title}
                 </h2>
-                <p className="text-muted-foreground text-gray-500">
+                <p className="text-muted-foreground">
                   {sections.find((s) => s.id === currentSection)?.description}
                 </p>
               </div>
@@ -271,7 +271,7 @@ export default function CreateAgentPage(): React.ReactNode {
 
                 {currentSection === 2 && (
                   <div className="space-y-4">
-                    <TriggersInterface showTitle={false} />
+                    <TriggersInterface />
                   </div>
                 )}
 

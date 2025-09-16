@@ -118,7 +118,8 @@ export function ThreadActionsView<
   handleShowSidePanel,
   setThreadData,
 }: ThreadActionsViewProps<ThreadValues>) {
-  const [agentInboxId] = useQueryState("agentInbox");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const { fetchSingleThread } = useThreadsContext<ThreadValues>();
   const [, setQueryParams] = useQueryStates({
     [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,
@@ -143,11 +144,16 @@ export function ThreadActionsView<
     setThreadData,
   });
 
-  const handleOpenInStudio = (id: string) => {
-    const [assistantId, deploymentId] = id.split(":");
+  const handleOpenInStudio = () => {
+    if (!agentId || !deploymentId) {
+      toast.error("No agent inbox selected.", {
+        duration: 5000,
+      });
+      return;
+    }
 
     const studioUrl = constructOpenInStudioURL(
-      assistantId,
+      agentId,
       deploymentId,
       threadData.thread.thread_id,
     );
@@ -185,7 +191,7 @@ export function ThreadActionsView<
 
   const handleRefreshThread = async () => {
     // Use selectedInbox here as well
-    if (!agentInboxId) {
+    if (!agentId || !deploymentId) {
       toast.error("No agent inbox selected.", { richColors: true });
       return;
     }
@@ -272,12 +278,12 @@ export function ThreadActionsView<
             </div>
             {/* Right-side controls with ButtonGroup */}
             <div className="flex flex-row items-center justify-start gap-2">
-              {agentInboxId && (
+              {agentId && deploymentId && (
                 <Button
                   size="sm"
                   variant="outline"
                   className="flex items-center gap-1 bg-white"
-                  onClick={() => handleOpenInStudio(agentInboxId)}
+                  onClick={() => handleOpenInStudio()}
                 >
                   Studio
                 </Button>
@@ -352,12 +358,12 @@ export function ThreadActionsView<
             <ThreadIdCopyable threadId={threadData.thread.thread_id} />
           </div>
           <div className="flex flex-row items-center justify-start gap-2">
-            {agentInboxId && (
+            {agentId && deploymentId && (
               <Button
                 size="sm"
                 variant="outline"
                 className="flex items-center gap-1 bg-white"
-                onClick={() => handleOpenInStudio(agentInboxId)}
+                onClick={() => handleOpenInStudio()}
               >
                 Studio
               </Button>
@@ -474,12 +480,12 @@ export function ThreadActionsView<
           <ThreadIdCopyable threadId={threadData.thread.thread_id} />
         </div>
         <div className="flex flex-row items-center justify-start gap-2">
-          {agentInboxId && (
+          {agentId && deploymentId && (
             <Button
               size="sm"
               variant="outline"
               className="flex items-center gap-1 bg-white"
-              onClick={() => handleOpenInStudio(agentInboxId)}
+              onClick={() => handleOpenInStudio()}
             >
               Studio
             </Button>

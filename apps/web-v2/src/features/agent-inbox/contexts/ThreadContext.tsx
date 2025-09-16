@@ -59,7 +59,8 @@ function ThreadsProviderInternal<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { session, isLoading } = useAuthContext();
-  const [agentInboxId] = useQueryState("agentInbox");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [isPending] = useTransition();
 
   // Get thread filter query params using the custom hook
@@ -84,7 +85,7 @@ function ThreadsProviderInternal<
         });
         return;
       }
-      if (!agentInboxId) {
+      if (!agentId || !deploymentId) {
         toast.error("No agent inbox ID found", {
           richColors: true,
         });
@@ -233,7 +234,7 @@ function ThreadsProviderInternal<
         setLoading(false);
       }
     },
-    [offsetParam, limitParam, agentInboxId],
+    [offsetParam, limitParam, agentId, deploymentId],
   );
 
   // Effect to fetch threads when parameters change
@@ -243,7 +244,8 @@ function ThreadsProviderInternal<
     }
 
     if (
-      !agentInboxId ||
+      !agentId ||
+      !deploymentId ||
       !inboxParam ||
       offsetParam == null ||
       !limitParam ||
@@ -253,11 +255,9 @@ function ThreadsProviderInternal<
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
-
     try {
       // Fetch threads - pass the session directly
-      fetchThreads(assistantId, deploymentId, session);
+      fetchThreads(agentId, deploymentId, session);
     } catch (e) {
       logger.error("Error occurred while fetching threads", e);
       toast.error("Failed to load threads. Please try again.");
@@ -265,7 +265,8 @@ function ThreadsProviderInternal<
       setLoading(false);
     }
   }, [
-    agentInboxId,
+    agentId,
+    deploymentId,
     inboxParam,
     offsetParam,
     limitParam,
@@ -279,7 +280,7 @@ function ThreadsProviderInternal<
       threadId: string,
       passedAgentInboxId?: string,
     ): Promise<ThreadData<ThreadValues> | undefined> => {
-      const effectiveAgentInboxId = passedAgentInboxId || agentInboxId;
+      const effectiveAgentInboxId = passedAgentInboxId || agentId;
       if (!session?.accessToken) {
         toast.error("No access token found", {
           richColors: true,
@@ -292,8 +293,13 @@ function ThreadsProviderInternal<
         });
         return undefined;
       }
+      if (!deploymentId) {
+        toast.error("No deployment ID found when fetching thread.", {
+          richColors: true,
+        });
+        return undefined;
+      }
 
-      const [_, deploymentId] = effectiveAgentInboxId.split(":");
       const client = createClient(deploymentId, session.accessToken);
 
       try {
@@ -367,14 +373,13 @@ function ThreadsProviderInternal<
       });
       return;
     }
-    if (!agentInboxId) {
-      toast.error("No agent inbox ID found when fetching thread.", {
+    if (!deploymentId) {
+      toast.error("No deployment ID found when fetching thread.", {
         richColors: true,
       });
       return;
     }
 
-    const [_, deploymentId] = agentInboxId.split(":");
     const client = createClient(deploymentId, session.accessToken);
 
     try {
@@ -421,26 +426,25 @@ function ThreadsProviderInternal<
       });
       return;
     }
-    if (!agentInboxId) {
-      toast.error("No agent inbox ID found when fetching thread.", {
+    if (!agentId || !deploymentId) {
+      toast.error("No agent ID or deployment ID found when fetching thread.", {
         richColors: true,
       });
       return;
     }
 
-    const [assistantId, deploymentId] = agentInboxId.split(":");
     const client = createClient(deploymentId, session.accessToken);
 
     try {
       if (options?.stream) {
-        return client.runs.stream(threadId, assistantId, {
+        return client.runs.stream(threadId, agentId, {
           command: {
             resume: response,
           },
           streamMode: "events",
         }) as any; // Type assertion needed due to conditional return type
       }
-      return client.runs.create(threadId, assistantId, {
+      return client.runs.create(threadId, agentId, {
         command: {
           resume: response,
         },

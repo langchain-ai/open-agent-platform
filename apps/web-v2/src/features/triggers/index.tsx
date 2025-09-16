@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuthContext } from "@/providers/Auth";
 import {
   Card,
   CardContent,
@@ -9,219 +8,87 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Zap } from "lucide-react";
-import { useTriggers } from "@/hooks/use-triggers";
-import { useEffect, useState } from "react";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
-import { toast } from "sonner";
-import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import Loading from "@/components/ui/loading";
-import { useFlags } from "launchdarkly-react-client-sdk";
-import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
 
-interface TriggersInterfaceProps {
-  showTitle?: boolean;
-}
+type TriggersInterfaceProps = {
+  groupedTriggers?: GroupedTriggerRegistrationsByProvider;
+  loading?: boolean;
+  showTriggersTab?: boolean;
+};
 
 export default function TriggersInterface({
-  showTitle = true,
+  groupedTriggers,
+  loading = false,
+  showTriggersTab,
 }: TriggersInterfaceProps) {
-  const [triggersLoading, setTriggersLoading] = useState(true);
-  const [groupedTriggers, setGroupedTriggers] =
-    useState<GroupedTriggerRegistrationsByProvider>();
-  const auth = useAuthContext();
-  const { listTriggers, listUserTriggers } = useTriggers();
-  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
-
-  useEffect(() => {
-    if (showTriggersTab === false) {
-      // Do not fetch when disabled
-      setTriggersLoading(false);
-      return;
-    }
-    if (showTriggersTab === undefined) {
-      setTriggersLoading(false);
-      return;
-    }
-    if (!auth.session?.accessToken) return;
-    setTriggersLoading(true);
-
-    async function fetchTriggersAndRegistrations(accessToken: string) {
-      const [triggers, registrations] = await Promise.all([
-        listTriggers(accessToken),
-        listUserTriggers(accessToken),
-      ]);
-      if (!triggers) {
-        toast.warning("No triggers found", {
-          richColors: true,
-        });
-        return;
-      }
-      if (!registrations) {
-        // User has not registered any triggers
-        return;
-      }
-      setGroupedTriggers(
-        groupTriggerRegistrationsByProvider(registrations, triggers),
-      );
-    }
-
-    fetchTriggersAndRegistrations(auth.session.accessToken).finally(() => {
-      setTriggersLoading(false);
-    });
-  }, [auth.session?.accessToken, showTriggersTab]);
-
-  if (triggersLoading) {
-    if (!showTitle) {
-      return (
-        <div className="py-8 text-center">
-          <div className="text-sm text-gray-500">Loading triggers...</div>
-        </div>
-      );
-    }
-
+  if (loading) {
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Loading Triggers
-            </CardTitle>
-            <CardDescription>Loading triggers…</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Loading label="Loading triggers" />
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Loading Triggers
+          </CardTitle>
+          <CardDescription>Loading triggers…</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Loading label="Loading triggers" />
+        </CardContent>
+      </Card>
     );
   }
 
   // Feature disabled: show coming soon (tab still visible per UX)
   if (showTriggersTab === false) {
-    if (!showTitle) {
-      return (
-        <div className="py-8 text-center">
-          <div className="text-sm text-gray-500">
-            Triggers feature coming soon
-          </div>
-        </div>
-      );
-    }
-
     return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Coming soon
-            </CardTitle>
-            <CardDescription>
-              This feature is under development and will be released soon. Stay
-              tuned!
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            Coming soon
+          </CardTitle>
+          <CardDescription>
+            This feature is under development and will be released soon. Stay
+            tuned!
+          </CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
   if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
-    if (!showTitle) {
-      return (
-        <div className="py-8 text-center">
-          <div className="text-sm text-gray-500">
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="h-5 w-5" />
+            No Triggers Available
+          </CardTitle>
+          <CardDescription>
             No triggers are currently configured. Please set up the
             NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
             triggers.
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
-        <div className="flex items-center justify-between space-y-2">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Triggers</h2>
-            <p className="text-muted-foreground">
-              Set up triggers to automatically activate your agents
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <Zap className="text-muted-foreground mx-auto h-12 w-12" />
+            <h3 className="mt-4 text-lg font-semibold">Configure Triggers</h3>
+            <p className="text-muted-foreground mt-2">
+              Add trigger configurations to your environment variables to get
+              started.
             </p>
           </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              No Triggers Available
-            </CardTitle>
-            <CardDescription>
-              No triggers are currently configured. Please set up the
-              NEXT_PUBLIC_TRIGGERS_API_URL environment variable to enable
-              triggers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <Zap className="text-muted-foreground mx-auto h-12 w-12" />
-              <h3 className="mt-4 text-lg font-semibold">Configure Triggers</h3>
-              <p className="text-muted-foreground mt-2">
-                Add trigger configurations to your environment variables to get
-                started.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!showTitle) {
-    return (
-      <div className="space-y-4">
-        <Accordion
-          type="multiple"
-          className="w-full"
-        >
-          {Object.entries(groupedTriggers).map(
-            ([provider, { registrations, triggers }]) => (
-              <TriggerAccordionItem
-                key={provider}
-                provider={provider}
-                groupedRegistrations={registrations}
-                triggers={triggers}
-              />
-            ),
-          )}
-        </Accordion>
-      </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
