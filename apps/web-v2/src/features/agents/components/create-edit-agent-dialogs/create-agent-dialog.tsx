@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { Bot, LoaderCircle, X } from "lucide-react";
+import { Bot, LoaderCircle, X, Copy, ClipboardPaste } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -41,6 +41,7 @@ function CreateAgentFormContent(props: {
   selectedGraph: Agent;
   selectedDeployment: Deployment;
   onClose: () => void;
+  onFormReady: (form: any) => void;
 }) {
   const { tools } = useMCPContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
@@ -53,6 +54,11 @@ function CreateAgentFormContent(props: {
   const { createAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const [submitting, setSubmitting] = useState(false);
+
+  // Expose form to parent component
+  useEffect(() => {
+    props.onFormReady(form);
+  }, [form, props]);
 
   const handleSubmit = async (data: {
     name: string;
@@ -208,6 +214,67 @@ export function CreateAgentDialog({
   ]);
 
   const [openCounter, setOpenCounter] = useState(0);
+  const [formRef, setFormRef] = useState<any>(null);
+
+  const handleCopyConfig = async () => {
+    if (!formRef) return;
+
+    const formData = formRef.getValues();
+    const configToCopy = {
+      name: formData.name,
+      description: formData.description,
+      config: formData.config,
+    };
+
+    try {
+      await navigator.clipboard.writeText(
+        JSON.stringify(configToCopy, null, 2),
+      );
+      toast.success("Agent configuration copied to clipboard", {
+        richColors: true,
+      });
+    } catch (error) {
+      toast.error("Failed to copy configuration", {
+        richColors: true,
+      });
+    }
+  };
+
+  const handlePasteConfig = async () => {
+    if (!formRef) return;
+
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      const parsedConfig = JSON.parse(clipboardText);
+
+      // Validate the structure
+      if (typeof parsedConfig !== "object" || parsedConfig === null) {
+        throw new Error("Invalid configuration format");
+      }
+
+      // Set form values
+      if (parsedConfig.name) {
+        formRef.setValue("name", parsedConfig.name);
+      }
+      if (parsedConfig.description) {
+        formRef.setValue("description", parsedConfig.description);
+      }
+      if (parsedConfig.config && typeof parsedConfig.config === "object") {
+        formRef.setValue("config", parsedConfig.config);
+      }
+
+      toast.success("Agent configuration pasted successfully", {
+        richColors: true,
+      });
+    } catch (error) {
+      toast.error(
+        "Failed to paste configuration. Please ensure it's valid JSON format.",
+        {
+          richColors: true,
+        },
+      );
+    }
+  };
 
   const lastOpen = useRef(open);
   useLayoutEffect(() => {
@@ -233,9 +300,31 @@ export function CreateAgentDialog({
                 &apos; graph.
               </AlertDialogDescription>
             </div>
-            <AlertDialogCancel size="icon">
-              <X className="size-4" />
-            </AlertDialogCancel>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyConfig}
+                className="flex items-center gap-2"
+                disabled={!formRef}
+              >
+                <Copy className="size-4" />
+                Copy
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePasteConfig}
+                className="flex items-center gap-2"
+                disabled={!formRef}
+              >
+                <ClipboardPaste className="size-4" />
+                Paste
+              </Button>
+              <AlertDialogCancel size="icon">
+                <X className="size-4" />
+              </AlertDialogCancel>
+            </div>
           </div>
         </AlertDialogHeader>
 
@@ -259,6 +348,7 @@ export function CreateAgentDialog({
             selectedGraph={selectedGraph}
             selectedDeployment={selectedDeployment}
             onClose={() => onOpenChange(false)}
+            onFormReady={setFormRef}
           />
         ) : null}
       </AlertDialogContent>

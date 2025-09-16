@@ -9,7 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
-import { Bot, LoaderCircle, Trash, X } from "lucide-react";
+import { Bot, LoaderCircle, Trash, X, Copy, ClipboardPaste } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
@@ -44,6 +44,62 @@ function EditAgentDialogContent({
   const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  const handleCopyConfig = async () => {
+    const formData = form.getValues();
+    const configToCopy = {
+      name: formData.name,
+      description: formData.description,
+      config: formData.config,
+    };
+
+    try {
+      await navigator.clipboard.writeText(
+        JSON.stringify(configToCopy, null, 2),
+      );
+      toast.success("Agent configuration copied to clipboard", {
+        richColors: true,
+      });
+    } catch (error) {
+      toast.error("Failed to copy configuration", {
+        richColors: true,
+      });
+    }
+  };
+
+  const handlePasteConfig = async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      const parsedConfig = JSON.parse(clipboardText);
+
+      // Validate the structure
+      if (typeof parsedConfig !== "object" || parsedConfig === null) {
+        throw new Error("Invalid configuration format");
+      }
+
+      // Set form values
+      if (parsedConfig.name) {
+        form.setValue("name", parsedConfig.name);
+      }
+      if (parsedConfig.description) {
+        form.setValue("description", parsedConfig.description);
+      }
+      if (parsedConfig.config && typeof parsedConfig.config === "object") {
+        form.setValue("config", parsedConfig.config);
+      }
+
+      toast.success("Agent configuration pasted successfully", {
+        richColors: true,
+      });
+    } catch (error) {
+      toast.error(
+        "Failed to paste configuration. Please ensure it's valid JSON format.",
+        {
+          richColors: true,
+        },
+      );
+    }
+  };
 
   const defaultConfigValues = getDefaultsFromAgent(agent);
   const form = useForm<{
@@ -193,9 +249,29 @@ function EditAgentDialogContent({
                 graph.
               </AlertDialogDescription>
             </div>
-            <AlertDialogCancel size="icon">
-              <X className="size-4" />
-            </AlertDialogCancel>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyConfig}
+                className="flex items-center gap-2"
+              >
+                <Copy className="size-4" />
+                Copy
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePasteConfig}
+                className="flex items-center gap-2"
+              >
+                <ClipboardPaste className="size-4" />
+                Paste
+              </Button>
+              <AlertDialogCancel size="icon">
+                <X className="size-4" />
+              </AlertDialogCancel>
+            </div>
           </div>
         </AlertDialogHeader>
         <FormProvider {...form}>
