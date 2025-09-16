@@ -222,8 +222,12 @@ export function CreateAgentDialog({
     const formData = formRef.getValues();
     const configToCopy = {
       name: formData.name,
-      description: formData.description,
-      config: formData.config,
+      metadata: {
+        description: formData.description,
+      },
+      config: {
+        configurable: formData.config,
+      },
     };
 
     try {
@@ -233,7 +237,7 @@ export function CreateAgentDialog({
       toast.success("Agent configuration copied to clipboard", {
         richColors: true,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to copy configuration", {
         richColors: true,
       });
@@ -252,21 +256,42 @@ export function CreateAgentDialog({
         throw new Error("Invalid configuration format");
       }
 
+      // Handle both old format (direct form data) and new format (agent structure)
+      let name, description, config;
+
+      if (parsedConfig.metadata && parsedConfig.config?.configurable) {
+        // New format: actual agent structure
+        name = parsedConfig.name;
+        description = parsedConfig.metadata.description;
+        config = parsedConfig.config.configurable;
+      } else if (
+        parsedConfig.name &&
+        parsedConfig.description &&
+        parsedConfig.config
+      ) {
+        // Old format: direct form data (for backward compatibility)
+        name = parsedConfig.name;
+        description = parsedConfig.description;
+        config = parsedConfig.config;
+      } else {
+        throw new Error("Invalid configuration format");
+      }
+
       // Set form values
-      if (parsedConfig.name) {
-        formRef.setValue("name", parsedConfig.name);
+      if (name) {
+        formRef.setValue("name", name);
       }
-      if (parsedConfig.description) {
-        formRef.setValue("description", parsedConfig.description);
+      if (description) {
+        formRef.setValue("description", description);
       }
-      if (parsedConfig.config && typeof parsedConfig.config === "object") {
-        formRef.setValue("config", parsedConfig.config);
+      if (config && typeof config === "object") {
+        formRef.setValue("config", config);
       }
 
       toast.success("Agent configuration pasted successfully", {
         richColors: true,
       });
-    } catch (error) {
+    } catch (_error) {
       toast.error(
         "Failed to paste configuration. Please ensure it's valid JSON format.",
         {
