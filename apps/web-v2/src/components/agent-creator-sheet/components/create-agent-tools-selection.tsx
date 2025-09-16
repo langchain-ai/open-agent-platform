@@ -41,7 +41,7 @@ interface ToolInterruptConfig {
 }
 
 interface CreateAgentToolsSelectionProps {
-  selectedTools: string[];
+  selectedTools?: string[];
   onToolsChange: (tools: string[]) => void;
   interruptConfig?: ToolInterruptConfig;
   onInterruptConfigChange?: (config: ToolInterruptConfig) => void;
@@ -73,9 +73,9 @@ export function CreateAgentToolsSelection({
 
   const handleToolToggle = (toolName: string, checked: boolean) => {
     if (checked) {
-      onToolsChange([...selectedTools, toolName]);
+      onToolsChange([...(selectedTools || []), toolName]);
     } else {
-      onToolsChange(selectedTools.filter((name) => name !== toolName));
+      onToolsChange((selectedTools || []).filter((name) => name !== toolName));
     }
   };
 
@@ -93,7 +93,8 @@ export function CreateAgentToolsSelection({
     onInterruptConfigChange(newConfig);
   };
 
-  const isToolSelected = (toolName: string) => selectedTools.includes(toolName);
+  const isToolSelected = (toolName: string) =>
+    selectedTools?.includes(toolName);
 
   return (
     <div className="space-y-6">
@@ -109,7 +110,7 @@ export function CreateAgentToolsSelection({
             <ToolSelectionCard
               key={`${tool.name}-${index}`}
               tool={tool}
-              isSelected={isToolSelected(tool.name)}
+              isSelected={isToolSelected(tool.name) || false}
               onToggle={handleToolToggle}
               interruptConfig={interruptConfig[tool.name]}
               onInterruptConfigChange={(config) =>
@@ -172,90 +173,86 @@ function ToolSelectionCard({
   interruptConfig,
   onInterruptConfigChange,
 }: ToolSelectionCardProps) {
-  const [showMore, setShowMore] = useState(false);
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const getFirstLine = (text: string) => {
+    const lines = text.split("\n");
+    return lines[0] || text;
+  };
+
+  const firstLineDescription = tool.description
+    ? getFirstLine(tool.description)
+    : "";
+  const hasMoreDescription =
+    tool.description && tool.description.split("\n").length > 1;
 
   return (
     <div
       className={cn(
         "cursor-pointer rounded-lg border border-gray-300 p-4 transition-colors hover:bg-gray-50",
-        showMore ? "bg-gray-50" : "bg-white",
+        showDetails ? "bg-gray-50" : "bg-white",
       )}
-      onClick={() => setShowMore(!showMore)}
+      onClick={() => setShowDetails((prev) => !prev)}
     >
       <div className="flex items-start gap-3">
-        {/* Checkbox */}
-        <div onClick={(e) => e.stopPropagation()}>
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => {
-              onToggle(tool.name, checked as boolean);
-              // Auto-expand the card when checkbox is clicked
-              if (!showMore) {
-                setShowMore(true);
-              }
-            }}
-            className="mt-1 border-gray-300 data-[state=checked]:border-[#2F6868] data-[state=checked]:bg-[#2F6868]"
-          />
-        </div>
+        <Checkbox
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle(tool.name, !isSelected);
+            if (!showDetails && !isSelected) {
+              setShowDetails(true);
+            }
+          }}
+          checked={isSelected}
+          className="mt-1 border-gray-300 data-[state=checked]:border-[#2F6868] data-[state=checked]:bg-[#2F6868]"
+        />
 
         {/* Content */}
         <div className="flex-1">
           <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="mb-1 font-semibold text-gray-700">
-                {_.startCase(tool.name)}
-              </h3>
-              <p className="mb-2 text-sm text-gray-600">
-                {!showMore ? (
-                  tool.description?.split("Args:")[0]?.trim() ||
-                  tool.description ||
-                  ""
-                ) : (
-                  <>
-                    {!showFullDescription && tool.description?.includes("Args:")
-                      ? tool.description?.split("Args:")[0]?.trim() ||
-                        tool.description ||
-                        ""
-                      : tool.description || ""}
-                    {!showFullDescription &&
-                      tool.description?.includes("Args:") && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowFullDescription(true);
-                          }}
-                          className="ml-1 text-sm text-gray-900 underline hover:text-gray-800"
-                        >
-                          Show more
-                        </button>
-                      )}
-                  </>
-                )}
-              </p>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-normal text-gray-700">
+                  {_.startCase(tool.name)}
+                </p>
+                <p className="text-sm font-light text-gray-600">
+                  {hasMoreDescription && !showDetails ? (
+                    <span>{firstLineDescription} ...</span>
+                  ) : (
+                    tool.description
+                  )}
+                </p>
+              </div>
 
-              {showMore && (
+              {showDetails && (
                 <div
-                  className="mt-3 border-t border-gray-100 pt-3"
+                  className="flex flex-col gap-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h4 className="mb-3 text-sm font-medium text-gray-700">
+                  <h4 className="text-sm font-normal text-gray-700">
                     Configure interrupts
                   </h4>
                   <InterruptMultiSelect
-                    tool={tool}
                     interruptConfig={interruptConfig}
                     onInterruptConfigChange={onInterruptConfigChange}
                   />
+                  <p className="text-xs font-light text-gray-600">
+                    The agent will stop and let you decide what to do before
+                    continuing
+                  </p>
                 </div>
               )}
             </div>
 
             <div className="flex items-center">
               <ChevronDown
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDetails((prev) => !prev);
+                }}
                 className={cn(
                   `h-6 w-6 text-gray-400 transition-transform`,
-                  showMore ? "rotate-180" : "",
+                  showDetails ? "rotate-180" : "",
                 )}
               />
             </div>
@@ -267,13 +264,11 @@ function ToolSelectionCard({
 }
 
 interface InterruptMultiSelectProps {
-  tool: Tool;
   interruptConfig?: HumanInterruptConfig;
   onInterruptConfigChange?: (config: HumanInterruptConfig) => void;
 }
 
 function InterruptMultiSelect({
-  tool,
   interruptConfig,
   onInterruptConfigChange,
 }: InterruptMultiSelectProps) {
@@ -281,7 +276,7 @@ function InterruptMultiSelect({
 
   const getSelectedOptions = () => {
     if (!interruptConfig) {
-      return ["accept", "respond", "edit"];
+      return [];
     }
 
     const selected: string[] = [];
@@ -348,12 +343,13 @@ function InterruptMultiSelect({
                     !option.disabled && handleSelect(option.value)
                   }
                   className={cn(
-                    `${option.disabled ? "cursor-not-allowed opacity-50" : ""} data-[selected]:bg-gray-50 data-[selected]:text-gray-500`,
+                    "data-[selected]:bg-gray-50 data-[selected]:text-gray-500",
+                    option.disabled ? "cursor-not-allowed opacity-50" : "",
                   )}
                 >
                   <Check
                     className={cn(
-                      `mr-2 h-4 w-4`,
+                      "mr-2 h-4 w-4",
                       selectedOptions.includes(option.value)
                         ? "opacity-100"
                         : "opacity-0",

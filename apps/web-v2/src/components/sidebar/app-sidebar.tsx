@@ -27,6 +27,7 @@ const data: {
     title: string;
     url: string;
     icon: LucideIcon;
+    isAgentCreator?: boolean;
   }[];
   workspace: (
     | {
@@ -45,8 +46,9 @@ const data: {
   topNav: [
     {
       title: "New Agent",
-      url: "/agents/new",
+      url: "#",
       icon: Plus,
+      isAgentCreator: true,
     },
     {
       title: "Agent Library",

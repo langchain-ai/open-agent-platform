@@ -640,6 +640,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hookform/resolvers@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "@hookform/resolvers@npm:5.2.2"
+  dependencies:
+    "@standard-schema/utils": ^0.3.0
+  peerDependencies:
+    react-hook-form: ^7.55.0
+  checksum: 131b1c4c763949164825634058fbe126041f1375622fddcb4f833af57e89665a2672474c778e604583d7447cff8252ab7df460240269e91eb5683646a3c9bebb
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -2342,6 +2353,7 @@ __metadata:
   resolution: "@open-agent-platform/web-v2@workspace:apps/web-v2"
   dependencies:
     "@eslint/js": ^9.19.0
+    "@hookform/resolvers": ^5.2.2
     "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.0.109
@@ -2356,14 +2368,14 @@ __metadata:
     "@radix-ui/react-dropdown-menu": ^2.1.7
     "@radix-ui/react-hover-card": ^1.1.15
     "@radix-ui/react-icons": ^1.3.2
-    "@radix-ui/react-label": ^2.1.3
+    "@radix-ui/react-label": ^2.1.7
     "@radix-ui/react-popover": ^1.1.7
     "@radix-ui/react-progress": 1.1.0
     "@radix-ui/react-scroll-area": ^1.2.5
     "@radix-ui/react-select": ^2.2.2
     "@radix-ui/react-separator": ^1.1.3
     "@radix-ui/react-slider": ^1.3.2
-    "@radix-ui/react-slot": ^1.2.0
+    "@radix-ui/react-slot": ^1.2.3
     "@radix-ui/react-switch": ^1.2.2
     "@radix-ui/react-tabs": ^1.1.7
     "@radix-ui/react-toast": 1.1.0
@@ -2408,7 +2420,7 @@ __metadata:
     prettier-plugin-tailwindcss: ^0.6.11
     react: ^19.0.0
     react-dom: ^19.0.0
-    react-hook-form: ^7.56.3
+    react-hook-form: ^7.62.0
     react-markdown: ^10.1.0
     react-resizable-panels: ^3.0.2
     react-syntax-highlighter: ^15.6.1
@@ -2426,7 +2438,7 @@ __metadata:
     typescript-eslint: ^8.22.0
     use-stick-to-bottom: ^1.1.0
     uuid: ^11.1.0
-    zod: 3.23.8
+    zod: ^4.1.8
     zustand: ^5.0.3
   languageName: unknown
   linkType: soft
@@ -3120,7 +3132,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-label@npm:^2.1.3":
+"@radix-ui/react-label@npm:^2.1.3, @radix-ui/react-label@npm:^2.1.7":
   version: 2.1.7
   resolution: "@radix-ui/react-label@npm:2.1.7"
   dependencies:
@@ -4192,6 +4204,13 @@ __metadata:
   version: 1.0.0
   resolution: "@standard-schema/spec@npm:1.0.0"
   checksum: 2d7d73a1c9706622750ab06fc40ef7c1d320b52d5e795f8a1c7a77d0d6a9f978705092bc4149327b3cff4c9a14e5b3800d3b00dc945489175a2d3031ded8332a
+  languageName: node
+  linkType: hard
+
+"@standard-schema/utils@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@standard-schema/utils@npm:0.3.0"
+  checksum: 7084f875d322792f2e0a5904009434c8374b9345b09ba89828b68fd56fa3c2b366d35bf340d9e8c72736ef01793c2f70d350c372ed79845dc3566c58d34b4b51
   languageName: node
   linkType: hard
 
@@ -14066,7 +14085,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-hook-form@npm:^7.56.3":
+"react-hook-form@npm:^7.56.3, react-hook-form@npm:^7.62.0":
   version: 7.62.0
   resolution: "react-hook-form@npm:7.62.0"
   peerDependencies:
@@ -17196,6 +17215,13 @@ __metadata:
   version: 3.25.76
   resolution: "zod@npm:3.25.76"
   checksum: c9a403a62b329188a5f6bd24d5d935d2bba345f7ab8151d1baa1505b5da9f227fb139354b043711490c798e91f3df75991395e40142e6510a4b16409f302b849
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.1.8":
+  version: 4.1.8
+  resolution: "zod@npm:4.1.8"
+  checksum: 63a91bfa0baf0a54191b2794ee286d87373e37462786490251a273e9ddb7a939b4daa5f5af7e3b00fa90dfe50e67e5861fcad12d6cdb1be0d06c9f3cb03b65f6
   languageName: node
   linkType: hard
 
