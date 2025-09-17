@@ -27,7 +27,11 @@ import _ from "lodash";
 import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 import { AgentFormValues } from "./types";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
-import { DEFAULT_FORM_CONFIG, prepareConfigForSaving } from "./utils";
+import {
+  DEFAULT_FORM_CONFIG,
+  prepareConfigForSaving,
+  isValidDeepAgentConfiguration,
+} from "./utils";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -278,7 +282,7 @@ export function CreateAgentDialog({
       if (description) {
         formRef.setValue("description", description);
       }
-      if (config && typeof config === "object") {
+      if (isValidDeepAgentConfiguration(config)) {
         formRef.setValue("config", config);
       }
 

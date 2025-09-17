@@ -28,7 +28,11 @@ import { useTriggers } from "@/hooks/use-triggers";
 import { useMCPContext } from "@/providers/MCP";
 import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
-import { getDefaultsFromAgent, prepareConfigForSaving } from "./utils";
+import {
+  getDefaultsFromAgent,
+  prepareConfigForSaving,
+  isValidDeepAgentConfiguration,
+} from "./utils";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 
 interface EditAgentDialogProps {
@@ -108,7 +112,7 @@ function EditAgentDialogContent({
       if (description) {
         form.setValue("description", description);
       }
-      if (config && typeof config === "object") {
+      if (isValidDeepAgentConfiguration(config)) {
         form.setValue("config", config);
       }
 

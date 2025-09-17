@@ -2,6 +2,20 @@ import { Agent } from "@/types/agent";
 import { DeepAgentConfiguration, MCPConfig } from "@/types/deep-agent";
 import { SubAgentConfig } from "@/types/deep-agent";
 
+// Type guard to check if an object is a valid DeepAgentConfiguration
+export function isValidDeepAgentConfiguration(
+  obj: any,
+): obj is DeepAgentConfiguration {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    "instructions" in obj &&
+    "subagents" in obj &&
+    "tools" in obj &&
+    "triggers" in obj
+  );
+}
+
 export const DEFAULT_FORM_CONFIG: DeepAgentConfiguration = {
   instructions: "",
   subagents: [],
