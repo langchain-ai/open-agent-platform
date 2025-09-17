@@ -1,4 +1,4 @@
-import { useForm, UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 export interface AgentTriggersFormData {
   triggerIds: string[];

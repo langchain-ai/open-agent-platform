@@ -1,8 +1,6 @@
 import type React from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { CreateAgentDialog } from "./create-edit-agent-dialogs/create-agent-dialog";
-import { useState } from "react";
 import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface PageHeaderProps {
@@ -12,7 +10,6 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
-  const [showCreateAgentDialog, setShowCreateAgentDialog] = useState(false);
   return (
     <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       <div>
@@ -31,11 +28,6 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
           }
         />
       )}
-
-      <CreateAgentDialog
-        open={showCreateAgentDialog}
-        onOpenChange={setShowCreateAgentDialog}
-      />
     </div>
   );
 }

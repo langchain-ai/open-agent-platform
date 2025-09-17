@@ -14,7 +14,6 @@ import {
 import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
 import { UseFormReturn } from "react-hook-form";
 import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";

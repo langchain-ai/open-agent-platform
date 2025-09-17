@@ -4,27 +4,16 @@ import { useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { Agent } from "@/types/agent";
-import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
-import _ from "lodash";
 import { AgentCard } from "../agent-card";
 import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface AgentListProps {
   agents: Agent[];
-  deploymentId: string;
 }
 
-export function AgentList({ agents, deploymentId }: AgentListProps) {
+export function AgentList({ agents }: AgentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-
-  const defaultAgent = agents.find(isUserCreatedDefaultAssistant) ?? agents[0];
-  const graphId = defaultAgent.graph_id;
-  // Agent ID in this context is the default assistant ID since it's used
-  // to fetch the config schema for a specific graph
-  const agentId = defaultAgent.assistant_id;
 
   const filteredAgents = agents.filter((agent) =>
     agent.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -82,14 +71,6 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
           ))}
         </div>
       )}
-
-      <CreateAgentDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        graphId={graphId}
-        agentId={agentId}
-        deploymentId={deploymentId}
-      />
     </div>
   );
 }
