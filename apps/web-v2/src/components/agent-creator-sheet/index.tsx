@@ -50,6 +50,7 @@ import {
   Trigger,
 } from "@/types/triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
+import { AuthRequiredDialog } from "./components/auth-required-dialog";
 
 const sections = [
   {
@@ -166,8 +167,8 @@ export function AgentCreatorSheet(props: {
     ListTriggerRegistrationsData[] | undefined
   >();
   const [triggersLoading, setTriggersLoading] = useState(true);
-
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -237,6 +238,18 @@ export function AgentCreatorSheet(props: {
           richColors: true,
         });
         return;
+      }
+
+      const enabledToolNames = tools;
+      if (enabledToolNames?.length) {
+        const success = await verifyUserAuthScopes(auth.session.accessToken, {
+          enabledToolNames: enabledToolNames,
+          tools: mcpTools,
+        });
+        if (!success) {
+          setAuthRequiredDialogOpen(true);
+          return;
+        }
       }
 
       const defaultDeploymentId = defaultDeployment.id;
@@ -355,6 +368,7 @@ export function AgentCreatorSheet(props: {
         tools: mcpTools,
       });
       if (!success) {
+        setAuthRequiredDialogOpen(true);
         return;
       }
     }
@@ -677,6 +691,19 @@ export function AgentCreatorSheet(props: {
           </div>
         </div>
       </SheetContent>
+      <AuthRequiredDialog
+        open={authRequiredDialogOpen}
+        onOpenChange={setAuthRequiredDialogOpen}
+        authUrls={authRequiredUrls}
+        handleSubmit={() => {
+          setAuthRequiredDialogOpen(false);
+          if (props.agent) {
+            handleUpdateAgent();
+          } else {
+            handleCreateAgent();
+          }
+        }}
+      />
     </Sheet>
   );
 }
