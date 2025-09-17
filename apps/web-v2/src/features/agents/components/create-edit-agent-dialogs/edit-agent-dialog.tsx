@@ -31,7 +31,8 @@ import { ToolAuthRequiredAlert } from "./tool-auth-required-alert";
 import {
   getDefaultsFromAgent,
   prepareConfigForSaving,
-  isValidDeepAgentConfiguration,
+  handleCopyConfig,
+  handlePasteConfig,
 } from "./utils";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 
@@ -55,79 +56,6 @@ function EditAgentDialogContent({
   const { updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
-
-  const handleCopyConfig = async () => {
-    const formData = form.getValues();
-    const configToCopy = {
-      name: formData.name,
-      metadata: {
-        description: formData.description,
-      },
-      config: {
-        configurable: formData.config,
-      },
-    };
-
-    try {
-      await navigator.clipboard.writeText(
-        JSON.stringify(configToCopy, null, 2),
-      );
-      toast.success("Agent configuration copied to clipboard", {
-        richColors: true,
-      });
-    } catch (_error) {
-      toast.error("Failed to copy configuration", {
-        richColors: true,
-      });
-    }
-  };
-
-  const handlePasteConfig = async () => {
-    try {
-      const clipboardText = await navigator.clipboard.readText();
-      const parsedConfig = JSON.parse(clipboardText);
-
-      // Validate the structure
-      if (typeof parsedConfig !== "object" || parsedConfig === null) {
-        throw new Error("Invalid configuration format");
-      }
-
-      // Expect only the new agent structure format
-      if (!(parsedConfig.metadata && parsedConfig.config?.configurable)) {
-        throw new Error("Invalid configuration format");
-      }
-
-      const name = parsedConfig.name as string | undefined;
-      const description = parsedConfig.metadata.description as
-        | string
-        | undefined;
-      const config = parsedConfig.config.configurable as
-        | Record<string, unknown>
-        | undefined;
-
-      // Set form values
-      if (name) {
-        form.setValue("name", name);
-      }
-      if (description) {
-        form.setValue("description", description);
-      }
-      if (isValidDeepAgentConfiguration(config)) {
-        form.setValue("config", config);
-      }
-
-      toast.success("Agent configuration pasted successfully", {
-        richColors: true,
-      });
-    } catch (_error) {
-      toast.error(
-        "Failed to paste configuration. Please ensure it's valid JSON format.",
-        {
-          richColors: true,
-        },
-      );
-    }
-  };
 
   const defaultConfigValues = getDefaultsFromAgent(agent);
   const form = useForm<{
@@ -281,7 +209,7 @@ function EditAgentDialogContent({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleCopyConfig}
+                onClick={() => handleCopyConfig(form)}
                 className="flex items-center gap-2"
               >
                 <Copy className="size-4" />
@@ -290,7 +218,7 @@ function EditAgentDialogContent({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePasteConfig}
+                onClick={() => handlePasteConfig(form)}
                 className="flex items-center gap-2"
               >
                 <ClipboardPaste className="size-4" />

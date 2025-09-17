@@ -1,6 +1,9 @@
 import { Agent } from "@/types/agent";
 import { DeepAgentConfiguration, MCPConfig } from "@/types/deep-agent";
 import { SubAgentConfig } from "@/types/deep-agent";
+import { UseFormReturn } from "react-hook-form";
+import { AgentFormValues } from "./types";
+import { toast } from "sonner";
 
 // Type guard to check if an object is a valid DeepAgentConfiguration
 export function isValidDeepAgentConfiguration(
@@ -62,4 +65,80 @@ export function prepareConfigForSaving(
   }
 
   return config;
+}
+
+export async function handleCopyConfig(
+  formRef: UseFormReturn<AgentFormValues> | null,
+) {
+  if (!formRef) return;
+
+  const formData = formRef.getValues();
+  const configToCopy = {
+    name: formData.name,
+    metadata: {
+      description: formData.description,
+    },
+    config: {
+      configurable: formData.config,
+    },
+  };
+
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(configToCopy, null, 2));
+    toast.success("Agent configuration copied to clipboard", {
+      richColors: true,
+    });
+  } catch {
+    toast.error("Failed to copy configuration", {
+      richColors: true,
+    });
+  }
+}
+
+export async function handlePasteConfig(
+  formRef: UseFormReturn<AgentFormValues> | null,
+) {
+  if (!formRef) return;
+
+  try {
+    const clipboardText = await navigator.clipboard.readText();
+    const parsedConfig = JSON.parse(clipboardText);
+
+    // Validate the structure
+    if (typeof parsedConfig !== "object" || parsedConfig === null) {
+      throw new Error("Invalid configuration format");
+    }
+
+    if (!(parsedConfig.metadata && parsedConfig.config?.configurable)) {
+      throw new Error("Invalid configuration format");
+    }
+
+    const name = parsedConfig.name as string | undefined;
+    const description = parsedConfig.metadata.description as string | undefined;
+    const config = parsedConfig.config.configurable as
+      | Record<string, unknown>
+      | undefined;
+
+    // Set form values
+    if (name) {
+      formRef.setValue("name", name);
+    }
+    if (description) {
+      formRef.setValue("description", description);
+    }
+    if (isValidDeepAgentConfiguration(config)) {
+      formRef.setValue("config", config);
+    }
+
+    toast.success("Agent configuration pasted successfully", {
+      richColors: true,
+    });
+  } catch (_error) {
+    toast.error(
+      "Failed to paste configuration. Please ensure it's valid JSON format.",
+      {
+        richColors: true,
+      },
+    );
+  }
 }
