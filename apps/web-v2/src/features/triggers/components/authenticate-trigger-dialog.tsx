@@ -96,6 +96,8 @@ export function AuthenticateTriggerDialog(props: {
         );
         // Reset form and go back
         setFormData({});
+        // Close the dialog after successful registration so users know it's done
+        setOpen(false);
         onCancel?.();
       }
     } catch (error) {
