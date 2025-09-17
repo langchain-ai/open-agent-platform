@@ -97,6 +97,8 @@ export function AuthenticateTriggerDialog(props: {
         // Reset form and go back
         setFormData({});
         onCancel?.();
+        // Close the dialog after successful registration
+        setOpen(false);
       }
     } catch (error) {
       console.error("[v0] Error registering trigger:", error);
