@@ -16,6 +16,9 @@ import { UseFormReturn } from "react-hook-form";
 import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox } from "@/components/ui/combobox";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import { ResourceRenderer } from "@/components/ui/resource-renderer";
 
 const getRegistrationText = (
   registration: ListTriggerRegistrationsData,
@@ -93,11 +96,17 @@ export function TriggerAccordionItem(props: {
 
   const selectedTriggerIds = props.form ? props.form.watch("triggerIds") : [];
 
-  const isSelected = (triggerId: string): boolean => {
+  const EnabledTriggersCountBadge = ({ count }: { count: number }) => (
+    <div className="flex size-5 items-center justify-center rounded-full border-[0.5px] border-blue-500 bg-blue-50 text-xs text-blue-700">
+      {count}
+    </div>
+  );
+
+  const numSelectedRegistrationsForTrigger = (triggerId: string): number => {
     const registrations = getRegistrationsFromTriggerId(triggerId);
-    return registrations.some((registration) =>
+    return registrations.filter((registration) =>
       selectedTriggerIds.includes(registration.id),
-    );
+    ).length;
   };
 
   return (
@@ -107,7 +116,18 @@ export function TriggerAccordionItem(props: {
     >
       <AccordionTrigger className="hover:bg-muted rounded px-4 hover:cursor-pointer">
         <span className="flex flex-col items-start justify-start gap-2">
-          <p className="text-sm font-semibold">{props.provider}</p>
+          <span className="flex flex-row items-center justify-start gap-2">
+            <p className="text-sm font-semibold">{props.provider}</p>{" "}
+            {props.form && (
+              <EnabledTriggersCountBadge
+                count={props.triggers
+                  .map((trigger) =>
+                    numSelectedRegistrationsForTrigger(trigger.id),
+                  )
+                  .reduce((a, b) => a + b)}
+              />
+            )}
+          </span>
           <p className="text-muted-foreground text-sm font-normal">
             {allTriggerNames.map((name) => prettifyText(name)).join(", ")}
           </p>
@@ -122,8 +142,12 @@ export function TriggerAccordionItem(props: {
             <div className="flex items-center justify-between py-4">
               <div className="flex flex-col items-start gap-2">
                 <div className="flex items-center gap-2">
-                  {props.form && <Checkbox checked={isSelected(trigger.id)} />}
                   {prettifyText(trigger.id)}
+                  {props.form && (
+                    <EnabledTriggersCountBadge
+                      count={numSelectedRegistrationsForTrigger(trigger.id)}
+                    />
+                  )}
                 </div>
                 <p className="text-sm font-medium"></p>
                 <p className="text-muted-foreground text-sm font-normal">
@@ -189,6 +213,48 @@ export function TriggerAccordionItem(props: {
                           );
                         }
                       }
+                    }}
+                    optionRenderer={(option) => {
+                      const registrations = getRegistrationsFromTriggerId(
+                        trigger.id,
+                      );
+                      const registration = registrations.find(
+                        (r) => r.id === option.value,
+                      );
+                      if (!registration) {
+                        return (
+                          <>
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                props.form
+                                  ?.getValues("triggerIds")
+                                  ?.includes(option.value)
+                                  ? "opacity-100"
+                                  : "opacity-0",
+                              )}
+                            />
+                            <span className="text-gray-500">
+                              {option.label}
+                            </span>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              props.form
+                                ?.getValues("triggerIds")
+                                ?.includes(option.value)
+                                ? "opacity-100"
+                                : "opacity-0",
+                            )}
+                          />
+                          <ResourceRenderer resource={registration.resource} />
+                        </>
+                      );
                     }}
                   />
                 ) : null}

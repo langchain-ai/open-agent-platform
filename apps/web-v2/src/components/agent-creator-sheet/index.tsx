@@ -12,8 +12,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
-import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
+import { ArrowLeft, LoaderCircle } from "lucide-react";
 import TriggersInterface from "@/features/triggers";
 import { cn } from "@/lib/utils";
 import { SubAgentCreator } from "./components/sub-agents";
@@ -30,10 +29,7 @@ import {
   AgentSystemPromptForm,
   useAgentSystemPromptForm,
 } from "./components/agent-system-prompt-form";
-import {
-  AgentTriggersForm,
-  useAgentTriggersForm,
-} from "./components/agent-triggers-form";
+import { useAgentTriggersForm } from "./components/agent-triggers-form";
 import { useForm as useReactHookForm } from "react-hook-form";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
@@ -118,7 +114,6 @@ export function AgentCreatorSheet(props: {
   const { tools: mcpTools } = useMCPContext();
   const [open, setOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState(1);
-  const [isCreating, setIsCreating] = useState(false);
   const [seenSections, setSeenSections] = useState(new Set([1]));
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
 
@@ -166,6 +161,8 @@ export function AgentCreatorSheet(props: {
   const [registrations, setRegistrations] = useState<
     ListTriggerRegistrationsData[] | undefined
   >();
+  const [isCreating, setIsCreating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
@@ -309,94 +306,105 @@ export function AgentCreatorSheet(props: {
       return;
     }
 
-    const { name, description } = configurationForm.getValues();
-    const { tools, interruptConfig: toolsInterruptConfig } =
-      toolsForm.getValues();
-    const { systemPrompt: currentSystemPrompt } = systemPromptForm.getValues();
-    const { subAgents } = subAgentsForm.getValues();
-    const { triggerIds } = triggersForm.getValues();
+    try {
+      setIsUpdating(true);
+      const { name, description } = configurationForm.getValues();
+      const { tools, interruptConfig: toolsInterruptConfig } =
+        toolsForm.getValues();
+      const { systemPrompt: currentSystemPrompt } =
+        systemPromptForm.getValues();
+      const { subAgents } = subAgentsForm.getValues();
+      const { triggerIds } = triggersForm.getValues();
 
-    if (!name) {
-      toast.warning("Name is required");
-      return;
-    }
+      if (!name) {
+        toast.warning("Name is required");
+        return;
+      }
 
-    // Check if the triggers have changed. Either the default triggers have changed, or if no
-    // default exists, check if the trigger list is non-empty
-    const agentConfigurable = props.agent.config.configurable as
-      | DeepAgentConfiguration
-      | undefined;
-    const existingTriggerConfig = agentConfigurable?.triggers;
-    if (
-      (existingTriggerConfig?.length &&
-        existingTriggerConfig.some(
-          (existingTrigger) =>
-            !triggerIds?.some((newTrigger) => existingTrigger === newTrigger),
-        )) ||
-      (!existingTriggerConfig?.length && triggerIds?.length)
-    ) {
-      const selectedTriggerIds = triggerIds ?? [];
+      // Check if the triggers have changed. Either the default triggers have changed, or if no
+      // default exists, check if the trigger list is non-empty
+      const agentConfigurable = props.agent.config.configurable as
+        | DeepAgentConfiguration
+        | undefined;
+      const existingTriggerConfig = agentConfigurable?.triggers;
+      if (
+        (existingTriggerConfig?.length &&
+          existingTriggerConfig.some(
+            (existingTrigger) =>
+              !triggerIds?.some((newTrigger) => existingTrigger === newTrigger),
+          )) ||
+        (!existingTriggerConfig?.length && triggerIds?.length)
+      ) {
+        const selectedTriggerIds = triggerIds ?? [];
 
-      const success = await updateAgentTriggers(auth.session.accessToken, {
-        agentId: props.agent.assistant_id,
-        selectedTriggerIds,
-      });
-      if (!success) {
-        toast.error("Failed to update agent triggers", {
+        const success = await updateAgentTriggers(auth.session.accessToken, {
+          agentId: props.agent.assistant_id,
+          selectedTriggerIds,
+        });
+        if (!success) {
+          toast.error("Failed to update agent triggers", {
+            richColors: true,
+          });
+          return;
+        }
+      }
+
+      const data: DeepAgentConfiguration = {
+        tools: {
+          url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+          auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
+          tools,
+          interrupt_config: toolsInterruptConfig ?? {},
+        },
+        triggers: triggerIds ?? [],
+        instructions: currentSystemPrompt,
+        subagents: subAgents,
+      };
+
+      const enabledToolNames = tools;
+      if (enabledToolNames?.length) {
+        const success = await verifyUserAuthScopes(auth.session.accessToken, {
+          enabledToolNames: enabledToolNames,
+          tools: mcpTools,
+        });
+        if (!success) {
+          setAuthRequiredDialogOpen(true);
+          return;
+        }
+      }
+
+      const updatedAgent = await updateAgent(
+        props.agent.assistant_id,
+        props.agent.deploymentId,
+        {
+          name,
+          description,
+          config: data,
+        },
+      );
+
+      if (!updatedAgent) {
+        toast.error("Failed to update agent", {
+          description: "Please try again",
           richColors: true,
         });
         return;
       }
-    }
 
-    const data: DeepAgentConfiguration = {
-      tools: {
-        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
-        auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
-        tools,
-        interrupt_config: toolsInterruptConfig ?? {},
-      },
-      triggers: triggerIds ?? [],
-      instructions: currentSystemPrompt,
-      subagents: subAgents,
-    };
-
-    const enabledToolNames = tools;
-    if (enabledToolNames?.length) {
-      const success = await verifyUserAuthScopes(auth.session.accessToken, {
-        enabledToolNames: enabledToolNames,
-        tools: mcpTools,
-      });
-      if (!success) {
-        setAuthRequiredDialogOpen(true);
-        return;
-      }
-    }
-
-    const updatedAgent = await updateAgent(
-      props.agent.assistant_id,
-      props.agent.deploymentId,
-      {
-        name,
-        description,
-        config: data,
-      },
-    );
-
-    if (!updatedAgent) {
-      toast.error("Failed to update agent", {
-        description: "Please try again",
+      toast.success("Agent updated successfully!", {
         richColors: true,
       });
-      return;
+
+      refreshAgents();
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to update agent", error);
+      toast.error("Failed to update agent", {
+        richColors: true,
+      });
+    } finally {
+      setIsUpdating(false);
     }
-
-    toast.success("Agent updated successfully!", {
-      richColors: true,
-    });
-
-    refreshAgents();
-    setOpen(false);
   };
 
   const handleDelete = async () => {
@@ -510,14 +518,23 @@ export function AgentCreatorSheet(props: {
               <ArrowLeft className="size-3.5 text-gray-600" />
             </SheetClose>
             <SheetTitle className="text-sm font-medium">
-              {props.agent ? "Edit agent" : "Create new agent"}
+              {props.agent ? (
+                <span>
+                  Edit agent •{" "}
+                  <span className="text-accent-foreground font-light">
+                    {props.agent.name}
+                  </span>
+                </span>
+              ) : (
+                "Create new agent"
+              )}
             </SheetTitle>
           </div>
 
           <div className="flex gap-2">
             <SheetClose asChild>
               <Button
-                disabled={isCreating || deleteSubmitting}
+                disabled={isCreating || deleteSubmitting || isUpdating}
                 variant="outline"
               >
                 Cancel
@@ -527,7 +544,7 @@ export function AgentCreatorSheet(props: {
               <Button
                 variant="destructive"
                 onClick={handleDelete}
-                disabled={isCreating || deleteSubmitting}
+                disabled={isCreating || deleteSubmitting || isUpdating}
               >
                 {deleteSubmitting ? (
                   <>
@@ -545,7 +562,8 @@ export function AgentCreatorSheet(props: {
                 !agentName.trim() ||
                 !systemPrompt.trim() ||
                 isCreating ||
-                deleteSubmitting
+                deleteSubmitting ||
+                isUpdating
               }
               onClick={props.agent ? handleUpdateAgent : handleCreateAgent}
             >
@@ -618,25 +636,23 @@ export function AgentCreatorSheet(props: {
                   )}
 
                   {currentSection === 2 && (
-                    <AgentTriggersForm form={triggersForm}>
-                      <div className="space-y-4">
-                        <div className="mb-6">
-                          <h2 className="text-md font- mb-2">Triggers</h2>
-                          <p className="text-muted-foreground">
-                            Set up triggers for your agent
-                          </p>
-                        </div>
-                        <div className="scrollbar-pretty-auto max-h-[60vh] pr-2">
-                          <TriggersInterface
-                            groupedTriggers={groupedTriggers}
-                            loading={triggersLoading}
-                            showTriggersTab={showTriggersTab}
-                            form={triggersForm}
-                            hideHeader={true}
-                          />
-                        </div>
+                    <div className="space-y-4">
+                      <div className="mb-6">
+                        <h2 className="text-md font- mb-2">Triggers</h2>
+                        <p className="text-muted-foreground">
+                          Set up triggers for your agent
+                        </p>
                       </div>
-                    </AgentTriggersForm>
+                      <div className="scrollbar-pretty-auto max-h-[60vh] pr-2">
+                        <TriggersInterface
+                          groupedTriggers={groupedTriggers}
+                          loading={triggersLoading}
+                          showTriggersTab={showTriggersTab}
+                          form={triggersForm}
+                          hideHeader={true}
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {currentSection === 3 && <AgentToolsForm form={toolsForm} />}

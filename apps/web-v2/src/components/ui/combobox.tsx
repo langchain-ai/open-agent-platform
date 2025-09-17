@@ -3,6 +3,7 @@ import { Button } from "./button";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Command, CommandGroup, CommandItem, CommandList } from "./command";
+import { ReactNode } from "react";
 
 interface ComboboxProps {
   open?: boolean;
@@ -10,6 +11,7 @@ interface ComboboxProps {
   displayText: string;
   options: { value: string; label: string; disabled?: boolean }[];
   selectedOptions?: string[];
+  optionRenderer?: (option: { value: string; label: string }) => ReactNode;
   onSelect?: (value: string) => void;
 }
 
@@ -19,6 +21,7 @@ export function Combobox({
   displayText,
   options,
   selectedOptions,
+  optionRenderer,
   onSelect,
 }: ComboboxProps) {
   return (
@@ -54,15 +57,21 @@ export function Combobox({
                     option.disabled ? "cursor-not-allowed opacity-50" : "",
                   )}
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedOptions?.includes(option.value)
-                        ? "opacity-100"
-                        : "opacity-0",
-                    )}
-                  />
-                  <span className="text-gray-500">{option.label}</span>
+                  {optionRenderer ? (
+                    optionRenderer(option)
+                  ) : (
+                    <>
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedOptions?.includes(option.value)
+                            ? "opacity-100"
+                            : "opacity-0",
+                        )}
+                      />
+                      <span className="text-gray-500">{option.label}</span>
+                    </>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

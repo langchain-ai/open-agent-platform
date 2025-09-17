@@ -19,10 +19,5 @@ export function useAgentTriggersForm(props: UseAgentTriggersFormProps = {}) {
 }
 
 export interface AgentTriggersFormProps {
-  form: UseFormReturn<AgentTriggersFormData>;
   children: React.ReactNode;
-}
-
-export function AgentTriggersForm({ form, children }: AgentTriggersFormProps) {
-  return <form>{children}</form>;
 }
