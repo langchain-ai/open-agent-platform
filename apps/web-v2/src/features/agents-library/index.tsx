@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AgentsInterface from "@/features/agents";
 import TriggersInterface from "@/features/triggers";
@@ -32,6 +32,21 @@ export default function AgentsLibrary(): React.ReactNode {
       if (!registrations || !triggers) return undefined;
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
+
+  const refreshTriggers = useCallback(async () => {
+    if (!session?.accessToken) return;
+    setTriggersLoading(true);
+    try {
+      const [t, r] = await Promise.all([
+        listTriggers(session.accessToken),
+        listUserTriggers(session.accessToken),
+      ]);
+      setTriggers(t);
+      setRegistrations(r);
+    } finally {
+      setTriggersLoading(false);
+    }
+  }, [session?.accessToken, listTriggers, listUserTriggers]);
 
   useEffect(() => {
     if (showTriggersTab === false || showTriggersTab === undefined) {
@@ -95,6 +110,7 @@ export default function AgentsLibrary(): React.ReactNode {
               groupedTriggers={groupedTriggers}
               loading={triggersLoading}
               showTriggersTab={showTriggersTab}
+              onRefresh={refreshTriggers}
             />
           </TabsContent>
         </Tabs>

@@ -103,9 +103,13 @@ export function useTriggers() {
       payload: Record<string, any>;
       method: "POST" | "GET";
       path: string;
+      authId?: string;
     },
   ): Promise<RegisterTriggerResponse | undefined> => {
-    const triggerApiUrl = constructTriggerUrl(args.path);
+    const triggerApiUrl = constructTriggerUrl(
+      args.path,
+      args.authId ? { auth_id: args.authId } : undefined,
+    );
     if (!triggerApiUrl) {
       return;
     }
@@ -114,6 +118,7 @@ export function useTriggers() {
       method: args.method,
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
       body:
         Object.keys(args.payload).length > 0

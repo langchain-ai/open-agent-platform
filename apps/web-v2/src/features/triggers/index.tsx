@@ -17,12 +17,14 @@ type TriggersInterfaceProps = {
   groupedTriggers?: GroupedTriggerRegistrationsByProvider;
   loading?: boolean;
   showTriggersTab?: boolean;
+  onRefresh?: () => void;
 };
 
 export default function TriggersInterface({
   groupedTriggers,
   loading = false,
   showTriggersTab,
+  onRefresh,
 }: TriggersInterfaceProps) {
   if (loading) {
     return (
@@ -110,6 +112,7 @@ export default function TriggersInterface({
               provider={provider}
               groupedRegistrations={registrations}
               triggers={triggers}
+              onRefresh={onRefresh}
             />
           ),
         )}

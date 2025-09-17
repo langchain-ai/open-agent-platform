@@ -68,6 +68,7 @@ export function TriggerAccordionItem(props: {
     [templateId: string]: ListTriggerRegistrationsData[];
   };
   triggers: Trigger[];
+  onRefresh?: () => void;
 }) {
   const getAllTriggerNamesUnique = () => {
     const names = new Set<string>();
@@ -121,7 +122,10 @@ export function TriggerAccordionItem(props: {
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />
                 ) : null}
-                <AuthenticateTriggerDialog trigger={trigger} />
+                <AuthenticateTriggerDialog
+                  trigger={trigger}
+                  onRegistered={props.onRefresh}
+                />
               </div>
             </div>
             {index < arr.length - 1 && <hr />}

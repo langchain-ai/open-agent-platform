@@ -29,13 +29,15 @@ import { prettifyText } from "@/features/agent-inbox/utils";
 export function AuthenticateTriggerDialog(props: {
   trigger: Trigger;
   onCancel?: () => void;
+  onRegistered?: () => void;
 }) {
-  const { trigger, onCancel } = props;
+  const { trigger, onCancel, onRegistered } = props;
   const auth = useAuthContext();
   const { registerTrigger } = useTriggers();
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const [authId, setAuthId] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -74,6 +76,7 @@ export function AuthenticateTriggerDialog(props: {
         payload: payload,
         method: trigger.method,
         path: trigger.path,
+        authId: authId ?? undefined,
       });
 
       if (!registerResponse) {
@@ -86,6 +89,7 @@ export function AuthenticateTriggerDialog(props: {
       // Handle response based on auth requirements
       if ("auth_url" in registerResponse) {
         setAuthUrl(registerResponse.auth_url);
+        setAuthId(registerResponse.auth_id);
         setIsAuthenticating(true);
       } else {
         toast.success(
@@ -96,6 +100,11 @@ export function AuthenticateTriggerDialog(props: {
         );
         // Reset form and go back
         setFormData({});
+        setAuthUrl(null);
+        setAuthId(null);
+        setIsAuthenticating(false);
+        // Ask parent to refresh registrations
+        onRegistered?.();
         // Close the dialog after successful registration so users know it's done
         setOpen(false);
         onCancel?.();
@@ -274,6 +283,7 @@ export function AuthenticateTriggerDialog(props: {
               <Button
                 onClick={handleSubmit}
                 className="w-full"
+                disabled={isLoading}
               >
                 I've completed authentication
               </Button>
