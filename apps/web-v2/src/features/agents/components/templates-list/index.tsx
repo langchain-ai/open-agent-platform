@@ -56,6 +56,17 @@ export function TemplatesList() {
     );
   }, [allGraphGroups, searchQueryState]);
 
+  useEffect(() => {
+    if (filteredGraphGroupsState.length && !openTemplatesState.length) {
+      setOpenTemplatesState(
+        filteredGraphGroupsState.map((group) => {
+          const uniqueGraphKey = `${group.deployment.id}:${group.graphId}`;
+          return uniqueGraphKey;
+        }),
+      );
+    }
+  }, [filteredGraphGroupsState, openTemplatesState]);
+
   const toggleGraphState = (deploymentId: string, graphId: string) => {
     const uniqueGraphKey = `${deploymentId}:${graphId}`;
     setOpenTemplatesState((prev) =>
