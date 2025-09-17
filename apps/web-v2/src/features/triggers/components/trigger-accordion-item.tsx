@@ -96,7 +96,7 @@ export function TriggerAccordionItem(props: {
   const selectedTriggerIds = props.form ? props.form.watch("triggerIds") : [];
 
   const EnabledTriggersCountBadge = ({ count }: { count: number }) => (
-    <div className="flex size-5 items-center justify-center rounded-full border-[0.5px] border-blue-500 bg-blue-50 text-xs text-blue-700">
+    <div className="flex size-5 items-center justify-center rounded-full border-[0.5px] border-blue-500 bg-blue-50/50 text-xs font-light text-blue-700">
       {count}
     </div>
   );
