@@ -10,7 +10,7 @@ import {
 import { useAgents } from "@/hooks/use-agents";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
 import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
@@ -110,7 +110,10 @@ const getDefaultInterruptConfig = (
   );
 };
 
-export function AgentCreatorSheet(props: { agent?: Agent }) {
+export function AgentCreatorSheet(props: {
+  agent?: Agent;
+  trigger: ReactNode;
+}) {
   const { tools: mcpTools } = useMCPContext();
   const [open, setOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState(1);
@@ -127,7 +130,7 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
     | undefined;
   const configurationForm = useAgentConfigurationForm({
     name: props.agent?.name ?? "",
-    description: props.agent?.description ?? "",
+    description: (props.agent?.metadata?.description ?? "") as string,
   });
   const toolsForm = useAgentToolsForm({
     tools: configurable?.tools?.tools ?? [],
@@ -155,7 +158,7 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
   const auth = useAuthContext();
   const { createAgent, updateAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
-  const { listTriggers, listUserTriggers } = useTriggers();
+  const { listTriggers, listUserTriggers, updateAgentTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
@@ -305,21 +308,22 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
 
     // Check if the triggers have changed. Either the default triggers have changed, or if no
     // default exists, check if the trigger list is non-empty
+    const agentConfigurable = props.agent.config.configurable as
+      | DeepAgentConfiguration
+      | undefined;
+    const existingTriggerConfig = agentConfigurable?.triggers;
     if (
-      (triggersConfigurations[0]?.default?.length &&
-        triggersConfigurations[0].default.some(
+      (existingTriggerConfig?.length &&
+        existingTriggerConfig.some(
           (existingTrigger) =>
-            !data.config?.triggers?.some(
-              (newTrigger: string) => existingTrigger === newTrigger,
-            ),
+            !triggerIds?.some((newTrigger) => existingTrigger === newTrigger),
         )) ||
-      (!triggersConfigurations[0]?.default?.length &&
-        data.config?.triggers?.length)
+      (!existingTriggerConfig?.length && triggerIds?.length)
     ) {
-      const selectedTriggerIds = data.config?.triggers ?? [];
+      const selectedTriggerIds = triggerIds ?? [];
 
       const success = await updateAgentTriggers(auth.session.accessToken, {
-        agentId: agent.assistant_id,
+        agentId: props.agent.assistant_id,
         selectedTriggerIds,
       });
       if (!success) {
@@ -407,6 +411,10 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
   };
 
   const canNavigateToSection = (sectionId: number): boolean => {
+    if (props.agent) {
+      // If the agent is defined, it means we're editing and users should be able to navigate freely
+      return true;
+    }
     if (sectionId === 1 && !hasAgentConfig) {
       return false;
     }
@@ -421,18 +429,7 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
       open={open}
       onOpenChange={handleOpenChange}
     >
-      <SheetTrigger asChild>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            tooltip="New agent"
-            onClick={() => setOpen(true)}
-          >
-            <Plus />
-            <p className="text-sm">New Agent</p>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SheetTrigger>
-
+      <SheetTrigger asChild>{props.trigger}</SheetTrigger>
       <SheetContent
         className="min-w-[85%] gap-0"
         hideClose={true}
@@ -443,7 +440,7 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
               <ArrowLeft className="size-3.5 text-gray-600" />
             </SheetClose>
             <SheetTitle className="text-sm font-medium">
-              Create new agent
+              {props.agent ? "Edit agent" : "Create new agent"}
             </SheetTitle>
           </div>
 
@@ -458,7 +455,7 @@ export function AgentCreatorSheet(props: { agent?: Agent }) {
                 !systemPrompt.trim() ||
                 isCreating
               }
-              onClick={handleCreateAgent}
+              onClick={props.agent ? handleUpdateAgent : handleCreateAgent}
             >
               {isCreating ? (
                 <>

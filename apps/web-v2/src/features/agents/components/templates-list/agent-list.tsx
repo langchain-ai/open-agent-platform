@@ -9,6 +9,7 @@ import { Agent } from "@/types/agent";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
 import _ from "lodash";
 import { AgentCard } from "../agent-card";
+import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface AgentListProps {
   agents: Agent[];
@@ -41,13 +42,14 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <Button
-          size="sm"
-          onClick={() => setShowCreateDialog(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          New Agent
-        </Button>
+        <AgentCreatorSheet
+          trigger={
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              New Agent
+            </Button>
+          }
+        />
       </div>
 
       {filteredAgents.length === 0 ? (
@@ -56,15 +58,19 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
           <p className="text-muted-foreground mt-1 text-sm">
             Create a new agent or try a different search.
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Agent
-          </Button>
+
+          <AgentCreatorSheet
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Agent
+              </Button>
+            }
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { CreateAgentDialog } from "./create-edit-agent-dialogs/create-agent-dialog";
 import { useState } from "react";
+import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface PageHeaderProps {
   title: string;
@@ -21,10 +22,14 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
         )}
       </div>
       {action || (
-        <Button onClick={() => setShowCreateAgentDialog(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Agent
-        </Button>
+        <AgentCreatorSheet
+          trigger={
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Create Agent
+            </Button>
+          }
+        />
       )}
 
       <CreateAgentDialog
