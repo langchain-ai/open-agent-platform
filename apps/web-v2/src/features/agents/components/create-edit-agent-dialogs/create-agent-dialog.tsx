@@ -18,7 +18,7 @@ import { Deployment } from "@/types/deployment";
 import { Agent } from "@/types/agent";
 import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
-import { FormProvider, useForm } from "react-hook-form";
+import { FormProvider, useForm, type UseFormReturn } from "react-hook-form";
 import { useAuthContext } from "@/providers/Auth";
 import { useTriggers } from "@/hooks/use-triggers";
 import { useMCPContext } from "@/providers/MCP";
@@ -41,7 +41,7 @@ function CreateAgentFormContent(props: {
   selectedGraph: Agent;
   selectedDeployment: Deployment;
   onClose: () => void;
-  onFormReady: (form: any) => void;
+  onFormReady: (form: UseFormReturn<AgentFormValues>) => void;
 }) {
   const { tools } = useMCPContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
@@ -214,7 +214,9 @@ export function CreateAgentDialog({
   ]);
 
   const [openCounter, setOpenCounter] = useState(0);
-  const [formRef, setFormRef] = useState<any>(null);
+  const [formRef, setFormRef] = useState<UseFormReturn<AgentFormValues> | null>(
+    null,
+  );
 
   const handleCopyConfig = async () => {
     if (!formRef) return;
@@ -237,7 +239,7 @@ export function CreateAgentDialog({
       toast.success("Agent configuration copied to clipboard", {
         richColors: true,
       });
-    } catch (_error) {
+    } catch {
       toast.error("Failed to copy configuration", {
         richColors: true,
       });
@@ -256,26 +258,18 @@ export function CreateAgentDialog({
         throw new Error("Invalid configuration format");
       }
 
-      // Handle both old format (direct form data) and new format (agent structure)
-      let name, description, config;
-
-      if (parsedConfig.metadata && parsedConfig.config?.configurable) {
-        // New format: actual agent structure
-        name = parsedConfig.name;
-        description = parsedConfig.metadata.description;
-        config = parsedConfig.config.configurable;
-      } else if (
-        parsedConfig.name &&
-        parsedConfig.description &&
-        parsedConfig.config
-      ) {
-        // Old format: direct form data (for backward compatibility)
-        name = parsedConfig.name;
-        description = parsedConfig.description;
-        config = parsedConfig.config;
-      } else {
+      // Expect only the new agent structure format
+      if (!(parsedConfig.metadata && parsedConfig.config?.configurable)) {
         throw new Error("Invalid configuration format");
       }
+
+      const name = parsedConfig.name as string | undefined;
+      const description = parsedConfig.metadata.description as
+        | string
+        | undefined;
+      const config = parsedConfig.config.configurable as
+        | Record<string, unknown>
+        | undefined;
 
       // Set form values
       if (name) {
