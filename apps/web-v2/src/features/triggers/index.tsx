@@ -20,6 +20,7 @@ type TriggersInterfaceProps = {
   loading?: boolean;
   showTriggersTab?: boolean;
   form?: UseFormReturn<AgentTriggersFormData>;
+  hideHeader?: boolean;
 };
 
 export default function TriggersInterface({
@@ -27,6 +28,7 @@ export default function TriggersInterface({
   loading = false,
   showTriggersTab,
   form,
+  hideHeader = false,
 }: TriggersInterfaceProps) {
   if (loading) {
     return (
@@ -93,15 +95,17 @@ export default function TriggersInterface({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
-          <p className="text-muted-foreground">
-            Authenticate with the following apps and set up triggers to
-            automatically activate your agents.
-          </p>
+      {!hideHeader && (
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-lg font-medium tracking-tight">Triggers</h2>
+            <p className="text-muted-foreground">
+              Authenticate with the following apps and set up triggers to
+              automatically activate your agents.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <Accordion
         type="multiple"

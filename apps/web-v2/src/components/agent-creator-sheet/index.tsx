@@ -156,7 +156,7 @@ export function AgentCreatorSheet(props: {
   const subAgents = subAgentsForm.watch("subAgents") ?? [];
 
   const auth = useAuthContext();
-  const { createAgent, updateAgent } = useAgents();
+  const { createAgent, updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
   const { listTriggers, listUserTriggers, updateAgentTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
@@ -165,7 +165,9 @@ export function AgentCreatorSheet(props: {
   const [registrations, setRegistrations] = useState<
     ListTriggerRegistrationsData[] | undefined
   >();
-  const [triggersLoading, setTriggersLoading] = useState<boolean>(true);
+  const [triggersLoading, setTriggersLoading] = useState(true);
+
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -383,6 +385,60 @@ export function AgentCreatorSheet(props: {
     setOpen(false);
   };
 
+  const handleDelete = async () => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+    if (!props.agent) {
+      toast.error("No agent found", {
+        richColors: true,
+      });
+      return;
+    }
+
+    setDeleteSubmitting(true);
+    const deleted = await deleteAgent(
+      props.agent.deploymentId,
+      props.agent.assistant_id,
+    );
+    setDeleteSubmitting(false);
+
+    if (!deleted) {
+      toast.error("Failed to delete agent", {
+        description: "Please try again",
+        richColors: true,
+      });
+      return;
+    }
+
+    const configurable = props.agent.config.configurable as
+      | DeepAgentConfiguration
+      | undefined;
+    if (configurable?.triggers?.length) {
+      const success = await updateAgentTriggers(auth.session.accessToken, {
+        agentId: props.agent.assistant_id,
+        selectedTriggerIds: [],
+        currentTriggerIds: configurable.triggers ?? [],
+      });
+      if (!success) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
+    toast.success("Agent deleted successfully!", {
+      richColors: true,
+    });
+
+    refreshAgents();
+    setOpen(false);
+  };
+
   const handleSubAgentChange = (updatedSubAgents: SubAgent[]) => {
     subAgentsForm.setValue("subAgents", updatedSubAgents, {
       shouldDirty: true,
@@ -446,22 +502,46 @@ export function AgentCreatorSheet(props: {
 
           <div className="flex gap-2">
             <SheetClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button
+                disabled={isCreating || deleteSubmitting}
+                variant="outline"
+              >
+                Cancel
+              </Button>
             </SheetClose>
+            {props.agent && (
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isCreating || deleteSubmitting}
+              >
+                {deleteSubmitting ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </Button>
+            )}
             <Button
               disabled={
-                currentSection !== 5 ||
+                (!props.agent && currentSection !== 5) ||
                 !agentName.trim() ||
                 !systemPrompt.trim() ||
-                isCreating
+                isCreating ||
+                deleteSubmitting
               }
               onClick={props.agent ? handleUpdateAgent : handleCreateAgent}
             >
               {isCreating ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {props.agent ? "Updating" : "Creating"}...
                 </>
+              ) : props.agent ? (
+                "Update"
               ) : (
                 "Create"
               )}
@@ -532,12 +612,15 @@ export function AgentCreatorSheet(props: {
                             Set up triggers for your agent
                           </p>
                         </div>
-                        <TriggersInterface
-                          groupedTriggers={groupedTriggers}
-                          loading={triggersLoading}
-                          showTriggersTab={showTriggersTab}
-                          form={triggersForm}
-                        />
+                        <div className="scrollbar-pretty-auto max-h-[60vh] pr-2">
+                          <TriggersInterface
+                            groupedTriggers={groupedTriggers}
+                            loading={triggersLoading}
+                            showTriggersTab={showTriggersTab}
+                            form={triggersForm}
+                            hideHeader={true}
+                          />
+                        </div>
                       </div>
                     </AgentTriggersForm>
                   )}
