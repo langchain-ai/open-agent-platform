@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { CreateAgentDialog } from "../create-edit-agent-dialogs/create-agent-dialog";
 import { TemplateCard } from "./templates-card";
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -55,6 +54,17 @@ export function TemplatesList() {
         ),
     );
   }, [allGraphGroups, searchQueryState]);
+
+  useEffect(() => {
+    if (filteredGraphGroupsState.length && !openTemplatesState.length) {
+      setOpenTemplatesState(
+        filteredGraphGroupsState.map((group) => {
+          const uniqueGraphKey = `${group.deployment.id}:${group.graphId}`;
+          return uniqueGraphKey;
+        }),
+      );
+    }
+  }, [filteredGraphGroupsState, openTemplatesState]);
 
   const toggleGraphState = (deploymentId: string, graphId: string) => {
     const uniqueGraphKey = `${deploymentId}:${graphId}`;
@@ -113,11 +123,6 @@ export function TemplatesList() {
           )}
         </div>
       )}
-
-      <CreateAgentDialog
-        open={false}
-        onOpenChange={() => {}}
-      />
     </div>
   );
 }

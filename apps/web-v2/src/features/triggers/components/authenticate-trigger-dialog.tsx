@@ -235,7 +235,7 @@ export function AuthenticateTriggerDialog(props: {
           onClick={() => setOpen(true)}
           className="cursor-pointer rounded border border-green-700 px-2 py-1 text-sm text-green-800 transition-colors ease-in-out hover:border-green-800 hover:bg-green-50 hover:text-green-900"
         >
-          Authenticate
+          Add
         </button>
       </DialogTrigger>
       <DialogContent className="p-6 sm:max-w-[425px]">
