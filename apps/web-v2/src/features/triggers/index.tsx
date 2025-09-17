@@ -12,17 +12,21 @@ import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 import Loading from "@/components/ui/loading";
 import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
+import { UseFormReturn } from "react-hook-form";
+import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
 
 type TriggersInterfaceProps = {
   groupedTriggers?: GroupedTriggerRegistrationsByProvider;
   loading?: boolean;
   showTriggersTab?: boolean;
+  form?: UseFormReturn<AgentTriggersFormData>;
 };
 
 export default function TriggersInterface({
   groupedTriggers,
   loading = false,
   showTriggersTab,
+  form,
 }: TriggersInterfaceProps) {
   if (loading) {
     return (
@@ -110,6 +114,7 @@ export default function TriggersInterface({
               provider={provider}
               groupedRegistrations={registrations}
               triggers={triggers}
+              form={form}
             />
           ),
         )}

@@ -21,8 +21,9 @@ import { Tool } from "@/types/tool";
 import _ from "lodash";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Combobox } from "@/components/ui/combobox";
 
-interface HumanInterruptConfig {
+export interface HumanInterruptConfig {
   allow_ignore: boolean;
   allow_respond: boolean;
   allow_edit: boolean;
@@ -34,11 +35,9 @@ const INTERRUPT_OPTIONS = [
   { value: "respond", label: "allow respond", disabled: false },
   { value: "edit", label: "allow edit", disabled: false },
   { value: "ignore", label: "allow ignore", disabled: true },
-] as const;
+];
 
-interface ToolInterruptConfig {
-  [toolName: string]: HumanInterruptConfig;
-}
+export type ToolInterruptConfig = Record<string, HumanInterruptConfig>;
 
 interface CreateAgentToolsSelectionProps {
   selectedTools?: string[];
@@ -48,7 +47,7 @@ interface CreateAgentToolsSelectionProps {
 }
 
 export function CreateAgentToolsSelection({
-  selectedTools,
+  selectedTools = [],
   onToolsChange,
   interruptConfig = {},
   onInterruptConfigChange,
@@ -73,9 +72,9 @@ export function CreateAgentToolsSelection({
 
   const handleToolToggle = (toolName: string, checked: boolean) => {
     if (checked) {
-      onToolsChange([...(selectedTools || []), toolName]);
+      onToolsChange([...selectedTools, toolName]);
     } else {
-      onToolsChange((selectedTools || []).filter((name) => name !== toolName));
+      onToolsChange(selectedTools.filter((name) => name !== toolName));
     }
   };
 
@@ -93,8 +92,7 @@ export function CreateAgentToolsSelection({
     onInterruptConfigChange(newConfig);
   };
 
-  const isToolSelected = (toolName: string) =>
-    selectedTools?.includes(toolName);
+  const isToolSelected = (toolName: string) => selectedTools.includes(toolName);
 
   return (
     <div className="space-y-6">
@@ -313,55 +311,13 @@ function InterruptMultiSelect({
       : "Select interrupt options...";
 
   return (
-    <Popover
+    <Combobox
       open={open}
       onOpenChange={setOpen}
-    >
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between text-sm text-gray-500"
-        >
-          {displayText}
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        className="w-full p-0"
-        align="start"
-      >
-        <Command>
-          <CommandList>
-            <CommandGroup>
-              {INTERRUPT_OPTIONS.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={() =>
-                    !option.disabled && handleSelect(option.value)
-                  }
-                  className={cn(
-                    "data-[selected]:bg-gray-50 data-[selected]:text-gray-500",
-                    option.disabled ? "cursor-not-allowed opacity-50" : "",
-                  )}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedOptions.includes(option.value)
-                        ? "opacity-100"
-                        : "opacity-0",
-                    )}
-                  />
-                  <span className="text-gray-500">{option.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+      displayText={displayText}
+      options={INTERRUPT_OPTIONS}
+      selectedOptions={selectedOptions}
+      onSelect={handleSelect}
+    />
   );
 }

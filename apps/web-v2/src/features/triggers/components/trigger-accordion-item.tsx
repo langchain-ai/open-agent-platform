@@ -12,21 +12,25 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
+import { UseFormReturn } from "react-hook-form";
+import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox } from "@/components/ui/combobox";
+
+const getRegistrationText = (
+  registration: ListTriggerRegistrationsData,
+): string => {
+  const resource = registration.resource;
+  if (typeof resource === "string") return resource;
+  if (typeof resource === "object" && resource !== null)
+    return Object.values(resource)[0];
+  return "";
+};
 
 function RegistrationsBadge(props: {
   registrations: ListTriggerRegistrationsData[];
 }) {
   const { registrations } = props;
-
-  const getRegistrationText = (
-    registration: ListTriggerRegistrationsData,
-  ): string => {
-    const resource = registration.resource;
-    if (typeof resource === "string") return resource;
-    if (typeof resource === "object" && resource !== null)
-      return Object.values(resource)[0];
-    return "";
-  };
 
   if (!registrations.length) {
     return null;
@@ -68,6 +72,7 @@ export function TriggerAccordionItem(props: {
     [templateId: string]: ListTriggerRegistrationsData[];
   };
   triggers: Trigger[];
+  form?: UseFormReturn<AgentTriggersFormData>;
 }) {
   const getAllTriggerNamesUnique = () => {
     const names = new Set<string>();
@@ -84,6 +89,15 @@ export function TriggerAccordionItem(props: {
     }
 
     return props.groupedRegistrations[triggerId];
+  };
+
+  const selectedTriggerIds = props.form ? props.form.watch("triggerIds") : [];
+
+  const isSelected = (triggerId: string): boolean => {
+    const registrations = getRegistrationsFromTriggerId(triggerId);
+    return registrations.some((registration) =>
+      selectedTriggerIds.includes(registration.id),
+    );
   };
 
   return (
@@ -107,16 +121,79 @@ export function TriggerAccordionItem(props: {
           >
             <div className="flex items-center justify-between py-4">
               <div className="flex flex-col items-start gap-2">
-                <p className="text-sm font-medium">
+                <div className="flex items-center gap-2">
+                  {props.form && <Checkbox checked={isSelected(trigger.id)} />}
                   {prettifyText(trigger.id)}
-                </p>
+                </div>
+                <p className="text-sm font-medium"></p>
                 <p className="text-muted-foreground text-sm font-normal">
                   {trigger.description}
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                {getRegistrationsFromTriggerId(trigger.id)?.length ? (
+                {props.form &&
+                getRegistrationsFromTriggerId(trigger.id)?.length ? (
+                  <Combobox
+                    displayText={(() => {
+                      const selectedIds =
+                        props.form?.getValues("triggerIds") || [];
+                      const registrations = getRegistrationsFromTriggerId(
+                        trigger.id,
+                      );
+                      const selectedRegistrations =
+                        registrations?.filter((r) =>
+                          selectedIds.includes(r.id),
+                        ) || [];
+
+                      if (selectedRegistrations.length === 0) {
+                        return "Select Registrations";
+                      } else if (selectedRegistrations.length === 1) {
+                        return getRegistrationText(selectedRegistrations[0]);
+                      } else {
+                        return `${selectedRegistrations.length} selected`;
+                      }
+                    })()}
+                    options={getRegistrationsFromTriggerId(trigger.id)?.map(
+                      (r) => ({
+                        label: getRegistrationText(r),
+                        value: r.id,
+                      }),
+                    )}
+                    selectedOptions={props.form?.getValues("triggerIds")}
+                    onSelect={(value) => {
+                      if (props.form) {
+                        const currentTriggerIds =
+                          props.form.getValues("triggerIds");
+                        const isSelected = currentTriggerIds.includes(value);
+
+                        if (isSelected) {
+                          // Remove from selection
+                          props.form.setValue(
+                            "triggerIds",
+                            currentTriggerIds.filter((id) => id !== value),
+                            {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            },
+                          );
+                        } else {
+                          // Add to selection
+                          props.form.setValue(
+                            "triggerIds",
+                            [...currentTriggerIds, value],
+                            {
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            },
+                          );
+                        }
+                      }
+                    }}
+                  />
+                ) : null}
+                {!props.form &&
+                getRegistrationsFromTriggerId(trigger.id)?.length ? (
                   <RegistrationsBadge
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />

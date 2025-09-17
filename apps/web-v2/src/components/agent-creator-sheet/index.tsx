@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetClose,
@@ -12,19 +10,46 @@ import {
 import { useAgents } from "@/hooks/use-agents";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
-import { Dispatch, SetStateAction, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
 import { ArrowLeft, LoaderCircle, Plus } from "lucide-react";
 import TriggersInterface from "@/features/triggers";
-import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
-import { Textarea } from "../ui/textarea";
 import { cn } from "@/lib/utils";
 import { SubAgentCreator } from "./components/sub-agents";
 import { SubAgent } from "@/types/sub-agent";
-import { z } from "zod";
-import { subAgentFormSchema } from "./components/sub-agents/form";
-import { useForm } from "react-hook-form";
+import {
+  AgentConfigurationForm,
+  useAgentConfigurationForm,
+} from "./components/agent-configuration-form";
+import {
+  AgentToolsForm,
+  useAgentToolsForm,
+} from "./components/agent-tools-form";
+import {
+  AgentSystemPromptForm,
+  useAgentSystemPromptForm,
+} from "./components/agent-system-prompt-form";
+import {
+  AgentTriggersForm,
+  useAgentTriggersForm,
+} from "./components/agent-triggers-form";
+import { useForm as useReactHookForm } from "react-hook-form";
+import { getDeployments } from "@/lib/environment/deployments";
+import { Agent } from "@/types/agent";
+import { DeepAgentConfiguration } from "@/types/deep-agent";
+import { HumanInterruptConfig } from "@/types/inbox";
+import { useLangChainAuth } from "@/hooks/use-langchain-auth";
+import { useMCPContext } from "@/providers/MCP";
+import { useTriggers } from "@/hooks/use-triggers";
+import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { useFlags } from "launchdarkly-react-client-sdk";
+import {
+  GroupedTriggerRegistrationsByProvider,
+  ListTriggerRegistrationsData,
+  Trigger,
+} from "@/types/triggers";
+import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 
 const sections = [
   {
@@ -60,110 +85,130 @@ const sections = [
   },
 ];
 
-function AgentConfiguration(props: {
-  name: string;
-  setName: Dispatch<SetStateAction<string>>;
-  description: string;
-  setDescription: Dispatch<SetStateAction<string>>;
-}) {
-  return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-md font- mb-2">Configure your agent</h2>
-        <p className="text-muted-foreground">
-          Basic agent settings and configuration
-        </p>
-      </div>
-      <div className="space-y-4">
-        <div>
-          <Label
-            htmlFor="agent-name"
-            className="text-sm font-medium text-gray-700"
-          >
-            Name
-            <span className="-ml-1 text-red-500">*</span>
-          </Label>
-          <Input
-            id="agent-name"
-            className="mt-1 h-10"
-            placeholder="Enter agent name"
-            value={props.name}
-            onChange={(e) => props.setName(e.target.value)}
-            required
-          />
-        </div>
+const getDefaultInterruptConfig = (
+  interruptConfig?: Record<string, boolean | HumanInterruptConfig>,
+): Record<string, HumanInterruptConfig> => {
+  if (!interruptConfig) {
+    return {};
+  }
 
-        <div>
-          <Label
-            htmlFor="agent-description"
-            className="text-sm font-medium text-gray-700"
-          >
-            Description
-          </Label>
-          <Textarea
-            id="agent-description"
-            className="mt-1 min-h-[197px]"
-            placeholder="e.g. Handles common customer questions, provides troubleshooting steps, and escalates complex issues to a human."
-            value={props.description}
-            onChange={(e) => props.setDescription(e.target.value)}
-          />
-        </div>
-      </div>
-    </div>
+  return Object.fromEntries(
+    Object.entries(interruptConfig).map(([key, value]) => {
+      if (typeof value === "boolean") {
+        return [
+          key,
+          {
+            allow_accept: value,
+            allow_respond: value,
+            allow_edit: value,
+            allow_ignore: value,
+          },
+        ];
+      }
+      return [key, value];
+    }),
   );
-}
+};
 
-const createAgentFormSchema = z.object({
-  name: z.string(),
-  description: z.string().optional(),
-  triggers: z.array(z.string()).optional(),
-  tools: z.array(z.string()).optional(),
-  subAgents: subAgentFormSchema.array().optional(),
-  systemPrompt: z.string(),
-});
-
-export function AgentCreatorSheet() {
+export function AgentCreatorSheet(props: { agent?: Agent }) {
+  const { tools: mcpTools } = useMCPContext();
   const [open, setOpen] = useState(false);
   const [currentSection, setCurrentSection] = useState(1);
   const [isCreating, setIsCreating] = useState(false);
+  const [seenSections, setSeenSections] = useState(new Set([1]));
+  const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
 
-  const [agentName, setAgentName] = useState("");
-  const [agentDescription, setAgentDescription] = useState("");
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [interruptConfig, setInterruptConfig] = useState<{
-    [toolName: string]: {
-      allow_accept: boolean;
-      allow_respond: boolean;
-      allow_edit: boolean;
-      allow_ignore: boolean;
-    };
-  }>({});
-  const [subAgents, setSubAgents] = useState<SubAgent[]>([]);
-  const [systemPrompt, setSystemPrompt] = useState("");
+  useEffect(() => {
+    setSeenSections((prev) => new Set([...prev, currentSection]));
+  }, [currentSection]);
 
-  const form = useForm<z.infer<typeof createAgentFormSchema>>({
+  const configurable = props.agent?.config.configurable as
+    | DeepAgentConfiguration
+    | undefined;
+  const configurationForm = useAgentConfigurationForm({
+    name: props.agent?.name ?? "",
+    description: props.agent?.description ?? "",
+  });
+  const toolsForm = useAgentToolsForm({
+    tools: configurable?.tools?.tools ?? [],
+    interruptConfig: getDefaultInterruptConfig(
+      configurable?.tools?.interrupt_config,
+    ),
+  });
+  const systemPromptForm = useAgentSystemPromptForm({
+    systemPrompt: configurable?.instructions ?? "",
+  });
+  const triggersForm = useAgentTriggersForm({
+    triggerIds: configurable?.triggers ?? [],
+  });
+  const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
     defaultValues: {
-      name: "",
-      description: "",
-      triggers: [],
-      tools: [],
-      subAgents: [],
-      systemPrompt: "",
+      subAgents: configurable?.subagents ?? [],
     },
   });
 
-  const auth = useAuthContext();
-  const { createAgent } = useAgents();
-  const { refreshAgents } = useAgentsContext();
+  const agentName = configurationForm.watch("name");
+  const hasAgentConfig = !!agentName.trim();
+  const systemPrompt = systemPromptForm.watch("systemPrompt");
+  const subAgents = subAgentsForm.watch("subAgents") ?? [];
 
-  // Handle agent creation
+  const auth = useAuthContext();
+  const { createAgent, updateAgent } = useAgents();
+  const { refreshAgents } = useAgentsContext();
+  const { listTriggers, listUserTriggers } = useTriggers();
+  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
+
+  const [triggers, setTriggers] = useState<Trigger[] | undefined>();
+  const [registrations, setRegistrations] = useState<
+    ListTriggerRegistrationsData[] | undefined
+  >();
+  const [triggersLoading, setTriggersLoading] = useState<boolean>(true);
+
+  const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
+    useMemo(() => {
+      if (!registrations || !triggers) return undefined;
+      return groupTriggerRegistrationsByProvider(registrations, triggers);
+    }, [registrations, triggers]);
+
+  useEffect(() => {
+    if (showTriggersTab === false || showTriggersTab === undefined) {
+      setTriggersLoading(false);
+      return;
+    }
+    if (!auth.session?.accessToken) return;
+    setTriggersLoading(true);
+    Promise.all([
+      listTriggers(auth.session.accessToken),
+      listUserTriggers(auth.session.accessToken),
+    ])
+      .then(([t, r]) => {
+        setTriggers(t);
+        setRegistrations(r);
+      })
+      .finally(() => setTriggersLoading(false));
+  }, [auth.session?.accessToken, showTriggersTab]);
+
   const handleCreateAgent = async () => {
     if (!auth.session?.accessToken) {
       toast.error("No access token found");
       return;
     }
 
-    if (!agentName.trim() || !agentDescription.trim() || !systemPrompt.trim()) {
+    const isConfigurationValid = await configurationForm.trigger();
+    const isSystemPromptValid = await systemPromptForm.trigger();
+
+    if (!isConfigurationValid || !isSystemPromptValid) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    const { name, description } = configurationForm.getValues();
+    const { tools, interruptConfig: toolsInterruptConfig } =
+      toolsForm.getValues();
+    const { systemPrompt: currentSystemPrompt } = systemPromptForm.getValues();
+    const { triggerIds } = triggersForm.getValues();
+
+    if (!name.trim() || !currentSystemPrompt.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -171,19 +216,21 @@ export function AgentCreatorSheet() {
     setIsCreating(true);
 
     try {
-      // Get the default deployment and graph from environment configuration
-      const { getDeployments } = await import("@/lib/environment/deployments");
       const deployments = getDeployments();
       const defaultDeployment = deployments.find((d) => d.isDefault);
 
       if (!defaultDeployment) {
-        toast.error("No default deployment found");
+        toast.error("No default deployment found", {
+          richColors: true,
+        });
         return;
       }
 
       const defaultGraph = defaultDeployment.graphs.find((g) => g.isDefault);
       if (!defaultGraph) {
-        toast.error("No default graph found");
+        toast.error("No default graph found", {
+          richColors: true,
+        });
         return;
       }
 
@@ -192,48 +239,187 @@ export function AgentCreatorSheet() {
 
       const config = {
         tools: {
-          tools: selectedTools,
-          interrupt_config: interruptConfig,
+          tools: tools ?? [],
+          interrupt_config: toolsInterruptConfig ?? {},
         },
-        triggers: [],
-        system_prompt: systemPrompt,
+        triggers: triggerIds ?? [],
+        system_prompt: currentSystemPrompt,
+        subagents: subAgents,
       };
 
-      // Create the agent
       const newAgent = await createAgent(defaultDeploymentId, defaultGraphId, {
-        name: agentName,
-        description: agentDescription,
+        name,
+        description,
         config,
       });
 
       if (!newAgent) {
-        toast.error("Failed to create agent");
+        toast.error("Failed to create agent", {
+          richColors: true,
+        });
         return;
       }
 
-      toast.success("Agent created successfully!");
+      toast.success("Agent created successfully!", {
+        richColors: true,
+      });
 
-      // Refresh the agents list
       refreshAgents();
 
-      window.location.href = "/chat";
+      setOpen(false);
     } catch (error) {
       console.error("Error creating agent:", error);
-      toast.error("Failed to create agent");
+      toast.error("Failed to create agent", {
+        richColors: true,
+      });
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleSubAgentChange = (subAgents: SubAgent[]) => {
-    setSubAgents(subAgents);
-    // TODO: Ensure any tools enabled in the sub-agent are also enabled in the parent agent
+  const handleUpdateAgent = async () => {
+    if (!props.agent) {
+      toast.error("No agent found", {
+        richColors: true,
+      });
+      return;
+    }
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+
+    const { name, description } = configurationForm.getValues();
+    const { tools, interruptConfig: toolsInterruptConfig } =
+      toolsForm.getValues();
+    const { systemPrompt: currentSystemPrompt } = systemPromptForm.getValues();
+    const { subAgents } = subAgentsForm.getValues();
+    const { triggerIds } = triggersForm.getValues();
+
+    if (!name) {
+      toast.warning("Name is required");
+      return;
+    }
+
+    // Check if the triggers have changed. Either the default triggers have changed, or if no
+    // default exists, check if the trigger list is non-empty
+    if (
+      (triggersConfigurations[0]?.default?.length &&
+        triggersConfigurations[0].default.some(
+          (existingTrigger) =>
+            !data.config?.triggers?.some(
+              (newTrigger: string) => existingTrigger === newTrigger,
+            ),
+        )) ||
+      (!triggersConfigurations[0]?.default?.length &&
+        data.config?.triggers?.length)
+    ) {
+      const selectedTriggerIds = data.config?.triggers ?? [];
+
+      const success = await updateAgentTriggers(auth.session.accessToken, {
+        agentId: agent.assistant_id,
+        selectedTriggerIds,
+      });
+      if (!success) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
+    const data: DeepAgentConfiguration = {
+      tools: {
+        url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+        auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
+        tools,
+        interrupt_config: toolsInterruptConfig ?? {},
+      },
+      triggers: triggerIds ?? [],
+      instructions: currentSystemPrompt,
+      subagents: subAgents,
+    };
+
+    const enabledToolNames = tools;
+    if (enabledToolNames?.length) {
+      const success = await verifyUserAuthScopes(auth.session.accessToken, {
+        enabledToolNames: enabledToolNames,
+        tools: mcpTools,
+      });
+      if (!success) {
+        return;
+      }
+    }
+
+    const updatedAgent = await updateAgent(
+      props.agent.assistant_id,
+      props.agent.deploymentId,
+      {
+        name,
+        description,
+        config: data,
+      },
+    );
+
+    if (!updatedAgent) {
+      toast.error("Failed to update agent", {
+        description: "Please try again",
+        richColors: true,
+      });
+      return;
+    }
+
+    toast.success("Agent updated successfully!", {
+      richColors: true,
+    });
+
+    refreshAgents();
+    setOpen(false);
+  };
+
+  const handleSubAgentChange = (updatedSubAgents: SubAgent[]) => {
+    subAgentsForm.setValue("subAgents", updatedSubAgents, {
+      shouldDirty: true,
+      shouldTouch: true,
+    });
+  };
+
+  const handleResetForms = () => {
+    configurationForm.reset();
+    toolsForm.reset();
+    systemPromptForm.reset();
+    triggersForm.reset();
+    subAgentsForm.reset({
+      subAgents: [],
+    });
+    setCurrentSection(1);
+    setIsCreating(false);
+    setSeenSections(new Set([1]));
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      handleResetForms();
+    }
+  };
+
+  const canNavigateToSection = (sectionId: number): boolean => {
+    if (sectionId === 1 && !hasAgentConfig) {
+      return false;
+    }
+    if (seenSections.has(sectionId)) {
+      return true;
+    }
+    return false;
   };
 
   return (
     <Sheet
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
     >
       <SheetTrigger asChild>
         <SidebarMenuItem>
@@ -267,7 +453,10 @@ export function AgentCreatorSheet() {
             </SheetClose>
             <Button
               disabled={
-                currentSection !== 5 || !systemPrompt.trim() || isCreating
+                currentSection !== 5 ||
+                !agentName.trim() ||
+                !systemPrompt.trim() ||
+                isCreating
               }
               onClick={handleCreateAgent}
             >
@@ -289,25 +478,33 @@ export function AgentCreatorSheet() {
               <div
                 key={section.id}
                 className={cn(
-                  `rounded p-4`,
+                  "rounded p-4",
                   currentSection === section.id ? "bg-gray-100" : "",
+                  canNavigateToSection(section.id)
+                    ? "cursor-pointer"
+                    : "cursor-default",
                 )}
+                onClick={() => {
+                  if (canNavigateToSection(section.id)) {
+                    setCurrentSection(section.id);
+                  }
+                }}
               >
-                <div className="flex items-center gap-6">
-                  <div
+                <span className="flex items-center gap-6">
+                  <span
                     className={cn(
-                      `text-base font-light`,
+                      "text-base font-light",
                       currentSection === section.id
                         ? "text-gray-500"
                         : "text-gray-300",
                     )}
                   >
                     {section.id}
-                  </div>
-                  <div>
+                  </span>
+                  <span>
                     <h3
                       className={cn(
-                        `text-base font-normal`,
+                        "text-base font-normal",
                         currentSection === section.id
                           ? "text-black"
                           : "text-black",
@@ -315,8 +512,8 @@ export function AgentCreatorSheet() {
                     >
                       {section.title}
                     </h3>
-                  </div>
-                </div>
+                  </span>
+                </span>
               </div>
             ))}
           </div>
@@ -326,42 +523,29 @@ export function AgentCreatorSheet() {
               <div className="mx-auto">
                 <div className="space-y-8">
                   {currentSection === 1 && (
-                    <AgentConfiguration
-                      name={agentName}
-                      setName={setAgentName}
-                      description={agentDescription}
-                      setDescription={setAgentDescription}
-                    />
+                    <AgentConfigurationForm form={configurationForm} />
                   )}
 
                   {currentSection === 2 && (
-                    <div className="space-y-4">
-                      <div className="mb-6">
-                        <h2 className="text-md font- mb-2">Triggers</h2>
-                        <p className="text-muted-foreground">
-                          Set up triggers for your agent
-                        </p>
+                    <AgentTriggersForm form={triggersForm}>
+                      <div className="space-y-4">
+                        <div className="mb-6">
+                          <h2 className="text-md font- mb-2">Triggers</h2>
+                          <p className="text-muted-foreground">
+                            Set up triggers for your agent
+                          </p>
+                        </div>
+                        <TriggersInterface
+                          groupedTriggers={groupedTriggers}
+                          loading={triggersLoading}
+                          showTriggersTab={showTriggersTab}
+                          form={triggersForm}
+                        />
                       </div>
-                      <TriggersInterface />
-                    </div>
+                    </AgentTriggersForm>
                   )}
 
-                  {currentSection === 3 && (
-                    <div className="scrollbar-pretty-auto max-h-[60vh] pr-2">
-                      <div className="mb-6">
-                        <h2 className="text-md font- mb-2">Tools</h2>
-                        <p className="text-muted-foreground">
-                          Set up tools for your agent
-                        </p>
-                      </div>
-                      <CreateAgentToolsSelection
-                        selectedTools={selectedTools}
-                        onToolsChange={setSelectedTools}
-                        interruptConfig={interruptConfig}
-                        onInterruptConfigChange={setInterruptConfig}
-                      />
-                    </div>
-                  )}
+                  {currentSection === 3 && <AgentToolsForm form={toolsForm} />}
 
                   {currentSection === 4 && (
                     <SubAgentCreator
@@ -371,23 +555,7 @@ export function AgentCreatorSheet() {
                   )}
 
                   {currentSection === 5 && (
-                    <div className="space-y-6">
-                      <div className="mb-6">
-                        <h2 className="text-md font- mb-2">System Prompt</h2>
-                        <p className="text-muted-foreground">
-                          Define the system prompt
-                        </p>
-                      </div>
-                      <div>
-                        <Textarea
-                          id="system-prompt"
-                          className="mt-1 min-h-[400px]"
-                          placeholder="Enter the system prompt for your agent..."
-                          value={systemPrompt}
-                          onChange={(e) => setSystemPrompt(e.target.value)}
-                        />
-                      </div>
-                    </div>
+                    <AgentSystemPromptForm form={systemPromptForm} />
                   )}
                 </div>
               </div>
