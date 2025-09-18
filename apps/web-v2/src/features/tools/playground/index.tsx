@@ -177,14 +177,16 @@ export default function ToolsPlaygroundInterface() {
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50}>
           <div className="flex h-full items-start p-6">
-            <div className="w-full space-y-4">
+            <div className="w-full min-w-0 space-y-4">
               <h3 className="text-md font-medium">Response</h3>
-              <ResponseViewer
-                response={response}
-                isLoading={isLoading}
-                errorMessage={errorMessage}
-                authRequiredMessage={authRequiredMessage}
-              />
+              <div className="overflow-hidden">
+                <ResponseViewer
+                  response={response}
+                  isLoading={isLoading}
+                  errorMessage={errorMessage}
+                  authRequiredMessage={authRequiredMessage}
+                />
+              </div>
             </div>
           </div>
         </ResizablePanel>
