@@ -177,7 +177,6 @@ export function useTriggers() {
       currentTriggerIds?: string[];
     },
   ): Promise<boolean> => {
-    console.log("[UPDATE AGENT TRIGGERS DEBUG] Called with args:", args);
     const currentTriggerIds = args.currentTriggerIds || [];
     const selectedTriggerIds = args.selectedTriggerIds;
 
@@ -190,19 +189,13 @@ export function useTriggers() {
     const triggersToAdd = selectedTriggerIds.filter(
       (id) => !currentTriggerIds.includes(id),
     );
-    
-    console.log("[UPDATE AGENT TRIGGERS DEBUG] Triggers to remove:", triggersToRemove);
-    console.log("[UPDATE AGENT TRIGGERS DEBUG] Triggers to add:", triggersToAdd);
 
     // First, remove unselected trigger links
     for (const triggerId of triggersToRemove) {
-      console.log("[UPDATE AGENT TRIGGERS DEBUG] Removing agent from trigger:", triggerId);
       const triggerApiUrl = constructTriggerUrl(
         `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
-      console.log("[UPDATE AGENT TRIGGERS DEBUG] DELETE URL:", triggerApiUrl);
       if (!triggerApiUrl) {
-        console.log("[UPDATE AGENT TRIGGERS DEBUG] Failed to construct URL for trigger:", triggerId);
         continue;
       }
 
@@ -213,17 +206,12 @@ export function useTriggers() {
         },
       });
 
-      console.log("[UPDATE AGENT TRIGGERS DEBUG] DELETE response status:", response.status);
       if (!response.ok) {
-        console.log("[UPDATE AGENT TRIGGERS DEBUG] DELETE failed for trigger:", triggerId, "Status:", response.status);
         const errorText = await response.text();
-        console.log("[UPDATE AGENT TRIGGERS DEBUG] DELETE error response:", errorText);
         toast.error("Failed to remove agent from trigger", {
           richColors: true,
         });
         continue;
-      } else {
-        console.log("[UPDATE AGENT TRIGGERS DEBUG] Successfully removed agent from trigger:", triggerId);
       }
     }
 

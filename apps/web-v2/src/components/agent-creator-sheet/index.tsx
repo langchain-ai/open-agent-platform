@@ -199,9 +199,12 @@ export function AgentCreatorSheet(props: {
       .then(async ([t, r]) => {
         setTriggers(t);
         setRegistrations(r);
-        
+
         if (props.agent && auth.session?.accessToken) {
-          const agentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
+          const agentTriggerIds = await listAgentTriggers(
+            auth.session.accessToken,
+            props.agent.assistant_id,
+          );
           triggersForm.setValue("triggerIds", agentTriggerIds);
         }
       })
@@ -354,16 +357,18 @@ export function AgentCreatorSheet(props: {
 
       // Check if the triggers have changed by comparing with current server state
       const selectedTriggerIds = triggerIds ?? [];
-      const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
-      
-      // Check if there are any differences between current and selected triggers
-      const hasChanges = 
-        currentTriggerIds.length !== selectedTriggerIds.length ||
-        currentTriggerIds.some(id => !selectedTriggerIds.includes(id)) ||
-        selectedTriggerIds.some(id => !currentTriggerIds.includes(id));
-      
-      if (hasChanges) {
+      const currentTriggerIds = await listAgentTriggers(
+        auth.session.accessToken,
+        props.agent.assistant_id,
+      );
 
+      // Check if there are any differences between current and selected triggers
+      const hasChanges =
+        currentTriggerIds.length !== selectedTriggerIds.length ||
+        currentTriggerIds.some((id) => !selectedTriggerIds.includes(id)) ||
+        selectedTriggerIds.some((id) => !currentTriggerIds.includes(id));
+
+      if (hasChanges) {
         const success = await updateAgentTriggers(auth.session.accessToken, {
           agentId: props.agent.assistant_id,
           selectedTriggerIds,
@@ -463,27 +468,23 @@ export function AgentCreatorSheet(props: {
       return;
     }
 
-    // Clean up trigger links using trigger server API
-    console.log("[DELETE AGENT DEBUG] Getting triggers for agent from trigger server:", props.agent.assistant_id);
-    const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
-    console.log("[DELETE AGENT DEBUG] Current trigger IDs from server:", currentTriggerIds);
-    
+    const currentTriggerIds = await listAgentTriggers(
+      auth.session.accessToken,
+      props.agent.assistant_id,
+    );
+
     if (currentTriggerIds.length > 0) {
-      console.log("[DELETE AGENT DEBUG] Attempting to clear trigger links for agent:", props.agent.assistant_id);
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: props.agent.assistant_id,
         selectedTriggerIds: [],
         currentTriggerIds: currentTriggerIds,
       });
-      console.log("[DELETE AGENT DEBUG] updateAgentTriggers result:", success);
       if (!success) {
         toast.error("Failed to update agent triggers", {
           richColors: true,
         });
         return;
       }
-    } else {
-      console.log("[DELETE AGENT DEBUG] No triggers found to cleanup");
     }
 
     toast.success("Agent deleted successfully!", {
