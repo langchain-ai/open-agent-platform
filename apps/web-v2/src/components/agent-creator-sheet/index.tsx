@@ -647,7 +647,6 @@ export function AgentCreatorSheet(props: {
               </div>
             ))}
 
-            {/* Copy and Paste buttons in sidebar - moved to bottom */}
             <div className="mt-auto px-4 pb-4">
               <div className="flex flex-col gap-2">
                 <Button

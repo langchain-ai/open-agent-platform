@@ -139,7 +139,7 @@ export async function handlePasteConfig(
     toast.success("Agent configuration pasted successfully", {
       richColors: true,
     });
-  } catch (_error) {
+  } catch {
     toast.error(
       "Failed to paste configuration. Please ensure it's valid JSON format.",
       {
