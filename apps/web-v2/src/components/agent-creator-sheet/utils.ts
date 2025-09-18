@@ -1,8 +1,5 @@
-import { Agent } from "@/types/agent";
-import { DeepAgentConfiguration, MCPConfig } from "@/types/deep-agent";
-import { SubAgentConfig } from "@/types/deep-agent";
-import { UseFormReturn } from "react-hook-form";
-import { AgentFormValues } from "./types";
+import { DeepAgentConfiguration, SubAgentConfig } from "@/types/deep-agent";
+import { SubAgent } from "@/types/sub-agent";
 import { toast } from "sonner";
 
 // Type guard to check if an object is a valid DeepAgentConfiguration
@@ -28,23 +25,6 @@ export const DEFAULT_FORM_CONFIG: DeepAgentConfiguration = {
   triggers: [],
 };
 
-export function getDefaultsFromAgent(agent: Agent): DeepAgentConfiguration {
-  return {
-    instructions:
-      (agent.config?.configurable?.instructions as string | undefined) ??
-      DEFAULT_FORM_CONFIG.instructions,
-    subagents:
-      (agent.config?.configurable?.subagents as SubAgentConfig[] | undefined) ??
-      DEFAULT_FORM_CONFIG.subagents,
-    tools:
-      (agent.config?.configurable?.tools as MCPConfig | undefined) ??
-      DEFAULT_FORM_CONFIG.tools,
-    triggers:
-      (agent.config?.configurable?.triggers as string[] | undefined) ??
-      DEFAULT_FORM_CONFIG.triggers,
-  };
-}
-
 export function prepareConfigForSaving(
   config: DeepAgentConfiguration,
 ): DeepAgentConfiguration {
@@ -67,19 +47,28 @@ export function prepareConfigForSaving(
   return config;
 }
 
-export async function handleCopyConfig(
-  formRef: UseFormReturn<AgentFormValues> | null,
-) {
-  if (!formRef) return;
-
-  const formData = formRef.getValues();
+export async function handleCopyConfig(config: {
+  name: string;
+  description: string;
+  systemPrompt: string;
+  tools: string[];
+  triggers: string[];
+  subAgents: SubAgent[];
+}) {
   const configToCopy = {
-    name: formData.name,
+    name: config.name,
     metadata: {
-      description: formData.description,
+      description: config.description,
     },
     config: {
-      configurable: formData.config,
+      configurable: {
+        instructions: config.systemPrompt,
+        subagents: config.subAgents,
+        tools: {
+          tools: config.tools,
+        },
+        triggers: config.triggers,
+      },
     },
   };
 
@@ -96,10 +85,15 @@ export async function handleCopyConfig(
 }
 
 export async function handlePasteConfig(
-  formRef: UseFormReturn<AgentFormValues> | null,
+  onPaste: (config: {
+    name: string;
+    description: string;
+    systemPrompt: string;
+    tools: string[];
+    triggers: string[];
+    subAgents: SubAgent[];
+  }) => void,
 ) {
-  if (!formRef) return;
-
   try {
     const clipboardText = await navigator.clipboard.readText();
     const parsedConfig = JSON.parse(clipboardText);
@@ -119,16 +113,28 @@ export async function handlePasteConfig(
       | Record<string, unknown>
       | undefined;
 
-    // Set form values
-    if (name) {
-      formRef.setValue("name", name);
+    if (!isValidDeepAgentConfiguration(config)) {
+      throw new Error("Invalid configuration format");
     }
-    if (description) {
-      formRef.setValue("description", description);
-    }
-    if (isValidDeepAgentConfiguration(config)) {
-      formRef.setValue("config", config);
-    }
+
+    // Convert SubAgentConfig[] to SubAgent[]
+    const subAgents: SubAgent[] = (config.subagents || []).map(
+      (subAgent: SubAgentConfig) => ({
+        name: subAgent.name || "",
+        description: subAgent.description || "",
+        prompt: subAgent.prompt || "",
+        tools: subAgent.tools || [],
+      }),
+    );
+
+    onPaste({
+      name: name || "",
+      description: description || "",
+      systemPrompt: config.instructions || "",
+      tools: config.tools?.tools || [],
+      triggers: config.triggers || [],
+      subAgents,
+    });
 
     toast.success("Agent configuration pasted successfully", {
       richColors: true,

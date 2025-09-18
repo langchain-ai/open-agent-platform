@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { Inbox, Settings, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryState } from "nuqs";
-import { EditAgentDialog } from "@/features/agents/components/create-edit-agent-dialogs/edit-agent-dialog";
 import { ThreadHistorySidebar } from "./thread-history-sidebar";
 import { useAgentsContext } from "@/providers/Agents";
 import {
@@ -27,6 +26,8 @@ import {
 } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Agent } from "@/types/agent";
+import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
+import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
 
 interface PageHeaderProps {
   view: "chat" | "workflow";
@@ -45,7 +46,6 @@ export function PageHeader({
 }: PageHeaderProps) {
   const { showAgentVisualizerUi } = useFlags<LaunchDarklyFeatureFlags>();
   const isWorkflowEnabled = showAgentVisualizerUi !== false;
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
@@ -60,14 +60,6 @@ export function PageHeader({
       return;
     }
     setView(newView);
-  };
-
-  const handleSettingsClick = () => {
-    if (!selectedAgent) {
-      toast.info("Please select an agent", { richColors: true });
-      return;
-    }
-    setShowEditDialog(true);
   };
 
   const handleThreadSelect = useCallback(
@@ -224,14 +216,20 @@ export function PageHeader({
               <Inbox className="size-4" />
             </NextLink>
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSettingsClick}
-            className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
-          >
-            <Settings className="size-4" />
-          </Button>
+          {!isUserSpecifiedDefaultAgent(selectedAgent) && (
+            <AgentCreatorSheet
+              agent={selectedAgent}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shadow-icon-button size-6 rounded border border-[#E4E4E7] bg-white p-2"
+                >
+                  <Settings className="size-4" />
+                </Button>
+              }
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -242,13 +240,6 @@ export function PageHeader({
             <SquarePen className="size-4" />
           </Button>
         </div>
-      )}
-      {selectedAgent && (
-        <EditAgentDialog
-          agent={selectedAgent}
-          open={showEditDialog}
-          onOpenChange={setShowEditDialog}
-        />
       )}
     </header>
   );

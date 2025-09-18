@@ -1,6 +1,6 @@
 "use client";
 
-import { type LucideIcon } from "lucide-react";
+import { Plus, type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useQueryState } from "nuqs";
 
@@ -14,6 +14,7 @@ import {
 import NextLink from "next/link";
 import { cn } from "@/lib/utils";
 import { AgentDropdown } from "./agent-dropdown";
+import { AgentCreatorSheet } from "../agent-creator-sheet";
 
 function ChatNavItem({
   item,
@@ -59,7 +60,6 @@ function ChatNavItem({
 export function NavMain({
   items,
   groupLabel,
-  onNewAgentClick,
 }: {
   items: (
     | {
@@ -67,6 +67,7 @@ export function NavMain({
         url: string;
         icon?: LucideIcon;
         isDropdown?: false;
+        isAgentCreator?: boolean;
         subItems?: {
           title: string;
           url: string;
@@ -84,7 +85,6 @@ export function NavMain({
       }
   )[];
   groupLabel?: string;
-  onNewAgentClick?: () => void;
 }) {
   return (
     <SidebarGroup className="gap-1">
@@ -100,16 +100,18 @@ export function NavMain({
               key={`${item.title}-${index}`}
               item={item}
             />
-          ) : item.title === "New Agent" && onNewAgentClick ? (
-            <SidebarMenuItem key={`${item.title}-${index}`}>
-              <SidebarMenuButton
-                tooltip={item.title}
-                onClick={onNewAgentClick}
-              >
-                {item.icon && <item.icon />}
-                <p className="text-sm">{item.title}</p>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+          ) : item.isAgentCreator ? (
+            <AgentCreatorSheet
+              key={`${item.title}-${index}`}
+              trigger={
+                <SidebarMenuItem>
+                  <SidebarMenuButton tooltip="New agent">
+                    <Plus />
+                    <p className="text-sm">New Agent</p>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              }
+            />
           ) : (
             <ChatNavItem
               key={`${item.title}-${index}`}

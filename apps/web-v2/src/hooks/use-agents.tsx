@@ -43,7 +43,7 @@ export function useAgents() {
       graphId: string,
       args: {
         name: string;
-        description: string;
+        description?: string;
         config: Record<string, any>;
       },
     ): Promise<Assistant | undefined> => {
