@@ -15,7 +15,6 @@ export function generateFormFields(
     description?: string;
   }> = [];
 
-  // Add display_name field if required
   if (requireDisplayName) {
     fields.push({
       name: "display_name",
