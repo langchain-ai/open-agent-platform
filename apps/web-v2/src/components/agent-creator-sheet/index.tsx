@@ -154,7 +154,12 @@ export function AgentCreatorSheet(props: {
   const auth = useAuthContext();
   const { createAgent, updateAgent, deleteAgent } = useAgents();
   const { refreshAgents } = useAgentsContext();
-  const { listTriggers, listUserTriggers, updateAgentTriggers } = useTriggers();
+  const {
+    listTriggers,
+    listUserTriggers,
+    updateAgentTriggers,
+    setupAgentTrigger,
+  } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
@@ -273,6 +278,19 @@ export function AgentCreatorSheet(props: {
           richColors: true,
         });
         return;
+      }
+
+      if (triggerIds.length) {
+        const success = await setupAgentTrigger(auth.session.accessToken, {
+          agentId: newAgent.assistant_id,
+          selectedTriggerIds: triggerIds,
+        });
+        if (!success) {
+          toast.error("Failed to add agent triggers", {
+            richColors: true,
+          });
+          return;
+        }
       }
 
       toast.success("Agent created successfully!", {

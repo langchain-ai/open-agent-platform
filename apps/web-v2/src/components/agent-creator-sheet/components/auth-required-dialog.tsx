@@ -36,9 +36,9 @@ export function AuthRequiredDialog(props: {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-3">
-          {props.authUrls.map((url) => (
+          {props.authUrls.map((url, index) => (
             <div
-              key={url.provider}
+              key={`${url.provider}-${index}`}
               className="bg-blue-25 rounded-lg border border-blue-200 p-4 dark:border-blue-800 dark:bg-blue-950/50"
             >
               <div className="mb-3 flex items-center justify-between">
