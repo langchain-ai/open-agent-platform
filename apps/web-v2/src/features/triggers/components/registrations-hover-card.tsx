@@ -26,11 +26,11 @@ export function RegistrationsHoverCard(props: {
   }
 
   return (
-    <HoverCard>
+    <HoverCard openDelay={250}>
       <HoverCardTrigger asChild>
         <Badge
           variant="secondary"
-          className="hover:ring-muted-foreground/30 cursor-help hover:ring-1"
+          className="hover:ring-muted-foreground/30 cursor-default hover:ring-1"
         >
           {registrations.length} Registrations
           <Info className="ml-1 h-3 w-3 opacity-70" />
