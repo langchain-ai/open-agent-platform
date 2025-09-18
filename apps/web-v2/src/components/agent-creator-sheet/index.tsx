@@ -352,24 +352,17 @@ export function AgentCreatorSheet(props: {
         return;
       }
 
-      // Check if the triggers have changed. Either the default triggers have changed, or if no
-      // default exists, check if the trigger list is non-empty
-      const agentConfigurable = props.agent.config.configurable as
-        | DeepAgentConfiguration
-        | undefined;
-      const existingTriggerConfig = agentConfigurable?.triggers;
-      if (
-        (existingTriggerConfig?.length &&
-          existingTriggerConfig.some(
-            (existingTrigger) =>
-              !triggerIds?.some((newTrigger) => existingTrigger === newTrigger),
-          )) ||
-        (!existingTriggerConfig?.length && triggerIds?.length)
-      ) {
-        const selectedTriggerIds = triggerIds ?? [];
-        
-        // Get current trigger IDs from server to determine what needs to be removed
-        const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
+      // Check if the triggers have changed by comparing with current server state
+      const selectedTriggerIds = triggerIds ?? [];
+      const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
+      
+      // Check if there are any differences between current and selected triggers
+      const hasChanges = 
+        currentTriggerIds.length !== selectedTriggerIds.length ||
+        currentTriggerIds.some(id => !selectedTriggerIds.includes(id)) ||
+        selectedTriggerIds.some(id => !currentTriggerIds.includes(id));
+      
+      if (hasChanges) {
 
         const success = await updateAgentTriggers(auth.session.accessToken, {
           agentId: props.agent.assistant_id,
