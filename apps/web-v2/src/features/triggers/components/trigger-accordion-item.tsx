@@ -3,8 +3,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { prettifyText } from "@/features/agent-inbox/utils";
 import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
 import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
@@ -13,8 +11,8 @@ import { AgentTriggersFormData } from "@/components/agent-creator-sheet/componen
 import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
-import { useState } from "react";
 import { ResourceRenderer } from "@/components/ui/resource-renderer";
+import { RegistrationsHoverCard } from "./registrations-hover-card";
 
 const getRegistrationText = (
   registration: ListTriggerRegistrationsData,
@@ -25,44 +23,6 @@ const getRegistrationText = (
     return Object.values(resource)[0];
   return "";
 };
-
-// Inline list of registrations with show more/less toggle
-function RegistrationsInlineList(props: {
-  registrations: ListTriggerRegistrationsData[];
-  initialCount?: number;
-}) {
-  const { registrations, initialCount = 2 } = props;
-  const [expanded, setExpanded] = useState(false);
-
-  const visible = expanded
-    ? registrations
-    : registrations.slice(0, initialCount);
-  const hiddenCount = Math.max(0, registrations.length - initialCount);
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      {visible.map((registration) => (
-        <Badge
-          key={registration.id}
-          variant="secondary"
-        >
-          <ResourceRenderer resource={registration.resource} />
-        </Badge>
-      ))}
-      {hiddenCount > 0 && (
-        <Button
-          type="button"
-          variant="link"
-          size="sm"
-          className="h-auto px-0"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          {expanded ? "Show less" : `+${hiddenCount} more`}
-        </Button>
-      )}
-    </div>
-  );
-}
 
 export function TriggerAccordionItem(props: {
   provider: string;
@@ -255,9 +215,8 @@ export function TriggerAccordionItem(props: {
                 ) : null}
                 {!props.form &&
                 getRegistrationsFromTriggerId(trigger.id)?.length ? (
-                  <RegistrationsInlineList
+                  <RegistrationsHoverCard
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
-                    initialCount={2}
                   />
                 ) : null}
                 <AuthenticateTriggerDialog trigger={trigger} />
