@@ -507,6 +507,21 @@ export function AgentCreatorSheet(props: {
     });
   };
 
+  const handlePasteSubmit = (text: string) => {
+    handlePasteConfigFromString(text, (config) => {
+      configurationForm.setValue("name", config.name);
+      configurationForm.setValue("description", config.description);
+      systemPromptForm.setValue("systemPrompt", config.systemPrompt);
+      toolsForm.setValue("tools", config.tools);
+      toolsForm.setValue("interruptConfig", config.interruptConfig, {
+        shouldDirty: true,
+      });
+      triggersForm.setValue("triggerIds", config.triggers);
+      subAgentsForm.setValue("subAgents", config.subAgents);
+      setPasteDialogOpen(false);
+    });
+  };
+
   const handleResetForms = () => {
     configurationForm.reset();
     toolsForm.reset();
@@ -785,20 +800,7 @@ export function AgentCreatorSheet(props: {
       <PasteConfigDialog
         open={pasteDialogOpen}
         onOpenChange={setPasteDialogOpen}
-        onSubmit={(text) => {
-          handlePasteConfigFromString(text, (config) => {
-            configurationForm.setValue("name", config.name);
-            configurationForm.setValue("description", config.description);
-            systemPromptForm.setValue("systemPrompt", config.systemPrompt);
-            toolsForm.setValue("tools", config.tools);
-            toolsForm.setValue("interruptConfig", config.interruptConfig, {
-              shouldDirty: true,
-            });
-            triggersForm.setValue("triggerIds", config.triggers);
-            subAgentsForm.setValue("subAgents", config.subAgents);
-            setPasteDialogOpen(false);
-          });
-        }}
+        onSubmit={handlePasteSubmit}
       />
     </Sheet>
   );
