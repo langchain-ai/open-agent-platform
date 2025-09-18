@@ -257,13 +257,15 @@ export function AgentCreatorSheet(props: {
       const defaultDeploymentId = defaultDeployment.id;
       const defaultGraphId = defaultGraph.id;
 
-      const config = {
+      const config: DeepAgentConfiguration = {
         tools: {
           tools: tools ?? [],
           interrupt_config: toolsInterruptConfig ?? {},
+          url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+          auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
         },
         triggers: triggerIds ?? [],
-        system_prompt: currentSystemPrompt,
+        instructions: currentSystemPrompt,
         subagents: subAgents,
       };
 
