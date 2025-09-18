@@ -119,7 +119,7 @@ export async function handlePasteConfig(
       systemPrompt: config.instructions || "",
       tools: config.tools?.tools || [],
       interruptConfig,
-      triggers: config.triggers || [],
+      triggers: [], // Triggers are deprecated in agent config, always use empty array
       subAgents,
     });
 
@@ -202,7 +202,7 @@ export async function handlePasteConfigFromString(
       systemPrompt: config.instructions || "",
       tools: config.tools?.tools || [],
       interruptConfig,
-      triggers: config.triggers || [],
+      triggers: [], // Triggers are deprecated in agent config, always use empty array
       subAgents,
     });
 

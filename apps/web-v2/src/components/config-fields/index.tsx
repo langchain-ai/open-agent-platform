@@ -251,4 +251,3 @@ export function ConfigField({
 export * from "./types";
 export * from "./mcp";
 export * from "./sub-agents";
-export * from "./triggers";
