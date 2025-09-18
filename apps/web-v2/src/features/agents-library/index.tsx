@@ -15,6 +15,7 @@ import { useTriggers } from "@/hooks/use-triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { toast } from "sonner";
 
 export default function AgentsLibrary(): React.ReactNode {
   const { session } = useAuthContext();
@@ -50,6 +51,28 @@ export default function AgentsLibrary(): React.ReactNode {
       })
       .finally(() => setTriggersLoading(false));
   }, [session?.accessToken, showTriggersTab]);
+
+  const reloadTriggers = async () => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+    try {
+      const [triggersList, userTriggersList] = await Promise.all([
+        listTriggers(session.accessToken),
+        listUserTriggers(session.accessToken),
+      ]);
+      setTriggers(triggersList);
+      setRegistrations(userTriggersList);
+    } catch (error) {
+      console.error("Error loading triggers:", error);
+      toast.error("Failed to load triggers", {
+        richColors: true,
+      });
+    }
+  };
 
   return (
     <AgentsProvider>
@@ -95,6 +118,7 @@ export default function AgentsLibrary(): React.ReactNode {
               groupedTriggers={groupedTriggers}
               loading={triggersLoading}
               showTriggersTab={showTriggersTab}
+              reloadTriggers={reloadTriggers}
             />
           </TabsContent>
         </Tabs>

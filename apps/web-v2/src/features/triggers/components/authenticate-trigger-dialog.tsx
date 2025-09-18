@@ -29,8 +29,9 @@ import { prettifyText } from "@/features/agent-inbox/utils";
 export function AuthenticateTriggerDialog(props: {
   trigger: Trigger;
   onCancel?: () => void;
+  reloadTriggers?: () => Promise<void>;
 }) {
-  const { trigger, onCancel } = props;
+  const { trigger, onCancel, reloadTriggers } = props;
   const auth = useAuthContext();
   const { registerTrigger } = useTriggers();
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -109,6 +110,7 @@ export function AuthenticateTriggerDialog(props: {
       });
     } finally {
       setIsLoading(false);
+      reloadTriggers?.();
     }
   };
 

@@ -21,6 +21,7 @@ type TriggersInterfaceProps = {
   showTriggersTab?: boolean;
   form?: UseFormReturn<AgentTriggersFormData>;
   hideHeader?: boolean;
+  reloadTriggers?: () => Promise<void>;
 };
 
 export default function TriggersInterface({
@@ -29,6 +30,7 @@ export default function TriggersInterface({
   showTriggersTab,
   form,
   hideHeader = false,
+  reloadTriggers,
 }: TriggersInterfaceProps) {
   if (loading) {
     return (
@@ -119,6 +121,7 @@ export default function TriggersInterface({
               groupedRegistrations={registrations}
               triggers={triggers}
               form={form}
+              reloadTriggers={reloadTriggers}
             />
           ),
         )}

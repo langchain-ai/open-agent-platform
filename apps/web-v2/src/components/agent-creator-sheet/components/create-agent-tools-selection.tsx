@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronRightIcon } from "lucide-react";
@@ -11,6 +11,8 @@ import _ from "lodash";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Combobox } from "@/components/ui/combobox";
+import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
+import { Search } from "@/components/ui/tool-search";
 
 export interface HumanInterruptConfig {
   allow_ignore: boolean;
@@ -42,8 +44,34 @@ export function CreateAgentToolsSelection({
   onInterruptConfigChange,
 }: CreateAgentToolsSelectionProps) {
   const { tools, loading, getTools, cursor, setTools } = useMCPContext();
-  const { toolSearchTerm, filteredTools } = useSearchTools(tools);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [sortedTools, setSortedTools] = useState<Tool[]>([]);
+
+  useEffect(() => {
+    // Sort by selected on first load only. Do NOT re-sort on selection
+    if (!tools.length || sortedTools.length) return;
+    const sorted = [...tools].sort((a, b) => {
+      const aSelected = selectedTools.includes(a.name);
+      const bSelected = selectedTools.includes(b.name);
+
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+
+      return 0;
+    });
+    setSortedTools(sorted);
+  }, [tools]);
+
+  const { toolSearchTerm, filteredTools, debouncedSetSearchTerm } =
+    useSearchTools(sortedTools, {
+      preSelectedTools: selectedTools,
+    });
+  const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
+    tools,
+    setTools,
+    getTools,
+    cursor,
+    searchTerm: toolSearchTerm,
+  });
 
   const handleLoadMore = async () => {
     if (!cursor) return;
@@ -90,6 +118,13 @@ export function CreateAgentToolsSelection({
           <div className="py-8 text-center">
             <span className="text-muted-foreground">Loading tools...</span>
           </div>
+        )}
+
+        {!loading && filteredTools.length > 0 && (
+          <Search
+            onSearchChange={debouncedSetSearchTerm}
+            placeholder="Search tools..."
+          />
         )}
 
         {!loading &&
