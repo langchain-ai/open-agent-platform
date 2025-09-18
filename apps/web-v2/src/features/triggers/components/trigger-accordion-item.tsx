@@ -4,19 +4,16 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { prettifyText } from "@/features/agent-inbox/utils";
 import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
 import { UseFormReturn } from "react-hook-form";
 import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
 import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { useState } from "react";
 import { ResourceRenderer } from "@/components/ui/resource-renderer";
 
 const getRegistrationText = (
@@ -29,42 +26,41 @@ const getRegistrationText = (
   return "";
 };
 
-function RegistrationsBadge(props: {
+// Inline list of registrations with show more/less toggle
+function RegistrationsInlineList(props: {
   registrations: ListTriggerRegistrationsData[];
+  initialCount?: number;
 }) {
-  const { registrations } = props;
+  const { registrations, initialCount = 2 } = props;
+  const [expanded, setExpanded] = useState(false);
 
-  if (!registrations.length) {
-    return null;
-  }
-
-  if (registrations.length === 1) {
-    return (
-      <Badge variant="secondary">{getRegistrationText(registrations[0])}</Badge>
-    );
-  }
+  const visible = expanded
+    ? registrations
+    : registrations.slice(0, initialCount);
+  const hiddenCount = Math.max(0, registrations.length - initialCount);
 
   return (
-    <HoverCard>
-      <HoverCardTrigger>
-        <Badge variant="secondary">{registrations.length} Registrations</Badge>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80">
-        <ul className="space-y-2">
-          {registrations.map((registration) => (
-            <li
-              key={registration.id}
-              className="flex items-center gap-2 text-sm"
-            >
-              <div className="bg-muted-foreground h-1.5 w-1.5 flex-shrink-0 rounded-full" />
-              <span className="break-words">
-                {getRegistrationText(registration)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </HoverCardContent>
-    </HoverCard>
+    <div className="flex flex-wrap items-center gap-2">
+      {visible.map((registration) => (
+        <Badge
+          key={registration.id}
+          variant="secondary"
+        >
+          <ResourceRenderer resource={registration.resource} />
+        </Badge>
+      ))}
+      {hiddenCount > 0 && (
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="h-auto px-0"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? "Show less" : `+${hiddenCount} more`}
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -259,8 +255,9 @@ export function TriggerAccordionItem(props: {
                 ) : null}
                 {!props.form &&
                 getRegistrationsFromTriggerId(trigger.id)?.length ? (
-                  <RegistrationsBadge
+                  <RegistrationsInlineList
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
+                    initialCount={2}
                   />
                 ) : null}
                 <AuthenticateTriggerDialog trigger={trigger} />
