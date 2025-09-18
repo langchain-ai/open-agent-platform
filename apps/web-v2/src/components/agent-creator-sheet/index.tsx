@@ -12,7 +12,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, LoaderCircle, Copy, ClipboardPaste } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Copy } from "lucide-react";
 import TriggersInterface from "@/features/triggers";
 import { cn } from "@/lib/utils";
 import { SubAgentCreator } from "./components/sub-agents";
@@ -177,7 +177,6 @@ export function AgentCreatorSheet(props: {
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
-  const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -690,15 +689,7 @@ export function AgentCreatorSheet(props: {
                   <Copy className="size-4" />
                   Copy
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPasteDialogOpen(true)}
-                  className="flex w-full items-center justify-center gap-2"
-                >
-                  <ClipboardPaste className="size-4" />
-                  Paste
-                </Button>
+                <PasteConfigDialog onSubmit={handlePasteSubmit} />
               </div>
             </div>
           </div>
@@ -795,11 +786,6 @@ export function AgentCreatorSheet(props: {
             handleCreateAgent();
           }
         }}
-      />
-      <PasteConfigDialog
-        open={pasteDialogOpen}
-        onOpenChange={setPasteDialogOpen}
-        onSubmit={handlePasteSubmit}
       />
     </Sheet>
   );

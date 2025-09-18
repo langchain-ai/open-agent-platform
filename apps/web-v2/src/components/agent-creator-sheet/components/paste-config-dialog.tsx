@@ -9,16 +9,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { ClipboardPaste } from "lucide-react";
 
 export function PasteConfigDialog(props: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onSubmit: (text: string) => Promise<boolean>;
 }) {
-  const { open, onOpenChange, onSubmit } = props;
+  const [open, setOpen] = useState(false);
+  const { onSubmit } = props;
   const [text, setText] = useState("");
 
   const EXAMPLE_CONFIG_PLACEHOLDER = JSON.stringify(
@@ -32,7 +33,7 @@ export function PasteConfigDialog(props: {
   );
 
   const handleClose = (nextOpen: boolean) => {
-    onOpenChange(nextOpen);
+    setOpen(nextOpen);
     if (!nextOpen) setText("");
   };
 
@@ -40,7 +41,7 @@ export function PasteConfigDialog(props: {
     const success = await onSubmit(text);
     if (success) {
       setText("");
-      onOpenChange(false);
+      setOpen(false);
     }
   };
 
@@ -49,6 +50,16 @@ export function PasteConfigDialog(props: {
       open={open}
       onOpenChange={handleClose}
     >
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex w-full items-center justify-center gap-2"
+        >
+          <ClipboardPaste className="size-4" />
+          Paste
+        </Button>
+      </AlertDialogTrigger>
       <AlertDialogContent className="sm:max-w-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Paste Agent Configuration</AlertDialogTitle>
