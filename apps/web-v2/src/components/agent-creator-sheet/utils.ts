@@ -1,4 +1,5 @@
 import { DeepAgentConfiguration, SubAgentConfig } from "@/types/deep-agent";
+import { HumanInterruptConfig } from "@/types/inbox";
 import { SubAgent } from "@/types/sub-agent";
 import { toast } from "sonner";
 
@@ -6,14 +7,7 @@ import { toast } from "sonner";
 export function isValidDeepAgentConfiguration(
   obj: any,
 ): obj is DeepAgentConfiguration {
-  return (
-    obj &&
-    typeof obj === "object" &&
-    "instructions" in obj &&
-    "subagents" in obj &&
-    "tools" in obj &&
-    "triggers" in obj
-  );
+  return obj && typeof obj === "object";
 }
 
 export async function handleCopyConfig(config: {
@@ -21,6 +15,7 @@ export async function handleCopyConfig(config: {
   description: string;
   systemPrompt: string;
   tools: string[];
+  interruptConfig?: Record<string, HumanInterruptConfig>;
   triggers: string[];
   subAgents: SubAgent[];
 }) {
@@ -35,6 +30,7 @@ export async function handleCopyConfig(config: {
         subagents: config.subAgents,
         tools: {
           tools: config.tools,
+          interrupt_config: config.interruptConfig ?? {},
         },
         triggers: config.triggers,
       },
@@ -59,6 +55,7 @@ export async function handlePasteConfig(
     description: string;
     systemPrompt: string;
     tools: string[];
+    interruptConfig: Record<string, HumanInterruptConfig>;
     triggers: string[];
     subAgents: SubAgent[];
   }) => void,
@@ -96,11 +93,113 @@ export async function handlePasteConfig(
       }),
     );
 
+    const interruptConfig: Record<string, HumanInterruptConfig> =
+      Object.fromEntries(
+        Object.entries(config.tools?.interrupt_config ?? {}).map(([k, v]) => {
+          if (typeof v === "boolean") {
+            return [
+              k,
+              {
+                allow_accept: v,
+                allow_respond: v,
+                allow_edit: v,
+                allow_ignore: v,
+              } satisfies HumanInterruptConfig,
+            ];
+          }
+          return [k, v as HumanInterruptConfig];
+        }),
+      );
+
     onPaste({
       name: name || "",
       description: description || "",
       systemPrompt: config.instructions || "",
       tools: config.tools?.tools || [],
+      interruptConfig,
+      triggers: config.triggers || [],
+      subAgents,
+    });
+
+    toast.success("Agent configuration pasted successfully", {
+      richColors: true,
+    });
+  } catch {
+    toast.error(
+      "Failed to paste configuration. Please ensure it's valid JSON format.",
+      {
+        richColors: true,
+      },
+    );
+  }
+}
+
+export async function handlePasteConfigFromString(
+  inputText: string,
+  onPaste: (config: {
+    name: string;
+    description: string;
+    systemPrompt: string;
+    tools: string[];
+    interruptConfig: Record<string, HumanInterruptConfig>;
+    triggers: string[];
+    subAgents: SubAgent[];
+  }) => void,
+) {
+  try {
+    const parsedConfig = JSON.parse(inputText);
+
+    if (typeof parsedConfig !== "object" || parsedConfig === null) {
+      throw new Error("Invalid configuration format");
+    }
+
+    if (!(parsedConfig.metadata && parsedConfig.config?.configurable)) {
+      throw new Error("Invalid configuration format");
+    }
+
+    const name = parsedConfig.name as string | undefined;
+    const description = parsedConfig.metadata.description as string | undefined;
+    const config = parsedConfig.config.configurable as
+      | Record<string, unknown>
+      | undefined;
+
+    if (!isValidDeepAgentConfiguration(config)) {
+      throw new Error("Invalid configuration format");
+    }
+
+    const subAgents: SubAgent[] = (config.subagents || []).map(
+      (subAgent: SubAgentConfig) => ({
+        name: subAgent.name || "",
+        description: subAgent.description || "",
+        prompt: subAgent.prompt || "",
+        tools: subAgent.tools || [],
+      }),
+    );
+
+    const interruptConfig: Record<string, HumanInterruptConfig> =
+      Object.fromEntries(
+        Object.entries(config.tools?.interrupt_config ?? {}).map(([k, v]) => {
+          if (typeof v === "boolean") {
+            return [
+              k,
+              {
+                allow_accept: v,
+                allow_respond: v,
+                allow_edit: v,
+                allow_ignore: v,
+              } satisfies HumanInterruptConfig,
+            ];
+          }
+          return [k, v as HumanInterruptConfig];
+        }),
+      );
+
+    onPaste({
+      name: name || "",
+      description: description || "",
+      systemPrompt: config.instructions || "",
+      tools: config.tools?.tools || [],
+      interruptConfig,
       triggers: config.triggers || [],
       subAgents,
     });

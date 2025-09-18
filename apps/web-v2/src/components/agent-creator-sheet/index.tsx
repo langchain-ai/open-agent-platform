@@ -47,7 +47,8 @@ import {
 } from "@/types/triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { AuthRequiredDialog } from "./components/auth-required-dialog";
-import { handleCopyConfig, handlePasteConfig } from "./utils";
+import { handleCopyConfig, handlePasteConfigFromString } from "./utils";
+import { PasteConfigDialog } from "./components/paste-config-dialog";
 
 const sections = [
   {
@@ -148,9 +149,13 @@ export function AgentCreatorSheet(props: {
   });
 
   const agentName = configurationForm.watch("name");
+  const description = configurationForm.watch("description");
   const hasAgentConfig = !!agentName.trim();
   const systemPrompt = systemPromptForm.watch("systemPrompt");
   const subAgents = subAgentsForm.watch("subAgents") ?? [];
+  const tools = toolsForm.watch("tools") ?? [];
+  const interruptConfig = toolsForm.watch("interruptConfig") ?? {};
+  const triggerIds = triggersForm.watch("triggerIds") ?? [];
 
   const auth = useAuthContext();
   const { createAgent, updateAgent, deleteAgent } = useAgents();
@@ -172,6 +177,7 @@ export function AgentCreatorSheet(props: {
   const [triggersLoading, setTriggersLoading] = useState(true);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
+  const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -489,6 +495,18 @@ export function AgentCreatorSheet(props: {
     });
   };
 
+  const handleCopy = () => {
+    handleCopyConfig({
+      name: agentName || "",
+      description: description || "",
+      systemPrompt: systemPrompt || "",
+      tools: tools || [],
+      interruptConfig: interruptConfig || {},
+      triggers: triggerIds || [],
+      subAgents: subAgents || [],
+    });
+  };
+
   const handleResetForms = () => {
     configurationForm.reset();
     toolsForm.reset();
@@ -652,22 +670,7 @@ export function AgentCreatorSheet(props: {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    const { name, description } = configurationForm.getValues();
-                    const { systemPrompt } = systemPromptForm.getValues();
-                    const { tools } = toolsForm.getValues();
-                    const { triggerIds } = triggersForm.getValues();
-                    const { subAgents } = subAgentsForm.getValues();
-
-                    handleCopyConfig({
-                      name: name || "",
-                      description: description || "",
-                      systemPrompt: systemPrompt || "",
-                      tools: tools || [],
-                      triggers: triggerIds || [],
-                      subAgents: subAgents || [],
-                    });
-                  }}
+                  onClick={handleCopy}
                   className="flex w-full items-center justify-center gap-2"
                 >
                   <Copy className="size-4" />
@@ -676,22 +679,7 @@ export function AgentCreatorSheet(props: {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    handlePasteConfig((config) => {
-                      configurationForm.setValue("name", config.name);
-                      configurationForm.setValue(
-                        "description",
-                        config.description,
-                      );
-                      systemPromptForm.setValue(
-                        "systemPrompt",
-                        config.systemPrompt,
-                      );
-                      toolsForm.setValue("tools", config.tools);
-                      triggersForm.setValue("triggerIds", config.triggers);
-                      subAgentsForm.setValue("subAgents", config.subAgents);
-                    });
-                  }}
+                  onClick={() => setPasteDialogOpen(true)}
                   className="flex w-full items-center justify-center gap-2"
                 >
                   <ClipboardPaste className="size-4" />
@@ -792,6 +780,24 @@ export function AgentCreatorSheet(props: {
           } else {
             handleCreateAgent();
           }
+        }}
+      />
+      <PasteConfigDialog
+        open={pasteDialogOpen}
+        onOpenChange={setPasteDialogOpen}
+        onSubmit={(text) => {
+          handlePasteConfigFromString(text, (config) => {
+            configurationForm.setValue("name", config.name);
+            configurationForm.setValue("description", config.description);
+            systemPromptForm.setValue("systemPrompt", config.systemPrompt);
+            toolsForm.setValue("tools", config.tools);
+            toolsForm.setValue("interruptConfig", config.interruptConfig, {
+              shouldDirty: true,
+            });
+            triggersForm.setValue("triggerIds", config.triggers);
+            subAgentsForm.setValue("subAgents", config.subAgents);
+            setPasteDialogOpen(false);
+          });
         }}
       />
     </Sheet>
