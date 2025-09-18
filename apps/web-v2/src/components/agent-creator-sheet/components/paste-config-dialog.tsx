@@ -2,20 +2,21 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 
 export function PasteConfigDialog(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (text: string) => void;
+  onSubmit: (text: string) => Promise<boolean>;
 }) {
   const { open, onOpenChange, onSubmit } = props;
   const [text, setText] = useState("");
@@ -35,41 +36,40 @@ export function PasteConfigDialog(props: {
     if (!nextOpen) setText("");
   };
 
-  const handleSubmit = () => {
-    onSubmit(text);
-    setText("");
-    onOpenChange(false);
+  const handleSubmit = async () => {
+    const success = await onSubmit(text);
+    if (success) {
+      setText("");
+      onOpenChange(false);
+    }
   };
 
   return (
-    <Dialog
+    <AlertDialog
       open={open}
       onOpenChange={handleClose}
     >
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Paste Agent Configuration</DialogTitle>
-          <DialogDescription>
+      <AlertDialogContent className="sm:max-w-2xl">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Paste Agent Configuration</AlertDialogTitle>
+          <AlertDialogDescription>
             Paste the JSON configuration to import. It should include metadata
             and a config.configurable object.
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={EXAMPLE_CONFIG_PLACEHOLDER}
           className="min-h-64 font-mono"
         />
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleClose(false)}
-          >
-            Cancel
-          </Button>
+        <AlertDialogFooter>
+          <AlertDialogCancel asChild>
+            <Button variant="outline">Cancel</Button>
+          </AlertDialogCancel>
           <Button onClick={handleSubmit}>Submit</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

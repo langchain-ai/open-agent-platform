@@ -147,7 +147,7 @@ export async function handlePasteConfigFromString(
     triggers: string[];
     subAgents: SubAgent[];
   }) => void,
-) {
+): Promise<boolean> {
   try {
     const parsedConfig = JSON.parse(inputText);
 
@@ -209,6 +209,8 @@ export async function handlePasteConfigFromString(
     toast.success("Agent configuration pasted successfully", {
       richColors: true,
     });
+
+    return true;
   } catch {
     toast.error(
       "Failed to paste configuration. Please ensure it's valid JSON format.",
@@ -217,4 +219,6 @@ export async function handlePasteConfigFromString(
       },
     );
   }
+
+  return false;
 }

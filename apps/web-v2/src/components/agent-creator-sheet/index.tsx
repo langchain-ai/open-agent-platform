@@ -507,8 +507,8 @@ export function AgentCreatorSheet(props: {
     });
   };
 
-  const handlePasteSubmit = (text: string) => {
-    handlePasteConfigFromString(text, (config) => {
+  const handlePasteSubmit = async (text: string): Promise<boolean> => {
+    return await handlePasteConfigFromString(text, (config) => {
       configurationForm.setValue("name", config.name);
       configurationForm.setValue("description", config.description);
       systemPromptForm.setValue("systemPrompt", config.systemPrompt);
