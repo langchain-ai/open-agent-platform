@@ -38,7 +38,7 @@ export interface ListTriggerRegistrationsData {
   user_id: string;
   template_id: string;
   resource: unknown;
-  linked_assistant_ids?: string[];
+  linked_agent_ids: string[];
   created_at: string;
 }
 

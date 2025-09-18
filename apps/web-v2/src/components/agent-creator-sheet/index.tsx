@@ -140,7 +140,7 @@ export function AgentCreatorSheet(props: {
     systemPrompt: configurable?.instructions ?? "",
   });
   const triggersForm = useAgentTriggersForm({
-    triggerIds: configurable?.triggers ?? [],
+    triggerIds: [], // Initial empty state, loaded from server in useEffect
   });
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
     defaultValues: {
@@ -165,6 +165,7 @@ export function AgentCreatorSheet(props: {
     listUserTriggers,
     updateAgentTriggers,
     setupAgentTrigger,
+    listAgentTriggers,
   } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
@@ -195,9 +196,17 @@ export function AgentCreatorSheet(props: {
       listTriggers(auth.session.accessToken),
       listUserTriggers(auth.session.accessToken),
     ])
-      .then(([t, r]) => {
+      .then(async ([t, r]) => {
         setTriggers(t);
         setRegistrations(r);
+
+        if (props.agent && auth.session?.accessToken) {
+          const agentTriggerIds = await listAgentTriggers(
+            auth.session.accessToken,
+            props.agent.assistant_id,
+          );
+          triggersForm.setValue("triggerIds", agentTriggerIds);
+        }
       })
       .finally(() => setTriggersLoading(false));
   }, [auth.session?.accessToken, showTriggersTab]);
@@ -270,7 +279,6 @@ export function AgentCreatorSheet(props: {
           url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
           auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
         },
-        triggers: triggerIds ?? [],
         instructions: currentSystemPrompt,
         subagents: subAgents,
       };
@@ -369,25 +377,24 @@ export function AgentCreatorSheet(props: {
         return;
       }
 
-      // Check if the triggers have changed. Either the default triggers have changed, or if no
-      // default exists, check if the trigger list is non-empty
-      const agentConfigurable = props.agent.config.configurable as
-        | DeepAgentConfiguration
-        | undefined;
-      const existingTriggerConfig = agentConfigurable?.triggers;
-      if (
-        (existingTriggerConfig?.length &&
-          existingTriggerConfig.some(
-            (existingTrigger) =>
-              !triggerIds?.some((newTrigger) => existingTrigger === newTrigger),
-          )) ||
-        (!existingTriggerConfig?.length && triggerIds?.length)
-      ) {
-        const selectedTriggerIds = triggerIds ?? [];
+      // Check if the triggers have changed by comparing with current server state
+      const selectedTriggerIds = triggerIds ?? [];
+      const currentTriggerIds = await listAgentTriggers(
+        auth.session.accessToken,
+        props.agent.assistant_id,
+      );
 
+      // Check if there are any differences between current and selected triggers
+      const hasChanges =
+        currentTriggerIds.length !== selectedTriggerIds.length ||
+        currentTriggerIds.some((id) => !selectedTriggerIds.includes(id)) ||
+        selectedTriggerIds.some((id) => !currentTriggerIds.includes(id));
+
+      if (hasChanges) {
         const success = await updateAgentTriggers(auth.session.accessToken, {
           agentId: props.agent.assistant_id,
           selectedTriggerIds,
+          currentTriggerIds,
         });
         if (!success) {
           toast.error("Failed to update agent triggers", {
@@ -404,7 +411,6 @@ export function AgentCreatorSheet(props: {
           tools,
           interrupt_config: toolsInterruptConfig ?? {},
         },
-        triggers: triggerIds ?? [],
         instructions: currentSystemPrompt,
         subagents: subAgents,
       };
@@ -484,14 +490,16 @@ export function AgentCreatorSheet(props: {
       return;
     }
 
-    const configurable = props.agent.config.configurable as
-      | DeepAgentConfiguration
-      | undefined;
-    if (configurable?.triggers?.length) {
+    const currentTriggerIds = await listAgentTriggers(
+      auth.session.accessToken,
+      props.agent.assistant_id,
+    );
+
+    if (currentTriggerIds.length > 0) {
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: props.agent.assistant_id,
         selectedTriggerIds: [],
-        currentTriggerIds: configurable.triggers ?? [],
+        currentTriggerIds: currentTriggerIds,
       });
       if (!success) {
         toast.error("Failed to update agent triggers", {

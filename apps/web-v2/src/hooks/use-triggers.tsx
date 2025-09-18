@@ -245,11 +245,34 @@ export function useTriggers() {
     return true;
   };
 
+  const listAgentTriggers = async (
+    accessToken: string,
+    agentId: string,
+  ): Promise<string[]> => {
+    try {
+      // Get all user trigger registrations
+      const registrations = await listTriggerRegistrations(accessToken);
+      if (!registrations) {
+        return [];
+      }
+      // Filter to find registrations that have this agent linked
+      const agentTriggerIds = registrations
+        .filter((reg) => reg.linked_agent_ids?.includes(agentId))
+        .map((reg) => reg.id);
+
+      return agentTriggerIds;
+    } catch (error) {
+      console.error("Error listing agent triggers:", error);
+      return [];
+    }
+  };
+
   return {
     listTriggers,
     listUserTriggers: listTriggerRegistrations,
     registerTrigger,
     setupAgentTrigger,
     updateAgentTriggers,
+    listAgentTriggers,
   };
 }

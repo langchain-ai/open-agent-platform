@@ -8,8 +8,6 @@ export interface SubAgentConfig {
   mcp_server?: string;
 }
 
-export type TriggersConfig = string[];
-
 export interface MCPConfig {
   tools?: string[];
   url?: string;
@@ -21,5 +19,4 @@ export interface DeepAgentConfiguration {
   instructions: string;
   subagents: SubAgentConfig[];
   tools: MCPConfig;
-  triggers: TriggersConfig;
 }
