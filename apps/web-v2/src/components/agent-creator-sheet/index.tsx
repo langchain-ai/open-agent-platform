@@ -660,12 +660,12 @@ export function AgentCreatorSheet(props: {
                     const { subAgents } = subAgentsForm.getValues();
 
                     handleCopyConfig({
-                      name,
-                      description,
-                      systemPrompt,
-                      tools,
-                      triggers: triggerIds,
-                      subAgents,
+                      name: name || "",
+                      description: description || "",
+                      systemPrompt: systemPrompt || "",
+                      tools: tools || [],
+                      triggers: triggerIds || [],
+                      subAgents: subAgents || [],
                     });
                   }}
                   className="flex w-full items-center justify-center gap-2"
