@@ -75,6 +75,7 @@ export function TriggerAccordionItem(props: {
   };
   triggers: Trigger[];
   form?: UseFormReturn<AgentTriggersFormData>;
+  reloadTriggers?: () => Promise<void>;
 }) {
   const getAllTriggerNamesUnique = () => {
     const names = new Set<string>();
@@ -263,7 +264,10 @@ export function TriggerAccordionItem(props: {
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />
                 ) : null}
-                <AuthenticateTriggerDialog trigger={trigger} />
+                <AuthenticateTriggerDialog
+                  reloadTriggers={props.reloadTriggers}
+                  trigger={trigger}
+                />
               </div>
             </div>
             {index < arr.length - 1 && <hr />}
