@@ -31,6 +31,8 @@ export async function handleCopyConfig(config: {
         tools: {
           tools: config.tools,
           interrupt_config: config.interruptConfig ?? {},
+          url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+          auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
         },
         triggers: config.triggers,
       },

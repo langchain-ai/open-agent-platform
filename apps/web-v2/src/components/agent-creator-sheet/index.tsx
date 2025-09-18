@@ -518,7 +518,6 @@ export function AgentCreatorSheet(props: {
       });
       triggersForm.setValue("triggerIds", config.triggers);
       subAgentsForm.setValue("subAgents", config.subAgents);
-      setPasteDialogOpen(false);
     });
   };
 

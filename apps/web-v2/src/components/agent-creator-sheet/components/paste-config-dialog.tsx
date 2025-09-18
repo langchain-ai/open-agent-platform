@@ -35,6 +35,12 @@ export function PasteConfigDialog(props: {
     if (!nextOpen) setText("");
   };
 
+  const handleSubmit = () => {
+    onSubmit(text);
+    setText("");
+    onOpenChange(false);
+  };
+
   return (
     <Dialog
       open={open}
@@ -61,7 +67,7 @@ export function PasteConfigDialog(props: {
           >
             Cancel
           </Button>
-          <Button onClick={() => onSubmit(text)}>Submit</Button>
+          <Button onClick={handleSubmit}>Submit</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
