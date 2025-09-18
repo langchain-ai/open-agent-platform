@@ -3,14 +3,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { prettifyText } from "@/features/agent-inbox/utils";
 import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { AuthenticateTriggerDialog } from "./authenticate-trigger-dialog";
 import { UseFormReturn } from "react-hook-form";
 import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
@@ -18,6 +12,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { ResourceRenderer } from "@/components/ui/resource-renderer";
+import { RegistrationsHoverCard } from "./registrations-hover-card";
 
 const getRegistrationText = (
   registration: ListTriggerRegistrationsData,
@@ -28,45 +23,6 @@ const getRegistrationText = (
     return Object.values(resource)[0];
   return "";
 };
-
-function RegistrationsBadge(props: {
-  registrations: ListTriggerRegistrationsData[];
-}) {
-  const { registrations } = props;
-
-  if (!registrations.length) {
-    return null;
-  }
-
-  if (registrations.length === 1) {
-    return (
-      <Badge variant="secondary">{getRegistrationText(registrations[0])}</Badge>
-    );
-  }
-
-  return (
-    <HoverCard>
-      <HoverCardTrigger>
-        <Badge variant="secondary">{registrations.length} Registrations</Badge>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80">
-        <ul className="space-y-2">
-          {registrations.map((registration) => (
-            <li
-              key={registration.id}
-              className="flex items-center gap-2 text-sm"
-            >
-              <div className="bg-muted-foreground h-1.5 w-1.5 flex-shrink-0 rounded-full" />
-              <span className="break-words">
-                {getRegistrationText(registration)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </HoverCardContent>
-    </HoverCard>
-  );
-}
 
 export function TriggerAccordionItem(props: {
   provider: string;
@@ -260,7 +216,7 @@ export function TriggerAccordionItem(props: {
                 ) : null}
                 {!props.form &&
                 getRegistrationsFromTriggerId(trigger.id)?.length ? (
-                  <RegistrationsBadge
+                  <RegistrationsHoverCard
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />
                 ) : null}
