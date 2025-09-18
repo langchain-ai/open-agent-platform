@@ -140,7 +140,7 @@ export function AgentCreatorSheet(props: {
     systemPrompt: configurable?.instructions ?? "",
   });
   const triggersForm = useAgentTriggersForm({
-    triggerIds: configurable?.triggers ?? [],
+    triggerIds: [], // TODO: Load from trigger server API instead of agent config
   });
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
     defaultValues: {
@@ -165,6 +165,7 @@ export function AgentCreatorSheet(props: {
     listUserTriggers,
     updateAgentTriggers,
     setupAgentTrigger,
+    listAgentTriggers,
   } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
@@ -195,9 +196,14 @@ export function AgentCreatorSheet(props: {
       listTriggers(auth.session.accessToken),
       listUserTriggers(auth.session.accessToken),
     ])
-      .then(([t, r]) => {
+      .then(async ([t, r]) => {
         setTriggers(t);
         setRegistrations(r);
+        
+        if (props.agent && auth.session?.accessToken) {
+          const agentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
+          triggersForm.setValue("triggerIds", agentTriggerIds);
+        }
       })
       .finally(() => setTriggersLoading(false));
   }, [auth.session?.accessToken, showTriggersTab]);
@@ -270,7 +276,6 @@ export function AgentCreatorSheet(props: {
           url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
           auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
         },
-        triggers: triggerIds ?? [],
         instructions: currentSystemPrompt,
         subagents: subAgents,
       };
@@ -362,10 +367,14 @@ export function AgentCreatorSheet(props: {
         (!existingTriggerConfig?.length && triggerIds?.length)
       ) {
         const selectedTriggerIds = triggerIds ?? [];
+        
+        // Get current trigger IDs from server to determine what needs to be removed
+        const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
 
         const success = await updateAgentTriggers(auth.session.accessToken, {
           agentId: props.agent.assistant_id,
           selectedTriggerIds,
+          currentTriggerIds,
         });
         if (!success) {
           toast.error("Failed to update agent triggers", {
@@ -382,7 +391,6 @@ export function AgentCreatorSheet(props: {
           tools,
           interrupt_config: toolsInterruptConfig ?? {},
         },
-        triggers: triggerIds ?? [],
         instructions: currentSystemPrompt,
         subagents: subAgents,
       };
@@ -462,21 +470,27 @@ export function AgentCreatorSheet(props: {
       return;
     }
 
-    const configurable = props.agent.config.configurable as
-      | DeepAgentConfiguration
-      | undefined;
-    if (configurable?.triggers?.length) {
+    // Clean up trigger links using trigger server API
+    console.log("[DELETE AGENT DEBUG] Getting triggers for agent from trigger server:", props.agent.assistant_id);
+    const currentTriggerIds = await listAgentTriggers(auth.session.accessToken, props.agent.assistant_id);
+    console.log("[DELETE AGENT DEBUG] Current trigger IDs from server:", currentTriggerIds);
+    
+    if (currentTriggerIds.length > 0) {
+      console.log("[DELETE AGENT DEBUG] Attempting to clear trigger links for agent:", props.agent.assistant_id);
       const success = await updateAgentTriggers(auth.session.accessToken, {
         agentId: props.agent.assistant_id,
         selectedTriggerIds: [],
-        currentTriggerIds: configurable.triggers ?? [],
+        currentTriggerIds: currentTriggerIds,
       });
+      console.log("[DELETE AGENT DEBUG] updateAgentTriggers result:", success);
       if (!success) {
         toast.error("Failed to update agent triggers", {
           richColors: true,
         });
         return;
       }
+    } else {
+      console.log("[DELETE AGENT DEBUG] No triggers found to cleanup");
     }
 
     toast.success("Agent deleted successfully!", {
