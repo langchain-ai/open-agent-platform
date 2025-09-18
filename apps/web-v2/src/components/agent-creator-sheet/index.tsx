@@ -12,7 +12,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Copy } from "lucide-react";
 import TriggersInterface from "@/features/triggers";
 import { cn } from "@/lib/utils";
 import { SubAgentCreator } from "./components/sub-agents";
@@ -47,6 +47,8 @@ import {
 } from "@/types/triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { AuthRequiredDialog } from "./components/auth-required-dialog";
+import { handleCopyConfig, handlePasteConfigFromString } from "./utils";
+import { PasteConfigDialog } from "./components/paste-config-dialog";
 
 const sections = [
   {
@@ -147,9 +149,13 @@ export function AgentCreatorSheet(props: {
   });
 
   const agentName = configurationForm.watch("name");
+  const description = configurationForm.watch("description");
   const hasAgentConfig = !!agentName.trim();
   const systemPrompt = systemPromptForm.watch("systemPrompt");
   const subAgents = subAgentsForm.watch("subAgents") ?? [];
+  const tools = toolsForm.watch("tools") ?? [];
+  const interruptConfig = toolsForm.watch("interruptConfig") ?? {};
+  const triggerIds = triggersForm.watch("triggerIds") ?? [];
 
   const auth = useAuthContext();
   const { createAgent, updateAgent, deleteAgent } = useAgents();
@@ -488,6 +494,32 @@ export function AgentCreatorSheet(props: {
     });
   };
 
+  const handleCopy = () => {
+    handleCopyConfig({
+      name: agentName || "",
+      description: description || "",
+      systemPrompt: systemPrompt || "",
+      tools: tools || [],
+      interruptConfig: interruptConfig || {},
+      triggers: triggerIds || [],
+      subAgents: subAgents || [],
+    });
+  };
+
+  const handlePasteSubmit = async (text: string): Promise<boolean> => {
+    return await handlePasteConfigFromString(text, (config) => {
+      configurationForm.setValue("name", config.name);
+      configurationForm.setValue("description", config.description);
+      systemPromptForm.setValue("systemPrompt", config.systemPrompt);
+      toolsForm.setValue("tools", config.tools);
+      toolsForm.setValue("interruptConfig", config.interruptConfig, {
+        shouldDirty: true,
+      });
+      triggersForm.setValue("triggerIds", config.triggers);
+      subAgentsForm.setValue("subAgents", config.subAgents);
+    });
+  };
+
   const handleResetForms = () => {
     configurationForm.reset();
     toolsForm.reset();
@@ -645,6 +677,21 @@ export function AgentCreatorSheet(props: {
                 </span>
               </div>
             ))}
+
+            <div className="mt-auto px-4 pb-4">
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="flex w-full items-center justify-center gap-2"
+                >
+                  <Copy className="size-4" />
+                  Copy
+                </Button>
+                <PasteConfigDialog onSubmit={handlePasteSubmit} />
+              </div>
+            </div>
           </div>
 
           <div className="bg-background m-3 flex w-full flex-col rounded-2xl p-3">
