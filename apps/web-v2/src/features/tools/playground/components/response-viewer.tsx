@@ -1,29 +1,18 @@
 "use client";
 
-import type React from "react";
-
 import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
-import {
   Loader2,
   AlertTriangle,
   Copy,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   vscDarkPlus,
-  vs,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 interface ResponseViewerProps {
   response: any;
@@ -54,7 +43,7 @@ function parseToolResponse(response: any): {
         parsedData,
         originalResponse: response,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         isParsedResponse: false,
         originalResponse: response,
@@ -203,285 +192,6 @@ function copyToClipboard(text: string, label?: string) {
     .catch(() => {
       toast.error("Failed to copy to clipboard");
     });
-}
-
-// TreeView component with collapsible nodes
-function TreeView({ response }: { response: any }) {
-  return (
-    <div className="space-y-1">
-      <TreeNode
-        value={response}
-        isRoot={true}
-        path=""
-        searchTerm=""
-      />
-    </div>
-  );
-}
-
-// Individual tree node component
-function TreeNode({
-  value,
-  keyName,
-  isRoot = false,
-  path,
-  searchTerm,
-}: {
-  value: any;
-  keyName?: string;
-  isRoot?: boolean;
-  path: string;
-  searchTerm: string;
-}) {
-  const [isOpen, setIsOpen] = useState(isRoot || searchTerm.length > 0);
-  const currentPath = keyName ? (path ? `${path}.${keyName}` : keyName) : path;
-
-  // Update open state when search term changes
-  React.useEffect(() => {
-    if (searchTerm.length > 0) {
-      // If there's a search term, check if this node or any children match
-      const shouldOpen = matchesSearch(value, currentPath, searchTerm);
-      setIsOpen(shouldOpen);
-    }
-  }, [searchTerm, value, currentPath]);
-
-  if (value === null || value === undefined) {
-    return (
-      <div className="group flex items-center gap-2">
-        {keyName && (
-          <span className="font-medium text-gray-700">{keyName}:</span>
-        )}
-        <span className="font-mono text-gray-400">null</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-          onClick={() => copyToClipboard("null", keyName)}
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
-      </div>
-    );
-  }
-
-  if (typeof value === "object" && Array.isArray(value)) {
-    const hasContent = value.length > 0;
-    const preview = hasContent ? `[${value.length} items]` : "[]";
-
-    return (
-      <div className={cn(!isRoot && "ml-4")}>
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-        >
-          <div className="group flex items-center gap-1">
-            {hasContent && (
-              <CollapsibleTrigger className="flex items-center gap-1 rounded p-1 hover:bg-gray-100">
-                {isOpen ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-              </CollapsibleTrigger>
-            )}
-            {keyName && (
-              <span className="font-medium text-gray-700">{keyName}:</span>
-            )}
-            <span className="font-mono text-purple-600">{preview}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-              onClick={() =>
-                copyToClipboard(JSON.stringify(value, null, 2), keyName)
-              }
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-
-          {hasContent && (
-            <CollapsibleContent className="space-y-1">
-              {value.map((item, index) => (
-                <TreeNode
-                  key={index}
-                  value={item}
-                  keyName={`[${index}]`}
-                  path={`${currentPath}[${index}]`}
-                  searchTerm={searchTerm}
-                />
-              ))}
-            </CollapsibleContent>
-          )}
-        </Collapsible>
-      </div>
-    );
-  }
-
-  if (typeof value === "object") {
-    const entries = Object.entries(value);
-    const hasContent = entries.length > 0;
-    const preview = hasContent ? `{${entries.length} keys}` : "{}";
-
-    return (
-      <div className={cn(!isRoot && "ml-4")}>
-        <Collapsible
-          open={isOpen}
-          onOpenChange={setIsOpen}
-        >
-          <div className="group flex items-center gap-1">
-            {hasContent && (
-              <CollapsibleTrigger className="flex items-center gap-1 rounded p-1 hover:bg-gray-100">
-                {isOpen ? (
-                  <ChevronDown className="h-3 w-3" />
-                ) : (
-                  <ChevronRight className="h-3 w-3" />
-                )}
-              </CollapsibleTrigger>
-            )}
-            {keyName && (
-              <span className="font-medium text-gray-700">{keyName}:</span>
-            )}
-            <span className="font-mono text-purple-600">{preview}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-              onClick={() =>
-                copyToClipboard(JSON.stringify(value, null, 2), keyName)
-              }
-            >
-              <Copy className="h-3 w-3" />
-            </Button>
-          </div>
-
-          {hasContent && (
-            <CollapsibleContent className="space-y-1">
-              {entries.map(([k, v]) => (
-                <TreeNode
-                  key={k}
-                  value={v}
-                  keyName={k}
-                  path={currentPath ? `${currentPath}.${k}` : k}
-                  searchTerm={searchTerm}
-                />
-              ))}
-            </CollapsibleContent>
-          )}
-        </Collapsible>
-      </div>
-    );
-  }
-
-  // Primitive values
-  const displayValue = typeof value === "string" ? `"${value}"` : String(value);
-  const colorClass = getValueColor(value);
-  const shouldHighlight =
-    searchTerm.length > 0 &&
-    ((keyName && keyName.toLowerCase().includes(searchTerm)) ||
-      String(value).toLowerCase().includes(searchTerm));
-
-  return (
-    <div
-      className={cn(
-        "group flex items-center gap-2",
-        !isRoot && "ml-4",
-        shouldHighlight && "rounded bg-yellow-100 px-1",
-      )}
-    >
-      {keyName && <span className="font-medium text-gray-700">{keyName}:</span>}
-      <span className={cn("font-mono break-words", colorClass)}>
-        {displayValue}
-      </span>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-        onClick={() => copyToClipboard(String(value), keyName)}
-      >
-        <Copy className="h-3 w-3" />
-      </Button>
-    </div>
-  );
-}
-
-// Helper function to get color classes for different value types
-function getValueColor(value: any): string {
-  if (typeof value === "boolean") {
-    return value ? "text-green-600" : "text-red-600";
-  }
-  if (typeof value === "number") {
-    return "text-blue-600";
-  }
-  if (typeof value === "string") {
-    return "text-green-700";
-  }
-  return "text-gray-600";
-}
-
-// Helper function to check if a node matches the search term
-function matchesSearch(value: any, path: string, searchTerm: string): boolean {
-  if (searchTerm.length === 0) return false;
-
-  // Check if path matches
-  if (path.toLowerCase().includes(searchTerm)) return true;
-
-  // Check if value matches (for primitives)
-  if (typeof value !== "object" || value === null) {
-    return String(value).toLowerCase().includes(searchTerm);
-  }
-
-  // For objects/arrays, recursively check children
-  if (Array.isArray(value)) {
-    return value.some((item, index) =>
-      matchesSearch(item, `${path}[${index}]`, searchTerm),
-    );
-  }
-
-  return Object.entries(value).some(
-    ([key, val]) =>
-      key.toLowerCase().includes(searchTerm) ||
-      matchesSearch(val, path ? `${path}.${key}` : key, searchTerm),
-  );
-}
-
-// FormattedView component with syntax highlighting
-function FormattedView({ response }: { response: any }) {
-  const jsonString = JSON.stringify(response, null, 2);
-
-  return (
-    <div className="relative">
-      <div className="absolute top-2 right-2 z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => copyToClipboard(jsonString, "JSON")}
-        >
-          <Copy className="h-4 w-4" />
-          Copy
-        </Button>
-      </div>
-      <SyntaxHighlighter
-        language="json"
-        style={vs}
-        showLineNumbers
-        lineNumberStyle={{
-          color: "#666",
-          paddingRight: "1em",
-          fontSize: "0.8em",
-        }}
-        customStyle={{
-          margin: 0,
-          borderRadius: 0,
-          background: "#fafafa",
-          fontSize: "0.875rem",
-        }}
-        wrapLongLines
-      >
-        {jsonString}
-      </SyntaxHighlighter>
-    </div>
-  );
 }
 
 // RawView component with enhanced syntax highlighting
