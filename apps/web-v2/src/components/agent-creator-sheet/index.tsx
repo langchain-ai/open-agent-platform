@@ -326,6 +326,28 @@ export function AgentCreatorSheet(props: {
     }
   };
 
+  const reloadTriggers = async () => {
+    if (!auth.session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      return;
+    }
+    try {
+      const [triggersList, userTriggersList] = await Promise.all([
+        listTriggers(auth.session.accessToken),
+        listUserTriggers(auth.session.accessToken),
+      ]);
+      setTriggers(triggersList);
+      setRegistrations(userTriggersList);
+    } catch (error) {
+      console.error("Error loading triggers:", error);
+      toast.error("Failed to load triggers", {
+        richColors: true,
+      });
+    }
+  };
+
   const handleUpdateAgent = async () => {
     if (!props.agent) {
       toast.error("No agent found", {
@@ -725,6 +747,7 @@ export function AgentCreatorSheet(props: {
                           showTriggersTab={showTriggersTab}
                           form={triggersForm}
                           hideHeader={true}
+                          reloadTriggers={reloadTriggers}
                         />
                       </div>
                     </div>
