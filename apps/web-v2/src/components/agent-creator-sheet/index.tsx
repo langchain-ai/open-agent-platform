@@ -140,7 +140,7 @@ export function AgentCreatorSheet(props: {
     systemPrompt: configurable?.instructions ?? "",
   });
   const triggersForm = useAgentTriggersForm({
-    triggerIds: [], // TODO: Load from trigger server API instead of agent config
+    triggerIds: [], // Initial empty state, loaded from server in useEffect
   });
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
     defaultValues: {
