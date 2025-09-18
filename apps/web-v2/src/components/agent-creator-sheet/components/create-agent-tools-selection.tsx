@@ -61,14 +61,10 @@ export function CreateAgentToolsSelection({
     setSortedTools(sorted);
   }, [tools]);
 
-  const {
-    toolSearchTerm,
-    filteredTools,
-    debouncedSetSearchTerm,
-    displayTools,
-  } = useSearchTools(sortedTools, {
-    preSelectedTools: selectedTools,
-  });
+  const { toolSearchTerm, filteredTools, debouncedSetSearchTerm } =
+    useSearchTools(sortedTools, {
+      preSelectedTools: selectedTools,
+    });
   const { loadingMore, setLoadingMore } = useFetchPreselectedTools({
     tools,
     setTools,
