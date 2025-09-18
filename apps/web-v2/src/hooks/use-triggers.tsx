@@ -207,7 +207,6 @@ export function useTriggers() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
         toast.error("Failed to remove agent from trigger", {
           richColors: true,
         });
