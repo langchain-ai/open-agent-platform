@@ -41,7 +41,7 @@ export function AuthenticateTriggerDialog(props: {
 
   // Generate form fields from payload schema
   const payloadFields = trigger.payloadSchema
-    ? generateFormFields(trigger.payloadSchema)
+    ? generateFormFields(trigger.payloadSchema, trigger.requireDisplayName)
     : [];
 
   const handleInputChange = (name: string, value: any) => {

@@ -4,7 +4,10 @@ import {
   Trigger,
 } from "@/types/triggers";
 
-export function generateFormFields(schema: Record<string, any>) {
+export function generateFormFields(
+  schema: Record<string, any>,
+  requireDisplayName?: boolean,
+) {
   const fields: Array<{
     name: string;
     type: string;
@@ -12,8 +15,21 @@ export function generateFormFields(schema: Record<string, any>) {
     description?: string;
   }> = [];
 
+  // Add display_name field if required
+  if (requireDisplayName) {
+    fields.push({
+      name: "display_name",
+      type: "string",
+      required: true,
+      description: "A display name for this trigger registration",
+    });
+  }
+
   if (schema.properties) {
     Object.entries(schema.properties).forEach(([key, value]: [string, any]) => {
+      // Skip display_name if it's already in the schema (avoid duplicates)
+      if (key === "display_name") return;
+
       fields.push({
         name: key,
         type: value.type || "string",

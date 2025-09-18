@@ -27,6 +27,10 @@ export interface Trigger {
    * A JSON schema for the payload of the trigger registration
    */
   payloadSchema: Record<string, any> | null;
+  /**
+   * Whether this trigger requires a display name to be provided
+   */
+  requireDisplayName?: boolean;
 }
 
 export interface ListTriggerRegistrationsData {
