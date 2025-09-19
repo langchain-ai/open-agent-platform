@@ -60,21 +60,23 @@ export function PasteConfigDialog(props: {
           Paste
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="sm:max-w-2xl">
-        <AlertDialogHeader>
+      <AlertDialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+        <AlertDialogHeader className="shrink-0">
           <AlertDialogTitle>Paste Agent Configuration</AlertDialogTitle>
           <AlertDialogDescription>
             Paste the JSON configuration to import. It should include metadata
             and a config.configurable object.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <Textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={EXAMPLE_CONFIG_PLACEHOLDER}
-          className="min-h-64 font-mono"
-        />
-        <AlertDialogFooter>
+        <div className="flex-1 overflow-auto">
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={EXAMPLE_CONFIG_PLACEHOLDER}
+            className="min-h-64 h-full resize-none font-mono"
+          />
+        </div>
+        <AlertDialogFooter className="shrink-0">
           <AlertDialogCancel asChild>
             <Button variant="outline">Cancel</Button>
           </AlertDialogCancel>

@@ -663,50 +663,52 @@ export function AgentCreatorSheet(props: {
           </div>
         </SheetHeader>
 
-        <div className="bg-muted/50 flex h-full w-full flex-row">
-          <div className="flex flex-col p-3">
-            {sections.map((section) => (
-              <div
-                key={section.id}
-                className={cn(
-                  "rounded p-4",
-                  currentSection === section.id ? "bg-gray-100" : "",
-                  canNavigateToSection(section.id)
-                    ? "cursor-pointer"
-                    : "cursor-default",
-                )}
-                onClick={() => {
-                  if (canNavigateToSection(section.id)) {
-                    setCurrentSection(section.id);
-                  }
-                }}
-              >
-                <span className="flex items-center gap-6">
-                  <span
-                    className={cn(
-                      "text-base font-light",
-                      currentSection === section.id
-                        ? "text-gray-500"
-                        : "text-gray-300",
-                    )}
-                  >
-                    {section.id}
-                  </span>
-                  <span>
-                    <h3
+        <div className="bg-muted/50 flex h-full min-h-0 w-full flex-row overflow-hidden">
+          <div className="flex w-64 flex-col p-3 overflow-hidden">
+            <div className="min-h-0 flex-1 overflow-auto pr-1">
+              {sections.map((section) => (
+                <div
+                  key={section.id}
+                  className={cn(
+                    "rounded p-4",
+                    currentSection === section.id ? "bg-gray-100" : "",
+                    canNavigateToSection(section.id)
+                      ? "cursor-pointer"
+                      : "cursor-default",
+                  )}
+                  onClick={() => {
+                    if (canNavigateToSection(section.id)) {
+                      setCurrentSection(section.id);
+                    }
+                  }}
+                >
+                  <span className="flex items-center gap-6">
+                    <span
                       className={cn(
-                        "text-base font-normal",
+                        "text-base font-light",
                         currentSection === section.id
-                          ? "text-black"
-                          : "text-black",
+                          ? "text-gray-500"
+                          : "text-gray-300",
                       )}
                     >
-                      {section.title}
-                    </h3>
+                      {section.id}
+                    </span>
+                    <span>
+                      <h3
+                        className={cn(
+                          "text-base font-normal",
+                          currentSection === section.id
+                            ? "text-black"
+                            : "text-black",
+                        )}
+                      >
+                        {section.title}
+                      </h3>
+                    </span>
                   </span>
-                </span>
-              </div>
-            ))}
+                </div>
+              ))}
+            </div>
 
             <div className="mt-auto px-4 pb-4">
               <div className="flex flex-col gap-2">
@@ -724,8 +726,8 @@ export function AgentCreatorSheet(props: {
             </div>
           </div>
 
-          <div className="bg-background m-3 flex w-full flex-col rounded-2xl p-3">
-            <div className="flex-1 p-6">
+          <div className="bg-background m-3 flex w-full min-h-0 flex-col rounded-2xl p-3">
+            <div className="flex-1 overflow-auto p-6">
               <div className="mx-auto">
                 <div className="space-y-8">
                   {currentSection === 1 && (
