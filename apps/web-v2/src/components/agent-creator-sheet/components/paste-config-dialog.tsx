@@ -60,7 +60,7 @@ export function PasteConfigDialog(props: {
           Paste
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+      <AlertDialogContent className="flex max-h-[85vh] flex-col sm:max-w-2xl">
         <AlertDialogHeader className="shrink-0">
           <AlertDialogTitle>Paste Agent Configuration</AlertDialogTitle>
           <AlertDialogDescription>
@@ -73,7 +73,7 @@ export function PasteConfigDialog(props: {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={EXAMPLE_CONFIG_PLACEHOLDER}
-            className="min-h-64 h-full resize-none font-mono"
+            className="h-full min-h-64 resize-none font-mono"
           />
         </div>
         <AlertDialogFooter className="shrink-0">

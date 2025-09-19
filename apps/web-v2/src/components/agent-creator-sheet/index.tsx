@@ -664,7 +664,7 @@ export function AgentCreatorSheet(props: {
         </SheetHeader>
 
         <div className="bg-muted/50 flex h-full min-h-0 w-full flex-row overflow-hidden">
-          <div className="flex w-64 flex-col p-3 overflow-hidden">
+          <div className="flex w-64 flex-col overflow-hidden p-3">
             <div className="min-h-0 flex-1 overflow-auto pr-1">
               {sections.map((section) => (
                 <div
@@ -726,7 +726,7 @@ export function AgentCreatorSheet(props: {
             </div>
           </div>
 
-          <div className="bg-background m-3 flex w-full min-h-0 flex-col rounded-2xl p-3">
+          <div className="bg-background m-3 flex min-h-0 w-full flex-col rounded-2xl p-3">
             <div className="flex-1 overflow-auto p-6">
               <div className="mx-auto">
                 <div className="space-y-8">
