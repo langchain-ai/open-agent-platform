@@ -19,13 +19,23 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-const fetchThreadsData = async (client: ReturnType<typeof createClient>) => {
+const fetchThreadsData = async (
+  client: ReturnType<typeof createClient>,
+  args?: {
+    assistantId?: string;
+  },
+) => {
   if (!client) return [];
 
   const response = await client.threads.search({
     limit: 30,
     sortBy: "created_at",
     sortOrder: "desc",
+    metadata: args?.assistantId
+      ? {
+          assistant_id: args?.assistantId,
+        }
+      : undefined,
   });
 
   const threadList: ChatHistoryItem[] = response.map((thread) => {
@@ -80,6 +90,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     const { session } = useAuthContext();
     const [threads, setThreads] = useState<ChatHistoryItem[]>([]);
     const [isLoadingThreadHistory, setIsLoadingThreadHistory] = useState(true);
+    const [agentId] = useQueryState("agentId");
     const [deploymentId] = useQueryState("deploymentId");
 
     const client = useMemo(() => {
@@ -88,17 +99,19 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     }, [deploymentId, session]);
 
     const fetchThreads = useCallback(async () => {
-      if (!client) return;
+      if (!client || !agentId) return;
       setIsLoadingThreadHistory(true);
       try {
-        const threadList = await fetchThreadsData(client);
+        const threadList = await fetchThreadsData(client, {
+          assistantId: agentId,
+        });
         setThreads(threadList);
       } catch (error) {
         console.error("Failed to fetch threads:", error);
       } finally {
         setIsLoadingThreadHistory(false);
       }
-    }, [client]);
+    }, [client, agentId]);
 
     useEffect(() => {
       fetchThreads();
