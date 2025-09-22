@@ -31,7 +31,7 @@ export function AgentHierarchyNav({
   const isMainSelected = currentTarget.type === "main";
 
   return (
-    <div className="w-64 border-r border-gray-200 bg-gray-50/50 p-4">
+    <div className="w-64 bg-gray-50/50 p-4">
       <div className="space-y-2">
         {/* Main Agent */}
         <div
