@@ -415,7 +415,6 @@ export function AgentConfig({
     }
   };
 
-
   if (!agent) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -571,7 +570,7 @@ export function AgentConfig({
               >
                 <BlockNoteView
                   editor={editor}
-                  className={cn("min-h-full oap-blocknote")}
+                  className={cn("oap-blocknote min-h-full")}
                   theme="light"
                   data-color-scheme="light"
                   // Disable default slash menu; we render a custom one for tools
