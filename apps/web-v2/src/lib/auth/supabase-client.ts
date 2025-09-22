@@ -27,18 +27,18 @@ export function getSupabaseClient() {
   supabaseInstance = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name) {
-        if (typeof document === 'undefined') return undefined;
+        if (typeof document === "undefined") return undefined;
         return document.cookie
           .split("; ")
           .find((row) => row.startsWith(`${name}=`))
           ?.split("=")?.[1];
       },
       set(name, value, options) {
-        if (typeof document === 'undefined') return;
+        if (typeof document === "undefined") return;
         document.cookie = `${name}=${value}; path=${options?.path ?? "/"}; max-age=${options?.maxAge ?? 31536000}`;
       },
       remove(name, options) {
-        if (typeof document === 'undefined') return;
+        if (typeof document === "undefined") return;
         document.cookie = `${name}=; path=${options?.path ?? "/"}; max-age=0`;
       },
     },
