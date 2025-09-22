@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Agent } from "@/types/agent";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Copy, Eye, EyeOff, Save, Download, Settings, Zap, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -29,14 +30,17 @@ import styles from "./AgentConfig.module.css";
 import { SubAgentCreator } from "@/components/agent-creator-sheet/components/sub-agents";
 import { SubAgent } from "@/types/sub-agent";
 import { useForm as useReactHookForm } from "react-hook-form";
+import { EditTarget } from "@/components/AgentHierarchyNav";
 
 interface AgentConfigProps {
   agent: Agent | null;
+  editTarget?: EditTarget;
+  onAgentUpdated?: () => Promise<void>;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
 
-export function AgentConfig({ agent }: AgentConfigProps) {
+export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigProps) {
   const { session } = useAuthContext();
   const { tools: mcpTools } = useMCPContext();
   const {
@@ -48,13 +52,35 @@ export function AgentConfig({ agent }: AgentConfigProps) {
   } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
-  // Extract data from the agent config
-  const instructions = agent?.config?.configurable?.instructions || "No instructions provided";
-  const tools = agent?.config?.configurable?.tools?.tools || [];
-  const interruptConfig = agent?.config?.configurable?.tools?.interrupt_config || {};
+  // Extract data based on edit target
+  const isEditingSubAgent = editTarget?.type === "subagent";
+  const currentSubAgent = isEditingSubAgent ? editTarget.subAgent : null;
+
+  const currentTitle = isEditingSubAgent
+    ? currentSubAgent?.name || "Untitled Sub-agent"
+    : agent?.name || "Untitled Agent";
+
+  const instructions = isEditingSubAgent
+    ? currentSubAgent?.prompt || "No instructions provided"
+    : agent?.config?.configurable?.instructions || "No instructions provided";
+
+  const tools = isEditingSubAgent
+    ? currentSubAgent?.tools || []
+    : agent?.config?.configurable?.tools?.tools || [];
+
+  const interruptConfig = isEditingSubAgent
+    ? {} // Sub-agents don't have interrupt config
+    : agent?.config?.configurable?.tools?.interrupt_config || {};
+
   const subAgents = agent?.config?.configurable?.subagents || [];
 
+  // Show different tabs based on what we're editing
+  const availableViews: ViewType[] = isEditingSubAgent
+    ? ["instructions", "tools"] // Sub-agents only have instructions and tools
+    : ["instructions", "tools", "triggers"]; // Main agents have instructions, tools, and triggers (sub-agents managed via hierarchy)
+
   const [currentView, setCurrentView] = useState<ViewType>("instructions");
+  const [editedTitle, setEditedTitle] = useState("");
   const [editedInstructions, setEditedInstructions] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
   const [editedInterruptConfig, setEditedInterruptConfig] = useState({});
@@ -73,7 +99,8 @@ export function AgentConfig({ agent }: AgentConfigProps) {
     },
   });
 
-  // Create BlockNote editor
+  // Create BlockNote editor with a unique key for each edit target
+  const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
   const editor = useCreateBlockNote({
     initialContent: undefined, // Will be set in useEffect
     onFocus: () => {
@@ -123,25 +150,78 @@ export function AgentConfig({ agent }: AgentConfigProps) {
       .finally(() => setTriggersLoading(false));
   }, [session?.accessToken, showTriggersTab, agent]);
 
-  // Update edited values when agent changes
+  // Update edited values when edit target changes (not on every render)
   React.useEffect(() => {
     if (agent) {
       console.log("Agent object:", agent);
       console.log("Agent config:", agent.config);
-      console.log("Instructions path:", agent.config?.configurable?.instructions);
+      if (isEditingSubAgent) {
+        console.log("Editing sub-agent:", currentSubAgent);
+        console.log("Sub-agent prompt:", currentSubAgent?.prompt);
+      } else {
+        console.log("Instructions path:", agent.config?.configurable?.instructions);
+      }
     }
-    setEditedInstructions(instructions);
-    setEditedTools(tools);
-    setEditedInterruptConfig(interruptConfig);
+    // Get fresh values each time we switch edit targets
+    const freshTitle = isEditingSubAgent
+      ? currentSubAgent?.name || "Untitled Sub-agent"
+      : agent?.name || "Untitled Agent";
+    const freshInstructions = isEditingSubAgent
+      ? currentSubAgent?.prompt || "No instructions provided"
+      : agent?.config?.configurable?.instructions || "No instructions provided";
+    const freshTools = isEditingSubAgent
+      ? currentSubAgent?.tools || []
+      : agent?.config?.configurable?.tools?.tools || [];
+    const freshInterruptConfig = isEditingSubAgent
+      ? {} // Sub-agents don't have interrupt config
+      : agent?.config?.configurable?.tools?.interrupt_config || {};
 
-    // Update BlockNote editor content
-    if (instructions && instructions !== "No instructions provided") {
-      // Set content as markdown/text in BlockNote
-      editor.tryParseMarkdownToBlocks(instructions).then((blocks) => {
-        editor.replaceBlocks(editor.document, blocks);
-      });
-    }
-  }, [instructions, tools, interruptConfig, agent, editor]);
+    setEditedTitle(freshTitle);
+    setEditedInstructions(freshInstructions);
+    setEditedTools([...freshTools]);
+    setEditedInterruptConfig({...freshInterruptConfig});
+  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, agent?.config?.configurable?.subagents]);
+
+  // Separate effect to update BlockNote editor content
+  React.useEffect(() => {
+    const updateEditorContent = async () => {
+      const currentInstructions = isEditingSubAgent
+        ? currentSubAgent?.prompt || "No instructions provided"
+        : agent?.config?.configurable?.instructions || "No instructions provided";
+
+      if (currentInstructions && currentInstructions !== "No instructions provided") {
+        try {
+          const blocks = await editor.tryParseMarkdownToBlocks(currentInstructions);
+          editor.replaceBlocks(editor.document, blocks);
+        } catch (error) {
+          console.error("Error parsing markdown to blocks:", error);
+          // Fallback to empty editor
+          editor.replaceBlocks(editor.document, [
+            {
+              id: "default",
+              type: "paragraph",
+              props: {},
+              content: "",
+              children: []
+            }
+          ]);
+        }
+      } else {
+        // Clear editor for empty instructions
+        editor.replaceBlocks(editor.document, [
+          {
+            id: "default",
+            type: "paragraph",
+            props: {},
+            content: "",
+            children: []
+          }
+        ]);
+      }
+    };
+
+    updateEditorContent();
+  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, editor]);
 
   // Separate effect to update forms when tools/interruptConfig/subAgents change
   React.useEffect(() => {
@@ -149,6 +229,11 @@ export function AgentConfig({ agent }: AgentConfigProps) {
     toolsForm.setValue("interruptConfig", interruptConfig);
     subAgentsForm.setValue("subAgents", subAgents);
   }, [tools, interruptConfig, subAgents]);
+
+  // Reset to instructions view when switching edit targets
+  React.useEffect(() => {
+    setCurrentView("instructions");
+  }, [editTarget]);
   const [isRawView, setIsRawView] = useState(false);
 
   const handleCopy = async () => {
@@ -211,28 +296,30 @@ export function AgentConfig({ agent }: AgentConfigProps) {
     setIsSaving(true);
 
     try {
-      // Update triggers if they have changed
-      const triggerIds = triggersForm.getValues().triggerIds || [];
-      const currentTriggerIds = await listAgentTriggers(
-        session.accessToken,
-        agent.assistant_id,
-      );
+      // Only update triggers if we're editing the main agent (not sub-agents)
+      if (!isEditingSubAgent) {
+        const triggerIds = triggersForm.getValues().triggerIds || [];
+        const currentTriggerIds = await listAgentTriggers(
+          session.accessToken,
+          agent.assistant_id,
+        );
 
-      // Check if there are any differences between current and selected triggers
-      const hasTriggersChanges =
-        currentTriggerIds.length !== triggerIds.length ||
-        currentTriggerIds.some((id) => !triggerIds.includes(id)) ||
-        triggerIds.some((id) => !currentTriggerIds.includes(id));
+        // Check if there are any differences between current and selected triggers
+        const hasTriggersChanges =
+          currentTriggerIds.length !== triggerIds.length ||
+          currentTriggerIds.some((id) => !triggerIds.includes(id)) ||
+          triggerIds.some((id) => !currentTriggerIds.includes(id));
 
-      if (hasTriggersChanges) {
-        const success = await updateAgentTriggers(session.accessToken, {
-          agentId: agent.assistant_id,
-          selectedTriggerIds: triggerIds,
-          currentTriggerIds,
-        });
-        if (!success) {
-          toast.error("Failed to update agent triggers");
-          return;
+        if (hasTriggersChanges) {
+          const success = await updateAgentTriggers(session.accessToken, {
+            agentId: agent.assistant_id,
+            selectedTriggerIds: triggerIds,
+            currentTriggerIds,
+          });
+          if (!success) {
+            toast.error("Failed to update agent triggers");
+            return;
+          }
         }
       }
 
@@ -242,38 +329,79 @@ export function AgentConfig({ agent }: AgentConfigProps) {
       // Get current values from forms and editor
       const instructionsMarkdown = await editor.blocksToMarkdownLossy(editor.document);
       const { tools: currentTools, interruptConfig: currentInterruptConfig } = toolsForm.getValues();
-      const { subAgents: currentSubAgents } = subAgentsForm.getValues();
 
-      // Update the agent's configuration with new values
-      await client.assistants.update(agent.assistant_id, {
-        config: {
-          configurable: {
-            ...agent.config?.configurable,
-            instructions: instructionsMarkdown,
-            tools: {
-              ...agent.config?.configurable?.tools,
-              tools: currentTools,
-              interrupt_config: currentInterruptConfig
-            },
-            subagents: currentSubAgents
+      if (isEditingSubAgent && editTarget && currentSubAgent) {
+        // Update the specific sub-agent
+        const updatedSubAgent: SubAgent = {
+          ...currentSubAgent,
+          name: editedTitle,
+          prompt: instructionsMarkdown,
+          tools: currentTools,
+        };
+
+        // Update the sub-agents array in the main agent
+        const currentSubAgents = agent?.config?.configurable?.subagents || [];
+        const updatedSubAgents = currentSubAgents.map((sa, index) =>
+          index === editTarget.index ? updatedSubAgent : sa
+        );
+
+        // Save the main agent with updated sub-agents
+        await client.assistants.update(agent.assistant_id, {
+          config: {
+            configurable: {
+              ...agent.config?.configurable,
+              subagents: updatedSubAgents
+            }
           }
-        }
-      });
+        });
+
+        console.log("Successfully updated sub-agent:", {
+          agentId: agent.assistant_id,
+          subAgentIndex: editTarget.index,
+          subAgentName: updatedSubAgent.name,
+          newInstructions: instructionsMarkdown,
+          newTools: currentTools
+        });
+      } else {
+        // Update the main agent
+        const { subAgents: currentSubAgents } = subAgentsForm.getValues();
+
+        await client.assistants.update(agent.assistant_id, {
+          name: editedTitle,
+          config: {
+            configurable: {
+              ...agent.config?.configurable,
+              instructions: instructionsMarkdown,
+              tools: {
+                ...agent.config?.configurable?.tools,
+                tools: currentTools,
+                interrupt_config: currentInterruptConfig
+              },
+              subagents: currentSubAgents
+            }
+          }
+        });
+
+        console.log("Successfully updated main agent:", {
+          agentId: agent.assistant_id,
+          newInstructions: instructionsMarkdown,
+          newTools: currentTools,
+          newInterruptConfig: currentInterruptConfig,
+          newSubAgents: currentSubAgents
+        });
+      }
 
       toast.success("Configuration saved successfully");
-      console.log("Successfully updated agent configuration:", {
-        agentId: agent.assistant_id,
-        newInstructions: instructionsMarkdown,
-        newTools: currentTools,
-        newInterruptConfig: currentInterruptConfig,
-        newTriggers: triggerIds,
-        newSubAgents: currentSubAgents
-      });
 
       // Update local state to reflect saved changes
       setEditedInstructions(instructionsMarkdown);
       setEditedTools(currentTools);
       setEditedInterruptConfig(currentInterruptConfig);
+
+      // Refresh agents data to show updated information
+      if (onAgentUpdated) {
+        await onAgentUpdated();
+      }
 
     } catch (error) {
       console.error("Error saving agent configuration:", error);
@@ -311,56 +439,81 @@ export function AgentConfig({ agent }: AgentConfigProps) {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Title section */}
+      <div className="flex-shrink-0 px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            {isEditingSubAgent ? "Sub-agent" : "Main Agent"}
+          </div>
+          <div className="flex-1">
+            <Input
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="text-lg font-semibold border-none shadow-none px-0 focus-visible:ring-0"
+              placeholder={isEditingSubAgent ? "Sub-agent name..." : "Agent name..."}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Header with view toggle buttons */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex flex-row items-center justify-between">
         <div className="flex gap-2 items-center">
-          <Button
-            variant={currentView === "instructions" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCurrentView("instructions")}
-            className={cn(
-              "h-8",
-              currentView === "instructions" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
-            )}
-          >
-            Instructions
-          </Button>
-          <Button
-            variant={currentView === "tools" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCurrentView("tools")}
-            className={cn(
-              "h-8 gap-1",
-              currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
-            )}
-          >
-            <Settings className="h-3 w-3" />
-            Tools
-          </Button>
-          <Button
-            variant={currentView === "triggers" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCurrentView("triggers")}
-            className={cn(
-              "h-8 gap-1",
-              currentView === "triggers" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
-            )}
-          >
-            <Zap className="h-3 w-3" />
-            Triggers
-          </Button>
-          <Button
-            variant={currentView === "subagents" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCurrentView("subagents")}
-            className={cn(
-              "h-8 gap-1",
-              currentView === "subagents" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
-            )}
-          >
-            <Users className="h-3 w-3" />
-            Sub-agents
-          </Button>
+          {availableViews.includes("instructions") && (
+            <Button
+              variant={currentView === "instructions" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentView("instructions")}
+              className={cn(
+                "h-8",
+                currentView === "instructions" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+              )}
+            >
+              Instructions
+            </Button>
+          )}
+          {availableViews.includes("tools") && (
+            <Button
+              variant={currentView === "tools" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentView("tools")}
+              className={cn(
+                "h-8 gap-1",
+                currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+              )}
+            >
+              <Settings className="h-3 w-3" />
+              Tools
+            </Button>
+          )}
+          {availableViews.includes("triggers") && (
+            <Button
+              variant={currentView === "triggers" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentView("triggers")}
+              className={cn(
+                "h-8 gap-1",
+                currentView === "triggers" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+              )}
+            >
+              <Zap className="h-3 w-3" />
+              Triggers
+            </Button>
+          )}
+          {availableViews.includes("subagents") && (
+            <Button
+              variant={currentView === "subagents" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentView("subagents")}
+              className={cn(
+                "h-8 gap-1",
+                currentView === "subagents" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+              )}
+            >
+              <Users className="h-3 w-3" />
+              Sub-agents
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 items-center">
           {currentView === "instructions" && (
@@ -422,6 +575,7 @@ export function AgentConfig({ agent }: AgentConfigProps) {
           <div className="h-full bg-white">
             <div className="p-6">
               <div
+                key={editorKey}
                 onKeyDown={(e) => {
                   // Prevent keyboard shortcuts from bubbling up to parent components
                   if (e.ctrlKey || e.metaKey) {
