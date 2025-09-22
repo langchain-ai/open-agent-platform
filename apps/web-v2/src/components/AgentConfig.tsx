@@ -32,7 +32,10 @@ import {
   ListTriggerRegistrationsData,
   Trigger,
 } from "@/types/triggers";
-import { useCreateBlockNote } from "@blocknote/react";
+import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
+import { insertOrUpdateBlock } from "@blocknote/core";
+import _ from "lodash";
+import type { DefaultReactSuggestionItem } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -43,6 +46,7 @@ import { useForm as useReactHookForm } from "react-hook-form";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 import { HumanInterruptConfig } from "@/types/inbox";
+import { useMCPContext } from "@/providers/MCP";
 
 interface AgentConfigProps {
   agent: Agent | null;
@@ -71,10 +75,13 @@ export function AgentConfig({
   // Always derive the current sub-agent from the latest agent data using the index,
   // not from the stale object on editTarget, so UI reflects saved updates immediately.
   const currentSubAgent: SubAgent | null = isEditingSubAgent
-    ? ((agent?.config?.configurable?.subagents as SubAgent[])?.[editTarget.index] ?? null)
+    ? ((agent?.config?.configurable?.subagents as SubAgent[])?.[
+        editTarget.index
+      ] ?? null)
     : null;
 
-  const subAgents = (agent?.config?.configurable?.subagents as SubAgent[]) || [];
+  const subAgents =
+    (agent?.config?.configurable?.subagents as SubAgent[]) || [];
 
   const availableViews: ViewType[] = isEditingSubAgent
     ? ["instructions", "tools"]
@@ -83,7 +90,9 @@ export function AgentConfig({
   const [currentView, setCurrentView] = useState<ViewType>("instructions");
   const [editedTitle, setEditedTitle] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
-  const [editedInterruptConfig, setEditedInterruptConfig] = useState<Record<string, HumanInterruptConfig>>({});
+  const [editedInterruptConfig, setEditedInterruptConfig] = useState<
+    Record<string, HumanInterruptConfig>
+  >({});
   const [isSaving, setIsSaving] = useState(false);
 
   // Create tools form to track changes
@@ -103,9 +112,12 @@ export function AgentConfig({
   const editor = useCreateBlockNote({
     initialContent: undefined,
     onFocus: () => {
-        // Prevent keyboard shortcuts from bubbling up when editor is focused
+      // Prevent keyboard shortcuts from bubbling up when editor is focused
     },
   });
+
+  // MCP tools available globally (used in Slash Menu)
+  const { tools: availableMcpTools } = useMCPContext();
 
   // Triggers state
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
@@ -160,10 +172,19 @@ export function AgentConfig({
       : agent?.name || "Untitled Agent";
     const freshTools = isEditingSubAgent
       ? currentSubAgent?.tools || []
-      : ((agent?.config?.configurable as DeepAgentConfiguration | undefined)?.tools?.tools || []);
+      : (agent?.config?.configurable as DeepAgentConfiguration | undefined)
+          ?.tools?.tools || [];
     const freshInterruptConfig = isEditingSubAgent
-      ? (currentSubAgent as { interrupt_config?: Record<string, HumanInterruptConfig> })?.interrupt_config || {}
-      : (agent?.config?.configurable?.tools as { interrupt_config?: Record<string, HumanInterruptConfig> })?.interrupt_config || {};
+      ? (
+          currentSubAgent as {
+            interrupt_config?: Record<string, HumanInterruptConfig>;
+          }
+        )?.interrupt_config || {}
+      : (
+          agent?.config?.configurable?.tools as {
+            interrupt_config?: Record<string, HumanInterruptConfig>;
+          }
+        )?.interrupt_config || {};
 
     setEditedTitle(freshTitle);
     setEditedTools([...freshTools]);
@@ -198,8 +219,9 @@ export function AgentConfig({
         currentInstructions !== "No instructions provided"
       ) {
         try {
-          const blocks =
-            await editor.tryParseMarkdownToBlocks(currentInstructions as string);
+          const blocks = await editor.tryParseMarkdownToBlocks(
+            currentInstructions as string,
+          );
           editor.replaceBlocks(editor.document, blocks);
         } catch (error) {
           console.error("Error parsing markdown to blocks:", error);
@@ -323,7 +345,8 @@ export function AgentConfig({
         };
 
         // Update the sub-agents array in the main agent
-        const currentSubAgents = (agent?.config?.configurable?.subagents as SubAgent[]) || [];
+        const currentSubAgents =
+          (agent?.config?.configurable?.subagents as SubAgent[]) || [];
         let updatedSubAgents = currentSubAgents.map((sa, index) =>
           index === editTarget.index ? updatedSubAgent : sa,
         );
@@ -348,13 +371,15 @@ export function AgentConfig({
       } else {
         // Update the main agent
         const { subAgents: currentSubAgents } = subAgentsForm.getValues();
-        const sanitizedSubAgents = ((currentSubAgents as SubAgent[]) || []).map((sa) => ({
-          ...sa,
-          mcp_server:
-            (sa as any)?.mcp_server ||
-            process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
-            "",
-        }));
+        const sanitizedSubAgents = ((currentSubAgents as SubAgent[]) || []).map(
+          (sa) => ({
+            ...sa,
+            mcp_server:
+              (sa as any)?.mcp_server ||
+              process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+              "",
+          }),
+        );
 
         await client.assistants.update(agent.assistant_id, {
           name: editedTitle,
@@ -575,7 +600,95 @@ export function AgentConfig({
                   className={cn("min-h-full", styles.blockNoteEditor)}
                   theme="light"
                   data-color-scheme="light"
-                />
+                  // Disable default slash menu; we render a custom one for tools
+                  slashMenu={false}
+                >
+                  <SuggestionMenuController
+                    triggerCharacter="/"
+                    getItems={async (query: string) => {
+                      // Build a comprehensive tool list:
+                      // - All MCP tools available in the workspace
+                      // - Currently selected tools in the form (if any)
+                      // - Agent-configured tools
+                      // - Sub-agent tools when editing a sub-agent
+                      const mcpTools = (availableMcpTools || []).map((t) => ({
+                        id: String(t.name),
+                        display: _.startCase(t.name),
+                      }));
+                      const selectedTools = (
+                        toolsForm.watch("tools") || []
+                      ).map((t) => ({
+                        id: String(t),
+                        display: _.startCase(String(t)),
+                      }));
+                      const configuredTools = (
+                        ((
+                          agent?.config?.configurable as
+                            | DeepAgentConfiguration
+                            | undefined
+                        )?.tools?.tools || []) as string[]
+                      ).map((t) => ({
+                        id: String(t),
+                        display: _.startCase(String(t)),
+                      }));
+                      const subAgentTools = isEditingSubAgent
+                        ? (currentSubAgent?.tools || []).map((t) => ({
+                            id: String(t),
+                            display: _.startCase(String(t)),
+                          }))
+                        : ([] as Array<{ id: string; display: string }>);
+
+                      // Merge by id to dedupe while preserving a display label
+                      const toolMap = new Map<string, string>();
+                      [
+                        ...mcpTools,
+                        ...selectedTools,
+                        ...configuredTools,
+                        ...subAgentTools,
+                      ].forEach((t) => {
+                        if (t.id && !toolMap.has(t.id)) {
+                          toolMap.set(t.id, t.display || _.startCase(t.id));
+                        }
+                      });
+                      const merged = Array.from(toolMap.entries()).map(
+                        ([id, display]) => ({ id, display }),
+                      );
+
+                      const q = (query || "").toLowerCase();
+                      const filtered = merged
+                        .filter(
+                          ({ id, display }) =>
+                            id.toLowerCase().includes(q) ||
+                            display.toLowerCase().includes(q),
+                        )
+                        .slice(0, 50);
+
+                      const items: DefaultReactSuggestionItem[] = filtered.map(
+                        ({ id, display }) => ({
+                          title: display,
+                          subtext: id,
+                          group: "Tools",
+                          onItemClick: () => {
+                            try {
+                              // Replace current empty block or insert a new one with the raw tool id
+                              insertOrUpdateBlock(editor as any, {
+                                type: "paragraph",
+                                content: id,
+                              });
+                            } catch (e) {
+                              console.warn(
+                                "Failed to insert tool into editor",
+                                e,
+                              );
+                            }
+                          },
+                        }),
+                      );
+
+                      return items;
+                    }}
+                  />
+                </BlockNoteView>
               </div>
             </div>
           </div>

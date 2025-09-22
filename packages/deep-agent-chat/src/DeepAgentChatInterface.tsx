@@ -59,7 +59,6 @@ function DeepAgentChatInterfaceInternal({
           )}
 
           <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white">
-
             <ChatInterface
               assistantId={assistantId}
               activeAssistant={activeAssistant}

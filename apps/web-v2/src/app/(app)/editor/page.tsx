@@ -195,7 +195,7 @@ function EditorPageContent(): React.ReactNode {
 
       {/* Right column - Chat with Agent */}
       <div className="flex min-h-0 w-1/4 flex-col">
-        <div className="mb-2 flex items-center justify-between gap-2 px-6">
+        <div className="mb-0 flex items-center justify-between gap-2 px-6">
           <h2 className="text-base font-semibold text-gray-800 md:text-lg">
             Chat with your agent
           </h2>
@@ -209,7 +209,7 @@ function EditorPageContent(): React.ReactNode {
             <SquarePen className="size-4" />
           </Button>
         </div>
-        <div className="flex min-h-0 flex-1 flex-col pb-6">
+        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
           <DeepAgentChatInterface
             key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
             assistantId={agentId}

@@ -30,7 +30,6 @@ export function useChat(
 ) {
   const { session } = useAuthContext();
 
-
   const handleUpdateEvent = useCallback(
     (data: { [node: string]: Partial<StateType> }) => {
       Object.values(data).forEach((nodeData) => {
