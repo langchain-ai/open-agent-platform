@@ -20,6 +20,7 @@ function DeepAgentChatInterfaceInternal({
   onViewChange,
   hideInternalToggle,
   hideSidebar,
+  showHeader,
 }: DeepAgentChatConfig) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
@@ -59,10 +60,12 @@ function DeepAgentChatInterfaceInternal({
           )}
 
           <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white">
-            {/* Chat Header */}
-            <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex flex-row items-center justify-between">
-              <h2 className="text-lg font-semibold">Chat with your agent</h2>
-            </div>
+            {/* Chat Header (optional, hidden by default) */}
+            {showHeader && (
+              <div className="flex-shrink-0 border-b border-gray-200 px-6 py-4">
+                <h2 className="text-lg font-semibold">Chat with your agent</h2>
+              </div>
+            )}
 
             <ChatInterface
               assistantId={assistantId}

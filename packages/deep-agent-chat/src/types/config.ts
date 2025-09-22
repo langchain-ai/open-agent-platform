@@ -14,4 +14,6 @@ export interface DeepAgentChatConfig {
   hideInternalToggle?: boolean;
   // Hide the sidebar with agent tasks, file system, and agent optimizer
   hideSidebar?: boolean;
+  // Optional internal header; hidden by default to let hosts control headers
+  showHeader?: boolean;
 }

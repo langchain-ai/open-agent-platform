@@ -195,7 +195,8 @@ function EditorPageContent(): React.ReactNode {
 
       {/* Right column - Chat with Agent */}
       <div className="flex min-h-0 w-1/4 flex-col">
-        <div className="mb-2 flex items-center justify-end gap-2">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-medium text-gray-700">Chat with your agent</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -222,6 +223,7 @@ function EditorPageContent(): React.ReactNode {
             view="chat"
             hideInternalToggle={true}
             hideSidebar={true}
+            showHeader={false}
           />
         </div>
       </div>
