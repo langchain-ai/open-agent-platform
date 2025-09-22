@@ -27,7 +27,7 @@ export function getSupabaseClient() {
   supabaseInstance = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name) {
-        if (typeof document === "undefined") return undefined;
+        if (typeof window === "undefined") return undefined;
         return document.cookie
           .split("; ")
           .find((row) => row.startsWith(`${name}=`))
