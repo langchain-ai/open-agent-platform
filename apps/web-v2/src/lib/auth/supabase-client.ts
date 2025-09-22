@@ -34,7 +34,7 @@ export function getSupabaseClient() {
           ?.split("=")?.[1];
       },
       set(name, value, options) {
-        if (typeof document === "undefined") return;
+        if (typeof window === "undefined") return;
         document.cookie = `${name}=${value}; path=${options?.path ?? "/"}; max-age=${options?.maxAge ?? 31536000}`;
       },
       remove(name, options) {
