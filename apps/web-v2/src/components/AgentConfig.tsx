@@ -8,7 +8,6 @@ import {
   Copy,
   Eye,
   EyeOff,
-  Download,
   Settings,
   Zap,
   Users,
@@ -39,7 +38,7 @@ import type { DefaultReactSuggestionItem } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import styles from "./AgentConfig.module.css";
+// Using inline Tailwind classes with arbitrary selectors for BlockNote styling
 import { SubAgentCreator } from "@/components/agent-creator-sheet/components/sub-agents";
 import { SubAgent } from "@/types/sub-agent";
 import { useForm as useReactHookForm } from "react-hook-form";
@@ -416,23 +415,6 @@ export function AgentConfig({
     }
   };
 
-  const handleDownload = async () => {
-    try {
-      const markdown = await editor.blocksToMarkdownLossy(editor.document);
-      const blob = new Blob([markdown], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${agent?.name || "agent"}-instructions.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Instructions downloaded");
-    } catch {
-      toast.error("Failed to download instructions");
-    }
-  };
 
   if (!agent) {
     return (
@@ -558,14 +540,6 @@ export function AgentConfig({
                   <Eye className="h-4 w-4" />
                 )}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                className="h-8 w-8 p-0"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
             </>
           )}
 
@@ -597,7 +571,7 @@ export function AgentConfig({
               >
                 <BlockNoteView
                   editor={editor}
-                  className={cn("min-h-full", styles.blockNoteEditor)}
+                  className={cn("min-h-full oap-blocknote")}
                   theme="light"
                   data-color-scheme="light"
                   // Disable default slash menu; we render a custom one for tools
@@ -606,11 +580,6 @@ export function AgentConfig({
                   <SuggestionMenuController
                     triggerCharacter="/"
                     getItems={async (query: string) => {
-                      // Build a comprehensive tool list:
-                      // - All MCP tools available in the workspace
-                      // - Currently selected tools in the form (if any)
-                      // - Agent-configured tools
-                      // - Sub-agent tools when editing a sub-agent
                       const mcpTools = (availableMcpTools || []).map((t) => ({
                         id: String(t.name),
                         display: _.startCase(t.name),
@@ -673,7 +642,8 @@ export function AgentConfig({
                               // Replace current empty block or insert a new one with the raw tool id
                               insertOrUpdateBlock(editor as any, {
                                 type: "paragraph",
-                                content: id,
+                                props: {},
+                                content: [id || ""],
                               });
                             } catch (e) {
                               console.warn(

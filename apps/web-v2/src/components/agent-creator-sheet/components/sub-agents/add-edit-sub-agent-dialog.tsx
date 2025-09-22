@@ -34,7 +34,7 @@ export function AddEditSubAgentDialog(props: {
       prompt: props.subAgent?.prompt || "",
       tools: props.subAgent?.tools || [],
       mcp_server:
-        (props.subAgent as any)?.mcp_server ||
+        (props.subAgent as { mcp_server?: string })?.mcp_server ||
         process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
         "",
     },
@@ -68,7 +68,7 @@ export function AddEditSubAgentDialog(props: {
                 ...(props.subAgent || {}),
                 ...v,
                 mcp_server:
-                  (props.subAgent as any)?.mcp_server ||
+                  (props.subAgent as { mcp_server?: string })?.mcp_server ||
                   v.mcp_server ||
                   process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
                   "",
