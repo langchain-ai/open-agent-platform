@@ -16,6 +16,9 @@
     "gen:supabase-types": "npx supabase gen types typescript --project-id \"juxhkpoaqdfzsrqcnoqa\" --schema public > src/types/supabase/database.types.ts"
   },
   "dependencies": {
+    "@blocknote/core": "^0.39.1",
+    "@blocknote/mantine": "^0.39.1",
+    "@blocknote/react": "^0.39.1",
     "@hookform/resolvers": "^5.2.2",
     "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
