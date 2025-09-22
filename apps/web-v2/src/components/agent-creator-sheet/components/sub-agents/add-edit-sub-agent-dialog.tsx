@@ -33,6 +33,10 @@ export function AddEditSubAgentDialog(props: {
       description: props.subAgent?.description || "",
       prompt: props.subAgent?.prompt || "",
       tools: props.subAgent?.tools || [],
+      mcp_server:
+        (props.subAgent as any)?.mcp_server ||
+        process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+        "",
     },
   });
 
@@ -59,7 +63,17 @@ export function AddEditSubAgentDialog(props: {
           <SubAgentForm
             form={form}
             onSubmit={(v) => {
-              props.onSubmit(v);
+              // Preserve existing mcp_server or apply default
+              const merged = {
+                ...(props.subAgent || {}),
+                ...v,
+                mcp_server:
+                  (props.subAgent as any)?.mcp_server ||
+                  v.mcp_server ||
+                  process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+                  "",
+              } as SubAgent;
+              props.onSubmit(merged);
               setOpen(false);
             }}
             interruptConfig={interruptConfig}

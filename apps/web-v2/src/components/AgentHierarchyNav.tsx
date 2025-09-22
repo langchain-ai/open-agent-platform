@@ -35,10 +35,10 @@ export function AgentHierarchyNav({
         {/* Main Agent */}
         <div
           className={cn(
-            "flex items-center gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors",
+            "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
             isMainSelected
               ? "bg-[#2F6868] text-white"
-              : "hover:bg-gray-100 text-gray-700"
+              : "text-gray-700 hover:bg-gray-100",
           )}
           onClick={() => onTargetChange({ type: "main", agent })}
         >
@@ -51,7 +51,7 @@ export function AgentHierarchyNav({
         {subAgents.length > 0 && (
           <div>
             <div
-              className="flex items-center gap-1 px-3 py-2 text-xs font-medium text-gray-500 cursor-pointer"
+              className="flex cursor-pointer items-center gap-1 px-3 py-2 text-xs font-medium text-gray-500"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               {isExpanded ? (
@@ -73,10 +73,10 @@ export function AgentHierarchyNav({
                     <div
                       key={`${subAgent.name}-${index}`}
                       className={cn(
-                        "flex items-center gap-2 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors",
+                        "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
                         isSelected
                           ? "bg-[#2F6868] text-white"
-                          : "hover:bg-gray-100 text-gray-600"
+                          : "text-gray-600 hover:bg-gray-100",
                       )}
                       onClick={() =>
                         onTargetChange({ type: "subagent", subAgent, index })

@@ -14,7 +14,7 @@ interface SimpleChatInputProps {
 export function SimpleChatInput({
   onSendMessage,
   placeholder = "Send a message here to test your agent",
-  disabled = false
+  disabled = false,
 }: SimpleChatInputProps) {
   const [message, setMessage] = useState("");
 
@@ -33,25 +33,23 @@ export function SimpleChatInput({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Main content area - empty for now */}
       <div className="flex-1 p-4">
-        <div className="h-full flex items-center justify-center">
-          <p className="text-muted-foreground text-center">
-            {placeholder}
-          </p>
+        <div className="flex h-full items-center justify-center">
+          <p className="text-muted-foreground text-center">{placeholder}</p>
         </div>
       </div>
 
       {/* Message input at bottom */}
-      <div className="p-4 border-t bg-background">
+      <div className="bg-background border-t p-4">
         <div className="flex gap-2">
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write your message..."
-            className="min-h-[44px] max-h-32 resize-none"
+            className="max-h-32 min-h-[44px] resize-none"
             disabled={disabled}
           />
           <Button

@@ -12,6 +12,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { Button } from "@/components/ui/button";
+import { SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
@@ -24,15 +25,26 @@ function EditorPageContent(): React.ReactNode {
 
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_threadId, setThreadId] = useQueryState("threadId");
 
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);
 
   // State for hierarchical editing
-  const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(null);
+  const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
+    null,
+  );
 
   // Force re-render when sub-agents change
   const [subAgentsVersion, setSubAgentsVersion] = useState(0);
+  const [chatVersion, setChatVersion] = useState(0);
+  const handleAgentUpdated = React.useCallback(async () => {
+    await refreshAgents();
+    // Clear threadId so subsequent messages start a fresh thread with new config
+    await setThreadId(null);
+    setChatVersion((v) => v + 1);
+    toast.success("Agent saved. New chat started with latest config.");
+  }, [refreshAgents, setThreadId]);
 
   const handleValueChange = (v: string) => {
     setValue(v);
@@ -76,11 +88,13 @@ function EditorPageContent(): React.ReactNode {
       name: `Sub-agent ${(selectedAgent.config?.configurable?.subagents?.length || 0) + 1}`,
       description: "",
       prompt: "",
-      tools: []
+      tools: [],
+      mcp_server: process.env.NEXT_PUBLIC_MCP_SERVER_URL || "",
     };
 
     // Add to the main agent's sub-agents list
-    const currentSubAgents = selectedAgent.config?.configurable?.subagents || [];
+    const currentSubAgents =
+      selectedAgent.config?.configurable?.subagents || [];
     const updatedSubAgents = [...currentSubAgents, newSubAgent];
 
     // Update the agent's config (this will be saved when they hit save)
@@ -89,17 +103,23 @@ function EditorPageContent(): React.ReactNode {
     }
 
     // Force a re-render to update the hierarchy navigation
-    setSubAgentsVersion(prev => prev + 1);
+    setSubAgentsVersion((prev) => prev + 1);
 
     // Immediately switch to editing the new sub-agent
     const newIndex = updatedSubAgents.length - 1;
     setCurrentEditTarget({
       type: "subagent",
       subAgent: newSubAgent,
-      index: newIndex
+      index: newIndex,
     });
 
     toast.success(`Created ${newSubAgent.name} - ready to edit!`);
+  };
+
+  const handleNewThread = async () => {
+    // Clear threadId to start a fresh chat thread while keeping the agent selection
+    await setThreadId(null);
+    setChatVersion((v) => v + 1);
   };
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
@@ -115,8 +135,8 @@ function EditorPageContent(): React.ReactNode {
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to the Agent Editor! To continue, please select an
-              agent to chat with and view its configuration.
+              Welcome to the Agent Editor! To continue, please select an agent
+              to chat with and view its configuration.
             </p>
           </div>
           <div className="mb-24 grid grid-cols-[1fr_auto] gap-4 px-6 pt-4">
@@ -162,21 +182,33 @@ function EditorPageContent(): React.ReactNode {
 
       {/* Middle column - Agent Configuration */}
       <div className="flex-1">
-        <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white h-full">
+        <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
           {currentEditTarget && (
             <AgentConfig
               agent={selectedAgent || null}
               editTarget={currentEditTarget}
-              onAgentUpdated={refreshAgents}
+              onAgentUpdated={handleAgentUpdated}
             />
           )}
         </div>
       </div>
 
       {/* Right column - Chat with Agent */}
-      <div className="w-1/4 min-h-0 flex flex-col">
+      <div className="flex min-h-0 w-1/4 flex-col">
+        <div className="mb-2 flex items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNewThread}
+            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
+            title="Start new chat"
+          >
+            <SquarePen className="size-4" />
+          </Button>
+        </div>
         <div className="flex min-h-0 flex-1 flex-col pb-6">
           <DeepAgentChatInterface
+            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
             assistantId={agentId}
             deploymentUrl={selectedDeployment?.deploymentUrl || ""}
             accessToken={session.accessToken || ""}

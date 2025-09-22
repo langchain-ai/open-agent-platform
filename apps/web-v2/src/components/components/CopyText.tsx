@@ -38,9 +38,9 @@ export function CopyText({ currentArtifactContent }: CopyTextProps) {
         onClick={handleCopy}
       >
         {isCopied ? (
-          <Check className="w-5 h-5 text-green-600" />
+          <Check className="h-5 w-5 text-green-600" />
         ) : (
-          <Copy className="w-5 h-5 text-gray-600" />
+          <Copy className="h-5 w-5 text-gray-600" />
         )}
       </TooltipIconButton>
     </motion.div>

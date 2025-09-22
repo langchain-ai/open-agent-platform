@@ -2,16 +2,22 @@
 
 import React, { useState } from "react";
 import { Agent } from "@/types/agent";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Eye, EyeOff, Save, Download, Settings, Zap, Users } from "lucide-react";
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  Download,
+  Settings,
+  Zap,
+  Users,
+  ArrowRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
 import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
-import { useMCPContext } from "@/providers/MCP";
 import { cn } from "@/lib/utils";
 import TriggersInterface from "@/features/triggers";
 import { useTriggers } from "@/hooks/use-triggers";
@@ -21,7 +27,11 @@ import { useMemo, useEffect } from "react";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
-import { GroupedTriggerRegistrationsByProvider, ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
+import {
+  GroupedTriggerRegistrationsByProvider,
+  ListTriggerRegistrationsData,
+  Trigger,
+} from "@/types/triggers";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
@@ -31,6 +41,8 @@ import { SubAgentCreator } from "@/components/agent-creator-sheet/components/sub
 import { SubAgent } from "@/types/sub-agent";
 import { useForm as useReactHookForm } from "react-hook-form";
 import { EditTarget } from "@/components/AgentHierarchyNav";
+import { DeepAgentConfiguration } from "@/types/deep-agent";
+import { HumanInterruptConfig } from "@/types/inbox";
 
 interface AgentConfigProps {
   agent: Agent | null;
@@ -40,50 +52,38 @@ interface AgentConfigProps {
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
 
-export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigProps) {
+export function AgentConfig({
+  agent,
+  editTarget,
+  onAgentUpdated,
+}: AgentConfigProps) {
   const { session } = useAuthContext();
-  const { tools: mcpTools } = useMCPContext();
   const {
     listTriggers,
     listUserTriggers,
     updateAgentTriggers,
-    setupAgentTrigger,
-    listAgentTriggers
+    listAgentTriggers,
   } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
 
   // Extract data based on edit target
   const isEditingSubAgent = editTarget?.type === "subagent";
-  const currentSubAgent = isEditingSubAgent ? editTarget.subAgent : null;
+  // Always derive the current sub-agent from the latest agent data using the index,
+  // not from the stale object on editTarget, so UI reflects saved updates immediately.
+  const currentSubAgent: SubAgent | null = isEditingSubAgent
+    ? ((agent?.config?.configurable?.subagents as SubAgent[])?.[editTarget.index] ?? null)
+    : null;
 
-  const currentTitle = isEditingSubAgent
-    ? currentSubAgent?.name || "Untitled Sub-agent"
-    : agent?.name || "Untitled Agent";
+  const subAgents = (agent?.config?.configurable?.subagents as SubAgent[]) || [];
 
-  const instructions = isEditingSubAgent
-    ? currentSubAgent?.prompt || "No instructions provided"
-    : agent?.config?.configurable?.instructions || "No instructions provided";
-
-  const tools = isEditingSubAgent
-    ? currentSubAgent?.tools || []
-    : agent?.config?.configurable?.tools?.tools || [];
-
-  const interruptConfig = isEditingSubAgent
-    ? {} // Sub-agents don't have interrupt config
-    : agent?.config?.configurable?.tools?.interrupt_config || {};
-
-  const subAgents = agent?.config?.configurable?.subagents || [];
-
-  // Show different tabs based on what we're editing
   const availableViews: ViewType[] = isEditingSubAgent
-    ? ["instructions", "tools"] // Sub-agents only have instructions and tools
-    : ["instructions", "tools", "triggers"]; // Main agents have instructions, tools, and triggers (sub-agents managed via hierarchy)
+    ? ["instructions", "tools"]
+    : ["instructions", "tools", "triggers"];
 
   const [currentView, setCurrentView] = useState<ViewType>("instructions");
   const [editedTitle, setEditedTitle] = useState("");
-  const [editedInstructions, setEditedInstructions] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
-  const [editedInterruptConfig, setEditedInterruptConfig] = useState({});
+  const [editedInterruptConfig, setEditedInterruptConfig] = useState<Record<string, HumanInterruptConfig>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   // Create tools form to track changes
@@ -99,28 +99,30 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
     },
   });
 
-  // Create BlockNote editor with a unique key for each edit target
   const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
   const editor = useCreateBlockNote({
-    initialContent: undefined, // Will be set in useEffect
+    initialContent: undefined,
     onFocus: () => {
-      // Prevent keyboard shortcuts from bubbling up when editor is focused
+        // Prevent keyboard shortcuts from bubbling up when editor is focused
     },
   });
 
   // Triggers state
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
-  const [registrations, setRegistrations] = useState<ListTriggerRegistrationsData[] | undefined>();
+  const [registrations, setRegistrations] = useState<
+    ListTriggerRegistrationsData[] | undefined
+  >();
   const [triggersLoading, setTriggersLoading] = useState(true);
 
   const triggersForm = useAgentTriggersForm({
-    triggerIds: [], // Will be loaded in useEffect
+    triggerIds: [],
   });
 
-  const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined = useMemo(() => {
-    if (!registrations || !triggers) return undefined;
-    return groupTriggerRegistrationsByProvider(registrations, triggers);
-  }, [registrations, triggers]);
+  const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
+    useMemo(() => {
+      if (!registrations || !triggers) return undefined;
+      return groupTriggerRegistrationsByProvider(registrations, triggers);
+    }, [registrations, triggers]);
 
   // Load triggers data
   useEffect(() => {
@@ -152,58 +154,52 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
 
   // Update edited values when edit target changes (not on every render)
   React.useEffect(() => {
-    if (agent) {
-      console.log("Agent object:", agent);
-      console.log("Agent config:", agent.config);
-      if (isEditingSubAgent) {
-        console.log("Editing sub-agent:", currentSubAgent);
-        console.log("Sub-agent prompt:", currentSubAgent?.prompt);
-      } else {
-        console.log("Instructions path:", agent.config?.configurable?.instructions);
-      }
-    }
     // Get fresh values each time we switch edit targets
     const freshTitle = isEditingSubAgent
       ? currentSubAgent?.name || "Untitled Sub-agent"
       : agent?.name || "Untitled Agent";
-    const freshInstructions = isEditingSubAgent
-      ? currentSubAgent?.prompt || "No instructions provided"
-      : agent?.config?.configurable?.instructions || "No instructions provided";
     const freshTools = isEditingSubAgent
       ? currentSubAgent?.tools || []
-      : agent?.config?.configurable?.tools?.tools || [];
+      : ((agent?.config?.configurable as DeepAgentConfiguration | undefined)?.tools?.tools || []);
     const freshInterruptConfig = isEditingSubAgent
-      ? {} // Sub-agents don't have interrupt config
-      : agent?.config?.configurable?.tools?.interrupt_config || {};
+      ? (currentSubAgent as { interrupt_config?: Record<string, HumanInterruptConfig> })?.interrupt_config || {}
+      : (agent?.config?.configurable?.tools as { interrupt_config?: Record<string, HumanInterruptConfig> })?.interrupt_config || {};
 
     setEditedTitle(freshTitle);
-    setEditedInstructions(freshInstructions);
     setEditedTools([...freshTools]);
-    setEditedInterruptConfig({...freshInterruptConfig});
+    setEditedInterruptConfig({ ...(freshInterruptConfig || {}) });
 
-    // Update the tools form with the fresh values to prevent stale data
     toolsForm.reset({
       tools: freshTools,
-      interruptConfig: freshInterruptConfig
+      interruptConfig: freshInterruptConfig,
     });
 
-    // Update the sub-agents form
     subAgentsForm.reset({
-      subAgents: subAgents
+      subAgents: subAgents,
     });
-  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, agent?.config?.configurable?.subagents, toolsForm, subAgentsForm]);
+  }, [
+    agent?.assistant_id,
+    editTarget?.type,
+    editTarget?.type === "subagent" ? editTarget.index : null,
+    agent?.config?.configurable?.subagents,
+    toolsForm,
+    subAgentsForm,
+  ]);
 
-
-  // Separate effect to update BlockNote editor content
   React.useEffect(() => {
     const updateEditorContent = async () => {
       const currentInstructions = isEditingSubAgent
         ? currentSubAgent?.prompt || "No instructions provided"
-        : agent?.config?.configurable?.instructions || "No instructions provided";
+        : agent?.config?.configurable?.instructions ||
+          "No instructions provided";
 
-      if (currentInstructions && currentInstructions !== "No instructions provided") {
+      if (
+        currentInstructions &&
+        currentInstructions !== "No instructions provided"
+      ) {
         try {
-          const blocks = await editor.tryParseMarkdownToBlocks(currentInstructions);
+          const blocks =
+            await editor.tryParseMarkdownToBlocks(currentInstructions as string);
           editor.replaceBlocks(editor.document, blocks);
         } catch (error) {
           console.error("Error parsing markdown to blocks:", error);
@@ -214,29 +210,31 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               type: "paragraph",
               props: {},
               content: "",
-              children: []
-            }
+              children: [],
+            },
           ]);
         }
       } else {
-        // Clear editor for empty instructions
         editor.replaceBlocks(editor.document, [
           {
             id: "default",
             type: "paragraph",
             props: {},
             content: "",
-            children: []
-          }
+            children: [],
+          },
         ]);
       }
     };
 
     updateEditorContent();
-  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, editor]);
+  }, [
+    agent?.assistant_id,
+    editTarget?.type,
+    editTarget?.type === "subagent" ? editTarget.index : null,
+    editor,
+  ]);
 
-
-  // Reset to instructions view when switching edit targets
   React.useEffect(() => {
     setCurrentView("instructions");
   }, [editTarget]);
@@ -247,31 +245,8 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
       const markdown = await editor.blocksToMarkdownLossy(editor.document);
       await navigator.clipboard.writeText(markdown);
       toast.success("Instructions copied to clipboard");
-    } catch (error) {
+    } catch {
       toast.error("Failed to copy instructions");
-    }
-  };
-
-  const handleSave = async () => {
-    if (!agent) return;
-
-    try {
-      // TODO: Replace with actual API call to update agent config
-      // Example API call structure:
-      // await updateAgentConfig(agent.assistant_id, {
-      //   configurable: {
-      //     ...agent.config?.configurable,
-      //     instructions: editedInstructions
-      //   }
-      // });
-
-      console.log("Saving instructions for agent:", agent.assistant_id);
-      console.log("New instructions:", editedInstructions);
-
-      toast.success("Instructions saved successfully");
-    } catch (error) {
-      console.error("Error saving instructions:", error);
-      toast.error("Failed to save instructions");
     }
   };
 
@@ -287,8 +262,7 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
       ]);
       setTriggers(triggersList);
       setRegistrations(userTriggersList);
-    } catch (error) {
-      console.error("Error loading triggers:", error);
+    } catch {
       toast.error("Failed to load triggers");
     }
   };
@@ -333,8 +307,11 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
       const client = createClient(agent.deploymentId, session.accessToken);
 
       // Get current values from forms and editor
-      const instructionsMarkdown = await editor.blocksToMarkdownLossy(editor.document);
-      const { tools: currentTools, interruptConfig: currentInterruptConfig } = toolsForm.getValues();
+      const instructionsMarkdown = await editor.blocksToMarkdownLossy(
+        editor.document,
+      );
+      const { tools: currentTools, interruptConfig: currentInterruptConfig } =
+        toolsForm.getValues();
 
       if (isEditingSubAgent && editTarget && currentSubAgent) {
         // Update the specific sub-agent
@@ -346,31 +323,38 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
         };
 
         // Update the sub-agents array in the main agent
-        const currentSubAgents = agent?.config?.configurable?.subagents || [];
-        const updatedSubAgents = currentSubAgents.map((sa, index) =>
-          index === editTarget.index ? updatedSubAgent : sa
+        const currentSubAgents = (agent?.config?.configurable?.subagents as SubAgent[]) || [];
+        let updatedSubAgents = currentSubAgents.map((sa, index) =>
+          index === editTarget.index ? updatedSubAgent : sa,
         );
+        // Ensure required mcp_server is present
+        updatedSubAgents = updatedSubAgents.map((sa) => ({
+          ...sa,
+          mcp_server:
+            (sa as any)?.mcp_server ||
+            process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+            "",
+        }));
 
         // Save the main agent with updated sub-agents
         await client.assistants.update(agent.assistant_id, {
           config: {
             configurable: {
               ...agent.config?.configurable,
-              subagents: updatedSubAgents
-            }
-          }
-        });
-
-        console.log("Successfully updated sub-agent:", {
-          agentId: agent.assistant_id,
-          subAgentIndex: editTarget.index,
-          subAgentName: updatedSubAgent.name,
-          newInstructions: instructionsMarkdown,
-          newTools: currentTools
+              subagents: updatedSubAgents,
+            },
+          },
         });
       } else {
         // Update the main agent
         const { subAgents: currentSubAgents } = subAgentsForm.getValues();
+        const sanitizedSubAgents = ((currentSubAgents as SubAgent[]) || []).map((sa) => ({
+          ...sa,
+          mcp_server:
+            (sa as any)?.mcp_server ||
+            process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+            "",
+        }));
 
         await client.assistants.update(agent.assistant_id, {
           name: editedTitle,
@@ -379,36 +363,26 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               ...agent.config?.configurable,
               instructions: instructionsMarkdown,
               tools: {
-                ...agent.config?.configurable?.tools,
+                ...(agent.config?.configurable?.tools ?? {}),
                 tools: currentTools,
-                interrupt_config: currentInterruptConfig
+                interrupt_config: currentInterruptConfig,
               },
-              subagents: currentSubAgents
-            }
-          }
-        });
-
-        console.log("Successfully updated main agent:", {
-          agentId: agent.assistant_id,
-          newInstructions: instructionsMarkdown,
-          newTools: currentTools,
-          newInterruptConfig: currentInterruptConfig,
-          newSubAgents: currentSubAgents
+              subagents: sanitizedSubAgents,
+            },
+          },
         });
       }
 
       toast.success("Configuration saved successfully");
 
       // Update local state to reflect saved changes
-      setEditedInstructions(instructionsMarkdown);
       setEditedTools(currentTools);
-      setEditedInterruptConfig(currentInterruptConfig);
+      setEditedInterruptConfig(currentInterruptConfig || {});
 
       // Refresh agents data to show updated information
       if (onAgentUpdated) {
         await onAgentUpdated();
       }
-
     } catch (error) {
       console.error("Error saving agent configuration:", error);
       toast.error("Failed to save configuration");
@@ -430,23 +404,23 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast.success("Instructions downloaded");
-    } catch (error) {
+    } catch {
       toast.error("Failed to download instructions");
     }
   };
 
   if (!agent) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <p className="text-muted-foreground">No agent selected</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Title section */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-gray-100">
+      <div className="flex-shrink-0 border-b border-gray-100 px-6 py-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-sm text-gray-500">
             {isEditingSubAgent ? "Sub-agent" : "Main Agent"}
@@ -455,16 +429,41 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
             <Input
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
-              className="text-lg font-semibold border-none shadow-none px-0 focus-visible:ring-0"
-              placeholder={isEditingSubAgent ? "Sub-agent name..." : "Agent name..."}
+              className="border-none px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
+              placeholder={
+                isEditingSubAgent ? "Sub-agent name..." : "Agent name..."
+              }
             />
           </div>
         </div>
       </div>
 
       {/* Header with view toggle buttons */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 flex flex-row items-center justify-between">
-        <div className="flex gap-2 items-center">
+      <div className="flex flex-shrink-0 flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center gap-2">
+          {availableViews.includes("triggers") && (
+            <Button
+              variant={currentView === "triggers" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentView("triggers")}
+              className={cn(
+                "h-8 gap-1",
+                currentView === "triggers" &&
+                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
+              )}
+              title="Triggers start the flow"
+            >
+              <Zap className="h-3 w-3" />
+              Triggers
+            </Button>
+          )}
+          {/* Visual flow from Triggers to Instructions */}
+          {availableViews.includes("triggers") &&
+            availableViews.includes("instructions") && (
+              <span className="text-muted-foreground">
+                <ArrowRight className="h-4 w-4" />
+              </span>
+            )}
           {availableViews.includes("instructions") && (
             <Button
               variant={currentView === "instructions" ? "default" : "outline"}
@@ -472,8 +471,10 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               onClick={() => setCurrentView("instructions")}
               className={cn(
                 "h-8",
-                currentView === "instructions" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+                currentView === "instructions" &&
+                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
               )}
+              title="Instructions guide the agent"
             >
               Instructions
             </Button>
@@ -485,25 +486,12 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               onClick={() => setCurrentView("tools")}
               className={cn(
                 "h-8 gap-1",
-                currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+                currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90",
               )}
+              title="Tools are invoked during runs"
             >
               <Settings className="h-3 w-3" />
               Tools
-            </Button>
-          )}
-          {availableViews.includes("triggers") && (
-            <Button
-              variant={currentView === "triggers" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("triggers")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "triggers" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
-              )}
-            >
-              <Zap className="h-3 w-3" />
-              Triggers
             </Button>
           )}
           {availableViews.includes("subagents") && (
@@ -513,7 +501,8 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               onClick={() => setCurrentView("subagents")}
               className={cn(
                 "h-8 gap-1",
-                currentView === "subagents" && "bg-[#2F6868] hover:bg-[#2F6868]/90"
+                currentView === "subagents" &&
+                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
               )}
             >
               <Users className="h-3 w-3" />
@@ -521,7 +510,7 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
             </Button>
           )}
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           {currentView === "instructions" && (
             <>
               <Button
@@ -547,14 +536,6 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleSave}
-                className="h-8 w-8 p-0"
-              >
-                <Save className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={handleDownload}
                 className="h-8 w-8 p-0"
               >
@@ -567,7 +548,7 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
           <Button
             onClick={handleSaveChanges}
             disabled={isSaving || !agent}
-            className="bg-[#2F6868] hover:bg-[#2F6868]/90 disabled:bg-gray-400 text-white ml-2"
+            className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
             size="sm"
           >
             {isSaving ? "Saving..." : "Save Changes"}
@@ -604,9 +585,15 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
           <div className="p-6">
             <CreateAgentToolsSelection
               selectedTools={toolsForm.watch("tools") || []}
-              onToolsChange={(tools) => toolsForm.setValue("tools", tools, { shouldDirty: true })}
+              onToolsChange={(tools) =>
+                toolsForm.setValue("tools", tools, { shouldDirty: true })
+              }
               interruptConfig={toolsForm.watch("interruptConfig") || {}}
-              onInterruptConfigChange={(config) => toolsForm.setValue("interruptConfig", config, { shouldDirty: true })}
+              onInterruptConfigChange={(config) =>
+                toolsForm.setValue("interruptConfig", config, {
+                  shouldDirty: true,
+                })
+              }
             />
           </div>
         )}
@@ -629,7 +616,9 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
             <SubAgentCreator
               subAgents={subAgentsForm.watch("subAgents") ?? []}
               onSubAgentChange={(updatedSubAgents) =>
-                subAgentsForm.setValue("subAgents", updatedSubAgents, { shouldDirty: true })
+                subAgentsForm.setValue("subAgents", updatedSubAgents, {
+                  shouldDirty: true,
+                })
               }
             />
           </div>

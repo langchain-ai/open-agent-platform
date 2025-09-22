@@ -4,15 +4,11 @@ import { useGraphContext } from "@/contexts/GraphContext";
 import React from "react";
 import { Textarea } from "@/components/ui/textarea";
 
-const cleanText = (text: string) => {
-  return text.replaceAll("\\\n", "\n");
-};
-
 // Helper function to get artifact content
 const getArtifactContent = (artifact: any): string => {
   if (!artifact) return "";
   const currentContent = artifact.contents.find(
-    (c: any) => c.index === artifact.currentIndex
+    (c: any) => c.index === artifact.currentIndex,
   );
   return currentContent?.fullMarkdown || "";
 };
@@ -25,18 +21,15 @@ export interface TextRendererProps {
 
 export function TextRendererComponent(props: TextRendererProps) {
   const { graphData } = useGraphContext();
-  const {
-    artifact,
-    setArtifact,
-    setSelectedBlocks,
-  } = graphData;
+  const { artifact, setArtifact, setSelectedBlocks } = graphData;
 
   const [markdown, setMarkdown] = useState("");
 
   // Initialize with default content if no artifact exists
   useEffect(() => {
     if (!artifact) {
-      const defaultMarkdown = "# Welcome to the Editor\n\nStart typing your markdown here...";
+      const defaultMarkdown =
+        "# Welcome to the Editor\n\nStart typing your markdown here...";
       setMarkdown(defaultMarkdown);
       setArtifact({
         currentIndex: 1,
@@ -51,7 +44,7 @@ export function TextRendererComponent(props: TextRendererProps) {
       });
     } else {
       const currentContent = artifact.contents.find(
-        (c) => c.index === artifact.currentIndex
+        (c) => c.index === artifact.currentIndex,
       );
       if (currentContent) {
         setMarkdown(currentContent.fullMarkdown);
@@ -99,14 +92,14 @@ export function TextRendererComponent(props: TextRendererProps) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col relative">
+    <div className="relative flex h-full w-full flex-col">
       {props.isHovering && artifact && (
-        <div className="absolute flex gap-2 top-2 right-4 z-10">
+        <div className="absolute top-2 right-4 z-10 flex gap-2">
           <CopyText currentArtifactContent={getArtifactContent(artifact)} />
         </div>
       )}
       <Textarea
-        className="whitespace-pre-wrap font-mono text-sm p-6 border-0 shadow-none h-full outline-none ring-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
+        className="h-full resize-none rounded-none border-0 p-6 font-mono text-sm whitespace-pre-wrap shadow-none ring-0 outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
         value={markdown}
         onChange={onChangeMarkdown}
         placeholder="# Enter your markdown here..."

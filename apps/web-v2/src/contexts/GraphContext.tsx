@@ -32,13 +32,18 @@ export interface GraphData {
   setUpdateRenderedArtifactRequired: (required: boolean) => void;
 }
 
-const GraphContext = createContext<{ graphData: GraphData } | undefined>(undefined);
+const GraphContext = createContext<{ graphData: GraphData } | undefined>(
+  undefined,
+);
 
 export function GraphProvider({ children }: { children: ReactNode }) {
   const [artifact, setArtifact] = useState<Artifact | undefined>();
-  const [selectedBlocks, setSelectedBlocks] = useState<SelectedBlocks | undefined>();
+  const [selectedBlocks, setSelectedBlocks] = useState<
+    SelectedBlocks | undefined
+  >();
   const [isStreaming] = useState(false);
-  const [updateRenderedArtifactRequired, setUpdateRenderedArtifactRequired] = useState(false);
+  const [updateRenderedArtifactRequired, setUpdateRenderedArtifactRequired] =
+    useState(false);
   const [firstTokenReceived] = useState(true);
 
   const graphData: GraphData = {

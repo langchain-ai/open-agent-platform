@@ -17,7 +17,8 @@ export function ChatUI() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! I'm here to help you with your markdown editing. Feel free to ask me anything!",
+      content:
+        "Hello! I'm here to help you with your markdown editing. Feel free to ask me anything!",
       role: "assistant",
       timestamp: new Date(),
     },
@@ -41,7 +42,8 @@ export function ChatUI() {
     setTimeout(() => {
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I received your message. How can I help you with your markdown?",
+        content:
+          "I received your message. How can I help you with your markdown?",
         role: "assistant",
         timestamp: new Date(),
       };
@@ -57,9 +59,9 @@ export function ChatUI() {
   };
 
   return (
-    <div className="flex flex-col h-full border-r border-gray-200">
+    <div className="flex h-full flex-col border-r border-gray-200">
       {/* Chat Header */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="border-b border-gray-200 bg-gray-50 p-4">
         <h2 className="text-lg font-semibold">Chat Assistant</h2>
         <p className="text-sm text-gray-600">Ask me anything about markdown</p>
       </div>
@@ -82,7 +84,7 @@ export function ChatUI() {
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
-                <span className="text-xs opacity-70 mt-1 block">
+                <span className="mt-1 block text-xs opacity-70">
                   {message.timestamp.toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -95,14 +97,14 @@ export function ChatUI() {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="border-t border-gray-200 p-4">
         <div className="flex gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+            className="max-h-[120px] min-h-[40px] flex-1 resize-none"
             rows={1}
           />
           <Button
@@ -111,7 +113,7 @@ export function ChatUI() {
             size="icon"
             className="h-10 w-10"
           >
-            <Send className="w-4 h-4" />
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>

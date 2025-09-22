@@ -30,6 +30,7 @@ export function useChat(
 ) {
   const { session } = useAuthContext();
 
+
   const handleUpdateEvent = useCallback(
     (data: { [node: string]: Partial<StateType> }) => {
       Object.values(data).forEach((nodeData) => {
@@ -77,10 +78,7 @@ export function useChat(
             const newMessages = [...prevMessages, humanMessage];
             return { ...prev, messages: newMessages };
           },
-          config: {
-            ...(activeAssistant?.config || {}),
-            recursion_limit: 100,
-          },
+          config: { ...(activeAssistant?.config || {}), recursion_limit: 100 },
         },
       );
     },
@@ -99,9 +97,7 @@ export function useChat(
           ...(optimisticMessages
             ? { optimisticValues: { messages: optimisticMessages } }
             : {}),
-          config: {
-            ...(activeAssistant?.config || {}),
-          },
+          config: { ...(activeAssistant?.config || {}) },
           checkpoint: checkpoint,
           ...(isRerunningSubagent
             ? { interruptAfter: ["tools"] }
@@ -111,9 +107,7 @@ export function useChat(
         stream.submit(
           { messages, files },
           {
-            config: {
-              ...(activeAssistant?.config || {}),
-            },
+            config: { ...(activeAssistant?.config || {}) },
             interruptBefore: ["tools"],
           },
         );
@@ -125,10 +119,7 @@ export function useChat(
   const continueStream = useCallback(
     (hasTaskToolCall?: boolean) => {
       stream.submit(undefined, {
-        config: {
-          ...(activeAssistant?.config || {}),
-          recursion_limit: 100,
-        },
+        config: { ...(activeAssistant?.config || {}), recursion_limit: 100 },
         ...(hasTaskToolCall
           ? { interruptAfter: ["tools"] }
           : { interruptBefore: ["tools"] }),
