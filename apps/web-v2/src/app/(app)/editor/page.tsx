@@ -174,22 +174,24 @@ function EditorPageContent(): React.ReactNode {
       </div>
 
       {/* Right column - Chat with Agent */}
-      <div className="w-1/4">
-        <DeepAgentChatInterface
-          assistantId={agentId}
-          deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-          accessToken={session.accessToken || ""}
-          optimizerDeploymentUrl={
-            process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
-          }
-          optimizerAccessToken={session.accessToken || ""}
-          mode="oap"
-          SidebarTrigger={SidebarTrigger}
-          DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-          view="chat"
-          hideInternalToggle={true}
-          hideSidebar={true}
-        />
+      <div className="w-1/4 min-h-0 flex flex-col">
+        <div className="flex min-h-0 flex-1 flex-col pb-6">
+          <DeepAgentChatInterface
+            assistantId={agentId}
+            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+            accessToken={session.accessToken || ""}
+            optimizerDeploymentUrl={
+              process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+            }
+            optimizerAccessToken={session.accessToken || ""}
+            mode="oap"
+            SidebarTrigger={SidebarTrigger}
+            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+            view="chat"
+            hideInternalToggle={true}
+            hideSidebar={true}
+          />
+        </div>
       </div>
     </div>
   );

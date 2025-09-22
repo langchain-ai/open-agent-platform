@@ -498,7 +498,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         {!isWorkflowView && (
           <form
             onSubmit={handleSubmit}
-            className="border-border focus-within:border-primary focus-within:ring-primary mx-6 mb-0 flex w-auto items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
+            className="border-border focus-within:border-primary focus-within:ring-primary mx-6 mb-6 flex w-auto items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
           >
             <textarea
               ref={textareaRef}

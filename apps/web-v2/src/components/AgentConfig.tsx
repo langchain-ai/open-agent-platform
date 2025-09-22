@@ -180,7 +180,19 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
     setEditedInstructions(freshInstructions);
     setEditedTools([...freshTools]);
     setEditedInterruptConfig({...freshInterruptConfig});
-  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, agent?.config?.configurable?.subagents]);
+
+    // Update the tools form with the fresh values to prevent stale data
+    toolsForm.reset({
+      tools: freshTools,
+      interruptConfig: freshInterruptConfig
+    });
+
+    // Update the sub-agents form
+    subAgentsForm.reset({
+      subAgents: subAgents
+    });
+  }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, agent?.config?.configurable?.subagents, toolsForm, subAgentsForm]);
+
 
   // Separate effect to update BlockNote editor content
   React.useEffect(() => {
@@ -223,12 +235,6 @@ export function AgentConfig({ agent, editTarget, onAgentUpdated }: AgentConfigPr
     updateEditorContent();
   }, [agent?.assistant_id, editTarget?.type, editTarget?.type === "subagent" ? editTarget.index : null, editor]);
 
-  // Separate effect to update forms when tools/interruptConfig/subAgents change
-  React.useEffect(() => {
-    toolsForm.setValue("tools", tools);
-    toolsForm.setValue("interruptConfig", interruptConfig);
-    subAgentsForm.setValue("subAgents", subAgents);
-  }, [tools, interruptConfig, subAgents]);
 
   // Reset to instructions view when switching edit targets
   React.useEffect(() => {
