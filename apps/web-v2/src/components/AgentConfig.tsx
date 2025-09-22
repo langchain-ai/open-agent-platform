@@ -31,10 +31,7 @@ import {
   ListTriggerRegistrationsData,
   Trigger,
 } from "@/types/triggers";
-import { SuggestionMenuController, useCreateBlockNote } from "@blocknote/react";
-import { insertOrUpdateBlock } from "@blocknote/core";
-import _ from "lodash";
-import type { DefaultReactSuggestionItem } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -45,7 +42,6 @@ import { useForm as useReactHookForm } from "react-hook-form";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 import { HumanInterruptConfig } from "@/types/inbox";
-import { useMCPContext } from "@/providers/MCP";
 
 interface AgentConfigProps {
   agent: Agent | null;
@@ -114,9 +110,6 @@ export function AgentConfig({
       // Prevent keyboard shortcuts from bubbling up when editor is focused
     },
   });
-
-  // MCP tools available globally (used in Slash Menu)
-  const { tools: availableMcpTools } = useMCPContext();
 
   // Triggers state
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
@@ -573,91 +566,7 @@ export function AgentConfig({
                   className={cn("oap-blocknote min-h-full")}
                   theme="light"
                   data-color-scheme="light"
-                  // Disable default slash menu; we render a custom one for tools
-                  slashMenu={false}
-                >
-                  <SuggestionMenuController
-                    triggerCharacter="/"
-                    getItems={async (query: string) => {
-                      const mcpTools = (availableMcpTools || []).map((t) => ({
-                        id: String(t.name),
-                        display: _.startCase(t.name),
-                      }));
-                      const selectedTools = (
-                        toolsForm.watch("tools") || []
-                      ).map((t) => ({
-                        id: String(t),
-                        display: _.startCase(String(t)),
-                      }));
-                      const configuredTools = (
-                        ((
-                          agent?.config?.configurable as
-                            | DeepAgentConfiguration
-                            | undefined
-                        )?.tools?.tools || []) as string[]
-                      ).map((t) => ({
-                        id: String(t),
-                        display: _.startCase(String(t)),
-                      }));
-                      const subAgentTools = isEditingSubAgent
-                        ? (currentSubAgent?.tools || []).map((t) => ({
-                            id: String(t),
-                            display: _.startCase(String(t)),
-                          }))
-                        : ([] as Array<{ id: string; display: string }>);
-
-                      // Merge by id to dedupe while preserving a display label
-                      const toolMap = new Map<string, string>();
-                      [
-                        ...mcpTools,
-                        ...selectedTools,
-                        ...configuredTools,
-                        ...subAgentTools,
-                      ].forEach((t) => {
-                        if (t.id && !toolMap.has(t.id)) {
-                          toolMap.set(t.id, t.display || _.startCase(t.id));
-                        }
-                      });
-                      const merged = Array.from(toolMap.entries()).map(
-                        ([id, display]) => ({ id, display }),
-                      );
-
-                      const q = (query || "").toLowerCase();
-                      const filtered = merged
-                        .filter(
-                          ({ id, display }) =>
-                            id.toLowerCase().includes(q) ||
-                            display.toLowerCase().includes(q),
-                        )
-                        .slice(0, 50);
-
-                      const items: DefaultReactSuggestionItem[] = filtered.map(
-                        ({ id, display }) => ({
-                          title: display,
-                          subtext: id,
-                          group: "Tools",
-                          onItemClick: () => {
-                            try {
-                              // Replace current empty block or insert a new one with the raw tool id
-                              insertOrUpdateBlock(editor as any, {
-                                type: "paragraph",
-                                props: {},
-                                content: [id || ""],
-                              });
-                            } catch (e) {
-                              console.warn(
-                                "Failed to insert tool into editor",
-                                e,
-                              );
-                            }
-                          },
-                        }),
-                      );
-
-                      return items;
-                    }}
-                  />
-                </BlockNoteView>
+                />
               </div>
             </div>
           </div>

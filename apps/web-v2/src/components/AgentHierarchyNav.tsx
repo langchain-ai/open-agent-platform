@@ -25,7 +25,8 @@ export function AgentHierarchyNav({
   onCreateSubAgent,
 }: AgentHierarchyNavProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
-  const subAgents = agent?.config?.configurable?.subagents || [];
+  const subAgents =
+    (agent?.config?.configurable?.subagents as SubAgent[]) || [];
 
   const isMainSelected = currentTarget.type === "main";
 

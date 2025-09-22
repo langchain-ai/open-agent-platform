@@ -85,7 +85,7 @@ function EditorPageContent(): React.ReactNode {
 
     // Create a blank sub-agent
     const newSubAgent: SubAgent = {
-      name: `Sub-agent ${(selectedAgent.config?.configurable?.subagents?.length || 0) + 1}`,
+      name: `Sub-agent ${((selectedAgent.config?.configurable?.subagents as SubAgent[])?.length || 0) + 1}`,
       description: "",
       prompt: "",
       tools: [],
@@ -94,7 +94,7 @@ function EditorPageContent(): React.ReactNode {
 
     // Add to the main agent's sub-agents list
     const currentSubAgents =
-      selectedAgent.config?.configurable?.subagents || [];
+      (selectedAgent.config?.configurable?.subagents as SubAgent[]) || [];
     const updatedSubAgents = [...currentSubAgents, newSubAgent];
 
     // Update the agent's config (this will be saved when they hit save)
