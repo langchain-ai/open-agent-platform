@@ -3,7 +3,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { OptimizationWindow } from "./OptimizationWindow";
 import type { Assistant } from "@langchain/langgraph-sdk";
-import { useChatContext } from "../providers/ChatContext";
+import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
 import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";

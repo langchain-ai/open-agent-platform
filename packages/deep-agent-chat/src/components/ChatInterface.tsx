@@ -23,9 +23,10 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 import { useClients } from "../providers/ClientProvider";
-import { useChatContext } from "../providers/ChatContext";
+import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
 import { cn } from "../lib/utils";
+import { ThreadActionsView } from "./interrupted-actions";
 
 interface ChatInterfaceProps {
   assistantId: string;
@@ -41,6 +42,7 @@ interface ChatInterfaceProps {
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
   hideInternalToggle?: boolean;
+  InterruptActionsRenderer?: React.ComponentType;
 }
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(
@@ -458,6 +460,13 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       isLastMessage={index === processedMessages.length - 1}
                     />
                   ))}
+                  {interrupt && (
+                    <ThreadActionsView
+                      threadData={threadData}
+                      threadTitle={threadTitle}
+                      setThreadData={setThreadData}
+                    />
+                  )}
                   {isLoading && (
                     <div className="text-primary/50 flex items-center justify-center gap-2 p-4 pt-8">
                       <LoaderCircle className="h-4 w-4 animate-spin" />
