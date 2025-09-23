@@ -5,7 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Inbox,
   Bot,
   Plus,
   Edit,
@@ -77,8 +76,8 @@ const createNavigationItems = (
       title: "Chat",
       url:
         agentId && deploymentId
-          ? `/chat?agentId=${agentId}&deploymentId=${deploymentId}`
-          : "/chat",
+          ? `/agents/chat?agentId=${agentId}&deploymentId=${deploymentId}`
+          : "/agents/chat",
       icon: MessageCircle,
     },
     {
@@ -88,14 +87,6 @@ const createNavigationItems = (
           ? `/editor?agentId=${agentId}&deploymentId=${deploymentId}`
           : "/editor",
       icon: Edit,
-    },
-    {
-      title: "Inbox",
-      url:
-        agentId && deploymentId
-          ? `/inbox?agentId=${agentId}&deploymentId=${deploymentId}`
-          : "/inbox",
-      icon: Inbox,
     },
   ],
 });
@@ -108,6 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     () => createNavigationItems(agentId, deploymentId),
     [agentId, deploymentId],
   );
+
   return (
     <Sidebar
       collapsible="icon"
