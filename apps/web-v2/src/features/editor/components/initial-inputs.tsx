@@ -161,7 +161,7 @@ export function InitialInputs(): React.ReactNode {
       return;
     }
     const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
-    setDeploymentId(deployment.id)
+    setDeploymentId(deployment.id);
   }, [deploymentId, setDeploymentId]);
 
   const stream = useStream({
