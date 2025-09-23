@@ -57,6 +57,11 @@ const data: {
       icon: Puzzle,
     },
     {
+      title: "Chat",
+      url: "/agents/chat",
+      icon: MessageCircle,
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: Settings,
@@ -67,11 +72,6 @@ const data: {
       title: "Select Agent",
       icon: Bot,
       isDropdown: true,
-    },
-    {
-      title: "Chat",
-      url: "/agents/chat",
-      icon: MessageCircle,
     },
     {
       title: "Editor",
