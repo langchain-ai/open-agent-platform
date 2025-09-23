@@ -12,6 +12,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { usePathname } from "next/navigation";
 
 export function AgentDropdown({
   item,
@@ -21,24 +22,27 @@ export function AgentDropdown({
   const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [initialized, setInitialized] = useState(false);
   const [selectOpen, setSelectOpen] = useState(false);
+  // get the current pathname
+  const pathname = usePathname();
 
   // Set default agent on first page load or handle missing deploymentId
   useEffect(() => {
-    if (!initialized && !loading && agents.length > 0) {
-      if (!agentId || !deploymentId) {
-        const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
-        if (defaultAgent) {
-          setAgentId(defaultAgent.assistant_id);
-          setDeploymentId(defaultAgent.deploymentId);
-        } else {
-          const firstAgent = agents[0];
-          setAgentId(firstAgent.assistant_id);
-          setDeploymentId(firstAgent.deploymentId);
-        }
+    if (
+      !loading &&
+      agents.length > 0 &&
+      pathname.startsWith("/chat") &&
+      (!agentId || !deploymentId)
+    ) {
+      const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);
+      if (defaultAgent) {
+        setAgentId(defaultAgent.assistant_id);
+        setDeploymentId(defaultAgent.deploymentId);
+      } else {
+        const firstAgent = agents[0];
+        setAgentId(firstAgent.assistant_id);
+        setDeploymentId(firstAgent.deploymentId);
       }
-      setInitialized(true);
     }
   }, [
     agents,
@@ -47,7 +51,7 @@ export function AgentDropdown({
     deploymentId,
     setAgentId,
     setDeploymentId,
-    initialized,
+    pathname,
   ]);
 
   const handleAgentChange = (value: string) => {
