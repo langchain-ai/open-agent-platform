@@ -75,7 +75,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If the user is authenticated, and they are trying to access an auth page, redirect them to the chat page
+  // If the user is authenticated, and they are trying to access an auth page or root,
+  // redirect them to the Agent Library
   if (
     user &&
     NO_AUTH_PATHS.some((path) =>
@@ -85,7 +86,7 @@ export async function updateSession(request: NextRequest) {
     )
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/agents/chat";
+    url.pathname = "/agents";
     return NextResponse.redirect(url);
   }
 
