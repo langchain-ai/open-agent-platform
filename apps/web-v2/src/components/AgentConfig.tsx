@@ -351,12 +351,24 @@ export function AgentConfig({
             "",
         }));
 
+        // Ensure top-level tools config includes MCP server URL
+        const existingToolsConfig =
+          (agent.config?.configurable?.tools as any) || {};
+        const ensuredToolsConfig = {
+          ...existingToolsConfig,
+          url:
+            existingToolsConfig.url ||
+            process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+            "",
+        };
+
         // Save the main agent with updated sub-agents
         await client.assistants.update(agent.assistant_id, {
           config: {
             configurable: {
               ...agent.config?.configurable,
               subagents: updatedSubAgents,
+              tools: ensuredToolsConfig,
             },
           },
         });
@@ -373,6 +385,21 @@ export function AgentConfig({
           }),
         );
 
+        // Ensure tools config includes MCP server URL and default auth flag
+        const existingToolsConfig =
+          (agent.config?.configurable?.tools as any) || {};
+        const ensuredToolsConfig = {
+          ...existingToolsConfig,
+          url:
+            existingToolsConfig.url ||
+            process.env.NEXT_PUBLIC_MCP_SERVER_URL ||
+            "",
+          auth_required:
+            existingToolsConfig.auth_required !== undefined
+              ? existingToolsConfig.auth_required
+              : process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
+        };
+
         await client.assistants.update(agent.assistant_id, {
           name: editedTitle,
           config: {
@@ -380,7 +407,7 @@ export function AgentConfig({
               ...agent.config?.configurable,
               instructions: instructionsMarkdown,
               tools: {
-                ...(agent.config?.configurable?.tools ?? {}),
+                ...ensuredToolsConfig,
                 tools: currentTools,
                 interrupt_config: currentInterruptConfig,
               },
