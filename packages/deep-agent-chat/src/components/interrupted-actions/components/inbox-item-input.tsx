@@ -1,15 +1,15 @@
-import { cn } from "@/lib/utils";
+import { cn } from "../../../lib/utils";
 import {
   ActionRequest,
   HumanInterrupt,
   HumanResponseWithEdits,
   SubmitType,
-} from "@/types/inbox";
-import { Textarea } from "@/components/ui/textarea";
+} from "../../../types/inbox";
+import { Textarea } from "../../../components/ui/textarea";
 import React from "react";
 import { haveArgsChanged, prettifyText } from "../utils";
-import { MarkdownText } from "@/components/ui/markdown-text";
-import { Button } from "@/components/ui/button";
+import { MarkdownText } from "../../../components/ui/markdown-text";
+import { Button } from "../../../components/ui/button";
 import { Undo2 } from "lucide-react";
 import { toast } from "sonner";
 

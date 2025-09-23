@@ -1,5 +1,5 @@
 import { Copy, CopyCheck } from "lucide-react";
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { TooltipIconButton } from "../../ui/tooltip-icon-button";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 

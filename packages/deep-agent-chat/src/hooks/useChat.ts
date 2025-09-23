@@ -10,7 +10,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { TodoItem } from "../types";
 import { useClients } from "../providers/ClientProvider";
-import { HumanResponse } from "@/types/inbox";
+import { HumanResponse } from "../types/inbox";
 
 type StateType = {
   messages: Message[];

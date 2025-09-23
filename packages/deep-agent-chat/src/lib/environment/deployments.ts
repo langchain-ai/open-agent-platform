@@ -1,4 +1,4 @@
-import { Deployment } from "@/types/deployment";
+import { Deployment } from "../../types/deployment";
 
 /**
  * Loads the provided deployments from the environment variable.

@@ -2,7 +2,7 @@ import {
   HumanResponse,
   HumanResponseWithEdits,
   SubmitType,
-} from "@/types/inbox";
+} from "../../../types/inbox";
 import { toast } from "sonner";
 import React from "react";
 import { createDefaultHumanResponse } from "../utils";

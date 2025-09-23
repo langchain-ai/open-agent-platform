@@ -10,8 +10,8 @@ import { FC, memo, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { SyntaxHighlighter } from "./syntax-highlighter";
 
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { cn } from "@/lib/utils";
+import { TooltipIconButton } from "../tooltip-icon-button";
+import { cn } from "../../../lib/utils";
 
 import "katex/dist/katex.min.css";
 

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { AlertCircle } from "lucide-react";
 import useInterruptedActions from "./hooks/use-interrupted-actions";
 import { ThreadIdCopyable } from "./components/thread-id";

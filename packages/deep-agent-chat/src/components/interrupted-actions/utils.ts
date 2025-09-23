@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { startCase } from "lodash";
 import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { validate } from "uuid";
-import { getDeployments } from "@/lib/environment/deployments";
+import { getDeployments } from "../../lib/environment/deployments";
 import { toast } from "sonner";
 
 export function prettifyText(action: string) {
