@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
-import { createClient, getOptimizerClient } from "@/lib/client";
+import { getOptimizerClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
 import { useQueryState } from "nuqs";
 import { useMCPContext } from "@/providers/MCP";
 import { useStream } from "@langchain/langgraph-sdk/react";
-import { Message } from "@langchain/langgraph-sdk";
-import { SubAgent } from "@/types/sub-agent";
+import { Assistant, Message } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import { Loader2 } from "lucide-react";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -28,15 +27,15 @@ function AgentDescription({
   loading,
 }: AgentDescriptionProps) {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
       <div className="space-y-2">
         <Label
           htmlFor="agent-description"
-          className="text-base font-semibold"
+          className="text-2xl font-semibold"
         >
           Describe the agent you want to build
         </Label>
-        <p className="text-sm text-gray-600">
+        <p className="text-lg text-gray-600">
           Provide a clear description of what you want your agent to do and how
           it should behave.
         </p>
@@ -85,23 +84,23 @@ function ClarifyingQuestions({
   }, [messages]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div className="space-y-4">
-        <Label className="text-base font-semibold">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-3 p-6">
+      <div className="space-y-2">
+        <Label className="text-2xl font-semibold">
           Please answer these clarifying questions
         </Label>
 
         <div className="w-xl rounded-lg border bg-gray-50 p-4">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-lg leading-relaxed whitespace-pre-wrap">
             {firstAiMessage ? (firstAiMessage.content as string) : "Loading..."}
           </p>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="w-full space-y-2">
         <Label
           htmlFor="clarifying-response"
-          className="text-sm font-medium"
+          className="text-lg font-medium"
         >
           Your response
         </Label>
@@ -110,8 +109,8 @@ function ClarifyingQuestions({
           value={response}
           onChange={(e) => onResponseChange(e.target.value)}
           placeholder="Please provide your answers to the questions above..."
-          minRows={3}
-          maxRows={6}
+          minRows={4}
+          maxRows={8}
           className="w-full"
         />
       </div>
@@ -136,14 +135,6 @@ function ClarifyingQuestions({
 
 const ASSISTANT_ID = "agent_generator";
 
-interface GeneratedAgentFields {
-  name: string;
-  description: string;
-  instructions: string;
-  subagents: SubAgent[];
-  tools: string[];
-}
-
 export function InitialInputs(): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
@@ -151,9 +142,6 @@ export function InitialInputs(): React.ReactNode {
 
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_agentId, setAgentId] = useQueryState("agentId");
-  const [agentCreatorThreadId, setAgentCreatorThreadId] = useQueryState(
-    "agentCreatorThreadId",
-  );
 
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
@@ -167,11 +155,6 @@ export function InitialInputs(): React.ReactNode {
     return getOptimizerClient(session.accessToken);
   }, [session]);
 
-  const deploymentClient = useMemo(() => {
-    if (!deploymentId || !session?.accessToken) return null;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session]);
-
   const deployments = getDeployments();
   useEffect(() => {
     if (deploymentId) {
@@ -179,35 +162,29 @@ export function InitialInputs(): React.ReactNode {
     }
     const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
     setDeploymentId(deployment.id);
-  }, []);
+  }, [deploymentId, setDeploymentId]);
 
   const stream = useStream({
     client: client ?? undefined,
     assistantId: ASSISTANT_ID,
-    onThreadId: (threadId) => {
-      setAgentCreatorThreadId(threadId);
-    },
-    threadId: agentCreatorThreadId,
     reconnectOnMount: true,
-    onFinish: async (state) => {
-      const { messages } = state.values as { messages: Message[] };
-      const lastMessage = messages[messages.length - 1];
-      if (
-        lastMessage.type !== "ai" ||
-        !lastMessage.tool_calls?.length ||
-        lastMessage.tool_calls[0].name !== "AgentConfig"
-      ) {
+    onUpdateEvent: async (data) => {
+      if (!("generate_config" in data)) return;
+      const newAgent = data.generate_config.assistant as Assistant | undefined;
+      if (!newAgent || !newAgent.assistant_id) {
+        toast.error("Failed to create agent", {
+          richColors: true,
+        });
         return;
       }
-
-      const agentConfig = lastMessage.tool_calls[0]
-        .args as GeneratedAgentFields;
-      await createAssistant(agentConfig);
+      setCreatingAgent(true);
+      await refreshAgents();
+      setAgentId(newAgent.assistant_id);
+      resetState();
     },
   });
 
   const resetState = () => {
-    setAgentCreatorThreadId(null);
     setStep(1);
     setDescription("");
     setResponse("");
@@ -236,53 +213,20 @@ export function InitialInputs(): React.ReactNode {
   };
 
   const handleQuestionsSubmit = () => {
-    setCreatingAgentLoadingText("Generating agent configuration...");
-    stream.submit({
-      messages: [
-        {
-          role: "user",
-          content: response,
-        },
-      ],
-    });
-  };
-
-  const createAssistant = async (args: GeneratedAgentFields) => {
-    if (!deploymentClient) {
-      toast.error("No deployment client found", {
-        richColors: true,
-      });
-      return;
-    }
-    setCreatingAgent(true);
-    setCreatingAgentLoadingText("Creating agent...");
-    const response = await deploymentClient.assistants.create({
-      graphId: "deep_agent",
-      name: args.name,
-      metadata: {
-        description: args.description,
-      },
-      config: {
-        configurable: {
-          instructions: args.instructions,
-          subagents: args.subagents.map((subAgent) => ({
-            ...subAgent,
-            mcp_server: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
-          })),
-          tools: {
-            tools: args.tools,
-            url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
-            auth_required: process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
-            // TODO: NEED TO GENERATE INTERRUPT CONFIG IN AGENT
-            interrupt_config: false,
+    setCreatingAgentLoadingText("Generating agent...");
+    stream.submit(
+      {
+        messages: [
+          {
+            role: "user",
+            content: response,
           },
-        },
+        ],
       },
-    });
-
-    setAgentId(response.assistant_id);
-    await refreshAgents();
-    resetState();
+      {
+        streamMode: ["updates"],
+      },
+    );
   };
 
   if (step === 1) {

@@ -4,7 +4,14 @@ import React from "react";
 import { Agent } from "@/types/agent";
 import { SubAgent } from "@/types/sub-agent";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronDown, FileText, Users, Plus } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronDown,
+  FileText,
+  Users,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type EditTarget =
@@ -16,6 +23,7 @@ interface AgentHierarchyNavProps {
   currentTarget: EditTarget;
   onTargetChange: (target: EditTarget) => void;
   onCreateSubAgent: () => void;
+  onDeleteSubAgent?: (index: number) => void;
 }
 
 export function AgentHierarchyNav({
@@ -23,6 +31,7 @@ export function AgentHierarchyNav({
   currentTarget,
   onTargetChange,
   onCreateSubAgent,
+  onDeleteSubAgent,
 }: AgentHierarchyNavProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const subAgents =
@@ -37,9 +46,7 @@ export function AgentHierarchyNav({
         <div
           className={cn(
             "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
-            isMainSelected
-              ? "bg-[#2F6868] text-white"
-              : "text-gray-700 hover:bg-gray-100",
+            isMainSelected ? "bg-[#2F6868] text-white" : "text-gray-700",
           )}
           onClick={() => onTargetChange({ type: "main", agent })}
         >
@@ -74,17 +81,42 @@ export function AgentHierarchyNav({
                     <div
                       key={`${subAgent.name}-${index}`}
                       className={cn(
-                        "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
+                        "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors",
                         isSelected
                           ? "bg-[#2F6868] text-white"
-                          : "text-gray-600 hover:bg-gray-100",
+                          : "text-gray-600",
                       )}
-                      onClick={() =>
-                        onTargetChange({ type: "subagent", subAgent, index })
-                      }
                     >
-                      <Users className="h-4 w-4" />
-                      <span>{subAgent.name}</span>
+                      <button
+                        type="button"
+                        className="flex flex-1 cursor-pointer items-center gap-2 text-left"
+                        onClick={() =>
+                          onTargetChange({ type: "subagent", subAgent, index })
+                        }
+                      >
+                        <Users className="h-4 w-4" />
+                        <span className="truncate">{subAgent.name}</span>
+                      </button>
+                      {onDeleteSubAgent && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "ml-auto h-6 w-6 p-0 transition-opacity",
+                            isSelected
+                              ? "text-white opacity-100 hover:text-white"
+                              : "hover:text-destructive text-gray-400 opacity-0 group-hover:opacity-100",
+                          )}
+                          aria-label="Delete sub-agent"
+                          title="Delete sub-agent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteSubAgent(index);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   );
                 })}
