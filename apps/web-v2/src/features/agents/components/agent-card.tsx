@@ -198,7 +198,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           </Button>
         )}
         <NextLink
-          href={`/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+          href={`/agents/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}&draft=1&fullChat=1`}
           className="ml-auto"
         >
           <Button size="sm">

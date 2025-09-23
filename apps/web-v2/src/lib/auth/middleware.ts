@@ -85,7 +85,7 @@ export async function updateSession(request: NextRequest) {
     )
   ) {
     const url = request.nextUrl.clone();
-    url.pathname = "/chat";
+    url.pathname = "/agents/chat";
     return NextResponse.redirect(url);
   }
 

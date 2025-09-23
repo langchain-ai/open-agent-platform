@@ -2,7 +2,6 @@
 
 import { type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useQueryState } from "nuqs";
 
 import {
   SidebarGroup,
@@ -21,24 +20,9 @@ function ChatNavItem({
   item: { title: string; url: string; icon?: LucideIcon };
 }) {
   const pathname = usePathname();
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
-
-  // If we have a selected agent, include it in the URL for Chat and Inbox
-  const href =
-    agentId && deploymentId
-      ? (() => {
-          if (item.title === "Chat") {
-            return `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
-          } else if (item.title === "Inbox") {
-            return `/inbox?agentInbox=${agentId}:${deploymentId}&agentId=${agentId}&deploymentId=${deploymentId}`;
-          }
-          return item.url;
-        })()
-      : item.url;
 
   return (
-    <NextLink href={href}>
+    <NextLink href={item.url}>
       <SidebarMenuItem
         className={cn(
           pathname === item.url &&
