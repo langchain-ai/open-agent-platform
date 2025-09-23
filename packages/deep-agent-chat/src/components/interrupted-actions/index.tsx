@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
-import { ThreadData } from "@/types/inbox";
 import useInterruptedActions from "./hooks/use-interrupted-actions";
 import { ThreadIdCopyable } from "./components/thread-id";
 import { InboxItemInput } from "./components/inbox-item-input";
-import { useChatContext } from "@/providers/ChatProvider";
+import { useChatContext } from "../../providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
+import { HumanInterrupt } from "./types";
 
 interface ThreadActionsViewProps {
   interrupt: Interrupt;
-  threadId: string;
+  threadId: string | null;
 }
 
 export function ThreadActionsView({
@@ -22,10 +22,11 @@ export function ThreadActionsView({
     interrupt,
   });
 
-  // Safely access config for determining allowed actions
-  const firstInterrupt = threadData.interrupts?.[0];
-  const config = firstInterrupt?.config;
-  const acceptAllowed = config?.allow_accept ?? false;
+  const interruptValue = (interrupt.value as any)?.[0] as HumanInterrupt;
+
+  const acceptAllowed = interruptValue?.config?.allow_accept ?? false;
+  const threadTitle =
+    interruptValue?.action_request.action ?? "Unknown interrupt";
 
   // Handle Valid Interrupted Threads
   return (
@@ -36,7 +37,7 @@ export function ThreadActionsView({
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <p className="text-2xl tracking-tighter text-pretty">{threadTitle}</p>
         </div>
-        <ThreadIdCopyable threadId={threadId} />
+        {threadId && <ThreadIdCopyable threadId={threadId} />}
       </div>
 
       {/* Interrupted thread actions */}
@@ -57,7 +58,7 @@ export function ThreadActionsView({
         acceptAllowed={acceptAllowed}
         hasEdited={actions.hasEdited}
         hasAddedResponse={actions.hasAddedResponse}
-        interruptValue={firstInterrupt!}
+        interruptValue={interruptValue}
         humanResponse={actions.humanResponse}
         initialValues={actions.initialHumanInterruptEditValue.current || {}}
         setHumanResponse={actions.setHumanResponse}

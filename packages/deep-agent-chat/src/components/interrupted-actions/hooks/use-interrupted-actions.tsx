@@ -8,7 +8,7 @@ import React from "react";
 import { createDefaultHumanResponse } from "../utils";
 
 import { useQueryState } from "nuqs";
-import { useChatContext } from "@/providers/ChatProvider";
+import { useChatContext } from "../../../providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
 
 interface UseInterruptedActionsInput {
@@ -70,9 +70,12 @@ export default function useInterruptedActions({
 
   React.useEffect(() => {
     try {
-      const interruptValue = interrupt.value;
+      const interruptValue = (interrupt.value as any)?.[0];
       const { responses, defaultSubmitType, hasAccept } =
-        createDefaultHumanResponse(interrupt, initialHumanInterruptEditValue);
+        createDefaultHumanResponse(
+          [interruptValue],
+          initialHumanInterruptEditValue,
+        );
       setSelectedSubmitType(defaultSubmitType);
       setHumanResponse(responses);
       setAcceptAllowed(hasAccept);
@@ -84,7 +87,7 @@ export default function useInterruptedActions({
       setAcceptAllowed(false);
       console.error("Error formatting and setting human response state", e);
     }
-  }, [threadData?.interrupts]);
+  }, [interrupt]);
 
   const handleSubmit = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,

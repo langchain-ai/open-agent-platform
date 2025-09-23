@@ -101,7 +101,6 @@ export function unknownToPrettyDate(input: unknown): string | undefined {
 }
 
 export function constructOpenInStudioURL(
-  agentId: string,
   deploymentId: string,
   threadId?: string,
 ): string {
