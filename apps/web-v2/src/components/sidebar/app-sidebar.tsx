@@ -70,7 +70,7 @@ const data: {
     },
     {
       title: "Chat",
-      url: "/chat",
+      url: "/agents/chat",
       icon: MessageCircle,
     },
     {
