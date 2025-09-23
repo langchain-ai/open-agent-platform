@@ -8,6 +8,7 @@ import {
   Inbox,
   Bot,
   Plus,
+  Edit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,6 +72,11 @@ const data: {
       title: "Chat",
       url: "/chat",
       icon: MessageCircle,
+    },
+    {
+      title: "Editor",
+      url: "/editor",
+      icon: Edit,
     },
     {
       title: "Inbox",

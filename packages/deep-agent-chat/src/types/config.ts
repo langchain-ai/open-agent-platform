@@ -12,4 +12,6 @@ export interface DeepAgentChatConfig {
   onViewChange?: (view: "chat" | "workflow") => void;
   // When controlled by the host, hide the internal toggle UI
   hideInternalToggle?: boolean;
+  // Hide the sidebar with agent tasks, file system, and agent optimizer
+  hideSidebar?: boolean;
 }

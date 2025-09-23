@@ -20,6 +20,8 @@ export const subAgentFormSchema = z.object({
   description: z.string(),
   prompt: z.string(),
   tools: z.array(z.string()),
+  // Not shown as an input, but preserved/filled on submit
+  mcp_server: z.string().optional(),
 });
 
 export function SubAgentForm(props: {

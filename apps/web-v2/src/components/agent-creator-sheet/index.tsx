@@ -144,7 +144,7 @@ export function AgentCreatorSheet(props: {
   });
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
     defaultValues: {
-      subAgents: configurable?.subagents ?? [],
+      subAgents: (configurable?.subagents as SubAgent[]) ?? [],
     },
   });
 
