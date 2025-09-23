@@ -10,6 +10,8 @@ import {
   User,
   Webhook,
   Wrench,
+  LoaderCircle,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,6 +41,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { useAgents } from "@/hooks/use-agents";
+import { useTriggers } from "@/hooks/use-triggers";
+import { useAuthContext } from "@/providers/Auth";
+import { useAgentsContext } from "@/providers/Agents";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import React from "react";
 
 function SupportedConfigBadge({
   type,
@@ -99,6 +118,59 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
 
   const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
   const hasConfigurable = Boolean(agent.config?.configurable);
+
+  const { deleteAgent } = useAgents();
+  const { listAgentTriggers, updateAgentTriggers } = useTriggers();
+  const { session } = useAuthContext();
+  const { refreshAgents } = useAgentsContext();
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = React.useState(false);
+
+  const handleDelete = async () => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", { richColors: true });
+      return;
+    }
+    if (!agent) {
+      toast.error("No agent found", { richColors: true });
+      return;
+    }
+
+    setDeleteSubmitting(true);
+    const deleted = await deleteAgent(agent.deploymentId, agent.assistant_id);
+    setDeleteSubmitting(false);
+
+    if (!deleted) {
+      toast.error("Failed to delete agent", {
+        description: "Please try again",
+        richColors: true,
+      });
+      return;
+    }
+
+    const currentTriggerIds = await listAgentTriggers(
+      session.accessToken,
+      agent.assistant_id,
+    );
+
+    if (currentTriggerIds.length > 0) {
+      const success = await updateAgentTriggers(session.accessToken, {
+        agentId: agent.assistant_id,
+        selectedTriggerIds: [],
+        currentTriggerIds: currentTriggerIds,
+      });
+      if (!success) {
+        toast.error("Failed to update agent triggers", {
+          richColors: true,
+        });
+        return;
+      }
+    }
+
+    toast.success("Agent deleted successfully!", { richColors: true });
+    await refreshAgents();
+    setDeleteOpen(false);
+  };
 
   return (
     <Card
@@ -182,30 +254,88 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
         </CardContent>
       )}
 
-      <CardFooter className="mt-auto flex w-full justify-between pt-2">
+      <CardFooter className="mt-auto flex w-full items-center gap-2 pt-2">
         {!isDefaultAgent && (
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-          >
-            <NextLink
-              href={`/editor?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
             >
-              <Edit className="mr-2 h-3.5 w-3.5" />
-              Edit
-            </NextLink>
-          </Button>
+              <NextLink
+                href={`/editor?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+              >
+                <Edit className="mr-2 h-3.5 w-3.5" />
+                Edit
+              </NextLink>
+            </Button>
+            <AlertDialog
+              open={deleteOpen}
+              onOpenChange={setDeleteOpen}
+            >
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                >
+                  {deleteSubmitting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Delete
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Delete agent “{agent.name}”?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. It will permanently delete the
+                    agent and unlink any attached triggers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel asChild>
+                    <Button variant="outline">Cancel</Button>
+                  </AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <Button
+                      variant="destructive"
+                      onClick={handleDelete}
+                      disabled={deleteSubmitting}
+                    >
+                      {deleteSubmitting ? (
+                        <>
+                          <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete"
+                      )}
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
         )}
-        <NextLink
-          href={`/agents/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}&draft=1&fullChat=1`}
-          className="ml-auto"
-        >
-          <Button size="sm">
-            <MessageSquare className="mr-2 h-3.5 w-3.5" />
-            Chat
-          </Button>
-        </NextLink>
+        <div className="ml-auto">
+          <NextLink
+            href={`/agents/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}&draft=1&fullChat=1`}
+          >
+            <Button size="sm">
+              <MessageSquare className="mr-2 h-3.5 w-3.5" />
+              Chat
+            </Button>
+          </NextLink>
+        </div>
       </CardFooter>
     </Card>
   );
