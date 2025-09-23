@@ -5,7 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Inbox,
   Bot,
   Plus,
   Edit,

@@ -15,7 +15,8 @@ type Props = {
   agent: Agent | null;
   deploymentId: string | null;
   currentThreadId: string | null;
-  onThreadSelect: (id: string) => void;
+  onThreadSelect: (id: string, assistantId?: string) => void;
+  showDraft?: boolean;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 };
@@ -23,9 +24,10 @@ type Props = {
 type Item = {
   id: string;
   updatedAt: Date;
-  status: Thread["status"];
+  status: Thread["status"] | "draft";
   title: string;
   description: string;
+  assistantId?: string;
 };
 
 export function ThreadHistoryAgentList({
@@ -33,6 +35,7 @@ export function ThreadHistoryAgentList({
   deploymentId,
   currentThreadId,
   onThreadSelect,
+  showDraft = false,
   className,
   statusFilter = "all",
 }: Props) {
@@ -57,7 +60,8 @@ export function ThreadHistoryAgentList({
 
   const fetchThreads = useCallback(async () => {
     if (!client) return;
-    setLoading(true);
+    // Avoid flicker: only show loading spinner when list is empty
+    setLoading((prev) => (items.length === 0 ? true : prev));
     try {
       const params: Parameters<typeof client.threads.search>[0] = {
         limit: 50,
@@ -85,6 +89,7 @@ export function ThreadHistoryAgentList({
             status: t.status,
             title: defaultTitle,
             description: defaultDesc,
+            assistantId: agent.assistant_id,
           };
         }
 
@@ -105,6 +110,7 @@ export function ThreadHistoryAgentList({
           description:
             (matched?.metadata?.description as string | undefined) ||
             defaultDesc,
+          assistantId,
         };
       });
       setItems(
@@ -120,11 +126,37 @@ export function ThreadHistoryAgentList({
     agent?.metadata,
     deploymentId,
     agentsByAssistantId,
+    items.length,
   ]);
 
+  // Initial fetch on mount or when client/agent changes
   useEffect(() => {
     fetchThreads();
   }, [fetchThreads]);
+
+  // Refetch after a concrete thread is selected/created to include it,
+  // but avoid refetch on "new thread" state (threadId === null) to prevent flicker.
+  useEffect(() => {
+    if (currentThreadId) {
+      fetchThreads();
+    }
+  }, [fetchThreads, currentThreadId]);
+
+  const displayItems = useMemo(() => {
+    if (showDraft && !currentThreadId && agent) {
+      const draft: Item = {
+        id: "__draft__",
+        updatedAt: new Date(),
+        status: "draft",
+        title: agent.name || "Agent",
+        description:
+          (agent.metadata?.description as string | undefined) ||
+          "No description",
+      };
+      return [draft, ...items];
+    }
+    return items;
+  }, [showDraft, currentThreadId, agent, items]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, Item[]> = {
@@ -136,8 +168,8 @@ export function ThreadHistoryAgentList({
     const now = new Date();
     const base =
       statusFilter === "all"
-        ? items
-        : items.filter((t) => t.status === statusFilter);
+        ? displayItems
+        : displayItems.filter((t) => t.status === statusFilter);
     base.forEach((t) => {
       const diff = now.getTime() - t.updatedAt.getTime();
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -147,7 +179,7 @@ export function ThreadHistoryAgentList({
       else groups.older.push(t);
     });
     return groups;
-  }, [items, statusFilter]);
+  }, [displayItems, statusFilter]);
 
   return (
     <div className={cn("flex h-full w-full flex-col", className)}>
@@ -173,8 +205,14 @@ export function ThreadHistoryAgentList({
                     description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={t.id === currentThreadId}
-                    onClick={() => onThreadSelect(t.id)}
+                    active={
+                      t.id === currentThreadId ||
+                      (t.id === "__draft__" && !currentThreadId)
+                    }
+                    onClick={() => {
+                      if (t.id !== "__draft__")
+                        onThreadSelect(t.id, t.assistantId);
+                    }}
                   />
                 ))}
               </Group>
@@ -189,8 +227,14 @@ export function ThreadHistoryAgentList({
                     description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={t.id === currentThreadId}
-                    onClick={() => onThreadSelect(t.id)}
+                    active={
+                      t.id === currentThreadId ||
+                      (t.id === "__draft__" && !currentThreadId)
+                    }
+                    onClick={() => {
+                      if (t.id !== "__draft__")
+                        onThreadSelect(t.id, t.assistantId);
+                    }}
                   />
                 ))}
               </Group>
@@ -205,8 +249,14 @@ export function ThreadHistoryAgentList({
                     description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={t.id === currentThreadId}
-                    onClick={() => onThreadSelect(t.id)}
+                    active={
+                      t.id === currentThreadId ||
+                      (t.id === "__draft__" && !currentThreadId)
+                    }
+                    onClick={() => {
+                      if (t.id !== "__draft__")
+                        onThreadSelect(t.id, t.assistantId);
+                    }}
                   />
                 ))}
               </Group>
@@ -221,8 +271,14 @@ export function ThreadHistoryAgentList({
                     description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={t.id === currentThreadId}
-                    onClick={() => onThreadSelect(t.id)}
+                    active={
+                      t.id === currentThreadId ||
+                      (t.id === "__draft__" && !currentThreadId)
+                    }
+                    onClick={() => {
+                      if (t.id !== "__draft__")
+                        onThreadSelect(t.id, t.assistantId);
+                    }}
                   />
                 ))}
               </Group>
@@ -263,23 +319,27 @@ function Row({
   id: string;
   title: string;
   description: string;
-  status: Thread["status"];
+  status: Thread["status"] | "draft";
   time: string;
   active: boolean;
   onClick: () => void;
 }) {
   const statusTextClass =
-    status === "busy"
-      ? "text-yellow-700"
-      : status === "idle"
-        ? "text-green-700"
-        : "text-red-700"; // interrupted or error
+    status === "draft"
+      ? "text-gray-600"
+      : status === "busy"
+        ? "text-yellow-700"
+        : status === "idle"
+          ? "text-green-700"
+          : "text-red-700"; // interrupted or error
   const statusDotClass =
-    status === "busy"
-      ? "bg-yellow-400"
-      : status === "idle"
-        ? "bg-green-500"
-        : "bg-red-500";
+    status === "draft"
+      ? "bg-gray-400"
+      : status === "busy"
+        ? "bg-yellow-400"
+        : status === "idle"
+          ? "bg-green-500"
+          : "bg-red-500";
   return (
     <button
       onClick={onClick}

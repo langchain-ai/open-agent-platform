@@ -11,6 +11,7 @@ import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
+import { toast } from "sonner";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
@@ -31,6 +32,7 @@ function ThreadHistoryHalf(): React.ReactNode {
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [fullChat] = useQueryState("fullChat");
+  const [draft, setDraft] = useQueryState("draft");
   const { agents } = useAgentsContext();
   const selectedAgent = useMemo(
     () => agents.find((a) => a.assistant_id === agentId) || null,
@@ -49,6 +51,12 @@ function ThreadHistoryHalf(): React.ReactNode {
   }, [deploymentId, setDeploymentId]);
 
   // List data is fetched inside ThreadHistoryAgentList
+  // Clear draft marker once a real thread is present
+  useEffect(() => {
+    if (currentThreadId) {
+      void setDraft(null);
+    }
+  }, [currentThreadId, setDraft]);
 
   const isFullChat = fullChat === "1";
   return (
@@ -148,7 +156,15 @@ function ThreadHistoryHalf(): React.ReactNode {
           agent={selectedAgent}
           deploymentId={deploymentId}
           currentThreadId={currentThreadId}
-          onThreadSelect={(id) => setCurrentThreadId(id)}
+          showDraft={draft === "1"}
+          onThreadSelect={async (id, assistantId) => {
+            // In "All agents" view, ensure we set the agent so sending works
+            if (assistantId) {
+              await setAgentId(assistantId);
+            }
+            await setCurrentThreadId(id);
+            await setDraft(null);
+          }}
           statusFilter={
             ((statusFilter as string) || "all") as
               | "all"
@@ -191,6 +207,7 @@ function RightPaneChat(): React.ReactNode {
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setThreadId] = useQueryState("threadId");
   const [fullChat, setFullChat] = useQueryState("fullChat");
+  const [_draft, setDraft] = useQueryState("draft");
   const [chatVersion, setChatVersion] = useState(0);
 
   const { agents } = useAgentsContext();
@@ -232,11 +249,17 @@ function RightPaneChat(): React.ReactNode {
             variant="ghost"
             size="icon"
             onClick={async () => {
+              if (!agentId) {
+                toast.info("Please select an agent", { richColors: true });
+                return;
+              }
               await setThreadId(null);
+              await setDraft("1");
               setChatVersion((v) => v + 1);
             }}
             className="shadow-icon-button size-8 rounded-md border border-[#2F6868] bg-[#2F6868] p-3 text-white hover:bg-[#2F6868] hover:text-gray-50"
             title="Start new chat"
+            disabled={!agentId}
           >
             <SquarePen className="size-5" />
           </Button>
@@ -260,7 +283,7 @@ function RightPaneChat(): React.ReactNode {
       </div>
       <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
         <DeepAgentChatInterface
-          key={`chat-${agentId || "all"}-${threadId || "none"}-${deploymentId}-${chatVersion}`}
+          key={`chat-${agentId || "all"}-${deploymentId}-${chatVersion}`}
           assistantId={agentId || ""}
           deploymentUrl={selectedDeployment?.deploymentUrl || ""}
           accessToken={session.accessToken || ""}
