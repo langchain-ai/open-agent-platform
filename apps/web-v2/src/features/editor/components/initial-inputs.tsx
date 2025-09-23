@@ -162,7 +162,7 @@ export function InitialInputs(): React.ReactNode {
     }
     const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
     setDeploymentId(deployment.id);
-  }, []);
+  }, [deploymentId, setDeploymentId]);
 
   const stream = useStream({
     client: client ?? undefined,
