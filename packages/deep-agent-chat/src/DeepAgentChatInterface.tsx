@@ -19,6 +19,7 @@ function DeepAgentChatInterfaceInternal({
   view,
   onViewChange,
   hideInternalToggle,
+  hideSidebar,
 }: DeepAgentChatConfig) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
@@ -43,19 +44,21 @@ function DeepAgentChatInterfaceInternal({
         assistantId={assistantId}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
-          <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
-            <TasksFilesSidebar
-              todos={todos}
-              files={files}
-              setFiles={setFiles}
-              activeAssistant={activeAssistant}
-              setActiveAssistant={setActiveAssistant}
-              setAssistantError={setAssistantError}
-              assistantError={assistantError}
-            />
-          </div>
+          {!hideSidebar && (
+            <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
+              <TasksFilesSidebar
+                todos={todos}
+                files={files}
+                setFiles={setFiles}
+                activeAssistant={activeAssistant}
+                setActiveAssistant={setActiveAssistant}
+                setAssistantError={setAssistantError}
+                assistantError={assistantError}
+              />
+            </div>
+          )}
 
-          <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white p-3">
+          <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white">
             <ChatInterface
               assistantId={assistantId}
               activeAssistant={activeAssistant}

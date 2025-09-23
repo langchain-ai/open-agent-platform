@@ -16,6 +16,9 @@
     "gen:supabase-types": "npx supabase gen types typescript --project-id \"juxhkpoaqdfzsrqcnoqa\" --schema public > src/types/supabase/database.types.ts"
   },
   "dependencies": {
+    "@blocknote/core": "^0.39.1",
+    "@blocknote/mantine": "^0.39.1",
+    "@blocknote/react": "^0.39.1",
     "@hookform/resolvers": "^5.2.2",
     "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
@@ -45,6 +48,10 @@
     "@radix-ui/react-tooltip": "^1.2.3",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
+    "@tiptap/core": "^3.4.6",
+    "@tiptap/extension-gapcursor": "^3.4.5",
+    "@tiptap/extensions": "^3.4.5",
+    "@tiptap/pm": "^3.4.6",
     "@types/js-yaml": "^4.0.9",
     "@xyflow/react": "^12.8.4",
     "class-variance-authority": "^0.7.1",
