@@ -36,7 +36,6 @@ interface ThreadActionsViewProps<
   ThreadValues extends Record<string, any> = Record<string, any>,
 > {
   threadData: ThreadData<ThreadValues>;
-  isInterrupted: boolean;
   threadTitle: string;
   showState: boolean;
   showDescription: boolean;
@@ -111,7 +110,6 @@ export function ThreadActionsView<
   ThreadValues extends Record<string, any> = Record<string, any>,
 >({
   threadData,
-  isInterrupted: _propIsInterrupted,
   threadTitle,
   showDescription,
   showState,

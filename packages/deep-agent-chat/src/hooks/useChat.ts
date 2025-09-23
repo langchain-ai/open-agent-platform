@@ -10,6 +10,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { TodoItem } from "../types";
 import { useClients } from "../providers/ClientProvider";
+import { HumanResponse } from "../types/inbox";
 
 type StateType = {
   messages: Message[];
@@ -129,6 +130,23 @@ export function useChat(
     [stream, activeAssistant?.config],
   );
 
+  const sendHumanResponse = (response: HumanResponse[]): void => {
+    stream.submit(null, {
+      command: {
+        resume: response,
+      },
+    });
+  };
+
+  const markCurrentThreadAsResolved = (): void => {
+    stream.submit(null, {
+      command: {
+        goto: "__end__",
+        update: null,
+      },
+    });
+  };
+
   const stopStream = useCallback(() => {
     stream.stop();
   }, [stream]);
@@ -142,5 +160,7 @@ export function useChat(
     runSingleStep,
     continueStream,
     stopStream,
+    sendHumanResponse,
+    markCurrentThreadAsResolved,
   };
 }

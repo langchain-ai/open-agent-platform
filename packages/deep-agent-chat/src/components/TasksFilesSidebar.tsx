@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import type { TodoItem, FileItem } from "../types";
-import { useChatContext } from "../providers/ChatContext";
+import { useChatContext } from "../providers/ChatProvider";
 import { cn } from "../lib/utils";
 import { FileViewDialog } from "./FileViewDialog";
 import { OptimizationSidebar } from "./OptimizationSidebar";

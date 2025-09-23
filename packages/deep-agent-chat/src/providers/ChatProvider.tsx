@@ -1,11 +1,10 @@
 "use client";
 
-import { ReactNode, useMemo } from "react";
+import { ReactNode, createContext, useContext } from "react";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import { useChat } from "../hooks/useChat";
 import type { TodoItem } from "../types";
-import { ChatContext } from "./ChatContext";
 
 interface ChatProviderProps {
   children: ReactNode;
@@ -36,9 +35,19 @@ export function ChatProvider({
     assistantId,
   );
 
-  const chatValue = useMemo(() => chat, [chat]);
+  return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
+}
 
-  return (
-    <ChatContext.Provider value={chatValue}>{children}</ChatContext.Provider>
-  );
+export type ChatContextType = ReturnType<typeof useChat>;
+
+export const ChatContext = createContext<ChatContextType | undefined>(
+  undefined,
+);
+
+export function useChatContext() {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error("useChatContext must be used within a ChatProvider");
+  }
+  return context;
 }

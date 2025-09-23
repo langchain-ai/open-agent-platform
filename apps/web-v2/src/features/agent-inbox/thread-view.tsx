@@ -21,9 +21,6 @@ export function ThreadView<
   const [showDescription, setShowDescription] = React.useState(true);
   const [showState, setShowState] = React.useState(false);
 
-  // Create interrupt actions if we have an interrupted thread
-  const isInterrupted = threadData?.status === "interrupted";
-
   // Show side panel for all thread types
   const showSidePanel = showDescription || showState;
 
@@ -108,7 +105,6 @@ export function ThreadView<
       >
         <ThreadActionsView<ThreadValues>
           threadData={threadData}
-          isInterrupted={isInterrupted}
           threadTitle={threadTitle}
           showState={showState}
           showDescription={showDescription}

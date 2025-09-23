@@ -12,7 +12,7 @@
     "declarationMap": true,
     "outDir": "./dist",
     "jsx": "react-jsx",
-    "types": ["react"],
+    "types": ["react", "node"],
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
