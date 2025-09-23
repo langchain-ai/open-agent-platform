@@ -5,7 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Inbox,
   Bot,
   Plus,
   Edit,
@@ -57,6 +56,11 @@ const data: {
       icon: Puzzle,
     },
     {
+      title: "Chat",
+      url: "/agents/chat",
+      icon: MessageCircle,
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: Settings,
@@ -69,19 +73,9 @@ const data: {
       isDropdown: true,
     },
     {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageCircle,
-    },
-    {
       title: "Editor",
       url: "/editor",
       icon: Edit,
-    },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
     },
   ],
 };

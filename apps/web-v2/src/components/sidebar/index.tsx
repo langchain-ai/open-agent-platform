@@ -9,10 +9,12 @@ import { MCPProvider } from "@/providers/MCP";
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(pathname !== "/chat");
+  const [sidebarOpen, setSidebarOpen] = useState(
+    pathname !== "/chat" && pathname !== "/agents/chat",
+  );
 
   useEffect(() => {
-    if (pathname === "/chat") {
+    if (pathname === "/chat" || pathname === "/agents/chat") {
       setSidebarOpen(false);
     }
   }, [pathname]);

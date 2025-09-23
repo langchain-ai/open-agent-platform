@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
@@ -166,13 +166,20 @@ export function InitialInputs(): React.ReactNode {
   }, [session]);
 
   const deployments = getDeployments();
-  const [_deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+
+  // Ensure a default deployment is selected once on mount/when deps available
+  useEffect(() => {
+    if (!deploymentId && deployments.length && session?.accessToken) {
+      const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
+      void setDeploymentId(deployment.id);
+    }
+  }, [deploymentId, deployments, session, setDeploymentId]);
+
   const deploymentClient = useMemo(() => {
-    if (!deployments.length || !session?.accessToken) return null;
-    const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
-    setDeploymentId(deployment.id);
-    return createClient(deployment.id, session.accessToken);
-  }, [session]);
+    if (!deploymentId || !session?.accessToken) return null;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session]);
 
   const stream = useStream({
     client: client ?? undefined,
