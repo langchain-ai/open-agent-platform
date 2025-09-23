@@ -25,12 +25,14 @@ function ChatNavItem({
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
 
-  // If we have a selected agent, include it in the URL for Chat only
+  // If we have a selected agent, include it in the URL for Chat and Inbox
   const href =
     agentId && deploymentId
       ? (() => {
           if (item.title === "Chat") {
             return `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
+          } else if (item.title === "Inbox") {
+            return `/inbox?agentInbox=${agentId}:${deploymentId}&agentId=${agentId}&deploymentId=${deploymentId}`;
           }
           return item.url;
         })()
