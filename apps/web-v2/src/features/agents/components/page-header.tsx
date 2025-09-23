@@ -1,7 +1,7 @@
 import type React from "react";
+import NextLink from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface PageHeaderProps {
   title: string;
@@ -19,14 +19,12 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
         )}
       </div>
       {action || (
-        <AgentCreatorSheet
-          trigger={
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Agent
-            </Button>
-          }
-        />
+        <Button asChild>
+          <NextLink href="/editor">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Create Agent
+          </NextLink>
+        </Button>
       )}
     </div>
   );

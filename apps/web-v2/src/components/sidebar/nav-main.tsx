@@ -1,8 +1,7 @@
 "use client";
 
-import { Plus, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useQueryState } from "nuqs";
 
 import {
   SidebarGroup,
@@ -14,7 +13,6 @@ import {
 import NextLink from "next/link";
 import { cn } from "@/lib/utils";
 import { AgentDropdown } from "./agent-dropdown";
-import { AgentCreatorSheet } from "../agent-creator-sheet";
 
 function ChatNavItem({
   item,
@@ -22,24 +20,9 @@ function ChatNavItem({
   item: { title: string; url: string; icon?: LucideIcon };
 }) {
   const pathname = usePathname();
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
-
-  // If we have a selected agent, include it in the URL for Chat and Inbox
-  const href =
-    agentId && deploymentId
-      ? (() => {
-          if (item.title === "Chat") {
-            return `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
-          } else if (item.title === "Inbox") {
-            return `/inbox?agentInbox=${agentId}:${deploymentId}&agentId=${agentId}&deploymentId=${deploymentId}`;
-          }
-          return item.url;
-        })()
-      : item.url;
 
   return (
-    <NextLink href={href}>
+    <NextLink href={item.url}>
       <SidebarMenuItem
         className={cn(
           pathname === item.url &&
@@ -99,18 +82,6 @@ export function NavMain({
             <AgentDropdown
               key={`${item.title}-${index}`}
               item={item}
-            />
-          ) : item.isAgentCreator ? (
-            <AgentCreatorSheet
-              key={`${item.title}-${index}`}
-              trigger={
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="New agent">
-                    <Plus />
-                    <p className="text-sm">New Agent</p>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              }
             />
           ) : (
             <ChatNavItem

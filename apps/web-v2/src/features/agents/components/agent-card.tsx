@@ -39,7 +39,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
-import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 function SupportedConfigBadge({
   type,
@@ -185,21 +184,21 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
 
       <CardFooter className="mt-auto flex w-full justify-between pt-2">
         {!isDefaultAgent && (
-          <AgentCreatorSheet
-            agent={agent}
-            trigger={
-              <Button
-                variant="outline"
-                size="sm"
-              >
-                <Edit className="mr-2 h-3.5 w-3.5" />
-                Edit
-              </Button>
-            }
-          />
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+          >
+            <NextLink
+              href={`/editor?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+            >
+              <Edit className="mr-2 h-3.5 w-3.5" />
+              Edit
+            </NextLink>
+          </Button>
         )}
         <NextLink
-          href={`/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
+          href={`/agents/chat?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}&draft=1&fullChat=1`}
           className="ml-auto"
         >
           <Button size="sm">

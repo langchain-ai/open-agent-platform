@@ -145,41 +145,41 @@ interface GeneratedAgentFields {
 }
 
 export function InitialInputs(): React.ReactNode {
-  const [step, setStep] = useState(1);
   const { tools } = useMCPContext();
+  const { session } = useAuthContext();
+  const { refreshAgents } = useAgentsContext();
+
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [agentCreatorThreadId, setAgentCreatorThreadId] = useQueryState(
     "agentCreatorThreadId",
   );
+
+  const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
   const [response, setResponse] = useState("");
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
 
-  const { session } = useAuthContext();
-  const { refreshAgents } = useAgentsContext();
-
   const client = useMemo(() => {
     if (!session?.accessToken) return null;
     return getOptimizerClient(session.accessToken);
   }, [session]);
 
-  const deployments = getDeployments();
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-
-  // Ensure a default deployment is selected once on mount/when deps available
-  useEffect(() => {
-    if (!deploymentId && deployments.length && session?.accessToken) {
-      const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
-      void setDeploymentId(deployment.id);
-    }
-  }, [deploymentId, deployments, session, setDeploymentId]);
-
   const deploymentClient = useMemo(() => {
     if (!deploymentId || !session?.accessToken) return null;
     return createClient(deploymentId, session.accessToken);
   }, [deploymentId, session]);
+
+  const deployments = getDeployments();
+  useEffect(() => {
+    if (deploymentId) {
+      return;
+    }
+    const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
+    setDeploymentId(deployment.id);
+  }, []);
 
   const stream = useStream({
     client: client ?? undefined,
