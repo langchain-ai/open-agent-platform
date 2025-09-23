@@ -7,9 +7,9 @@ import { MessageSquare } from "lucide-react";
 import { useAuthContext } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Agent } from "@/types/agent";
-import type { Message, Thread } from "@langchain/langgraph-sdk";
-import { extractStringFromMessageContent } from "../utils";
+import type { Thread } from "@langchain/langgraph-sdk";
 import { format } from "date-fns";
+import { useAgentsContext } from "@/providers/Agents";
 
 type Props = {
   agent: Agent | null;
@@ -24,6 +24,8 @@ type Item = {
   id: string;
   updatedAt: Date;
   status: Thread["status"];
+  title: string;
+  description: string;
 };
 
 export function ThreadHistoryAgentList({
@@ -35,6 +37,7 @@ export function ThreadHistoryAgentList({
   statusFilter = "all",
 }: Props) {
   const { session } = useAuthContext();
+  const { agents: allAgents } = useAgentsContext();
   const client = useMemo(() => {
     if (!deploymentId || !session?.accessToken) return null;
     return createClient(deploymentId, session.accessToken);
@@ -42,6 +45,15 @@ export function ThreadHistoryAgentList({
 
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
+
+  // Build a quick lookup for agents in the current deployment
+  const agentsByAssistantId = useMemo(() => {
+    const map = new Map<string, Agent>();
+    allAgents
+      .filter((a) => a.deploymentId === deploymentId)
+      .forEach((a) => map.set(a.assistant_id, a));
+    return map;
+  }, [allAgents, deploymentId]);
 
   const fetchThreads = useCallback(async () => {
     if (!client) return;
@@ -53,21 +65,62 @@ export function ThreadHistoryAgentList({
         sortOrder: "desc",
       };
       if (agent?.assistant_id) {
-        params.metadata = { assistant_id: agent.assistant_id } as Record<string, string>;
+        params.metadata = { assistant_id: agent.assistant_id } as Record<
+          string,
+          string
+        >;
       }
       const response = await client.threads.search(params);
-      const mapped: Item[] = response.map((t) => ({
-        id: t.thread_id,
-        updatedAt: new Date(t.updated_at || t.created_at),
-        status: t.status,
-      }));
+      const defaultTitle = agent?.name || "Agent";
+      const defaultDesc =
+        (agent?.metadata?.description as string | undefined) ||
+        "No description";
+
+      const mapped: Item[] = response.map((t) => {
+        // If a specific agent is selected, use it for title/desc
+        if (agent?.assistant_id) {
+          return {
+            id: t.thread_id,
+            updatedAt: new Date(t.updated_at || t.created_at),
+            status: t.status,
+            title: defaultTitle,
+            description: defaultDesc,
+          };
+        }
+
+        // Otherwise, try to derive the agent from thread metadata
+        const meta = (t as unknown as { metadata?: Record<string, unknown> })
+          .metadata;
+        const assistantId =
+          (meta?.["assistant_id"] as string | undefined) || undefined;
+        const matched = assistantId
+          ? agentsByAssistantId.get(assistantId)
+          : undefined;
+
+        return {
+          id: t.thread_id,
+          updatedAt: new Date(t.updated_at || t.created_at),
+          status: t.status,
+          title: matched?.name || defaultTitle,
+          description:
+            (matched?.metadata?.description as string | undefined) ||
+            defaultDesc,
+        };
+      });
       setItems(
         mapped.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
       );
     } finally {
       setLoading(false);
     }
-  }, [client, agent?.assistant_id]);
+  }, [
+    client,
+    agent?.assistant_id,
+    agent?.name,
+    agent?.metadata,
+    deploymentId,
+    agentsByAssistantId,
+  ]);
 
   useEffect(() => {
     fetchThreads();
@@ -96,9 +149,8 @@ export function ThreadHistoryAgentList({
     return groups;
   }, [items, statusFilter]);
 
-  const AgentTitle = agent?.name || "Agent";
-  const AgentDesc =
-    (agent?.metadata?.description as string | undefined) || "No description";
+  // When a specific agent is selected, each row will still have its own
+  // title/description derived above; leaving no separate header state here.
 
   return (
     <div className={cn("flex h-full w-full flex-col", className)}>
@@ -120,8 +172,8 @@ export function ThreadHistoryAgentList({
                   <Row
                     key={t.id}
                     id={t.id}
-                    title={AgentTitle}
-                    description={AgentDesc}
+                    title={t.title}
+                    description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
                     active={t.id === currentThreadId}
@@ -136,8 +188,8 @@ export function ThreadHistoryAgentList({
                   <Row
                     key={t.id}
                     id={t.id}
-                    title={AgentTitle}
-                    description={AgentDesc}
+                    title={t.title}
+                    description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
                     active={t.id === currentThreadId}
@@ -152,8 +204,8 @@ export function ThreadHistoryAgentList({
                   <Row
                     key={t.id}
                     id={t.id}
-                    title={AgentTitle}
-                    description={AgentDesc}
+                    title={t.title}
+                    description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
                     active={t.id === currentThreadId}
@@ -168,8 +220,8 @@ export function ThreadHistoryAgentList({
                   <Row
                     key={t.id}
                     id={t.id}
-                    title={AgentTitle}
-                    description={AgentDesc}
+                    title={t.title}
+                    description={t.description}
                     status={t.status}
                     time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
                     active={t.id === currentThreadId}
@@ -185,10 +237,16 @@ export function ThreadHistoryAgentList({
   );
 }
 
-function Group({ label, children }: { label: string; children: React.ReactNode }) {
+function Group({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="mb-6">
-      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold uppercase tracking-wide">
+      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
         {label}
       </h4>
       {children}
@@ -235,7 +293,7 @@ function Row({
       aria-current={active}
     >
       <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-      <div className="min-w-0 flex w-full items-stretch justify-between gap-2 overflow-hidden">
+      <div className="flex w-full min-w-0 items-stretch justify-between gap-2 overflow-hidden">
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="text-foreground mb-0.5 w-full max-w-full overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
             {title}
@@ -244,9 +302,19 @@ function Row({
             {description}
           </div>
         </div>
-        <div className="shrink-0 flex flex-col items-end justify-between pl-2 text-[11px] text-muted-foreground">
-          <span className={cn("flex items-center gap-1 capitalize", statusTextClass)}>
-            <span className={cn("inline-block size-1.5 rounded-full", statusDotClass)} />
+        <div className="text-muted-foreground flex shrink-0 flex-col items-end justify-between pl-2 text-[11px]">
+          <span
+            className={cn(
+              "flex items-center gap-1 capitalize",
+              statusTextClass,
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block size-1.5 rounded-full",
+                statusDotClass,
+              )}
+            />
             {status.replaceAll("_", " ")}
           </span>
           <span className="tabular-nums">{time}</span>

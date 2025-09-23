@@ -28,8 +28,6 @@ import {
 } from "@/components/ui/select";
 import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
 
-// (Thread list handled by ThreadHistoryAgentList)
-
 function ThreadHistoryHalf(): React.ReactNode {
   const { session } = useAuthContext();
   const [agentId, setAgentId] = useQueryState("agentId");
@@ -71,39 +69,48 @@ function ThreadHistoryHalf(): React.ReactNode {
         )}
         aria-hidden={isFullChat}
       >
-          <div className="border-b p-4">
-            <div className="flex items-center justify-between gap-2">
-              <h2 className="text-base font-semibold">All Conversations</h2>
-              <div className="flex items-center gap-2">
-                {/* Agent selector */}
-                <Select
-                  value={agentId && deploymentId ? `${agentId}:${deploymentId}` : ""}
-                  onValueChange={async (v) => {
-                    const [aid, did] = v.split(":");
-                    await setAgentId(aid || null);
-                    await setDeploymentId(did || null);
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-[240px]">
-                    <SelectValue placeholder="Select agent" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {agents.map((a) => (
-                      <SelectItem
-                        key={`${a.assistant_id}:${a.deploymentId}`}
-                        value={`${a.assistant_id}:${a.deploymentId}`}
-                      >
-                        {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        <div className="border-b p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">All Conversations</h2>
+            <div className="flex items-center gap-2">
+              {/* Agent selector */}
+              <Select
+                value={
+                  agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+                }
+                onValueChange={async (v) => {
+                  if (v === "all") {
+                    await setAgentId(null);
+                    await setDeploymentId(null);
+                    return;
+                  }
+                  const [aid, did] = v.split(":");
+                  await setAgentId(aid || null);
+                  await setDeploymentId(did || null);
+                }}
+              >
+                <SelectTrigger className="h-8 w-[240px]">
+                  <SelectValue placeholder="All agents" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All agents</SelectItem>
+                  <SelectSeparator />
+                  {agents.map((a) => (
+                    <SelectItem
+                      key={`${a.assistant_id}:${a.deploymentId}`}
+                      value={`${a.assistant_id}:${a.deploymentId}`}
+                    >
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                {/* Status filter */}
-                <Select
-                  value={(statusFilter as string) || "all"}
-                  onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
-                >
+              {/* Status filter */}
+              <Select
+                value={(statusFilter as string) || "all"}
+                onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
+              >
                 <SelectTrigger className="h-8 w-[220px]">
                   <SelectValue placeholder="Filter status" />
                 </SelectTrigger>
@@ -143,24 +150,24 @@ function ThreadHistoryHalf(): React.ReactNode {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              </div>
             </div>
           </div>
-          <ThreadHistoryAgentList
-            agent={selectedAgent}
-            deploymentId={deploymentId}
-            currentThreadId={currentThreadId}
-            onThreadSelect={(id) => setCurrentThreadId(id)}
-            statusFilter={
-              ((statusFilter as string) || "all") as
-                | "all"
-                | "idle"
-                | "busy"
-                | "interrupted"
-                | "error"
-            }
-          />
         </div>
+        <ThreadHistoryAgentList
+          agent={selectedAgent}
+          deploymentId={deploymentId}
+          currentThreadId={currentThreadId}
+          onThreadSelect={(id) => setCurrentThreadId(id)}
+          statusFilter={
+            ((statusFilter as string) || "all") as
+              | "all"
+              | "idle"
+              | "busy"
+              | "interrupted"
+              | "error"
+          }
+        />
+      </div>
       <div
         className={cn(
           "transition-all duration-300 ease-in-out",
@@ -193,7 +200,7 @@ function RightPaneChat(): React.ReactNode {
   const { session } = useAuthContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
-  const [_threadId, setThreadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useQueryState("threadId");
   const [fullChat, setFullChat] = useQueryState("fullChat");
   const [chatVersion, setChatVersion] = useState(0);
 
@@ -209,9 +216,10 @@ function RightPaneChat(): React.ReactNode {
     [deployments, deploymentId],
   );
 
-  if (!agentId || !deploymentId || !session?.accessToken) {
+  // Allow viewing a selected thread even when no agent is selected
+  if ((!agentId && !threadId) || !deploymentId || !session?.accessToken) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-sm">
         Select an agent and a thread to view chat
       </div>
     );
@@ -221,11 +229,11 @@ function RightPaneChat(): React.ReactNode {
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="mb-0 flex items-center justify-between gap-2 px-6 pt-3 md:pt-4">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold text-gray-800 md:text-lg truncate">
+          <h2 className="truncate text-base font-semibold text-gray-800 md:text-lg">
             {selectedAgent?.name || "Agent"}
           </h2>
           {typeof selectedAgent?.metadata?.description === "string" && (
-            <p className="text-muted-foreground text-xs truncate">
+            <p className="text-muted-foreground truncate text-xs">
               {selectedAgent.metadata.description as string}
             </p>
           )}
@@ -263,8 +271,8 @@ function RightPaneChat(): React.ReactNode {
       </div>
       <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
         <DeepAgentChatInterface
-          key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-          assistantId={agentId}
+          key={`chat-${agentId || "all"}-${threadId || "none"}-${deploymentId}-${chatVersion}`}
+          assistantId={agentId || ""}
           deploymentUrl={selectedDeployment?.deploymentUrl || ""}
           accessToken={session.accessToken || ""}
           optimizerDeploymentUrl={
@@ -282,4 +290,3 @@ function RightPaneChat(): React.ReactNode {
     </div>
   );
 }
-
