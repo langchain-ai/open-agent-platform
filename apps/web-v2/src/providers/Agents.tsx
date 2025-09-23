@@ -117,7 +117,7 @@ type AgentsContextType = {
    * Refreshes the agents list by fetching the latest agents from the API,
    * and updating the state.
    */
-  refreshAgents: () => Promise<void>;
+  refreshAgents: () => Promise<Agent[]>;
   /**
    * Whether the agents list is currently loading.
    */
@@ -155,19 +155,24 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       .finally(() => setLoading(false));
   }, [session?.accessToken]);
 
-  async function refreshAgents() {
+  async function refreshAgents(): Promise<Agent[]> {
     if (!session?.accessToken) {
       toast.error("No access token found", {
         richColors: true,
       });
-      return;
+      return [];
     }
     try {
       setRefreshAgentsLoading(true);
       const newAgents = await getAgents(deployments, session.accessToken);
-      setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
+      const updatedAgentsList = newAgents.filter(
+        (a) => !isSystemCreatedDefaultAssistant(a),
+      );
+      setAgents(updatedAgentsList);
+      return updatedAgentsList;
     } catch (e) {
       console.error("Failed to refresh agents", e);
+      return [];
     } finally {
       setRefreshAgentsLoading(false);
     }

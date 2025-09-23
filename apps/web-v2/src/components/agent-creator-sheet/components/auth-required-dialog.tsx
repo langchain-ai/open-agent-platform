@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -18,6 +17,7 @@ export function AuthRequiredDialog(props: {
   onOpenChange: (open: boolean) => void;
   handleSubmit: () => void;
   authUrls: { provider: string; authUrl: string }[];
+  hideCancel?: boolean;
 }) {
   return (
     <AlertDialog
@@ -79,12 +79,12 @@ export function AuthRequiredDialog(props: {
           ))}
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel asChild>
-            <Button variant="outline">Cancel</Button>
-          </AlertDialogCancel>
-          <AlertDialogAction onClick={props.handleSubmit}>
-            Save changes
-          </AlertDialogAction>
+          {!props.hideCancel && (
+            <AlertDialogCancel asChild>
+              <Button variant="outline">Cancel</Button>
+            </AlertDialogCancel>
+          )}
+          <Button onClick={props.handleSubmit}>Save changes</Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -12,6 +12,9 @@ import { Assistant, Message } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import { Loader2 } from "lucide-react";
 import { getDeployments } from "@/lib/environment/deployments";
+import { useLangChainAuth } from "@/hooks/use-langchain-auth";
+import { DeepAgentConfiguration } from "@/types/deep-agent";
+import { AuthRequiredDialog } from "@/components/agent-creator-sheet/components/auth-required-dialog";
 
 interface AgentDescriptionProps {
   description: string;
@@ -139,6 +142,7 @@ export function InitialInputs(): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
   const { refreshAgents } = useAgentsContext();
+  const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
 
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_agentId, setAgentId] = useQueryState("agentId");
@@ -149,6 +153,10 @@ export function InitialInputs(): React.ReactNode {
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
+
+  const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
+  const [enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
+  const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
   const client = useMemo(() => {
     if (!session?.accessToken) return null;
@@ -177,12 +185,47 @@ export function InitialInputs(): React.ReactNode {
         });
         return;
       }
+
+      const agentConfigurable = newAgent.config?.configurable as
+        | DeepAgentConfiguration
+        | undefined;
+      const enabledToolNames = agentConfigurable?.tools?.tools ?? [];
+      if (enabledToolNames?.length) {
+        setEnabledToolNames(enabledToolNames);
+        setNewAgentId(newAgent.assistant_id);
+        const success = await validateAuth(enabledToolNames);
+        if (!success) {
+          return;
+        }
+      }
+
       setCreatingAgent(true);
       await refreshAgents();
       setAgentId(newAgent.assistant_id);
       resetState();
     },
   });
+
+  const validateAuth = async (enabledToolNames: string[]): Promise<boolean> => {
+    if (!session?.accessToken) {
+      toast.error("No access token found", {
+        richColors: true,
+      });
+      setAuthRequiredDialogOpen(false);
+      return false;
+    }
+
+    const success = await verifyUserAuthScopes(session.accessToken, {
+      enabledToolNames: enabledToolNames,
+      tools,
+    });
+    if (!success) {
+      setAuthRequiredDialogOpen(true);
+      return false;
+    }
+    setAuthRequiredDialogOpen(false);
+    return true;
+  };
 
   const resetState = () => {
     setStep(1);
@@ -242,14 +285,33 @@ export function InitialInputs(): React.ReactNode {
 
   if (step === 2) {
     return (
-      <ClarifyingQuestions
-        response={response}
-        onResponseChange={setResponse}
-        onSubmit={handleQuestionsSubmit}
-        messages={stream.messages ?? []}
-        loading={stream.isLoading || creatingAgent}
-        loadingText={creatingAgentLoadingText}
-      />
+      <>
+        <ClarifyingQuestions
+          response={response}
+          onResponseChange={setResponse}
+          onSubmit={handleQuestionsSubmit}
+          messages={stream.messages ?? []}
+          loading={stream.isLoading || creatingAgent}
+          loadingText={creatingAgentLoadingText}
+        />
+        <AuthRequiredDialog
+          hideCancel={true}
+          open={authRequiredDialogOpen}
+          onOpenChange={setAuthRequiredDialogOpen}
+          authUrls={authRequiredUrls}
+          handleSubmit={async () => {
+            const success = await validateAuth(enabledToolNames);
+            if (!success) {
+              return;
+            }
+            await refreshAgents();
+            if (newAgentId) {
+              await setAgentId(newAgentId);
+            }
+            resetState();
+          }}
+        />
+      </>
     );
   }
 }
