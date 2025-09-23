@@ -30,7 +30,7 @@ function ChatNavItem({
     agentId && deploymentId
       ? (() => {
           if (item.title === "Chat") {
-            return `/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
+            return `/agents/chat?agentId=${agentId}&deploymentId=${deploymentId}`;
           } else if (item.title === "Inbox") {
             return `/inbox?agentInbox=${agentId}:${deploymentId}&agentId=${agentId}&deploymentId=${deploymentId}`;
           }
