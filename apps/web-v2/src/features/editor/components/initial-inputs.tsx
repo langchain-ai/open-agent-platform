@@ -27,15 +27,15 @@ function AgentDescription({
   loading,
 }: AgentDescriptionProps) {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
       <div className="space-y-2">
         <Label
           htmlFor="agent-description"
-          className="text-base font-semibold"
+          className="text-2xl font-semibold"
         >
           Describe the agent you want to build
         </Label>
-        <p className="text-sm text-gray-600">
+        <p className="text-lg text-gray-600">
           Provide a clear description of what you want your agent to do and how
           it should behave.
         </p>
@@ -84,23 +84,23 @@ function ClarifyingQuestions({
   }, [messages]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div className="space-y-4">
-        <Label className="text-base font-semibold">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-3 p-6">
+      <div className="space-y-2">
+        <Label className="text-2xl font-semibold">
           Please answer these clarifying questions
         </Label>
 
         <div className="w-xl rounded-lg border bg-gray-50 p-4">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-lg leading-relaxed whitespace-pre-wrap">
             {firstAiMessage ? (firstAiMessage.content as string) : "Loading..."}
           </p>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="w-full space-y-2">
         <Label
           htmlFor="clarifying-response"
-          className="text-sm font-medium"
+          className="text-lg font-medium"
         >
           Your response
         </Label>
@@ -109,8 +109,8 @@ function ClarifyingQuestions({
           value={response}
           onChange={(e) => onResponseChange(e.target.value)}
           placeholder="Please provide your answers to the questions above..."
-          minRows={3}
-          maxRows={6}
+          minRows={4}
+          maxRows={8}
           className="w-full"
         />
       </div>
