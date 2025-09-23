@@ -171,8 +171,6 @@ function ThreadHistoryHalf(): React.ReactNode {
   );
 }
 
-// (Old ThreadRow removed)
-
 export default function AgentsChatHalf(): React.ReactNode {
   return (
     <React.Suspense fallback={<div>Loading…</div>}>
