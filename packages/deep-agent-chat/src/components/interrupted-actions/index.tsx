@@ -8,31 +8,18 @@ import { useChatContext } from "@/providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
 
 interface ThreadActionsViewProps {
-  threadData: ThreadData;
-  threadTitle: string;
   interrupt: Interrupt;
+  threadId: string;
 }
 
 export function ThreadActionsView({
-  threadData,
-  threadTitle,
+  interrupt,
+  threadId,
 }: ThreadActionsViewProps) {
   const { isLoading } = useChatContext();
-  // Only use interrupted actions for interrupted threads
-  const isInterrupted =
-    threadData.status === "interrupted" &&
-    threadData.interrupts !== undefined &&
-    threadData.interrupts.length > 0;
-
   // Initialize the hook outside of conditional to satisfy React rules of hooks
   const actions = useInterruptedActions({
-    threadData: isInterrupted
-      ? {
-          thread: threadData.thread,
-          status: "interrupted",
-          interrupts: threadData.interrupts || [],
-        }
-      : null,
+    interrupt,
   });
 
   // Safely access config for determining allowed actions
@@ -49,7 +36,7 @@ export function ThreadActionsView({
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <p className="text-2xl tracking-tighter text-pretty">{threadTitle}</p>
         </div>
-        <ThreadIdCopyable threadId={threadData.thread.thread_id} />
+        <ThreadIdCopyable threadId={threadId} />
       </div>
 
       {/* Interrupted thread actions */}
