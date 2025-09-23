@@ -73,7 +73,7 @@ const createNavigationItems = (
       isDropdown: true,
     },
     {
-      title: "Chat",
+      title: "Inbox",
       url:
         agentId && deploymentId
           ? `/agents/chat?agentId=${agentId}&deploymentId=${deploymentId}`
