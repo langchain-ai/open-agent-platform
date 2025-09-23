@@ -149,9 +149,6 @@ export function ThreadHistoryAgentList({
     return groups;
   }, [items, statusFilter]);
 
-  // When a specific agent is selected, each row will still have its own
-  // title/description derived above; leaving no separate header state here.
-
   return (
     <div className={cn("flex h-full w-full flex-col", className)}>
       <ScrollArea className="h-[calc(100vh-100px)]">
