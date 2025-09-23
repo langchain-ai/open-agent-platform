@@ -78,11 +78,6 @@ const data: {
       url: "/editor",
       icon: Edit,
     },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
-    },
   ],
 };
 
