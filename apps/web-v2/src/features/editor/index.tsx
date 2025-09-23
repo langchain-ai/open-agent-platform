@@ -97,6 +97,37 @@ export function EditorPageContent(): React.ReactNode {
     toast.success(`Created ${newSubAgent.name} - ready to edit!`);
   };
 
+  const handleDeleteSubAgent = (index: number) => {
+    if (!selectedAgent) return;
+
+    const currentSubAgents =
+      (selectedAgent.config?.configurable?.subagents as SubAgent[]) || [];
+    if (index < 0 || index >= currentSubAgents.length) return;
+
+    const updatedSubAgents = currentSubAgents.filter((_, i) => i !== index);
+
+    if (selectedAgent.config?.configurable) {
+      selectedAgent.config.configurable.subagents = updatedSubAgents;
+    }
+
+    // Update current edit target if needed
+    if (currentEditTarget?.type === "subagent") {
+      if (updatedSubAgents.length === 0) {
+        setCurrentEditTarget({ type: "main", agent: selectedAgent });
+      } else {
+        const newIndex = Math.min(index, updatedSubAgents.length - 1);
+        setCurrentEditTarget({
+          type: "subagent",
+          subAgent: updatedSubAgents[newIndex],
+          index: newIndex,
+        });
+      }
+    }
+
+    setSubAgentsVersion((prev) => prev + 1);
+    toast.success("Sub-agent removed. Click Save Changes to persist.");
+  };
+
   const handleNewThread = async () => {
     // Clear threadId to start a fresh chat thread while keeping the agent selection
     await setThreadId(null);
@@ -123,6 +154,7 @@ export function EditorPageContent(): React.ReactNode {
             currentTarget={currentEditTarget}
             onTargetChange={setCurrentEditTarget}
             onCreateSubAgent={handleCreateSubAgent}
+            onDeleteSubAgent={handleDeleteSubAgent}
           />
         )}
       </div>
