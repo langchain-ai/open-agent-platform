@@ -24,7 +24,7 @@ import { SiteHeader } from "./sidebar-header";
 const data = {
   navMain: [
     {
-      title: "Chat",
+      title: "Inbox",
       url: "/chat",
       icon: MessageCircle,
     },
@@ -37,11 +37,6 @@ const data = {
       title: "Tools",
       url: "/tools",
       icon: Wrench,
-    },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
     },
     {
       title: "Triggers",
