@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { createClient } from "@/lib/client";
-import type { Message } from "@langchain/langgraph-sdk";
 import { cn } from "@/lib/utils";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
@@ -29,17 +27,10 @@ import {
 import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
 
 function ThreadHistoryHalf(): React.ReactNode {
-  const { session } = useAuthContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [fullChat] = useQueryState("fullChat");
-
-  const client = useMemo(() => {
-    if (!deploymentId || !session?.accessToken) return null;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session]);
-
   const { agents } = useAgentsContext();
   const selectedAgent = useMemo(
     () => agents.find((a) => a.assistant_id === agentId) || null,
