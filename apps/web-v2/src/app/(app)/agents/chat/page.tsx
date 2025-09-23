@@ -49,8 +49,6 @@ function ThreadHistoryHalf(): React.ReactNode {
     }
   }, [deploymentId, setDeploymentId]);
 
-  // List data is fetched inside ThreadHistoryAgentList
-  // Clear draft marker once a real thread is present
   useEffect(() => {
     if (currentThreadId) {
       void setDraft(null);
