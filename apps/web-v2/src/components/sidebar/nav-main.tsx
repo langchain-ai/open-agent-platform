@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useQueryState } from "nuqs";
 
@@ -14,7 +14,6 @@ import {
 import NextLink from "next/link";
 import { cn } from "@/lib/utils";
 import { AgentDropdown } from "./agent-dropdown";
-import { AgentCreatorSheet } from "../agent-creator-sheet";
 
 function ChatNavItem({
   item,
@@ -99,18 +98,6 @@ export function NavMain({
             <AgentDropdown
               key={`${item.title}-${index}`}
               item={item}
-            />
-          ) : item.isAgentCreator ? (
-            <AgentCreatorSheet
-              key={`${item.title}-${index}`}
-              trigger={
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="New agent">
-                    <Plus />
-                    <p className="text-sm">New Agent</p>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              }
             />
           ) : (
             <ChatNavItem

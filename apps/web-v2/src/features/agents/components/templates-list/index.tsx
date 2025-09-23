@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAgentsContext } from "@/providers/Agents";
 import { TemplatesLoading } from "./templates-loading";
 import { AgentCard } from "../agent-card";
-import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
+import NextLink from "next/link";
 
 export function TemplatesList() {
   const { agents, loading: agentsLoading } = useAgentsContext();
@@ -56,14 +56,15 @@ export function TemplatesList() {
               ? "We couldn't find any agents matching your search."
               : "There are no agents configured yet."}
           </p>
-          <AgentCreatorSheet
-            trigger={
-              <Button variant="outline">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Agent
-              </Button>
-            }
-          />
+          <Button
+            variant="outline"
+            asChild
+          >
+            <NextLink href="/editor">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Agent
+            </NextLink>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

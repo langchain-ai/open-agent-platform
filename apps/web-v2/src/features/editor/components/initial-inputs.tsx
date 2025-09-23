@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
@@ -145,34 +145,41 @@ interface GeneratedAgentFields {
 }
 
 export function InitialInputs(): React.ReactNode {
-  const [step, setStep] = useState(1);
   const { tools } = useMCPContext();
+  const { session } = useAuthContext();
+  const { refreshAgents } = useAgentsContext();
+
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [agentCreatorThreadId, setAgentCreatorThreadId] = useQueryState(
     "agentCreatorThreadId",
   );
+
+  const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
   const [response, setResponse] = useState("");
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
 
-  const { session } = useAuthContext();
-  const { refreshAgents } = useAgentsContext();
-
   const client = useMemo(() => {
     if (!session?.accessToken) return null;
     return getOptimizerClient(session.accessToken);
   }, [session]);
 
-  const deployments = getDeployments();
-  const [_deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const deploymentClient = useMemo(() => {
-    if (!deployments.length || !session?.accessToken) return null;
+    if (!deploymentId || !session?.accessToken) return null;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session]);
+
+  const deployments = getDeployments();
+  useEffect(() => {
+    if (deploymentId) {
+      return;
+    }
     const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
     setDeploymentId(deployment.id);
-    return createClient(deployment.id, session.accessToken);
-  }, [session]);
+  }, []);
 
   const stream = useStream({
     client: client ?? undefined,
