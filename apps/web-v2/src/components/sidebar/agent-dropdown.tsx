@@ -31,7 +31,7 @@ export function AgentDropdown({
     if (
       !loading &&
       agents.length > 0 &&
-      pathname.startsWith("/chat") &&
+      pathname.includes("/chat") &&
       (!agentId || !deploymentId)
     ) {
       const defaultAgent = agents.find(isUserSpecifiedDefaultAgent);

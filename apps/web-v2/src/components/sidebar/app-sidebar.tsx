@@ -5,7 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Inbox,
   Bot,
   Plus,
   Edit,
@@ -21,9 +20,9 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
+import { useQueryState } from "nuqs";
 
-// Sidebar navigation data
-const data: {
+interface NavigationItems {
   topNav: {
     title: string;
     url: string;
@@ -43,11 +42,16 @@ const data: {
         isDropdown: true;
       }
   )[];
-} = {
+}
+
+const createNavigationItems = (
+  agentId: string | null,
+  deploymentId: string | null,
+): NavigationItems => ({
   topNav: [
     {
       title: "New Agent",
-      url: "#",
+      url: "/editor",
       icon: Plus,
       isAgentCreator: true,
     },
@@ -70,23 +74,32 @@ const data: {
     },
     {
       title: "Chat",
-      url: "/agents/chat",
+      url:
+        agentId && deploymentId
+          ? `/agents/chat?agentId=${agentId}&deploymentId=${deploymentId}`
+          : "/agents/chat",
       icon: MessageCircle,
     },
     {
       title: "Editor",
-      url: "/editor",
+      url:
+        agentId && deploymentId
+          ? `/editor?agentId=${agentId}&deploymentId=${deploymentId}`
+          : "/editor",
       icon: Edit,
     },
-    {
-      title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
-    },
   ],
-};
+});
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
+
+  const navItems = React.useMemo(
+    () => createNavigationItems(agentId, deploymentId),
+    [agentId, deploymentId],
+  );
+
   return (
     <Sidebar
       collapsible="icon"
@@ -94,9 +107,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={data.topNav} />
+        <NavMain items={navItems.topNav} />
         <NavMain
-          items={data.workspace}
+          items={navItems.workspace}
           groupLabel="Workspace"
         />
       </SidebarContent>

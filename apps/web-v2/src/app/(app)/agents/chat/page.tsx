@@ -1,225 +1,186 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { createClient } from "@/lib/client";
-import type { Message } from "@langchain/langgraph-sdk";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { MessageSquare } from "lucide-react";
-import { extractStringFromMessageContent } from "@/features/chat/utils";
+import { Maximize2, Minimize2, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
-
-type ChatHistoryItem = {
-  id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-async function fetchThreadsData(
-  client: ReturnType<typeof createClient>,
-  args?: { assistantId?: string },
-): Promise<ChatHistoryItem[]> {
-  if (!client) return [];
-  const response = await client.threads.search({
-    limit: 50,
-    sortBy: "created_at",
-    sortOrder: "desc",
-    metadata: args?.assistantId ? { assistant_id: args.assistantId } : undefined,
-  });
-
-  const threadList: ChatHistoryItem[] = response.map((thread) => {
-    let displayContent =
-      thread.status === "busy"
-        ? "Current Thread"
-        : `Thread ${thread.thread_id.slice(0, 8)}`;
-    try {
-      if (thread.values && typeof thread.values === "object" && "messages" in thread.values) {
-        const messages = (thread.values as { messages?: unknown[] }).messages;
-        if (Array.isArray(messages) && messages.length > 0 && thread.status !== "busy") {
-          displayContent = extractStringFromMessageContent(messages[0] as Message);
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to read first message for thread ${thread.thread_id}:`, err);
-    }
-    return {
-      id: thread.thread_id,
-      title: displayContent,
-      createdAt: new Date(thread.created_at),
-      updatedAt: new Date(thread.updated_at || thread.created_at),
-    };
-  });
-
-  return threadList.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-}
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
+import { useAgentsContext } from "@/providers/Agents";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
 
 function ThreadHistoryHalf(): React.ReactNode {
-  const { session } = useAuthContext();
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [currentThreadId, setCurrentThreadId] = useQueryState("threadId");
+  const [fullChat] = useQueryState("fullChat");
+  const [draft, setDraft] = useQueryState("draft");
+  const { agents } = useAgentsContext();
+  const selectedAgent = useMemo(
+    () => agents.find((a) => a.assistant_id === agentId) || null,
+    [agents, agentId],
+  );
+  const [statusFilter, setStatusFilter] = useQueryState("status");
 
-  const client = useMemo(() => {
-    if (!deploymentId || !session?.accessToken) return null;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session]);
-
-  const [threads, setThreads] = useState<ChatHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    if (!client || !agentId) return;
-    setLoading(true);
-    try {
-      const data = await fetchThreadsData(client, { assistantId: agentId });
-      setThreads(data);
-    } finally {
-      setLoading(false);
+  // Default to first deployment so the thread list can load when nothing is selected
+  useEffect(() => {
+    if (!deploymentId) {
+      const deployments = getDeployments();
+      if (deployments.length > 0) {
+        void setDeploymentId(deployments[0].id);
+      }
     }
-  }, [client, agentId]);
+  }, [deploymentId, setDeploymentId]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh, currentThreadId]);
+    if (currentThreadId) {
+      void setDraft(null);
+    }
+  }, [currentThreadId, setDraft]);
 
-  const grouped = useMemo(() => {
-    const groups: Record<string, ChatHistoryItem[]> = {
-      today: [],
-      yesterday: [],
-      week: [],
-      older: [],
-    };
-    const now = new Date();
-    threads.forEach((t) => {
-      const diff = now.getTime() - t.updatedAt.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      if (days === 0) groups.today.push(t);
-      else if (days === 1) groups.yesterday.push(t);
-      else if (days < 7) groups.week.push(t);
-      else groups.older.push(t);
-    });
-    return groups;
-  }, [threads]);
-
+  const isFullChat = fullChat === "1";
   return (
     <div className="flex h-full w-full">
-      <div className="w-1/2 border-r border-gray-200">
+      <div
+        className={cn(
+          "overflow-hidden border-gray-200 transition-all duration-300 ease-in-out",
+          isFullChat ? "w-0 border-r-0" : "w-1/2 border-r",
+        )}
+        aria-hidden={isFullChat}
+      >
         <div className="border-b p-4">
-          <h2 className="text-base font-semibold">Thread History</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">All Conversations</h2>
+            <div className="flex items-center gap-2">
+              {/* Agent selector */}
+              <Select
+                value={
+                  agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+                }
+                onValueChange={async (v) => {
+                  if (v === "all") {
+                    await setAgentId(null);
+                    await setDeploymentId(null);
+                    return;
+                  }
+                  const [aid, did] = v.split(":");
+                  await setAgentId(aid || null);
+                  await setDeploymentId(did || null);
+                }}
+              >
+                <SelectTrigger className="h-8 w-[240px]">
+                  <SelectValue placeholder="All agents" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All agents</SelectItem>
+                  <SelectSeparator />
+                  {agents.map((a) => (
+                    <SelectItem
+                      key={`${a.assistant_id}:${a.deploymentId}`}
+                      value={`${a.assistant_id}:${a.deploymentId}`}
+                    >
+                      {a.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Status filter */}
+              <Select
+                value={(statusFilter as string) || "all"}
+                onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
+              >
+                <SelectTrigger className="h-8 w-[220px]">
+                  <SelectValue placeholder="Filter status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Active</SelectLabel>
+                    <SelectItem value="idle">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-green-500" />
+                        Idle
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="busy">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-yellow-400" />
+                        Busy
+                      </span>
+                    </SelectItem>
+                  </SelectGroup>
+                  <SelectSeparator />
+                  <SelectGroup>
+                    <SelectLabel>Attention</SelectLabel>
+                    <SelectItem value="interrupted">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-red-500" />
+                        Interrupted
+                      </span>
+                    </SelectItem>
+                    <SelectItem value="error">
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-block size-2 rounded-full bg-red-600" />
+                        Error
+                      </span>
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-        <ScrollArea className="h-[calc(100vh-100px)]">
-          {loading ? (
-            <div className="text-muted-foreground flex items-center justify-center p-12">
-              Loading threads...
-            </div>
-          ) : threads.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
-              <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
-              <p>No threads yet</p>
-            </div>
-          ) : (
-            <div className="box-border w-full max-w-full overflow-hidden p-2">
-              {grouped.today.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold uppercase tracking-wide">
-                    Today
-                  </h4>
-                  {grouped.today.map((thread) => (
-                    <ThreadRow
-                      key={thread.id}
-                      thread={thread}
-                      isActive={thread.id === currentThreadId}
-                      onClick={() => setCurrentThreadId(thread.id)}
-                    />
-                  ))}
-                </div>
-              )}
-              {grouped.yesterday.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold uppercase tracking-wide">
-                    Yesterday
-                  </h4>
-                  {grouped.yesterday.map((thread) => (
-                    <ThreadRow
-                      key={thread.id}
-                      thread={thread}
-                      isActive={thread.id === currentThreadId}
-                      onClick={() => setCurrentThreadId(thread.id)}
-                    />
-                  ))}
-                </div>
-              )}
-              {grouped.week.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold uppercase tracking-wide">
-                    This Week
-                  </h4>
-                  {grouped.week.map((thread) => (
-                    <ThreadRow
-                      key={thread.id}
-                      thread={thread}
-                      isActive={thread.id === currentThreadId}
-                      onClick={() => setCurrentThreadId(thread.id)}
-                    />
-                  ))}
-                </div>
-              )}
-              {grouped.older.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold uppercase tracking-wide">
-                    Older
-                  </h4>
-                  {grouped.older.map((thread) => (
-                    <ThreadRow
-                      key={thread.id}
-                      thread={thread}
-                      isActive={thread.id === currentThreadId}
-                      onClick={() => setCurrentThreadId(thread.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
+        <ThreadHistoryAgentList
+          agent={selectedAgent}
+          deploymentId={deploymentId}
+          currentThreadId={currentThreadId}
+          showDraft={draft === "1"}
+          onThreadSelect={async (id, assistantId) => {
+            // In "All agents" view, ensure we set the agent so sending works
+            if (assistantId) {
+              await setAgentId(assistantId);
+            }
+            await setCurrentThreadId(id);
+            await setDraft(null);
+          }}
+          statusFilter={
+            ((statusFilter as string) || "all") as
+              | "all"
+              | "idle"
+              | "busy"
+              | "interrupted"
+              | "error"
+          }
+        />
       </div>
-      <div className="w-1/2">
+      <div
+        className={cn(
+          "transition-all duration-300 ease-in-out",
+          isFullChat ? "w-full" : "w-1/2",
+        )}
+      >
         <RightPaneChat />
       </div>
     </div>
-  );
-}
-
-function ThreadRow({
-  thread,
-  isActive,
-  onClick,
-}: {
-  thread: ChatHistoryItem;
-  isActive: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "hover:bg-muted flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
-        isActive ? "bg-muted" : "bg-transparent",
-      )}
-    >
-      <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-      <div className="w-[calc(50vw-5rem)] min-w-0 flex-1 overflow-hidden">
-        <div className="text-foreground mb-1 w-full max-w-full overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
-          {thread.title}
-        </div>
-      </div>
-    </button>
   );
 }
 
@@ -241,6 +202,16 @@ function RightPaneChat(): React.ReactNode {
   const { session } = useAuthContext();
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
+  const [threadId, setThreadId] = useQueryState("threadId");
+  const [fullChat, setFullChat] = useQueryState("fullChat");
+  const [_draft, setDraft] = useQueryState("draft");
+  const [chatVersion, setChatVersion] = useState(0);
+
+  const { agents } = useAgentsContext();
+  const selectedAgent = useMemo(
+    () => agents.find((a) => a.assistant_id === agentId) || null,
+    [agents, agentId],
+  );
 
   const deployments = getDeployments();
   const selectedDeployment = useMemo(
@@ -248,9 +219,10 @@ function RightPaneChat(): React.ReactNode {
     [deployments, deploymentId],
   );
 
-  if (!agentId || !deploymentId || !session?.accessToken) {
+  // Allow viewing a selected thread even when no agent is selected
+  if ((!agentId && !threadId) || !deploymentId || !session?.accessToken) {
     return (
-      <div className="flex h-full items-center justify-center p-6 text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-sm">
         Select an agent and a thread to view chat
       </div>
     );
@@ -258,19 +230,72 @@ function RightPaneChat(): React.ReactNode {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
-      <DeepAgentChatInterface
-        assistantId={agentId}
-        deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-        accessToken={session.accessToken || ""}
-        optimizerDeploymentUrl={
-          process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
-        }
-        optimizerAccessToken={session.accessToken || ""}
-        mode="oap"
-        hideInternalToggle={true}
-        hideSidebar={true}
-        view="chat"
-      />
+      <div className="mb-0 flex items-center justify-between gap-2 px-6 pt-3 md:pt-4">
+        <div className="min-w-0">
+          <h2 className="truncate text-base font-semibold text-gray-800 md:text-lg">
+            {selectedAgent?.name || "Agent"}
+          </h2>
+          {typeof selectedAgent?.metadata?.description === "string" && (
+            <p className="text-muted-foreground truncate text-xs">
+              {selectedAgent.metadata.description as string}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              if (!agentId) {
+                toast.info("Please select an agent", { richColors: true });
+                return;
+              }
+              await setThreadId(null);
+              await setDraft("1");
+              setChatVersion((v) => v + 1);
+            }}
+            className="shadow-icon-button size-8 rounded-md border border-[#2F6868] bg-[#2F6868] p-3 text-white hover:bg-[#2F6868] hover:text-gray-50"
+            title="Start new chat"
+            disabled={!agentId}
+          >
+            <SquarePen className="size-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              const next = fullChat === "1" ? null : "1";
+              await setFullChat(next);
+            }}
+            className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+            title={fullChat === "1" ? "Exit full view" : "Expand chat"}
+          >
+            {fullChat === "1" ? (
+              <Minimize2 className="size-5" />
+            ) : (
+              <Maximize2 className="size-5" />
+            )}
+          </Button>
+        </div>
+      </div>
+      <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
+        <DeepAgentChatInterface
+          key={`chat-${agentId || "all"}-${deploymentId}-${chatVersion}`}
+          assistantId={agentId || ""}
+          deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+          accessToken={session.accessToken || ""}
+          optimizerDeploymentUrl={
+            process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+          }
+          optimizerAccessToken={session.accessToken || ""}
+          mode="oap"
+          SidebarTrigger={SidebarTrigger}
+          DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+          hideInternalToggle={true}
+          hideSidebar={true}
+          view="chat"
+        />
+      </div>
     </div>
   );
 }

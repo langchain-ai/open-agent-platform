@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import NextLink from "next/link";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Agent } from "@/types/agent";
 import { AgentCard } from "../agent-card";
-import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 
 interface AgentListProps {
   agents: Agent[];
@@ -31,14 +31,15 @@ export function AgentList({ agents }: AgentListProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <AgentCreatorSheet
-          trigger={
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              New Agent
-            </Button>
-          }
-        />
+        <Button
+          size="sm"
+          asChild
+        >
+          <NextLink href="/editor">
+            <Plus className="mr-2 h-4 w-4" />
+            New Agent
+          </NextLink>
+        </Button>
       </div>
 
       {filteredAgents.length === 0 ? (
@@ -48,18 +49,17 @@ export function AgentList({ agents }: AgentListProps) {
             Create a new agent or try a different search.
           </p>
 
-          <AgentCreatorSheet
-            trigger={
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Agent
-              </Button>
-            }
-          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4"
+            asChild
+          >
+            <NextLink href="/editor">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Agent
+            </NextLink>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
