@@ -28,7 +28,7 @@ function AgentDescription({
   loading,
 }: AgentDescriptionProps) {
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6 flex flex-col items-center justify-center min-h-screen">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
       <div className="space-y-2">
         <Label
           htmlFor="agent-description"
@@ -85,7 +85,7 @@ function ClarifyingQuestions({
   }, [messages]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3 p-6 flex flex-col items-center justify-center min-h-screen">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-3 p-6">
       <div className="space-y-2">
         <Label className="text-2xl font-semibold">
           Please answer these clarifying questions
@@ -98,7 +98,7 @@ function ClarifyingQuestions({
         </div>
       </div>
 
-      <div className="space-y-2 w-full">
+      <div className="w-full space-y-2">
         <Label
           htmlFor="clarifying-response"
           className="text-lg font-medium"
