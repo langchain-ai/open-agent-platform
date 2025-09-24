@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
@@ -98,10 +98,10 @@ function ClarifyingQuestions({
   const [individualResponses, setIndividualResponses] = useState<string[]>([]);
 
   useEffect(() => {
-    if (followups && followups.length > 0) {
+    if (followups && followups.length > 0 && individualResponses.length === 0) {
       setIndividualResponses(new Array(followups.length).fill(""));
     }
-  }, [followups]);
+  }, [followups, individualResponses.length]);
 
   const handleIndividualResponseChange = (index: number, value: string) => {
     const newResponses = [...individualResponses];
@@ -195,9 +195,6 @@ export function InitialInputs({
   const { session } = useAuthContext();
   const { refreshAgents } = useAgentsContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
-
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [_agentId, setAgentId] = useQueryState("agentId");
 
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
@@ -369,12 +366,15 @@ export function InitialInputs({
             if (!success) {
               return;
             }
+
             await refreshAgents();
+
             if (newAgentId && onAgentCreated) {
               const deployments = getDeployments();
               const deploymentId = deployments[0]?.id || "";
               await onAgentCreated(newAgentId, deploymentId);
             }
+
             resetState();
           }}
         />
