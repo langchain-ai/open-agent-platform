@@ -10,7 +10,7 @@ import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { SquarePen, Bot } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
