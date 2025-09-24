@@ -31,7 +31,6 @@ export function SidebarTriggers({
   targetLabel,
   note,
 }: SidebarTriggersProps) {
-
   const CountText = ({ count }: { count: number }) =>
     count > 0 ? <span className="text-xs text-gray-500">{count}</span> : null;
 
@@ -54,30 +53,36 @@ export function SidebarTriggers({
   if (loading) {
     return (
       <div className="py-2">
-        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium uppercase text-gray-500">
+        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium text-gray-500 uppercase">
           Triggers
         </div>
-        <div className="py-3 text-center text-sm text-muted-foreground">Loading…</div>
+        <div className="text-muted-foreground py-3 text-center text-sm">
+          Loading…
+        </div>
       </div>
     );
   }
   if (showTriggersTab === false) {
     return (
       <div className="py-2">
-        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium uppercase text-gray-500">
+        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium text-gray-500 uppercase">
           Triggers
         </div>
-        <div className="py-3 text-center text-sm text-muted-foreground">Coming soon</div>
+        <div className="text-muted-foreground py-3 text-center text-sm">
+          Coming soon
+        </div>
       </div>
     );
   }
   if (!groupedTriggers || Object.keys(groupedTriggers).length === 0) {
     return (
       <div className="py-2">
-        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium uppercase text-gray-500">
+        <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium text-gray-500 uppercase">
           Triggers
         </div>
-        <div className="py-3 text-center text-xs text-muted-foreground">No triggers available</div>
+        <div className="text-muted-foreground py-3 text-center text-xs">
+          No triggers available
+        </div>
       </div>
     );
   }
