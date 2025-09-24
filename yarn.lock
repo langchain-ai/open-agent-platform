@@ -2519,9 +2519,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@open-agent-platform/web-v2@workspace:apps/web":
+"@open-agent-platform/web@workspace:apps/web":
   version: 0.0.0-use.local
-  resolution: "@open-agent-platform/web-v2@workspace:apps/web"
+  resolution: "@open-agent-platform/web@workspace:apps/web"
   dependencies:
     "@blocknote/core": ^0.39.1
     "@blocknote/mantine": ^0.39.1
