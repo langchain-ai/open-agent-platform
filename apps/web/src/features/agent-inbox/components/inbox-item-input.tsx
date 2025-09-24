@@ -341,7 +341,7 @@ export function InboxItemInput({
   handleSubmit,
 }: InboxItemInputProps) {
   const isEditAllowed = interruptValue?.config ?? false;
-  const isResponseAllowed = interruptValue?.config ?? false;
+  const isResponseAllowed = false; // With simplified boolean config, only show accept/ignore, not send response
   const hasArgs =
     Object.entries(interruptValue?.action_request?.args || {}).length > 0;
   const showArgsInResponse =

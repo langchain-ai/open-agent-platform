@@ -210,12 +210,7 @@ export function createDefaultHumanResponse(
       });
     }
   }
-  if (interrupt.config) {
-    responses.push({
-      type: "response",
-      args: "",
-    });
-  }
+  // Removed automatic response option - with simplified boolean config, only show accept/ignore
 
   if (interrupt.config) {
     responses.push({
