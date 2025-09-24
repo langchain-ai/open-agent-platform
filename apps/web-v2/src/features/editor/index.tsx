@@ -160,7 +160,6 @@ export function EditorPageContent(): React.ReactNode {
     return <InitialInputs />;
   }
 
-
   const handleAgentChange = async (value: string) => {
     const [selectedAgentId, selectedDeploymentId] = value.split(":");
     await setAgentId(selectedAgentId);
@@ -173,9 +172,13 @@ export function EditorPageContent(): React.ReactNode {
       <div className="flex-shrink-0 border-b bg-white px-6 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-gray-800">Agent Editor</h1>
+            <h1 className="text-xl font-semibold text-gray-800">
+              Agent Editor
+            </h1>
             <Select
-              value={agentId && deploymentId ? `${agentId}:${deploymentId}` : ""}
+              value={
+                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+              }
               onValueChange={handleAgentChange}
             >
               <SelectTrigger className="w-[280px]">
@@ -198,7 +201,7 @@ export function EditorPageContent(): React.ReactNode {
           </div>
           <Button
             variant="outline"
-            onClick={() => window.location.href = "/editor?new=true"}
+            onClick={() => (window.location.href = "/editor?new=true")}
             className="border-[#2F6868] text-[#2F6868] hover:bg-[#2F6868] hover:text-white"
           >
             Create New Agent
