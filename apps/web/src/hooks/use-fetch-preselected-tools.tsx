@@ -6,15 +6,14 @@ import {
   Dispatch,
 } from "react";
 import { Tool } from "@/types/tool";
-import { ConfigurableFieldMCPMetadata } from "@/types/configurable";
 
 interface UseFetchPreselectedToolsProps {
   tools: Tool[];
   setTools: Dispatch<SetStateAction<Tool[]>>;
   getTools: (cursor?: string) => Promise<Tool[]>;
   cursor: string;
-  toolConfigurations: ConfigurableFieldMCPMetadata[];
   searchTerm?: string;
+  preselectedTools?: string[];
 }
 
 /**
@@ -26,8 +25,8 @@ export function useFetchPreselectedTools({
   setTools,
   getTools,
   cursor,
-  toolConfigurations,
   searchTerm,
+  preselectedTools,
 }: UseFetchPreselectedToolsProps) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [fetchedAllPreSelectedTools, setFetchedAllPreSelectedTools] =
@@ -35,30 +34,24 @@ export function useFetchPreselectedTools({
 
   // Function to check if all pre-selected tools exist in the current tools list
   const checkPreSelectedTools = useCallback(() => {
-    if (
-      !toolConfigurations.length ||
-      !toolConfigurations[0]?.default?.tools ||
-      searchTerm
-    ) {
+    if (searchTerm || !preselectedTools?.length) {
       return true; // No pre-selected tools or search is active, no need to fetch more
     }
 
-    const preSelectedToolNames = toolConfigurations[0].default.tools;
     const currentToolNames = tools.map((tool) => tool.name);
 
     // Check if all pre-selected tools exist in the current tools list
-    return preSelectedToolNames.every((toolName) =>
+    return preselectedTools.every((toolName) =>
       currentToolNames.some((currentToolName) => currentToolName === toolName),
     );
-  }, [tools, toolConfigurations, searchTerm]);
+  }, [tools, preselectedTools, searchTerm]);
 
   // Effect to fetch all pre-selected tools when component mounts or tools/cursor changes
   useEffect(() => {
     const fetchPreSelectedTools = async () => {
       if (
         fetchedAllPreSelectedTools ||
-        !toolConfigurations.length ||
-        !toolConfigurations[0]?.default?.tools ||
+        !preselectedTools?.length ||
         searchTerm
       ) {
         return; // Already fetched all tools or no pre-selected tools or search is active
@@ -95,7 +88,7 @@ export function useFetchPreselectedTools({
   }, [
     tools,
     cursor,
-    toolConfigurations,
+    preselectedTools,
     searchTerm,
     checkPreSelectedTools,
     fetchedAllPreSelectedTools,

@@ -54,24 +54,40 @@ export function useLangChainAuth() {
       return false;
     }
 
-    const toolsAuthResPromise = enabledTools.map(async (tool) => {
-      if (!tool.auth_provider || !tool.scopes?.length) {
-        return true;
+    // Group tools by provider and combine scopes
+    const providerScopesMap = new Map<string, Set<string>>();
+
+    enabledTools.forEach((tool) => {
+      if (tool.auth_provider && tool.scopes?.length) {
+        const providerId = tool.auth_provider;
+        if (!providerScopesMap.has(providerId)) {
+          providerScopesMap.set(providerId, new Set());
+        }
+        tool.scopes.forEach((scope) => {
+          providerScopesMap.get(providerId)!.add(scope);
+        });
       }
-      const authRes = await getAuthUrlOrSuccessForProvider(accessToken, {
-        providerId: tool.auth_provider,
-        scopes: tool.scopes,
-      });
-      if (typeof authRes === "string") {
-        return {
-          provider: tool.auth_provider,
-          authUrl: authRes,
-        };
-      }
-      return true;
     });
 
-    const authUrls = (await Promise.all(toolsAuthResPromise)).filter(
+    // Make one request per provider
+    const providerAuthPromises = Array.from(providerScopesMap.entries()).map(
+      async ([providerId, scopesSet]) => {
+        const scopes = Array.from(scopesSet);
+        const authRes = await getAuthUrlOrSuccessForProvider(accessToken, {
+          providerId,
+          scopes,
+        });
+        if (typeof authRes === "string") {
+          return {
+            provider: providerId,
+            authUrl: authRes,
+          };
+        }
+        return true;
+      },
+    );
+
+    const authUrls = (await Promise.all(providerAuthPromises)).filter(
       (res) => typeof res === "object",
     );
     if (authUrls.length) {

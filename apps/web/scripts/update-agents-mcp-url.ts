@@ -1,97 +1,64 @@
 import "dotenv/config";
-import { getDeployments } from "@/lib/environment/deployments";
 import { Assistant, Client } from "@langchain/langgraph-sdk";
-import {
-  extractConfigurationsFromAgent,
-  getConfigurableDefaults,
-} from "@/lib/ui-config";
 
 async function main() {
-  const deployments = getDeployments();
-
-  const newMCPUrlStr = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-  if (!newMCPUrlStr) {
+  const deploymentUrl = "";
+  const newMCPUrl = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
+  if (!newMCPUrl) {
     throw new Error("MCP URL env variable is not set");
   }
 
-  const newMCPUrl = new URL(newMCPUrlStr);
-  newMCPUrl.pathname = `${newMCPUrl.pathname}/mcp`;
+  const client = new Client({
+    apiUrl: deploymentUrl,
+    apiKey: process.env.LANGSMITH_API_KEY,
+    defaultHeaders: {
+      "x-auth-scheme": "langsmith",
+    },
+  });
 
-  for await (const deployment of deployments) {
-    const client = new Client({
-      apiUrl: deployment.deploymentUrl,
-      apiKey: process.env.LANGSMITH_API_KEY,
-      defaultHeaders: {
-        "x-auth-scheme": "langsmith",
-      },
+  // Collect all agents using pagination
+  const allAgents: Assistant[] = [];
+  const pageSize = 100;
+  let hasMore = true;
+  let offset = 0;
+
+  // Continue fetching until there are no more pages
+  while (hasMore) {
+    const agents = await client.assistants.search({
+      limit: pageSize,
+      offset,
     });
 
-    // Collect all agents using pagination
-    const allAgents: Assistant[] = [];
-    const pageSize = 100;
-    let hasMore = true;
-    let offset = 0;
-
-    // Continue fetching until there are no more pages
-    while (hasMore) {
-      const agents = await client.assistants.search({
-        limit: pageSize,
-        offset,
-      });
-
-      // Add the current page of agents to our collection
-      if (agents.length === 0) {
-        hasMore = false;
-      } else {
-        allAgents.push(...agents);
-        offset += pageSize;
-      }
+    // Add the current page of agents to our collection
+    if (agents.length === 0) {
+      hasMore = false;
+    } else {
+      allAgents.push(...agents);
+      offset += pageSize;
     }
+  }
 
-    const agentsUpdatePromise = allAgents.map(async (agent) => {
-      // First get the agent schema. We need this to verify this agent has support
-      // for MCP servers
-      const agentSchema = await client.assistants.getSchemas(
-        agent.assistant_id,
-      );
-      // Extract the configs
-      const agentConfigs = extractConfigurationsFromAgent({
-        agent,
-        schema: agentSchema.config_schema,
-      });
-      if (!agentConfigs.toolConfig || !agentConfigs.toolConfig[0]) {
-        // Agent does not support MCP servers, skip
-        return;
-      }
-      const mcpConfigDefaultUrl = agentConfigs.toolConfig[0].default?.url;
-      if (newMCPUrl.href === mcpConfigDefaultUrl) {
-        // Agent already has latest MCP URL, skip
-        return;
-      }
-      const existingConfig = getConfigurableDefaults(
-        agentConfigs.configFields,
-        agentConfigs.toolConfig,
-        agentConfigs.ragConfig,
-        agentConfigs.agentsConfig,
-        agentConfigs.subAgentsConfig,
-        agentConfigs.triggersConfig,
-      );
+  console.log("allAgents", allAgents.length);
 
-      await client.assistants.update(agent.assistant_id, {
-        config: {
-          configurable: {
-            ...existingConfig,
-            // Ensure we only update the MCP config field.
-            [agentConfigs.toolConfig[0].label]: {
-              ...agentConfigs.toolConfig[0].default,
-              url: newMCPUrl.href,
-            },
+  const agentsUpdatePromise = allAgents.map(async (agent) => {
+    if (!agent.config?.configurable || !agent.config?.configurable.tools) {
+      return;
+    }
+    return await client.assistants.update(agent.assistant_id, {
+      config: {
+        configurable: {
+          ...agent.config.configurable,
+          tools: {
+            ...agent.config.configurable.tools,
+            url: newMCPUrl,
           },
         },
-      });
+      },
     });
-    await Promise.all(agentsUpdatePromise);
-  }
+  });
+  const updatedAgents = await Promise.all(agentsUpdatePromise);
+
+  console.log("updated", updatedAgents.length);
 }
 
 main().catch(console.error);

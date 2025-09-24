@@ -15,7 +15,6 @@ import {
   SubAgentNodeComponent,
   ToolNodeComponent,
 } from "./nodes";
-import { ConfigurableFieldSubAgentsMetadata } from "@/types/configurable";
 
 interface AgentGraphVisualizationProps {
   configurable: Record<string, any>;
@@ -51,6 +50,14 @@ interface MainAgentNode {
 }
 
 type GraphNode = SubAgentNode | ToolNode | StartEndNode | MainAgentNode;
+
+interface SubAgentConfig {
+  name?: string;
+  description?: string;
+  prompt?: string;
+  tools?: string[];
+  mcp_server?: string;
+}
 
 const nodeTypes = {
   startEnd: StartEndNodeComponent,
@@ -99,9 +106,7 @@ export function AgentGraphVisualization({
     currentY += nodeSpacing;
 
     // Get subagents from configurable
-    const subagents: NonNullable<
-      ConfigurableFieldSubAgentsMetadata["default"]
-    > = configurable?.subagents || [];
+    const subagents: SubAgentConfig[] = configurable?.subagents || [];
 
     // Layout subagents horizontally
     if (subagents.length > 0) {

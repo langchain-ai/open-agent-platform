@@ -6,10 +6,14 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { LangGraphLogoSVG } from "../icons/langgraph";
+import { OAPLogoBlue } from "@/components/icons/oap-logo-blue";
+import { PanelLeftIcon } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 import NextLink from "next/link";
 
 export function SiteHeader() {
+  const { toggleSidebar } = useSidebar();
+
   return (
     <SidebarHeader>
       <SidebarMenu>
@@ -17,14 +21,28 @@ export function SiteHeader() {
           <SidebarMenuButton
             size="lg"
             asChild
-            className="flex items-center justify-center gap-0"
+            className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center"
           >
-            <NextLink href="/chat">
-              <LangGraphLogoSVG className="!h-4 !w-auto flex-shrink-0" />
-              <div className="grid flex-1 pl-2 text-left text-sm leading-tight transition-all group-data-[collapsible=icon]:pl-0 group-data-[collapsible=icon]:opacity-0">
-                <span className="truncate font-semibold">
-                  Open Agent Platform
-                </span>
+            <NextLink href="/agents">
+              {/* Show only trigger icon when collapsed */}
+              <PanelLeftIcon
+                className="hidden !h-4 !w-4 flex-shrink-0 cursor-pointer group-data-[collapsible=icon]:block"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleSidebar();
+                }}
+              />
+
+              {/* Show logo and trigger when expanded */}
+              <div className="flex w-full items-center justify-between group-data-[collapsible=icon]:hidden">
+                <OAPLogoBlue className="!h-4 !w-auto flex-shrink-0" />
+                <PanelLeftIcon
+                  className="!h-4 !w-4 flex-shrink-0 cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleSidebar();
+                  }}
+                />
               </div>
             </NextLink>
           </SidebarMenuButton>

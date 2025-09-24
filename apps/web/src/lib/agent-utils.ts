@@ -1,8 +1,7 @@
-import { Agent } from "@/types/agent";
+import { Agent, AgentConfigType } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { toast } from "sonner";
-import React from "react";
+import { Deployment } from "@/types/deployment";
 
 /**
  * Determines if an agent is the user's default agent.
@@ -62,7 +61,7 @@ export function isUserSpecifiedDefaultAgent(agent: Agent): boolean {
   }
   return (
     isUserCreatedDefaultAssistant(agent) &&
-    agent.graph_id === defaultDeployment.defaultGraphId &&
+    isDefaultGraph(defaultDeployment, agent.graph_id) &&
     agent.deploymentId === defaultDeployment.id
   );
 }
@@ -117,55 +116,63 @@ export function groupAgentsByGraphs<AgentOrAssistant extends Agent | Assistant>(
 }
 
 /**
- * Checks if API keys are required but not set for a deployment.
- * @param deploymentId The deployment ID to check
- * @param hasApiKeys Whether the user has API keys set
- * @returns True if the deployment requires API keys but user doesn't have them
+ * Determines if a graph is the default graph for a deployment.
+ * @param deployment The deployment to check.
+ * @param graphId The graph ID to check.
+ * @returns True if the graph is the default graph for the deployment.
  */
-export function requiresApiKeysButNotSet(
-  deploymentId: string,
-  hasApiKeys: boolean,
+export function isDefaultGraph(
+  deployment: Deployment,
+  graphId: string,
 ): boolean {
-  const deployment = getDeployments().find((d) => d.id === deploymentId);
-  return deployment?.requiresApiKeys === true && !hasApiKeys;
+  return deployment.graphs.find((g) => g.isDefault)?.id === graphId;
 }
 
 /**
- * Shows a warning toast if API keys are required but not set.
- * @param deploymentId The deployment ID to check
- * @param hasApiKeys Whether the user has API keys set
+ * Analyzes an agent's configuration to determine what features it actually supports.
+ * @param agent The agent to analyze
+ * @param agentIdsWithTriggers Optional set of agent IDs that have triggers configured
+ * @returns Array of supported configuration types
  */
-export function checkApiKeysWarning(deploymentId: string, hasApiKeys: boolean) {
-  if (requiresApiKeysButNotSet(deploymentId, hasApiKeys)) {
-    const deployment = getDeployments().find((d) => d.id === deploymentId);
-    const baseMessage =
-      "This agent requires all necessary API keys to be set in the Settings page under your Account.";
+export function detectSupportedConfigs(
+  agent: Agent | Assistant,
+  agentIdsWithTriggers?: Set<string>,
+): AgentConfigType[] {
+  const supportedConfigs: AgentConfigType[] = [];
+  const configurable = agent.config?.configurable;
 
-    const customMessage = deployment?.apiKeysRequiredMessage;
-    const fullMessage = customMessage
-      ? `${baseMessage}\n\n${customMessage}`
-      : baseMessage;
-
-    toast.error(
-      React.createElement(
-        "div",
-        { className: "space-y-2" },
-        React.createElement("p", null, fullMessage),
-        React.createElement(
-          "a",
-          {
-            href: "/settings",
-            className:
-              "inline-flex items-center text-sm font-bold hover:text-red-900 underline",
-          },
-          "Go to Settings →",
-        ),
-      ),
-      {
-        duration: 60000,
-        richColors: true,
-        closeButton: false,
-      },
-    );
+  if (!configurable) {
+    // Still check for triggers even if no configurable data
+    if (agentIdsWithTriggers?.has(agent.assistant_id)) {
+      supportedConfigs.push("triggers");
+    }
+    return supportedConfigs;
   }
+
+  // Check for tools configuration
+  if (
+    configurable.tools &&
+    typeof configurable.tools === "object" &&
+    "tools" in configurable.tools &&
+    Array.isArray(configurable.tools.tools) &&
+    configurable.tools.tools.length > 0
+  ) {
+    supportedConfigs.push("tools");
+  }
+
+  // Check for sub-agents configuration
+  if (
+    configurable.subagents &&
+    Array.isArray(configurable.subagents) &&
+    configurable.subagents.length > 0
+  ) {
+    supportedConfigs.push("subagents");
+  }
+
+  // Check for triggers
+  if (agentIdsWithTriggers?.has(agent.assistant_id)) {
+    supportedConfigs.push("triggers");
+  }
+
+  return supportedConfigs;
 }

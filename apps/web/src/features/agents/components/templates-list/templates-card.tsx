@@ -95,10 +95,7 @@ export function TemplateCard({
         </CardHeader>
         <CollapsibleContent>
           <CardContent className="pt-6">
-            <AgentList
-              agents={agents}
-              deploymentId={deployment.id}
-            />
+            <AgentList agents={agents} />
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

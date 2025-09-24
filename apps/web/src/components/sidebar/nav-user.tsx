@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronsUpDown,
-  LogOut,
-  User,
-  Loader2,
-  TriangleAlert,
-  Settings,
-} from "lucide-react";
+import { ChevronsUpDown, LogOut, User, Loader2 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -28,14 +21,12 @@ import {
 import { useAuthContext } from "@/providers/Auth";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useConfigStore } from "@/hooks/use-config-store";
 
 export function NavUser() {
   const { isMobile } = useSidebar();
   const { user: authUser, signOut, isAuthenticated } = useAuthContext();
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const { resetStore } = useConfigStore();
 
   // Use auth user if available, otherwise use default user
   const displayUser = authUser
@@ -79,15 +70,6 @@ export function NavUser() {
   const handleSignIn = () => {
     router.push("/signin");
   };
-
-  const handleClearLocalData = () => {
-    resetStore();
-    toast.success("Local data cleared. Please refresh the page.", {
-      richColors: true,
-    });
-  };
-
-  const isProdEnv = process.env.NODE_ENV === "production";
 
   return (
     <SidebarMenu>
@@ -150,11 +132,6 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-
             {isAuthenticated ? (
               <DropdownMenuItem
                 onClick={handleSignOut}
@@ -176,12 +153,6 @@ export function NavUser() {
               <DropdownMenuItem onClick={handleSignIn}>
                 <User className="mr-2 h-4 w-4" />
                 Sign in
-              </DropdownMenuItem>
-            )}
-            {!isProdEnv && (
-              <DropdownMenuItem onClick={handleClearLocalData}>
-                <TriangleAlert className="mr-2 h-4 w-4 text-red-500" />
-                Clear local data
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

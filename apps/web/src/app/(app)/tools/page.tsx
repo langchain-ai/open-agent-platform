@@ -10,6 +10,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
+import { MCPProvider } from "@/providers/MCP";
 
 /**
  * The /tools page.
@@ -31,7 +32,9 @@ export default function ToolsPage(): React.ReactNode {
           </Breadcrumb>
         </div>
       </header>
-      <ToolsInterface />
+      <MCPProvider>
+        <ToolsInterface />
+      </MCPProvider>
     </React.Suspense>
   );
 }

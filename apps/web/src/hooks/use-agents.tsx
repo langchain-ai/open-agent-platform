@@ -37,48 +37,13 @@ export function useAgents() {
     [session?.accessToken],
   );
 
-  const getAgentConfigSchema = useCallback(
-    async (agentId: string, deploymentId: string) => {
-      if (!session?.accessToken) {
-        toast.error("No access token found", {
-          richColors: true,
-        });
-        return;
-      }
-      try {
-        const client = createClient(deploymentId, session.accessToken);
-        const schemas = await client.assistants.getSchemas(agentId);
-
-        return schemas.config_schema ?? undefined;
-      } catch (e) {
-        console.error("Failed to get agent config schema", e);
-        toast.error("Failed to get agent config schema", {
-          description: (
-            <div className="flex flex-col items-start gap-2">
-              <p>
-                Agent ID:{" "}
-                <span className="font-mono font-semibold">{agentId}</span>
-              </p>
-              <p>
-                Deployment ID:{" "}
-                <span className="font-mono font-semibold">{deploymentId}</span>
-              </p>
-            </div>
-          ),
-          richColors: true,
-        });
-      }
-    },
-    [session?.accessToken],
-  );
-
   const createAgent = useCallback(
     async (
       deploymentId: string,
       graphId: string,
       args: {
         name: string;
-        description: string;
+        description?: string;
         config: Record<string, any>;
       },
     ): Promise<Assistant | undefined> => {
@@ -170,7 +135,6 @@ export function useAgents() {
 
   return {
     getAgent,
-    getAgentConfigSchema,
     createAgent,
     updateAgent,
     deleteAgent,
