@@ -28,6 +28,7 @@ export function SidebarTriggers({
   showTriggersTab,
   form,
   hideHeader = false,
+  reloadTriggers,
   targetLabel,
   note,
 }: SidebarTriggersProps) {

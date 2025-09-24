@@ -589,11 +589,12 @@ export function AgentConfig({
                 : "No tools selected";
             return (
               <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
-                <Wrench
-                  className="h-4 w-4 flex-shrink-0 text-gray-500"
-                  aria-label={tooltip}
-                  title={tooltip}
-                />
+                <span title={tooltip} className="flex-shrink-0">
+                  <Wrench
+                    className="h-4 w-4 text-gray-500"
+                    aria-label={tooltip}
+                  />
+                </span>
                 {toolNames.length === 0 ? (
                   <span className="px-1 text-xs whitespace-nowrap text-gray-400">
                     None
