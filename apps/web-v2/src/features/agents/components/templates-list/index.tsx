@@ -72,11 +72,7 @@ export function TemplatesList({ agentIdsWithTriggers }: TemplatesListProps) {
         </div>
       ) : (
         <div
-          className="grid grid-cols-1 gap-4"
-          style={{
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(min(310px, 100%), 1fr))",
-          }}
+          className="grid grid-cols-[repeat(auto-fit,minmax(min(310px,100%),1fr))] gap-4"
         >
           {filteredAgents.map((agent) => (
             <AgentCard
