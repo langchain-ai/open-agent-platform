@@ -9,7 +9,11 @@ import { TemplatesLoading } from "./templates-loading";
 import { AgentCard } from "../agent-card";
 import NextLink from "next/link";
 
-export function TemplatesList() {
+interface TemplatesListProps {
+  agentIdsWithTriggers?: Set<string>;
+}
+
+export function TemplatesList({ agentIdsWithTriggers }: TemplatesListProps) {
   const { agents, loading: agentsLoading } = useAgentsContext();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,11 +71,12 @@ export function TemplatesList() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(310px,100%),1fr))] gap-4">
           {filteredAgents.map((agent) => (
             <AgentCard
               key={`agent-${agent.assistant_id}`}
               agent={agent}
+              agentIdsWithTriggers={agentIdsWithTriggers}
             />
           ))}
         </div>
