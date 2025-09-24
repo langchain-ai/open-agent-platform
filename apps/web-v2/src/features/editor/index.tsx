@@ -18,12 +18,14 @@ import { InitialInputs } from "./components/initial-inputs";
 import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
 import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 import { useAgentTriggersForm } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
-import TriggersInterface from "@/features/triggers";
 import { SidebarTriggers } from "@/features/editor/components/sidebar-triggers";
 import { useTriggers } from "@/hooks/use-triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
-import type { GroupedTriggerRegistrationsByProvider, Trigger, ListTriggerRegistrationsData } from "@/types/triggers";
+import type {
+  GroupedTriggerRegistrationsByProvider,
+  Trigger,
+  ListTriggerRegistrationsData,
+} from "@/types/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import type { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
@@ -137,10 +139,11 @@ export function EditorPageContent(): React.ReactNode {
         : null;
     const savedTools = isSub
       ? sub?.tools || []
-      : ((selectedAgent?.config?.configurable as any)?.tools?.tools || []);
+      : (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
     const savedInterruptConfig = isSub
-      ? ((sub as any)?.interrupt_config || {})
-      : ((selectedAgent?.config?.configurable as any)?.tools?.interrupt_config || {});
+      ? (sub as any)?.interrupt_config || {}
+      : (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
+        {};
 
     const draft = toolsDrafts[currentTargetKey];
     isApplyingToolsResetRef.current = true;
@@ -278,8 +281,14 @@ export function EditorPageContent(): React.ReactNode {
             showTriggersTab={showTriggersTab}
             form={triggersForm}
             hideHeader={false}
-            targetLabel={selectedAgent ? `${selectedAgent.name} (Main)` : "Main Agent"}
-            note={currentEditTarget?.type === "subagent" ? "Triggers are configured for the main agent" : undefined}
+            targetLabel={
+              selectedAgent ? `${selectedAgent.name} (Main)` : "Main Agent"
+            }
+            note={
+              currentEditTarget?.type === "subagent"
+                ? "Triggers are configured for the main agent"
+                : undefined
+            }
             reloadTriggers={async () => {
               if (!session?.accessToken || !selectedAgent) return;
               setTriggersLoading(true);
@@ -301,7 +310,7 @@ export function EditorPageContent(): React.ReactNode {
             }}
           />
           <div className="my-5 h-px w-full bg-gray-200" />
-          <div className="flex cursor-default items-center gap-1 px-3 py-3 text-xs font-medium uppercase text-gray-500">
+          <div className="flex cursor-default items-center gap-1 px-3 py-3 text-xs font-medium text-gray-500 uppercase">
             Hierarchy
           </div>
           {selectedAgent && currentEditTarget && (

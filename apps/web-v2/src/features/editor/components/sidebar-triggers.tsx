@@ -31,6 +31,26 @@ export function SidebarTriggers({
   targetLabel,
   note,
 }: SidebarTriggersProps) {
+
+  const CountText = ({ count }: { count: number }) =>
+    count > 0 ? <span className="text-xs text-gray-500">{count}</span> : null;
+
+  const [openProvider, setOpenProvider] = React.useState<string | null>(null);
+  const toggle = (key: string) =>
+    setOpenProvider((curr) => (curr === key ? null : key));
+  const selectedIds = form?.watch("triggerIds") || [];
+
+  const getRegistrationsFromTriggerId = (provider: string, triggerId: string) =>
+    groupedTriggers?.[provider]?.registrations?.[triggerId] || [];
+
+  const countSelectedForTrigger = (provider: string, triggerId: string) =>
+    getRegistrationsFromTriggerId(provider, triggerId).filter((r) =>
+      selectedIds.includes(r.id),
+    ).length;
+
+  // Helper intentionally omitted for now; provider counts computed inline
+
+  // Early returns after hooks are initialized (satisfies rules-of-hooks)
   if (loading) {
     return (
       <div className="py-2">
@@ -57,48 +77,19 @@ export function SidebarTriggers({
         <div className="flex cursor-default items-center gap-1 px-3 py-1 text-xs font-medium uppercase text-gray-500">
           Triggers
         </div>
-        <div className="py-3 text-center text-xs text-muted-foreground">
-          No triggers available
-        </div>
+        <div className="py-3 text-center text-xs text-muted-foreground">No triggers available</div>
       </div>
     );
   }
 
-  const CountText = ({ count }: { count: number }) =>
-    count > 0 ? (
-      <span className="text-xs text-gray-500">{count}</span>
-    ) : null;
-
-  const [openProvider, setOpenProvider] = React.useState<string | null>(null);
-  const toggle = (key: string) =>
-    setOpenProvider((curr) => (curr === key ? null : key));
-  const selectedIds = form?.watch("triggerIds") || [];
-
-  const getRegistrationsFromTriggerId = (
-    provider: string,
-    triggerId: string,
-  ) => groupedTriggers?.[provider]?.registrations?.[triggerId] || [];
-
-  const countSelectedForTrigger = (provider: string, triggerId: string) =>
-    getRegistrationsFromTriggerId(provider, triggerId).filter((r) =>
-      selectedIds.includes(r.id),
-    ).length;
-
-  const countSelectedForProvider = (provider: string) => {
-    const triggers = groupedTriggers?.[provider]?.triggers || [];
-    return triggers
-      .map((t) => countSelectedForTrigger(provider, t.id))
-      .reduce((a, b) => a + b, 0);
-  };
-
   return (
     <div className="space-y-2">
       {!hideHeader && (
-          <div className="px-3 py-1.5">
-            <div className="flex items-center gap-2">
-              <div className="cursor-default text-xs font-medium uppercase text-gray-500">
-                Triggers
-              </div>
+        <div className="px-3 py-1.5">
+          <div className="flex items-center gap-2">
+            <div className="cursor-default text-xs font-medium text-gray-500 uppercase">
+              Triggers
+            </div>
             {targetLabel && (
               <span className="rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700">
                 {targetLabel}
@@ -149,7 +140,10 @@ export function SidebarTriggers({
                               {hasRegs ? (
                                 form && (
                                   <CountText
-                                    count={countSelectedForTrigger(provider, t.id)}
+                                    count={countSelectedForTrigger(
+                                      provider,
+                                      t.id,
+                                    )}
                                   />
                                 )
                               ) : (
@@ -171,21 +165,33 @@ export function SidebarTriggers({
                             <div className="mt-3">
                               <Combobox
                                 displayText={(() => {
-                                  const selected = regs.filter((r) => selectedIds.includes(r.id));
-                                  if (selected.length === 0) return "Select registrations";
+                                  const selected = regs.filter((r) =>
+                                    selectedIds.includes(r.id),
+                                  );
+                                  if (selected.length === 0)
+                                    return "Select registrations";
                                   if (selected.length === 1) {
-                                    const resource = selected[0].resource as any;
-                                    if (typeof resource === "string") return resource;
-                                    if (resource && typeof resource === "object")
+                                    const resource = selected[0]
+                                      .resource as any;
+                                    if (typeof resource === "string")
+                                      return resource;
+                                    if (
+                                      resource &&
+                                      typeof resource === "object"
+                                    )
                                       return String(Object.values(resource)[0]);
                                     return "1 selected";
                                   }
                                   return `${selected.length} selected`;
                                 })()}
-                                options={regs.map((r) => ({ label: "", value: r.id }))}
+                                options={regs.map((r) => ({
+                                  label: "",
+                                  value: r.id,
+                                }))}
                                 selectedOptions={selectedIds}
                                 onSelect={(value) => {
-                                  const current = form?.getValues("triggerIds") || [];
+                                  const current =
+                                    form?.getValues("triggerIds") || [];
                                   const isSelected = current.includes(value);
                                   form?.setValue(
                                     "triggerIds",
@@ -196,7 +202,9 @@ export function SidebarTriggers({
                                   );
                                 }}
                                 optionRenderer={(option) => {
-                                  const reg = regs.find((r) => r.id === option.value);
+                                  const reg = regs.find(
+                                    (r) => r.id === option.value,
+                                  );
                                   const active = form
                                     ?.getValues("triggerIds")
                                     ?.includes(option.value);
@@ -205,13 +213,19 @@ export function SidebarTriggers({
                                       <Check
                                         className={cn(
                                           "mr-2 h-4 w-4",
-                                          active ? "text-[#2F6868]" : "text-transparent",
+                                          active
+                                            ? "text-[#2F6868]"
+                                            : "text-transparent",
                                         )}
                                       />
                                       {reg ? (
-                                        <ResourceRenderer resource={reg.resource} />
+                                        <ResourceRenderer
+                                          resource={reg.resource}
+                                        />
                                       ) : (
-                                        <span className="text-gray-500">{option.label}</span>
+                                        <span className="text-gray-500">
+                                          {option.label}
+                                        </span>
                                       )}
                                     </>
                                   );

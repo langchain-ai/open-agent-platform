@@ -13,8 +13,14 @@ import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/comp
 import { cn } from "@/lib/utils";
 import TriggersInterface from "@/features/triggers";
 import { useTriggers } from "@/hooks/use-triggers";
-import { useAgentTriggersForm, AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { useAgentToolsForm, AgentToolsFormValues } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import {
+  useAgentTriggersForm,
+  AgentTriggersFormData,
+} from "@/components/agent-creator-sheet/components/agent-triggers-form";
+import {
+  useAgentToolsForm,
+  AgentToolsFormValues,
+} from "@/components/agent-creator-sheet/components/agent-tools-form";
 import type { UseFormReturn } from "react-hook-form";
 import { useMemo, useEffect } from "react";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
@@ -91,14 +97,10 @@ export function AgentConfig({
     : ["instructions", "tools", "triggers"];
   const availableViews: ViewType[] = React.useMemo(() => {
     let v = [...baseViews];
-    if (hideTriggersTab) {
-      v = v.filter((x) => x !== "triggers");
-    }
-    if (hideToolsTab) {
-      v = v.filter((x) => x !== "tools");
-    }
+    if (hideTriggersTab) v = v.filter((x) => x !== "triggers");
+    if (hideToolsTab) v = v.filter((x) => x !== "tools");
     return v;
-  }, [baseViews.join("-"), hideTriggersTab, hideToolsTab]);
+  }, [isEditingSubAgent, hideTriggersTab, hideToolsTab]);
 
   const [internalView, setInternalView] = useState<ViewType>("instructions");
   const currentView = externalView ?? internalView;
@@ -116,12 +118,11 @@ export function AgentConfig({
   const [isInstructionsDirty, setIsInstructionsDirty] = useState(false);
 
   // Create tools form to track changes
-  const toolsForm =
-    toolsFormExternal ||
-    useAgentToolsForm({
-      tools: editedTools,
-      interruptConfig: editedInterruptConfig,
-    });
+  const toolsFormInternal = useAgentToolsForm({
+    tools: editedTools,
+    interruptConfig: editedInterruptConfig,
+  });
+  const toolsForm = toolsFormExternal ?? toolsFormInternal;
 
   // Create sub-agents form to track changes
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
@@ -145,11 +146,10 @@ export function AgentConfig({
   >();
   const [triggersLoading, setTriggersLoading] = useState(true);
 
-  const triggersForm =
-    triggersFormExternal ||
-    useAgentTriggersForm({
-      triggerIds: [],
-    });
+  const triggersFormInternal = useAgentTriggersForm({
+    triggerIds: [],
+  });
+  const triggersForm = triggersFormExternal ?? triggersFormInternal;
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -507,79 +507,80 @@ export function AgentConfig({
       <div className="flex flex-shrink-0 flex-row items-center justify-between border-b border-gray-200 px-6 py-2">
         {!hideTopTabs && (
           <div className="flex items-center gap-2">
-          {availableViews.includes("triggers") && (
-            <Button
-              variant={currentView === "triggers" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("triggers")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "triggers" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-              title="Triggers start the flow"
-            >
-              <Zap className="h-3 w-3" />
-              Triggers
-            </Button>
-          )}
-          {/* Visual flow from Triggers to Instructions */}
-          {availableViews.includes("triggers") &&
-            availableViews.includes("instructions") && (
-              <span className="text-muted-foreground">
-                <ArrowRight className="h-4 w-4" />
-              </span>
+            {availableViews.includes("triggers") && (
+              <Button
+                variant={currentView === "triggers" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("triggers")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "triggers" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Triggers start the flow"
+              >
+                <Zap className="h-3 w-3" />
+                Triggers
+              </Button>
             )}
-          {availableViews.includes("instructions") && (
-            <Button
-              variant={currentView === "instructions" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("instructions")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "instructions" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
+            {/* Visual flow from Triggers to Instructions */}
+            {availableViews.includes("triggers") &&
+              availableViews.includes("instructions") && (
+                <span className="text-muted-foreground">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               )}
-              title="Instructions guide the agent"
-            >
-              <FileText className="h-3 w-3" />
-              Instructions
-            </Button>
-          )}
-          {availableViews.includes("tools") && (
-            <Button
-              variant={currentView === "tools" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("tools")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-              title="Tools are invoked during runs"
-            >
-              <Wrench className="h-3 w-3" />
-              Tools
-            </Button>
-          )}
-          {availableViews.includes("subagents") && (
-            <Button
-              variant={currentView === "subagents" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("subagents")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "subagents" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-            >
-              <Users className="h-3 w-3" />
-              Sub-agents
-            </Button>
-          )}
+            {availableViews.includes("instructions") && (
+              <Button
+                variant={currentView === "instructions" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("instructions")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "instructions" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Instructions guide the agent"
+              >
+                <FileText className="h-3 w-3" />
+                Instructions
+              </Button>
+            )}
+            {availableViews.includes("tools") && (
+              <Button
+                variant={currentView === "tools" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("tools")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "tools" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Tools are invoked during runs"
+              >
+                <Wrench className="h-3 w-3" />
+                Tools
+              </Button>
+            )}
+            {availableViews.includes("subagents") && (
+              <Button
+                variant={currentView === "subagents" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("subagents")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "subagents" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+              >
+                <Users className="h-3 w-3" />
+                Sub-agents
+              </Button>
+            )}
           </div>
         )}
         {/* Tools indicator: icon + list of selected tools */}
-        <div className="ml-6 mr-2 hidden flex-1 items-center overflow-hidden border-l border-gray-200 pl-4 md:flex">
+        <div className="mr-2 ml-6 hidden flex-1 items-center overflow-hidden border-l border-gray-200 pl-4 md:flex">
           {(() => {
             const toolNames = toolsForm.watch("tools") || [];
             const tooltip =
@@ -594,7 +595,7 @@ export function AgentConfig({
                   title={tooltip}
                 />
                 {toolNames.length === 0 ? (
-                  <span className="whitespace-nowrap px-1 text-xs text-gray-400">
+                  <span className="px-1 text-xs whitespace-nowrap text-gray-400">
                     None
                   </span>
                 ) : (
@@ -602,7 +603,7 @@ export function AgentConfig({
                     <Badge
                       key={`summary-tool-${t}`}
                       variant="outline"
-                      className="whitespace-nowrap border-gray-300 text-gray-700"
+                      className="border-gray-300 whitespace-nowrap text-gray-700"
                     >
                       {t}
                     </Badge>
