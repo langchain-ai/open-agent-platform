@@ -32,6 +32,7 @@ import {
 } from "@/types/triggers";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
+import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 // Using inline Tailwind classes with arbitrary selectors for BlockNote styling
@@ -131,7 +132,26 @@ export function AgentConfig({
   });
 
   const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
+  
+  // Create custom schema that renders headers as bold paragraphs
+  const schema = BlockNoteSchema.create({
+    blockSpecs: {
+      // Include all default blocks except headers
+      paragraph: defaultBlockSpecs.paragraph,
+      bulletListItem: defaultBlockSpecs.bulletListItem,
+      numberedListItem: defaultBlockSpecs.numberedListItem,
+      checkListItem: defaultBlockSpecs.checkListItem,
+      table: defaultBlockSpecs.table,
+      file: defaultBlockSpecs.file,
+      image: defaultBlockSpecs.image,
+      video: defaultBlockSpecs.video,
+      audio: defaultBlockSpecs.audio,
+      codeBlock: defaultBlockSpecs.codeBlock,
+    },
+  });
+
   const editor = useCreateBlockNote({
+    schema,
     initialContent: undefined,
     onFocus: () => {
       // Prevent keyboard shortcuts from bubbling up when editor is focused
@@ -243,8 +263,12 @@ export function AgentConfig({
         currentInstructions !== "No instructions provided"
       ) {
         try {
+          // Convert headers to bold text before parsing
+          const processedMarkdown = (currentInstructions as string)
+            .replace(/^#{1,6}\s+(.+)$/gm, '**$1**'); // Convert headers to bold text
+          
           const blocks = await editor.tryParseMarkdownToBlocks(
-            currentInstructions as string,
+            processedMarkdown,
           );
           editor.replaceBlocks(editor.document, blocks);
         } catch (error) {
