@@ -85,11 +85,16 @@ function ThreadHistoryHalf(): React.ReactNode {
                     if (v === "all") {
                       await setAgentId(null);
                       await setDeploymentId(null);
+                      await setCurrentThreadId(null);
+                      await setDraft(null);
                       return;
                     }
                     const [aid, did] = v.split(":");
                     await setAgentId(aid || null);
                     await setDeploymentId(did || null);
+                    // Clear any previously selected thread when switching agents
+                    await setCurrentThreadId(null);
+                    await setDraft(null);
                   }}
                 >
                   <SelectTrigger className="h-8 w-[240px]">
@@ -216,7 +221,7 @@ function RightPaneChat(): React.ReactNode {
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setThreadId] = useQueryState("threadId");
   const [fullChat, setFullChat] = useQueryState("fullChat");
-  const [_draft, setDraft] = useQueryState("draft");
+  const [draft, setDraft] = useQueryState("draft");
   const [chatVersion, setChatVersion] = useState(0);
 
   const { agents } = useAgentsContext();
@@ -231,11 +236,20 @@ function RightPaneChat(): React.ReactNode {
     [deployments, deploymentId],
   );
 
-  // Allow viewing a selected thread even when no agent is selected
-  if ((!agentId && !threadId) || !deploymentId || !session?.accessToken) {
+  // Guard missing essentials
+  if (!deploymentId || !session?.accessToken) {
     return (
       <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-sm">
         Select an agent and a thread to view chat
+      </div>
+    );
+  }
+
+  // If no thread selected and not composing a draft, show placeholder
+  if (!threadId && draft !== "1") {
+    return (
+      <div className="text-muted-foreground flex h-full items-center justify-center p-6 text-sm">
+        No conversation selected
       </div>
     );
   }
