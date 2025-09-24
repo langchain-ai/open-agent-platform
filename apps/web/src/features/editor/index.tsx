@@ -34,8 +34,8 @@ export function EditorPageContent(): React.ReactNode {
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
 
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
 
   // State for hierarchical editing
@@ -267,7 +267,14 @@ export function EditorPageContent(): React.ReactNode {
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
   if (!agentId || !deploymentId) {
-    return <InitialInputs />;
+    return (
+      <InitialInputs
+        onAgentCreated={async (agentId: string, deploymentId: string) => {
+          await setAgentId(agentId);
+          await setDeploymentId(deploymentId);
+        }}
+      />
+    );
   }
 
   return (
