@@ -14,6 +14,7 @@ import { TriggerAccordionItem } from "./components/trigger-accordion-item";
 import { Accordion } from "@/components/ui/accordion";
 import { UseFormReturn } from "react-hook-form";
 import { AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
+// Default triggers interface (card + accordion) used by pages outside the editor
 
 type TriggersInterfaceProps = {
   groupedTriggers?: GroupedTriggerRegistrationsByProvider;
@@ -32,6 +33,7 @@ export default function TriggersInterface({
   hideHeader = false,
   reloadTriggers,
 }: TriggersInterfaceProps) {
+  // No sidebar variant here — editor has its own SidebarTriggers component
   if (loading) {
     return (
       <Card>

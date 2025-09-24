@@ -4,16 +4,8 @@ import React, { useState } from "react";
 import { Agent } from "@/types/agent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Copy,
-  Eye,
-  EyeOff,
-  Zap,
-  Users,
-  ArrowRight,
-  Wrench,
-  FileText,
-} from "lucide-react";
+import { Copy, Zap, Users, ArrowRight, Wrench, FileText } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
@@ -21,8 +13,9 @@ import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/comp
 import { cn } from "@/lib/utils";
 import TriggersInterface from "@/features/triggers";
 import { useTriggers } from "@/hooks/use-triggers";
-import { useAgentTriggersForm } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import { useAgentTriggersForm, AgentTriggersFormData } from "@/components/agent-creator-sheet/components/agent-triggers-form";
+import { useAgentToolsForm, AgentToolsFormValues } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import type { UseFormReturn } from "react-hook-form";
 import { useMemo, useEffect } from "react";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
@@ -48,6 +41,13 @@ interface AgentConfigProps {
   agent: Agent | null;
   editTarget?: EditTarget;
   onAgentUpdated?: () => Promise<void>;
+  view?: ViewType;
+  onViewChange?: (view: ViewType) => void;
+  hideTopTabs?: boolean;
+  toolsFormExternal?: UseFormReturn<AgentToolsFormValues>;
+  triggersFormExternal?: UseFormReturn<AgentTriggersFormData>;
+  hideTriggersTab?: boolean;
+  hideToolsTab?: boolean;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
@@ -56,6 +56,13 @@ export function AgentConfig({
   agent,
   editTarget,
   onAgentUpdated,
+  view: externalView,
+  onViewChange,
+  hideTopTabs,
+  toolsFormExternal,
+  triggersFormExternal,
+  hideTriggersTab,
+  hideToolsTab,
 }: AgentConfigProps) {
   const { session } = useAuthContext();
   const {
@@ -79,23 +86,42 @@ export function AgentConfig({
   const subAgents =
     (agent?.config?.configurable?.subagents as SubAgent[]) || [];
 
-  const availableViews: ViewType[] = isEditingSubAgent
+  const baseViews: ViewType[] = isEditingSubAgent
     ? ["instructions", "tools"]
     : ["instructions", "tools", "triggers"];
+  const availableViews: ViewType[] = React.useMemo(() => {
+    let v = [...baseViews];
+    if (hideTriggersTab) {
+      v = v.filter((x) => x !== "triggers");
+    }
+    if (hideToolsTab) {
+      v = v.filter((x) => x !== "tools");
+    }
+    return v;
+  }, [baseViews.join("-"), hideTriggersTab, hideToolsTab]);
 
-  const [currentView, setCurrentView] = useState<ViewType>("instructions");
+  const [internalView, setInternalView] = useState<ViewType>("instructions");
+  const currentView = externalView ?? internalView;
+  const setCurrentView = (v: ViewType) => {
+    if (onViewChange) onViewChange(v);
+    else setInternalView(v);
+  };
   const [editedTitle, setEditedTitle] = useState("");
+  const [initialTitle, setInitialTitle] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
   const [editedInterruptConfig, setEditedInterruptConfig] = useState<
     Record<string, HumanInterruptConfig>
   >({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isInstructionsDirty, setIsInstructionsDirty] = useState(false);
 
   // Create tools form to track changes
-  const toolsForm = useAgentToolsForm({
-    tools: editedTools,
-    interruptConfig: editedInterruptConfig,
-  });
+  const toolsForm =
+    toolsFormExternal ||
+    useAgentToolsForm({
+      tools: editedTools,
+      interruptConfig: editedInterruptConfig,
+    });
 
   // Create sub-agents form to track changes
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
@@ -119,9 +145,11 @@ export function AgentConfig({
   >();
   const [triggersLoading, setTriggersLoading] = useState(true);
 
-  const triggersForm = useAgentTriggersForm({
-    triggerIds: [],
-  });
+  const triggersForm =
+    triggersFormExternal ||
+    useAgentTriggersForm({
+      triggerIds: [],
+    });
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -180,6 +208,7 @@ export function AgentConfig({
         )?.interrupt_config || {};
 
     setEditedTitle(freshTitle);
+    setInitialTitle(freshTitle);
     setEditedTools([...freshTools]);
     setEditedInterruptConfig({ ...(freshInterruptConfig || {}) });
 
@@ -191,6 +220,9 @@ export function AgentConfig({
     subAgentsForm.reset({
       subAgents: subAgents,
     });
+
+    // Reset dirty flags when switching targets
+    setIsInstructionsDirty(false);
   }, [
     agent?.assistant_id,
     editTarget?.type,
@@ -253,7 +285,6 @@ export function AgentConfig({
   React.useEffect(() => {
     setCurrentView("instructions");
   }, [editTarget]);
-  const [isRawView, setIsRawView] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -423,6 +454,13 @@ export function AgentConfig({
       // Update local state to reflect saved changes
       setEditedTools(currentTools);
       setEditedInterruptConfig(currentInterruptConfig || {});
+      setIsInstructionsDirty(false);
+      setInitialTitle(editedTitle);
+
+      // Reset form dirtiness so Save button hides after save
+      toolsForm.reset(toolsForm.getValues());
+      triggersForm.reset(triggersForm.getValues());
+      subAgentsForm.reset(subAgentsForm.getValues());
 
       // Refresh agents data to show updated information
       if (onAgentUpdated) {
@@ -467,7 +505,8 @@ export function AgentConfig({
 
       {/* Header with view toggle buttons */}
       <div className="flex flex-shrink-0 flex-row items-center justify-between border-b border-gray-200 px-6 py-2">
-        <div className="flex items-center gap-2">
+        {!hideTopTabs && (
+          <div className="flex items-center gap-2">
           {availableViews.includes("triggers") && (
             <Button
               variant={currentView === "triggers" ? "default" : "outline"}
@@ -537,6 +576,41 @@ export function AgentConfig({
               Sub-agents
             </Button>
           )}
+          </div>
+        )}
+        {/* Tools indicator: icon + list of selected tools */}
+        <div className="ml-6 mr-2 hidden flex-1 items-center overflow-hidden border-l border-gray-200 pl-4 md:flex">
+          {(() => {
+            const toolNames = toolsForm.watch("tools") || [];
+            const tooltip =
+              toolNames.length > 0
+                ? `Selected tools (${toolNames.length}): ${toolNames.join(", ")}`
+                : "No tools selected";
+            return (
+              <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
+                <Wrench
+                  className="h-4 w-4 flex-shrink-0 text-gray-500"
+                  aria-label={tooltip}
+                  title={tooltip}
+                />
+                {toolNames.length === 0 ? (
+                  <span className="whitespace-nowrap px-1 text-xs text-gray-400">
+                    None
+                  </span>
+                ) : (
+                  toolNames.map((t) => (
+                    <Badge
+                      key={`summary-tool-${t}`}
+                      variant="outline"
+                      className="whitespace-nowrap border-gray-300 text-gray-700"
+                    >
+                      {t}
+                    </Badge>
+                  ))
+                )}
+              </div>
+            );
+          })()}
         </div>
         <div className="flex items-center gap-2">
           {currentView === "instructions" && (
@@ -549,30 +623,29 @@ export function AgentConfig({
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRawView(!isRawView)}
-                className="h-8 w-8 p-0"
-              >
-                {isRawView ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
             </>
           )}
 
           {/* Save Changes Button */}
-          <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving || !agent}
-            className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
-            size="sm"
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          {(() => {
+            const isTitleDirty = editedTitle.trim() !== initialTitle.trim();
+            const hasFormDirty =
+              toolsForm.formState.isDirty ||
+              triggersForm.formState.isDirty ||
+              subAgentsForm.formState.isDirty;
+            const hasChanges =
+              isTitleDirty || isInstructionsDirty || hasFormDirty;
+            return hasChanges ? (
+              <Button
+                onClick={handleSaveChanges}
+                disabled={isSaving || !agent}
+                className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
+                size="sm"
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            ) : null;
+          })()}
         </div>
       </div>
 
@@ -592,6 +665,7 @@ export function AgentConfig({
               >
                 <BlockNoteView
                   editor={editor}
+                  onChange={() => setIsInstructionsDirty(true)}
                   className={cn("oap-blocknote min-h-full")}
                   theme="light"
                   data-color-scheme="light"
