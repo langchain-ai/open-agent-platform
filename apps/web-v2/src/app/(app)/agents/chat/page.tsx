@@ -75,7 +75,7 @@ function ThreadHistoryHalf(): React.ReactNode {
               <h2 className="text-base font-semibold whitespace-nowrap">
                 All Conversations
               </h2>
-              <div className="flex gap-2 w-full">
+              <div className="flex w-full gap-2">
                 {/* Agent selector */}
                 <Select
                   value={
@@ -92,9 +92,9 @@ function ThreadHistoryHalf(): React.ReactNode {
                     await setDeploymentId(did || null);
                   }}
                 >
-                <SelectTrigger className="h-8 flex-1">
-                  <SelectValue placeholder="All agents" />
-                </SelectTrigger>
+                  <SelectTrigger className="h-8 flex-1">
+                    <SelectValue placeholder="All agents" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All agents</SelectItem>
                     <SelectSeparator />
@@ -114,9 +114,9 @@ function ThreadHistoryHalf(): React.ReactNode {
                   value={(statusFilter as string) || "all"}
                   onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
                 >
-                <SelectTrigger className="h-8 flex-1">
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
+                  <SelectTrigger className="h-8 flex-1">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All statuses</SelectItem>
                     <SelectSeparator />
