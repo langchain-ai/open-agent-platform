@@ -5,7 +5,6 @@ import { Agent } from "@/types/agent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Copy, Zap, Users, ArrowRight, Wrench, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
@@ -579,44 +578,6 @@ export function AgentConfig({
             )}
           </div>
         )}
-        {/* Tools indicator: icon + list of selected tools */}
-        <div className="mr-2 ml-6 hidden flex-1 items-center overflow-hidden border-l border-gray-200 pl-4 md:flex">
-          {(() => {
-            const toolNames = toolsForm.watch("tools") || [];
-            const tooltip =
-              toolNames.length > 0
-                ? `Selected tools (${toolNames.length}): ${toolNames.join(", ")}`
-                : "No tools selected";
-            return (
-              <div className="flex min-w-0 items-center gap-1 overflow-x-auto">
-                <span
-                  title={tooltip}
-                  className="flex-shrink-0"
-                >
-                  <Wrench
-                    className="h-4 w-4 text-gray-500"
-                    aria-label={tooltip}
-                  />
-                </span>
-                {toolNames.length === 0 ? (
-                  <span className="px-1 text-xs whitespace-nowrap text-gray-400">
-                    None
-                  </span>
-                ) : (
-                  toolNames.map((t) => (
-                    <Badge
-                      key={`summary-tool-${t}`}
-                      variant="outline"
-                      className="border-gray-300 whitespace-nowrap text-gray-700"
-                    >
-                      {t}
-                    </Badge>
-                  ))
-                )}
-              </div>
-            );
-          })()}
-        </div>
         <div className="flex items-center gap-2">
           {currentView === "instructions" && (
             <>

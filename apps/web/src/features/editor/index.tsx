@@ -273,7 +273,7 @@ export function EditorPageContent(): React.ReactNode {
   return (
     <div className="flex h-screen gap-4 p-4">
       {/* Left column: Top half Triggers, bottom half Sub-agents hierarchy */}
-      <div className="w-[30rem] flex-shrink-0">
+      <div className="w-[24rem] flex-shrink-0">
         <div className="scrollbar-pretty-auto h-full overflow-auto pr-0">
           <SidebarTriggers
             groupedTriggers={groupedTriggers}
