@@ -34,7 +34,6 @@ import { useForm as useReactHookForm } from "react-hook-form";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
-import { HumanInterruptConfig } from "@/types/inbox";
 import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import { useMCPContext } from "@/providers/MCP";
 import { useTriggers } from "@/hooks/use-triggers";
@@ -85,28 +84,13 @@ const sections = [
 ];
 
 const getDefaultInterruptConfig = (
-  interruptConfig?: Record<string, boolean | HumanInterruptConfig>,
-): Record<string, HumanInterruptConfig> => {
+  interruptConfig?: Record<string, boolean>,
+): Record<string, boolean> => {
   if (!interruptConfig) {
     return {};
   }
 
-  return Object.fromEntries(
-    Object.entries(interruptConfig).map(([key, value]) => {
-      if (typeof value === "boolean") {
-        return [
-          key,
-          {
-            allow_accept: value,
-            allow_respond: value,
-            allow_edit: value,
-            allow_ignore: value,
-          },
-        ];
-      }
-      return [key, value];
-    }),
-  );
+  return interruptConfig;
 };
 
 export function AgentCreatorSheet(props: {

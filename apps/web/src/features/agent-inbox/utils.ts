@@ -164,8 +164,8 @@ export function createDefaultHumanResponse(
   const interrupt = interrupts[0];
 
   const responses: HumanResponseWithEdits[] = [];
-  if (interrupt.config.allow_edit) {
-    if (interrupt.config.allow_accept) {
+  if (interrupt.config) {
+    if (interrupt.config) {
       Object.entries(interrupt.action_request.args).forEach(([k, v]) => {
         let stringValue = "";
         if (typeof v === "string") {
@@ -210,14 +210,14 @@ export function createDefaultHumanResponse(
       });
     }
   }
-  if (interrupt.config.allow_respond) {
+  if (interrupt.config) {
     responses.push({
       type: "response",
       args: "",
     });
   }
 
-  if (interrupt.config.allow_ignore) {
+  if (interrupt.config) {
     responses.push({
       type: "ignore",
       args: null,
@@ -226,8 +226,8 @@ export function createDefaultHumanResponse(
 
   // Set the submit type.
   // Priority: accept > response  > edit
-  const acceptAllowedConfig = interrupts.find((i) => i.config.allow_accept);
-  const ignoreAllowedConfig = interrupts.find((i) => i.config.allow_ignore);
+  const acceptAllowedConfig = interrupts.find((i) => i.config);
+  const ignoreAllowedConfig = interrupts.find((i) => i.config);
 
   const hasResponse = responses.find((r) => r.type === "response");
   const hasAccept =

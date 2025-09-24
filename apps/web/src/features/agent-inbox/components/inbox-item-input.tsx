@@ -340,8 +340,8 @@ export function InboxItemInput({
   setHasAddedResponse,
   handleSubmit,
 }: InboxItemInputProps) {
-  const isEditAllowed = interruptValue?.config?.allow_edit ?? false;
-  const isResponseAllowed = interruptValue?.config?.allow_respond ?? false;
+  const isEditAllowed = interruptValue?.config ?? false;
+  const isResponseAllowed = interruptValue?.config ?? false;
   const hasArgs =
     Object.entries(interruptValue?.action_request?.args || {}).length > 0;
   const showArgsInResponse =

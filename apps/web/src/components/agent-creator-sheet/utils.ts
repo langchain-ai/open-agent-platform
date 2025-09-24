@@ -96,22 +96,7 @@ export async function handlePasteConfig(
     );
 
     const interruptConfig: Record<string, HumanInterruptConfig> =
-      Object.fromEntries(
-        Object.entries(config.tools?.interrupt_config ?? {}).map(([k, v]) => {
-          if (typeof v === "boolean") {
-            return [
-              k,
-              {
-                allow_accept: v,
-                allow_respond: v,
-                allow_edit: v,
-                allow_ignore: v,
-              } satisfies HumanInterruptConfig,
-            ];
-          }
-          return [k, v as HumanInterruptConfig];
-        }),
-      );
+      config.tools?.interrupt_config ?? {};
 
     onPaste({
       name: name || "",
@@ -179,22 +164,7 @@ export async function handlePasteConfigFromString(
     );
 
     const interruptConfig: Record<string, HumanInterruptConfig> =
-      Object.fromEntries(
-        Object.entries(config.tools?.interrupt_config ?? {}).map(([k, v]) => {
-          if (typeof v === "boolean") {
-            return [
-              k,
-              {
-                allow_accept: v,
-                allow_respond: v,
-                allow_edit: v,
-                allow_ignore: v,
-              } satisfies HumanInterruptConfig,
-            ];
-          }
-          return [k, v as HumanInterruptConfig];
-        }),
-      );
+      config.tools?.interrupt_config ?? {};
 
     onPaste({
       name: name || "",
