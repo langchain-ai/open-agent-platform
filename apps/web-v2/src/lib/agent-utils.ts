@@ -152,6 +152,8 @@ export function detectSupportedConfigs(
   // Check for tools configuration
   if (
     configurable.tools &&
+    typeof configurable.tools === "object" &&
+    "tools" in configurable.tools &&
     Array.isArray(configurable.tools.tools) &&
     configurable.tools.tools.length > 0
   ) {
