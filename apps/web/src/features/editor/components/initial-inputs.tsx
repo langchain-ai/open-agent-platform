@@ -204,7 +204,7 @@ export function InitialInputs({
   const [creatingAgent, setCreatingAgent] = useState(false);
 
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
-  const [enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
+  const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
   const deployments = getDeployments();
@@ -362,10 +362,12 @@ export function InitialInputs({
           onOpenChange={setAuthRequiredDialogOpen}
           authUrls={authRequiredUrls}
           handleSubmit={async () => {
-            const success = await validateAuth(enabledToolNames);
-            if (!success) {
-              return;
-            }
+            // TODO: Eventually, we should require auth before proceeding. For now, skip until we figure out that flow.
+            // const success = await validateAuth(enabledToolNames);
+            // if (!success) {
+            //   return;
+            // }
+            setAuthRequiredDialogOpen(false);
 
             await refreshAgents();
 

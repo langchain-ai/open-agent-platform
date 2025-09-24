@@ -4,6 +4,7 @@ import React from "react";
 import { useAuthContext } from "@/providers/Auth";
 import { SidebarLayout } from "@/components/sidebar";
 import LaunchDarklyProvider from "@/providers/LaunchDarkly";
+import { OAuthProvidersProvider } from "@/hooks/use-oauth-providers";
 import Loading from "@/components/ui/loading";
 
 export function AuthenticatedApp({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,9 @@ export function AuthenticatedApp({ children }: { children: React.ReactNode }) {
   // Only render the app with LaunchDarkly after auth is complete
   return (
     <LaunchDarklyProvider>
-      <SidebarLayout>{children}</SidebarLayout>
+      <OAuthProvidersProvider>
+        <SidebarLayout>{children}</SidebarLayout>
+      </OAuthProvidersProvider>
     </LaunchDarklyProvider>
   );
 }
