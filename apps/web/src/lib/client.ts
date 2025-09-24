@@ -16,20 +16,3 @@ export function createClient(deploymentId: string, accessToken: string) {
   });
   return client;
 }
-
-export function getOptimizerClient(accessToken: string): Client {
-  if (!process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL) {
-    throw new Error(
-      "Failed to create optimizer client: Optimization deployment URL not configured. Please set NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL",
-    );
-  }
-
-  const client = new Client({
-    apiUrl: process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL,
-    defaultHeaders: {
-      Authorization: `Bearer ${accessToken}`,
-      "x-supabase-access-token": accessToken,
-    },
-  });
-  return client;
-}
