@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
@@ -10,6 +10,7 @@ import type { Agent } from "@/types/agent";
 import type { Thread } from "@langchain/langgraph-sdk";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
+import useSWR from "swr";
 
 type Props = {
   agent: Agent | null;
@@ -21,7 +22,7 @@ type Props = {
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 };
 
-type Item = {
+type ThreadItem = {
   id: string;
   updatedAt: Date;
   status: Thread["status"] | "draft";
@@ -30,40 +31,28 @@ type Item = {
   assistantId?: string;
 };
 
-export function ThreadHistoryAgentList({
-  agent,
-  deploymentId,
-  currentThreadId,
-  onThreadSelect,
-  showDraft = false,
-  className,
-  statusFilter = "all",
-}: Props) {
+function useThreads(args: {
+  deploymentId: string | null;
+  agent: Agent | null;
+}) {
   const { session } = useAuthContext();
-  const { agents: allAgents } = useAgentsContext();
-  const client = useMemo(() => {
-    if (!deploymentId || !session?.accessToken) return null;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session]);
+  const { agents } = useAgentsContext();
 
-  const [loading, setLoading] = useState(true);
-  const [items, setItems] = useState<Item[]>([]);
+  return useSWR(
+    { ...args, agents, session },
+    async ({ deploymentId, agent, agents, session }) => {
+      if (!deploymentId || !session?.accessToken) return [];
 
-  // Build a quick lookup for agents in the current deployment
-  const agentsByAssistantId = useMemo(() => {
-    const map = new Map<string, Agent>();
-    allAgents
-      .filter((a) => a.deploymentId === deploymentId)
-      .forEach((a) => map.set(a.assistant_id, a));
-    return map;
-  }, [allAgents, deploymentId]);
+      // Build a quick lookup for agents in the current deployment
+      const agentsByAssistantId = new Map<string, Agent>(
+        agents
+          .filter((a) => a.deploymentId === args.deploymentId)
+          .map((a) => [a.assistant_id, a]),
+      );
 
-  const fetchThreads = useCallback(async () => {
-    if (!client) return;
-    // Avoid flicker: only show loading spinner when list is empty
-    setLoading((prev) => (items.length === 0 ? true : prev));
-    try {
+      const client = createClient(deploymentId, session.accessToken);
       const params: Parameters<typeof client.threads.search>[0] = {
+        // TODO: use useSWRInfinite to fetch multiple pages
         limit: 50,
         sortBy: "created_at",
         sortOrder: "desc",
@@ -80,7 +69,7 @@ export function ThreadHistoryAgentList({
         (agent?.metadata?.description as string | undefined) ||
         "No description";
 
-      const mapped: Item[] = response.map((t) => {
+      return response.map((t) => {
         // If a specific agent is selected, use it for title/desc
         if (agent?.assistant_id) {
           return {
@@ -113,38 +102,24 @@ export function ThreadHistoryAgentList({
           assistantId,
         };
       });
-      setItems(
-        mapped.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    client,
-    agent?.assistant_id,
-    agent?.name,
-    agent?.metadata,
-    deploymentId,
-    agentsByAssistantId,
-    items.length,
-  ]);
+    },
+  );
+}
 
-  // Initial fetch on mount or when client/agent changes
-  useEffect(() => {
-    fetchThreads();
-  }, [fetchThreads]);
-
-  // Refetch after a concrete thread is selected/created to include it,
-  // but avoid refetch on "new thread" state (threadId === null) to prevent flicker.
-  useEffect(() => {
-    if (currentThreadId) {
-      fetchThreads();
-    }
-  }, [fetchThreads, currentThreadId]);
+export function ThreadHistoryAgentList({
+  agent,
+  deploymentId,
+  currentThreadId,
+  onThreadSelect,
+  showDraft = false,
+  className,
+  statusFilter = "all",
+}: Props) {
+  const threads = useThreads({ deploymentId, agent });
 
   const displayItems = useMemo(() => {
     if (showDraft && !currentThreadId && agent) {
-      const draft: Item = {
+      const draft: ThreadItem = {
         id: "__draft__",
         updatedAt: new Date(),
         status: "draft",
@@ -153,13 +128,13 @@ export function ThreadHistoryAgentList({
           (agent.metadata?.description as string | undefined) ||
           "No description",
       };
-      return [draft, ...items];
+      return [draft, ...(threads.data ?? [])];
     }
-    return items;
-  }, [showDraft, currentThreadId, agent, items]);
+    return threads.data ?? [];
+  }, [showDraft, currentThreadId, agent, threads.data]);
 
   const grouped = useMemo(() => {
-    const groups: Record<string, Item[]> = {
+    const groups: Record<string, ThreadItem[]> = {
       today: [],
       yesterday: [],
       week: [],
@@ -184,11 +159,11 @@ export function ThreadHistoryAgentList({
   return (
     <div className={cn("flex h-full w-full flex-col", className)}>
       <ScrollArea className="h-[calc(100vh-100px)]">
-        {loading ? (
+        {threads.isLoading ? (
           <div className="text-muted-foreground flex items-center justify-center p-12">
             Loading threads...
           </div>
-        ) : items.length === 0 ? (
+        ) : !threads.data?.length ? (
           <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
             <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
             <p>No threads yet</p>
