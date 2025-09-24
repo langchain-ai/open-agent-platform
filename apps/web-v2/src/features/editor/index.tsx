@@ -12,6 +12,7 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
 import { toast } from "sonner";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -21,14 +22,27 @@ export function EditorPageContent(): React.ReactNode {
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
 
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
+  const [newAgent, setNewAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
     null,
   );
+
+  // State for agents combobox
+  const [agentsComboboxOpen, setAgentsComboboxOpen] = useState(false);
+
+  // Auto-select first agent if none selected and we have agents
+  useEffect(() => {
+    if (!agentId && !newAgent && agents.length > 0) {
+      const firstAgent = agents[0];
+      setAgentId(firstAgent.assistant_id);
+      setDeploymentId(firstAgent.deploymentId);
+    }
+  }, [agentId, newAgent, agents, setAgentId, setDeploymentId]);
 
   // Force re-render when sub-agents change
   const [subAgentsVersion, setSubAgentsVersion] = useState(0);
@@ -134,77 +148,132 @@ export function EditorPageContent(): React.ReactNode {
     setChatVersion((v) => v + 1);
   };
 
+  const handleAgentCreated = async (
+    createdAgentId: string,
+    createdDeploymentId: string,
+  ) => {
+    // Set the new agent as selected
+    await setAgentId(createdAgentId);
+    await setDeploymentId(createdDeploymentId);
+    // Clear the "new" flag to show the editor
+    await setNewAgent(null);
+    // Reset chat and trigger refresh
+    await setThreadId(null);
+    setChatVersion((v) => v + 1);
+  };
+
   if (!session) {
     return <div>Loading...</div>;
   }
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
-    return <InitialInputs />;
+  // Show new agent creation form if new=true parameter is present
+  if (newAgent === "true") {
+    return <InitialInputs onAgentCreated={handleAgentCreated} />;
   }
 
+  const handleAgentChange = async (value: string | string[]) => {
+    if (typeof value === "string" && value) {
+      const [selectedAgentId, selectedDeploymentId] = value.split(":");
+      await setAgentId(selectedAgentId);
+      await setDeploymentId(selectedDeploymentId);
+    }
+  };
+
   return (
-    <div className="flex h-screen gap-4 p-4">
-      {/* Left column - Hierarchy Navigation */}
-      <div className="w-64 flex-shrink-0">
-        {selectedAgent && currentEditTarget && (
-          <AgentHierarchyNav
-            key={subAgentsVersion} // Force re-render when sub-agents change
-            agent={selectedAgent}
-            currentTarget={currentEditTarget}
-            onTargetChange={setCurrentEditTarget}
-            onCreateSubAgent={handleCreateSubAgent}
-            onDeleteSubAgent={handleDeleteSubAgent}
-          />
-        )}
+    <div className="flex h-screen flex-col">
+      {/* Header with Agent Selector */}
+      <div className="flex-shrink-0 border-b bg-white px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-semibold text-gray-800">
+              Agent Editor
+            </h1>
+            <AgentsCombobox
+              agents={agents}
+              agentsLoading={false}
+              placeholder="Select agent to edit..."
+              value={
+                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+              }
+              setValue={handleAgentChange}
+              open={agentsComboboxOpen}
+              setOpen={setAgentsComboboxOpen}
+              className="w-[280px]"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => (window.location.href = "/editor?new=true")}
+            className="border-[#2F6868] text-[#2F6868] hover:bg-[#2F6868] hover:text-white"
+          >
+            Create New Agent
+          </Button>
+        </div>
       </div>
 
-      {/* Middle column - Agent Configuration */}
-      <div className="flex-1">
-        <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
-          {currentEditTarget && (
-            <AgentConfig
-              agent={selectedAgent || null}
-              editTarget={currentEditTarget}
-              onAgentUpdated={handleAgentUpdated}
+      {/* Main Content */}
+      <div className="flex flex-1 gap-4 p-4">
+        {/* Left column - Hierarchy Navigation */}
+        <div className="w-64 flex-shrink-0">
+          {selectedAgent && currentEditTarget && (
+            <AgentHierarchyNav
+              key={subAgentsVersion} // Force re-render when sub-agents change
+              agent={selectedAgent}
+              currentTarget={currentEditTarget}
+              onTargetChange={setCurrentEditTarget}
+              onCreateSubAgent={handleCreateSubAgent}
+              onDeleteSubAgent={handleDeleteSubAgent}
             />
           )}
         </div>
-      </div>
 
-      {/* Right column - Chat with Agent */}
-      <div className="flex min-h-0 w-1/4 flex-col">
-        <div className="mb-0 flex items-center justify-between gap-2 px-6">
-          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
-            Chat with your agent
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNewThread}
-            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
-            title="Start new chat"
-          >
-            <SquarePen className="size-4" />
-          </Button>
+        {/* Middle column - Agent Configuration */}
+        <div className="flex-1">
+          <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
+            {currentEditTarget && (
+              <AgentConfig
+                agent={selectedAgent || null}
+                editTarget={currentEditTarget}
+                onAgentUpdated={handleAgentUpdated}
+              />
+            )}
+          </div>
         </div>
-        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
-          <DeepAgentChatInterface
-            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-            assistantId={agentId}
-            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-            accessToken={session.accessToken || ""}
-            optimizerDeploymentUrl={
-              process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
-            }
-            optimizerAccessToken={session.accessToken || ""}
-            mode="oap"
-            SidebarTrigger={SidebarTrigger}
-            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-            view="chat"
-            hideInternalToggle={true}
-            hideSidebar={true}
-          />
+
+        {/* Right column - Chat with Agent */}
+        <div className="flex min-h-0 w-1/4 flex-col">
+          <div className="mb-0 flex items-center justify-between gap-2 px-6">
+            <h2 className="text-base font-semibold text-gray-800 md:text-lg">
+              Chat with your agent
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNewThread}
+              className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
+              title="Start new chat"
+            >
+              <SquarePen className="size-4" />
+            </Button>
+          </div>
+          <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
+            <DeepAgentChatInterface
+              key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
+              assistantId={agentId || ""}
+              deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+              accessToken={session.accessToken || ""}
+              optimizerDeploymentUrl={
+                process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+              }
+              optimizerAccessToken={session.accessToken || ""}
+              mode="oap"
+              SidebarTrigger={SidebarTrigger}
+              DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+              view="chat"
+              hideInternalToggle={true}
+              hideSidebar={true}
+            />
+          </div>
         </div>
       </div>
     </div>
