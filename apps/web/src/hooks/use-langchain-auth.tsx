@@ -8,6 +8,7 @@ export function useLangChainAuth() {
     {
       provider: string;
       authUrl: string;
+      tools: string[];
     }[]
   >([]);
 
@@ -56,16 +57,25 @@ export function useLangChainAuth() {
 
     // Group tools by provider and combine scopes
     const providerScopesMap = new Map<string, Set<string>>();
+    const providerToolsMap = new Map<string, string[]>();
 
     enabledTools.forEach((tool) => {
       if (tool.auth_provider && tool.scopes?.length) {
         const providerId = tool.auth_provider;
+
+        // Track scopes
         if (!providerScopesMap.has(providerId)) {
           providerScopesMap.set(providerId, new Set());
         }
         tool.scopes.forEach((scope) => {
           providerScopesMap.get(providerId)!.add(scope);
         });
+
+        // Track tool names
+        if (!providerToolsMap.has(providerId)) {
+          providerToolsMap.set(providerId, []);
+        }
+        providerToolsMap.get(providerId)!.push(tool.name);
       }
     });
 
@@ -81,6 +91,7 @@ export function useLangChainAuth() {
           return {
             provider: providerId,
             authUrl: authRes,
+            tools: providerToolsMap.get(providerId) || [],
           };
         }
         return true;
