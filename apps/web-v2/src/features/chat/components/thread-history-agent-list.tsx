@@ -337,7 +337,7 @@ function Row({
         <div className="text-muted-foreground flex shrink-0 flex-col items-end pl-2 text-xs">
           <span
             className={cn(
-              "flex items-center gap-1 capitalize h-5 mb-0.5",
+              "mb-0.5 flex h-5 items-center gap-1 capitalize",
               statusTextClass,
             )}
           >
