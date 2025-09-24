@@ -61,7 +61,7 @@ function ThreadHistoryHalf(): React.ReactNode {
       <div
         className={cn(
           "overflow-hidden border-gray-200 transition-all duration-300 ease-in-out",
-          isFullChat ? "w-0 border-r-0" : "w-1/2 border-r",
+          isFullChat ? "w-0 border-r-0" : "w-1/2 max-w-[500px] border-r",
         )}
         aria-hidden={isFullChat}
       >
