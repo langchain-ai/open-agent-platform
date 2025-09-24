@@ -21,22 +21,34 @@ export function useLangChainAuth() {
   ): Promise<boolean | string> => {
     const { providerId, scopes } = args;
 
-    const url = new URL(getApiUrl());
-    url.pathname += `/langchain-auth/verify-user-auth-scopes`;
-    url.searchParams.set("providerId", providerId);
-    url.searchParams.set("scopes", scopes.join(","));
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-access-token": accessToken,
-      },
-    });
-    const data = await res.json();
-    if (data.success) {
+    try {
+      const url = new URL(getApiUrl());
+      url.pathname += `/langchain-auth/verify-user-auth-scopes`;
+      url.searchParams.set("providerId", providerId);
+      url.searchParams.set("scopes", scopes.join(","));
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": accessToken,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        return true;
+      }
+      // If we get an authUrl, the user needs to authenticate
+      if (data.authUrl) {
+        return data.authUrl;
+      }
+      // If no authUrl and not success, treat as error and allow continuation
+      return true;
+    } catch (error) {
+      console.error(`Error verifying auth for provider ${providerId}:`, error);
+      // If there's an error (like unknown provider), treat as already authenticated
+      // so it doesn't block the Continue button
       return true;
     }
-    return data.authUrl;
   };
 
   const verifyUserAuthScopes = async (
