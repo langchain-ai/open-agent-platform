@@ -8,6 +8,7 @@ export function useLangChainAuth() {
     {
       provider: string;
       authUrl: string;
+      tools: string[];
     }[]
   >([]);
 
@@ -20,22 +21,34 @@ export function useLangChainAuth() {
   ): Promise<boolean | string> => {
     const { providerId, scopes } = args;
 
-    const url = new URL(getApiUrl());
-    url.pathname += `/langchain-auth/verify-user-auth-scopes`;
-    url.searchParams.set("providerId", providerId);
-    url.searchParams.set("scopes", scopes.join(","));
-    const res = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "x-access-token": accessToken,
-      },
-    });
-    const data = await res.json();
-    if (data.success) {
+    try {
+      const url = new URL(getApiUrl());
+      url.pathname += `/langchain-auth/verify-user-auth-scopes`;
+      url.searchParams.set("providerId", providerId);
+      url.searchParams.set("scopes", scopes.join(","));
+      const res = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-access-token": accessToken,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        return true;
+      }
+      // If we get an authUrl, the user needs to authenticate
+      if (data.authUrl) {
+        return data.authUrl;
+      }
+      // If no authUrl and not success, treat as error and allow continuation
+      return true;
+    } catch (error) {
+      console.error(`Error verifying auth for provider ${providerId}:`, error);
+      // If there's an error (like unknown provider), treat as already authenticated
+      // so it doesn't block the Continue button
       return true;
     }
-    return data.authUrl;
   };
 
   const verifyUserAuthScopes = async (
@@ -56,16 +69,25 @@ export function useLangChainAuth() {
 
     // Group tools by provider and combine scopes
     const providerScopesMap = new Map<string, Set<string>>();
+    const providerToolsMap = new Map<string, string[]>();
 
     enabledTools.forEach((tool) => {
       if (tool.auth_provider && tool.scopes?.length) {
         const providerId = tool.auth_provider;
+
+        // Track scopes
         if (!providerScopesMap.has(providerId)) {
           providerScopesMap.set(providerId, new Set());
         }
         tool.scopes.forEach((scope) => {
           providerScopesMap.get(providerId)!.add(scope);
         });
+
+        // Track tool names
+        if (!providerToolsMap.has(providerId)) {
+          providerToolsMap.set(providerId, []);
+        }
+        providerToolsMap.get(providerId)!.push(tool.name);
       }
     });
 
@@ -81,6 +103,7 @@ export function useLangChainAuth() {
           return {
             provider: providerId,
             authUrl: authRes,
+            tools: providerToolsMap.get(providerId) || [],
           };
         }
         return true;
