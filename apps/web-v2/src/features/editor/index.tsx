@@ -12,13 +12,7 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { SquarePen, Bot } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -37,6 +31,9 @@ export function EditorPageContent(): React.ReactNode {
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
     null,
   );
+
+  // State for agents combobox
+  const [agentsComboboxOpen, setAgentsComboboxOpen] = useState(false);
 
   // Auto-select first agent if none selected and we have agents
   useEffect(() => {
@@ -174,10 +171,12 @@ export function EditorPageContent(): React.ReactNode {
     return <InitialInputs onAgentCreated={handleAgentCreated} />;
   }
 
-  const handleAgentChange = async (value: string) => {
-    const [selectedAgentId, selectedDeploymentId] = value.split(":");
-    await setAgentId(selectedAgentId);
-    await setDeploymentId(selectedDeploymentId);
+  const handleAgentChange = async (value: string | string[]) => {
+    if (typeof value === "string" && value) {
+      const [selectedAgentId, selectedDeploymentId] = value.split(":");
+      await setAgentId(selectedAgentId);
+      await setDeploymentId(selectedDeploymentId);
+    }
   };
 
   return (
@@ -189,29 +188,18 @@ export function EditorPageContent(): React.ReactNode {
             <h1 className="text-xl font-semibold text-gray-800">
               Agent Editor
             </h1>
-            <Select
+            <AgentsCombobox
+              agents={agents}
+              agentsLoading={false}
+              placeholder="Select agent to edit..."
               value={
                 agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
               }
-              onValueChange={handleAgentChange}
-            >
-              <SelectTrigger className="w-[280px]">
-                <SelectValue placeholder="Select agent to edit..." />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((agent) => (
-                  <SelectItem
-                    key={`${agent.assistant_id}:${agent.deploymentId}`}
-                    value={`${agent.assistant_id}:${agent.deploymentId}`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Bot className="h-4 w-4" />
-                      <span>{agent.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              setValue={handleAgentChange}
+              open={agentsComboboxOpen}
+              setOpen={setAgentsComboboxOpen}
+              className="w-[280px]"
+            />
           </div>
           <Button
             variant="outline"
