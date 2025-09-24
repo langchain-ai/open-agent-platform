@@ -35,7 +35,7 @@ export function AgentList({ agents }: AgentListProps) {
           size="sm"
           asChild
         >
-          <NextLink href="/editor">
+          <NextLink href="/editor?new=true">
             <Plus className="mr-2 h-4 w-4" />
             New Agent
           </NextLink>
@@ -55,7 +55,7 @@ export function AgentList({ agents }: AgentListProps) {
             className="mt-4"
             asChild
           >
-            <NextLink href="/editor">
+            <NextLink href="/editor?new=true">
               <Plus className="mr-2 h-4 w-4" />
               Create Agent
             </NextLink>

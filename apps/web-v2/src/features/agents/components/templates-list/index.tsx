@@ -60,7 +60,7 @@ export function TemplatesList() {
             variant="outline"
             asChild
           >
-            <NextLink href="/editor">
+            <NextLink href="/editor?new=true">
               <Plus className="mr-2 h-4 w-4" />
               Create Agent
             </NextLink>

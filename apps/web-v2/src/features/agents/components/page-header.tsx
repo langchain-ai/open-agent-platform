@@ -20,7 +20,7 @@ export function PageHeader({ title, description, action }: PageHeaderProps) {
       </div>
       {action || (
         <Button asChild>
-          <NextLink href="/editor">
+          <NextLink href="/editor?new=true">
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Agent
           </NextLink>
