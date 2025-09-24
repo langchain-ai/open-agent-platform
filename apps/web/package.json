@@ -1,11 +1,11 @@
 {
-  "name": "@open-agent-platform/web-v2",
+  "name": "@open-agent-platform/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "turbo build:internal --filter=@open-agent-platform/web-v2",
+    "build": "turbo build:internal --filter=@open-agent-platform/web",
     "build:internal": "next build",
     "start": "next start",
     "lint": "next lint",
