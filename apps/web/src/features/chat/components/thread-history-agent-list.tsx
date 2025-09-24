@@ -56,6 +56,9 @@ function useThreads(args: {
         limit: 50,
         sortBy: "created_at",
         sortOrder: "desc",
+        metadata: {
+          assistant_id: agent?.assistant_id,
+        },
       };
       if (agent?.assistant_id) {
         params.metadata = { assistant_id: agent.assistant_id } as Record<
