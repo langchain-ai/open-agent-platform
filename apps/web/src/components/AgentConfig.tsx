@@ -4,16 +4,7 @@ import React, { useState } from "react";
 import { Agent } from "@/types/agent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Copy,
-  Eye,
-  EyeOff,
-  Zap,
-  Users,
-  ArrowRight,
-  Wrench,
-  FileText,
-} from "lucide-react";
+import { Copy, Zap, Users, ArrowRight, Wrench, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
@@ -21,8 +12,15 @@ import { CreateAgentToolsSelection } from "@/components/agent-creator-sheet/comp
 import { cn } from "@/lib/utils";
 import TriggersInterface from "@/features/triggers";
 import { useTriggers } from "@/hooks/use-triggers";
-import { useAgentTriggersForm } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import {
+  useAgentTriggersForm,
+  AgentTriggersFormData,
+} from "@/components/agent-creator-sheet/components/agent-triggers-form";
+import {
+  useAgentToolsForm,
+  AgentToolsFormValues,
+} from "@/components/agent-creator-sheet/components/agent-tools-form";
+import type { UseFormReturn } from "react-hook-form";
 import { useMemo, useEffect } from "react";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
@@ -34,6 +32,7 @@ import {
 } from "@/types/triggers";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
+import { BlockNoteSchema, defaultBlockSpecs } from "@blocknote/core";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 // Using inline Tailwind classes with arbitrary selectors for BlockNote styling
@@ -48,6 +47,13 @@ interface AgentConfigProps {
   agent: Agent | null;
   editTarget?: EditTarget;
   onAgentUpdated?: () => Promise<void>;
+  view?: ViewType;
+  onViewChange?: (view: ViewType) => void;
+  hideTopTabs?: boolean;
+  toolsFormExternal?: UseFormReturn<AgentToolsFormValues>;
+  triggersFormExternal?: UseFormReturn<AgentTriggersFormData>;
+  hideTriggersTab?: boolean;
+  hideToolsTab?: boolean;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
@@ -56,6 +62,13 @@ export function AgentConfig({
   agent,
   editTarget,
   onAgentUpdated,
+  view: externalView,
+  onViewChange,
+  hideTopTabs,
+  toolsFormExternal,
+  triggersFormExternal,
+  hideTriggersTab,
+  hideToolsTab,
 }: AgentConfigProps) {
   const { session } = useAuthContext();
   const {
@@ -79,23 +92,37 @@ export function AgentConfig({
   const subAgents =
     (agent?.config?.configurable?.subagents as SubAgent[]) || [];
 
-  const availableViews: ViewType[] = isEditingSubAgent
+  const baseViews: ViewType[] = isEditingSubAgent
     ? ["instructions", "tools"]
     : ["instructions", "tools", "triggers"];
+  const availableViews: ViewType[] = React.useMemo(() => {
+    let v = [...baseViews];
+    if (hideTriggersTab) v = v.filter((x) => x !== "triggers");
+    if (hideToolsTab) v = v.filter((x) => x !== "tools");
+    return v;
+  }, [isEditingSubAgent, hideTriggersTab, hideToolsTab]);
 
-  const [currentView, setCurrentView] = useState<ViewType>("instructions");
+  const [internalView, setInternalView] = useState<ViewType>("instructions");
+  const currentView = externalView ?? internalView;
+  const setCurrentView = (v: ViewType) => {
+    if (onViewChange) onViewChange(v);
+    else setInternalView(v);
+  };
   const [editedTitle, setEditedTitle] = useState("");
+  const [initialTitle, setInitialTitle] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
   const [editedInterruptConfig, setEditedInterruptConfig] = useState<
     Record<string, HumanInterruptConfig>
   >({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isInstructionsDirty, setIsInstructionsDirty] = useState(false);
 
   // Create tools form to track changes
-  const toolsForm = useAgentToolsForm({
+  const toolsFormInternal = useAgentToolsForm({
     tools: editedTools,
     interruptConfig: editedInterruptConfig,
   });
+  const toolsForm = toolsFormExternal ?? toolsFormInternal;
 
   // Create sub-agents form to track changes
   const subAgentsForm = useReactHookForm<{ subAgents: SubAgent[] }>({
@@ -105,7 +132,24 @@ export function AgentConfig({
   });
 
   const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
+
+  const schema = BlockNoteSchema.create({
+    blockSpecs: {
+      paragraph: defaultBlockSpecs.paragraph,
+      bulletListItem: defaultBlockSpecs.bulletListItem,
+      numberedListItem: defaultBlockSpecs.numberedListItem,
+      checkListItem: defaultBlockSpecs.checkListItem,
+      table: defaultBlockSpecs.table,
+      file: defaultBlockSpecs.file,
+      image: defaultBlockSpecs.image,
+      video: defaultBlockSpecs.video,
+      audio: defaultBlockSpecs.audio,
+      codeBlock: defaultBlockSpecs.codeBlock,
+    },
+  });
+
   const editor = useCreateBlockNote({
+    schema,
     initialContent: undefined,
     onFocus: () => {
       // Prevent keyboard shortcuts from bubbling up when editor is focused
@@ -119,9 +163,10 @@ export function AgentConfig({
   >();
   const [triggersLoading, setTriggersLoading] = useState(true);
 
-  const triggersForm = useAgentTriggersForm({
+  const triggersFormInternal = useAgentTriggersForm({
     triggerIds: [],
   });
+  const triggersForm = triggersFormExternal ?? triggersFormInternal;
 
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
@@ -180,6 +225,7 @@ export function AgentConfig({
         )?.interrupt_config || {};
 
     setEditedTitle(freshTitle);
+    setInitialTitle(freshTitle);
     setEditedTools([...freshTools]);
     setEditedInterruptConfig({ ...(freshInterruptConfig || {}) });
 
@@ -191,6 +237,9 @@ export function AgentConfig({
     subAgentsForm.reset({
       subAgents: subAgents,
     });
+
+    // Reset dirty flags when switching targets
+    setIsInstructionsDirty(false);
   }, [
     agent?.assistant_id,
     editTarget?.type,
@@ -212,9 +261,14 @@ export function AgentConfig({
         currentInstructions !== "No instructions provided"
       ) {
         try {
-          const blocks = await editor.tryParseMarkdownToBlocks(
-            currentInstructions as string,
+          // Convert headers to bold text before parsing
+          const processedMarkdown = (currentInstructions as string).replace(
+            /^#{1,6}\s+(.+)$/gm,
+            "**$1**",
           );
+
+          const blocks =
+            await editor.tryParseMarkdownToBlocks(processedMarkdown);
           editor.replaceBlocks(editor.document, blocks);
         } catch (error) {
           console.error("Error parsing markdown to blocks:", error);
@@ -253,7 +307,6 @@ export function AgentConfig({
   React.useEffect(() => {
     setCurrentView("instructions");
   }, [editTarget]);
-  const [isRawView, setIsRawView] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -423,6 +476,13 @@ export function AgentConfig({
       // Update local state to reflect saved changes
       setEditedTools(currentTools);
       setEditedInterruptConfig(currentInterruptConfig || {});
+      setIsInstructionsDirty(false);
+      setInitialTitle(editedTitle);
+
+      // Reset form dirtiness so Save button hides after save
+      toolsForm.reset(toolsForm.getValues());
+      triggersForm.reset(triggersForm.getValues());
+      subAgentsForm.reset(subAgentsForm.getValues());
 
       // Refresh agents data to show updated information
       if (onAgentUpdated) {
@@ -467,77 +527,80 @@ export function AgentConfig({
 
       {/* Header with view toggle buttons */}
       <div className="flex flex-shrink-0 flex-row items-center justify-between border-b border-gray-200 px-6 py-2">
-        <div className="flex items-center gap-2">
-          {availableViews.includes("triggers") && (
-            <Button
-              variant={currentView === "triggers" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("triggers")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "triggers" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-              title="Triggers start the flow"
-            >
-              <Zap className="h-3 w-3" />
-              Triggers
-            </Button>
-          )}
-          {/* Visual flow from Triggers to Instructions */}
-          {availableViews.includes("triggers") &&
-            availableViews.includes("instructions") && (
-              <span className="text-muted-foreground">
-                <ArrowRight className="h-4 w-4" />
-              </span>
+        {!hideTopTabs && (
+          <div className="flex items-center gap-2">
+            {availableViews.includes("triggers") && (
+              <Button
+                variant={currentView === "triggers" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("triggers")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "triggers" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Triggers start the flow"
+              >
+                <Zap className="h-3 w-3" />
+                Triggers
+              </Button>
             )}
-          {availableViews.includes("instructions") && (
-            <Button
-              variant={currentView === "instructions" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("instructions")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "instructions" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
+            {/* Visual flow from Triggers to Instructions */}
+            {availableViews.includes("triggers") &&
+              availableViews.includes("instructions") && (
+                <span className="text-muted-foreground">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
               )}
-              title="Instructions guide the agent"
-            >
-              <FileText className="h-3 w-3" />
-              Instructions
-            </Button>
-          )}
-          {availableViews.includes("tools") && (
-            <Button
-              variant={currentView === "tools" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("tools")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "tools" && "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-              title="Tools are invoked during runs"
-            >
-              <Wrench className="h-3 w-3" />
-              Tools
-            </Button>
-          )}
-          {availableViews.includes("subagents") && (
-            <Button
-              variant={currentView === "subagents" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCurrentView("subagents")}
-              className={cn(
-                "h-8 gap-1",
-                currentView === "subagents" &&
-                  "bg-[#2F6868] hover:bg-[#2F6868]/90",
-              )}
-            >
-              <Users className="h-3 w-3" />
-              Sub-agents
-            </Button>
-          )}
-        </div>
+            {availableViews.includes("instructions") && (
+              <Button
+                variant={currentView === "instructions" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("instructions")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "instructions" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Instructions guide the agent"
+              >
+                <FileText className="h-3 w-3" />
+                Instructions
+              </Button>
+            )}
+            {availableViews.includes("tools") && (
+              <Button
+                variant={currentView === "tools" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("tools")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "tools" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+                title="Tools are invoked during runs"
+              >
+                <Wrench className="h-3 w-3" />
+                Tools
+              </Button>
+            )}
+            {availableViews.includes("subagents") && (
+              <Button
+                variant={currentView === "subagents" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentView("subagents")}
+                className={cn(
+                  "h-8 gap-1",
+                  currentView === "subagents" &&
+                    "bg-[#2F6868] hover:bg-[#2F6868]/90",
+                )}
+              >
+                <Users className="h-3 w-3" />
+                Sub-agents
+              </Button>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-2">
           {currentView === "instructions" && (
             <>
@@ -549,30 +612,29 @@ export function AgentConfig({
               >
                 <Copy className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRawView(!isRawView)}
-                className="h-8 w-8 p-0"
-              >
-                {isRawView ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
             </>
           )}
 
           {/* Save Changes Button */}
-          <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving || !agent}
-            className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
-            size="sm"
-          >
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          {(() => {
+            const isTitleDirty = editedTitle.trim() !== initialTitle.trim();
+            const hasFormDirty =
+              toolsForm.formState.isDirty ||
+              triggersForm.formState.isDirty ||
+              subAgentsForm.formState.isDirty;
+            const hasChanges =
+              isTitleDirty || isInstructionsDirty || hasFormDirty;
+            return hasChanges ? (
+              <Button
+                onClick={handleSaveChanges}
+                disabled={isSaving || !agent}
+                className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
+                size="sm"
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            ) : null;
+          })()}
         </div>
       </div>
 
@@ -592,6 +654,7 @@ export function AgentConfig({
               >
                 <BlockNoteView
                   editor={editor}
+                  onChange={() => setIsInstructionsDirty(true)}
                   className={cn("oap-blocknote min-h-full")}
                   theme="light"
                   data-color-scheme="light"

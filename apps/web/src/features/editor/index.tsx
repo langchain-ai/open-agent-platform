@@ -12,41 +12,60 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { SquarePen } from "lucide-react";
 import { toast } from "sonner";
-import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
+import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
+import { useAgentTriggersForm } from "@/components/agent-creator-sheet/components/agent-triggers-form";
+import { SidebarTriggers } from "@/features/editor/components/sidebar-triggers";
+import { useTriggers } from "@/hooks/use-triggers";
+import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
+import type {
+  GroupedTriggerRegistrationsByProvider,
+  Trigger,
+  ListTriggerRegistrationsData,
+} from "@/types/triggers";
+import { useFlags } from "launchdarkly-react-client-sdk";
+import type { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
 
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
-  const [newAgent, setNewAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
     null,
   );
 
-  // State for agents combobox
-  const [agentsComboboxOpen, setAgentsComboboxOpen] = useState(false);
-
-  // Auto-select first agent if none selected and we have agents
-  useEffect(() => {
-    if (!agentId && !newAgent && agents.length > 0) {
-      const firstAgent = agents[0];
-      setAgentId(firstAgent.assistant_id);
-      setDeploymentId(firstAgent.deploymentId);
-    }
-  }, [agentId, newAgent, agents, setAgentId, setDeploymentId]);
-
   // Force re-render when sub-agents change
   const [subAgentsVersion, setSubAgentsVersion] = useState(0);
   const [chatVersion, setChatVersion] = useState(0);
+  // External forms for tools/triggers for shared state
+  const toolsForm = useAgentToolsForm();
+  const triggersForm = useAgentTriggersForm();
+  const [toolsDrafts, setToolsDrafts] = useState<
+    Record<string, { tools: string[]; interruptConfig: ToolInterruptConfig }>
+  >({});
+  const isApplyingToolsResetRef = React.useRef(false);
+  // Triggers data for sidebar
+  const { listTriggers, listUserTriggers, listAgentTriggers } = useTriggers();
+  const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
+  const [triggersLoading, setTriggersLoading] = useState(false);
+  const [triggers, setTriggers] = useState<Trigger[] | undefined>();
+  const [registrations, setRegistrations] = useState<
+    ListTriggerRegistrationsData[] | undefined
+  >();
+  const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
+    React.useMemo(() => {
+      if (!registrations || !triggers) return undefined;
+      return groupTriggerRegistrationsByProvider(registrations, triggers);
+    }, [registrations, triggers]);
 
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
@@ -74,6 +93,100 @@ export function EditorPageContent(): React.ReactNode {
       setCurrentEditTarget({ type: "main", agent: selectedAgent });
     }
   }, [selectedAgent, currentEditTarget]);
+
+  // Utility to compute a stable key for the current edit target
+  const currentTargetKey = React.useMemo(() => {
+    if (!currentEditTarget) return "main";
+    return currentEditTarget.type === "subagent"
+      ? `sub:${currentEditTarget.index}`
+      : "main";
+  }, [currentEditTarget]);
+
+  // Persist draft tool changes per-target so switching targets doesn't lose draft edits
+  useEffect(() => {
+    const subscription = toolsForm.watch((value) => {
+      if (isApplyingToolsResetRef.current) return;
+      const draft = {
+        tools: (value.tools as string[]) || [],
+        interruptConfig: (value.interruptConfig as ToolInterruptConfig) || {},
+      };
+      setToolsDrafts((prev) => {
+        const prevDraft = prev[currentTargetKey];
+        if (
+          prevDraft &&
+          Array.isArray(prevDraft.tools) &&
+          prevDraft.tools.length === (draft.tools || []).length &&
+          prevDraft.tools.every((t, i) => t === draft.tools[i]) &&
+          JSON.stringify(prevDraft.interruptConfig || {}) ===
+            JSON.stringify(draft.interruptConfig || {})
+        ) {
+          return prev; // no change
+        }
+        return { ...prev, [currentTargetKey]: draft };
+      });
+    });
+    return () => subscription.unsubscribe();
+  }, [toolsForm, currentTargetKey]);
+
+  // Keep tools form values in sync when switching edit targets, prefer draft if present
+  useEffect(() => {
+    const isSub = currentEditTarget?.type === "subagent";
+    const currentSubAgents =
+      (selectedAgent?.config?.configurable?.subagents as SubAgent[]) || [];
+    const sub =
+      isSub && typeof currentEditTarget?.index === "number"
+        ? currentSubAgents[currentEditTarget.index]
+        : null;
+    const savedTools = isSub
+      ? sub?.tools || []
+      : (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
+    const savedInterruptConfig = isSub
+      ? (sub as any)?.interrupt_config || {}
+      : (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
+        {};
+
+    const draft = toolsDrafts[currentTargetKey];
+    isApplyingToolsResetRef.current = true;
+    toolsForm.reset(
+      {
+        tools: draft?.tools ?? savedTools,
+        interruptConfig: draft?.interruptConfig ?? savedInterruptConfig,
+      },
+      { keepDirty: false },
+    );
+    // release on next tick to avoid capturing reset changes
+    setTimeout(() => {
+      isApplyingToolsResetRef.current = false;
+    }, 0);
+  }, [selectedAgent?.assistant_id, currentTargetKey]);
+
+  // Load triggers for sidebar; only for main agent
+  useEffect(() => {
+    const load = async () => {
+      if (showTriggersTab === false || showTriggersTab === undefined) {
+        setTriggersLoading(false);
+        return;
+      }
+      if (!session?.accessToken || !selectedAgent) return;
+      setTriggersLoading(true);
+      try {
+        const [t, r] = await Promise.all([
+          listTriggers(session.accessToken),
+          listUserTriggers(session.accessToken),
+        ]);
+        setTriggers(t);
+        setRegistrations(r);
+        const ids = await listAgentTriggers(
+          session.accessToken,
+          selectedAgent.assistant_id,
+        );
+        triggersForm.setValue("triggerIds", ids);
+      } finally {
+        setTriggersLoading(false);
+      }
+    };
+    load();
+  }, [session?.accessToken, selectedAgent?.assistant_id, showTriggersTab]);
 
   const handleCreateSubAgent = () => {
     if (!selectedAgent) return;
@@ -148,132 +261,124 @@ export function EditorPageContent(): React.ReactNode {
     setChatVersion((v) => v + 1);
   };
 
-  const handleAgentCreated = async (
-    createdAgentId: string,
-    createdDeploymentId: string,
-  ) => {
-    // Set the new agent as selected
-    await setAgentId(createdAgentId);
-    await setDeploymentId(createdDeploymentId);
-    // Clear the "new" flag to show the editor
-    await setNewAgent(null);
-    // Reset chat and trigger refresh
-    await setThreadId(null);
-    setChatVersion((v) => v + 1);
-  };
-
   if (!session) {
     return <div>Loading...</div>;
   }
 
-  // Show new agent creation form if new=true parameter is present
-  if (newAgent === "true") {
-    return <InitialInputs onAgentCreated={handleAgentCreated} />;
+  // Show the form if we: don't have an API URL, or don't have an assistant ID
+  if (!agentId || !deploymentId) {
+    return <InitialInputs />;
   }
 
-  const handleAgentChange = async (value: string | string[]) => {
-    if (typeof value === "string" && value) {
-      const [selectedAgentId, selectedDeploymentId] = value.split(":");
-      await setAgentId(selectedAgentId);
-      await setDeploymentId(selectedDeploymentId);
-    }
-  };
-
   return (
-    <div className="flex h-screen flex-col">
-      {/* Header with Agent Selector */}
-      <div className="flex-shrink-0 border-b bg-white px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-gray-800">
-              Agent Editor
-            </h1>
-            <AgentsCombobox
-              agents={agents}
-              agentsLoading={false}
-              placeholder="Select agent to edit..."
-              value={
-                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+    <div className="flex h-screen gap-4 p-4">
+      {/* Left column: Top half Triggers, bottom half Sub-agents hierarchy */}
+      <div className="w-[24rem] flex-shrink-0">
+        <div className="scrollbar-pretty-auto h-full overflow-auto pr-0">
+          <SidebarTriggers
+            groupedTriggers={groupedTriggers}
+            loading={triggersLoading}
+            showTriggersTab={showTriggersTab}
+            form={triggersForm}
+            hideHeader={false}
+            targetLabel={
+              selectedAgent ? `${selectedAgent.name} (Main)` : "Main Agent"
+            }
+            note={
+              currentEditTarget?.type === "subagent"
+                ? "Triggers are configured for the main agent"
+                : undefined
+            }
+            reloadTriggers={async () => {
+              if (!session?.accessToken || !selectedAgent) return;
+              setTriggersLoading(true);
+              try {
+                const [t, r] = await Promise.all([
+                  listTriggers(session.accessToken),
+                  listUserTriggers(session.accessToken),
+                ]);
+                setTriggers(t);
+                setRegistrations(r);
+                const ids = await listAgentTriggers(
+                  session.accessToken,
+                  selectedAgent.assistant_id,
+                );
+                triggersForm.setValue("triggerIds", ids);
+              } finally {
+                setTriggersLoading(false);
               }
-              setValue={handleAgentChange}
-              open={agentsComboboxOpen}
-              setOpen={setAgentsComboboxOpen}
-              className="w-[280px]"
-            />
+            }}
+          />
+          <div className="my-5 h-px w-full bg-gray-200" />
+          <div className="flex cursor-default items-center gap-1 px-3 py-3 text-xs font-medium text-gray-500 uppercase">
+            Hierarchy
           </div>
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = "/editor?new=true")}
-            className="border-[#2F6868] text-[#2F6868] hover:bg-[#2F6868] hover:text-white"
-          >
-            Create New Agent
-          </Button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex flex-1 gap-4 p-4">
-        {/* Left column - Hierarchy Navigation */}
-        <div className="w-64 flex-shrink-0">
           {selectedAgent && currentEditTarget && (
             <AgentHierarchyNav
-              key={subAgentsVersion} // Force re-render when sub-agents change
+              key={subAgentsVersion}
               agent={selectedAgent}
               currentTarget={currentEditTarget}
               onTargetChange={setCurrentEditTarget}
               onCreateSubAgent={handleCreateSubAgent}
               onDeleteSubAgent={handleDeleteSubAgent}
+              compact
+              toolsForm={toolsForm}
             />
           )}
         </div>
+      </div>
 
-        {/* Middle column - Agent Configuration */}
-        <div className="flex-1">
-          <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
-            {currentEditTarget && (
-              <AgentConfig
-                agent={selectedAgent || null}
-                editTarget={currentEditTarget}
-                onAgentUpdated={handleAgentUpdated}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Right column - Chat with Agent */}
-        <div className="flex min-h-0 w-1/4 flex-col">
-          <div className="mb-0 flex items-center justify-between gap-2 px-6">
-            <h2 className="text-base font-semibold text-gray-800 md:text-lg">
-              Chat with your agent
-            </h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleNewThread}
-              className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
-              title="Start new chat"
-            >
-              <SquarePen className="size-4" />
-            </Button>
-          </div>
-          <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
-            <DeepAgentChatInterface
-              key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-              assistantId={agentId || ""}
-              deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-              accessToken={session.accessToken || ""}
-              optimizerDeploymentUrl={
-                process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
-              }
-              optimizerAccessToken={session.accessToken || ""}
-              mode="oap"
-              SidebarTrigger={SidebarTrigger}
-              DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-              view="chat"
-              hideInternalToggle={true}
-              hideSidebar={true}
+      {/* Middle column - Agent Configuration */}
+      <div className="flex-1">
+        <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
+          {currentEditTarget && (
+            <AgentConfig
+              agent={selectedAgent || null}
+              editTarget={currentEditTarget}
+              onAgentUpdated={handleAgentUpdated}
+              hideTopTabs={false}
+              hideTriggersTab={true}
+              hideToolsTab={true}
+              toolsFormExternal={toolsForm}
+              triggersFormExternal={triggersForm}
             />
-          </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right column - Chat with Agent */}
+      <div className="flex min-h-0 w-1/4 flex-col">
+        <div className="mb-0 flex items-center justify-between gap-2 px-6">
+          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
+            Chat with your agent
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNewThread}
+            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
+            title="Start new chat"
+          >
+            <SquarePen className="size-4" />
+          </Button>
+        </div>
+        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
+          <DeepAgentChatInterface
+            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
+            assistantId={agentId}
+            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+            accessToken={session.accessToken || ""}
+            optimizerDeploymentUrl={
+              process.env.NEXT_PUBLIC_OPTIMIZATION_DEPLOYMENT_URL || ""
+            }
+            optimizerAccessToken={session.accessToken || ""}
+            mode="oap"
+            SidebarTrigger={SidebarTrigger}
+            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+            view="chat"
+            hideInternalToggle={true}
+            hideSidebar={true}
+          />
         </div>
       </div>
     </div>
