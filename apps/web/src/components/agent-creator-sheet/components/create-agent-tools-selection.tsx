@@ -10,23 +10,11 @@ import { Tool } from "@/types/tool";
 import _ from "lodash";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Combobox } from "@/components/ui/combobox";
 import { useFetchPreselectedTools } from "@/hooks/use-fetch-preselected-tools";
 import { Search } from "@/components/ui/tool-search";
 
-export interface HumanInterruptConfig {
-  allow_ignore: boolean;
-  allow_respond: boolean;
-  allow_edit: boolean;
-  allow_accept: boolean;
-}
+export type HumanInterruptConfig = boolean;
 
-const INTERRUPT_OPTIONS = [
-  { value: "accept", label: "allow accept", disabled: false },
-  { value: "respond", label: "allow respond", disabled: false },
-  { value: "edit", label: "allow edit", disabled: false },
-  { value: "ignore", label: "allow ignore", disabled: true },
-];
 
 export type ToolInterruptConfig = Record<string, HumanInterruptConfig>;
 
@@ -254,9 +242,9 @@ function ToolSelectionCard({
                   <h4 className="text-sm font-normal text-gray-700">
                     Configure interrupts
                   </h4>
-                  <InterruptMultiSelect
-                    interruptConfig={interruptConfig}
-                    onInterruptConfigChange={onInterruptConfigChange}
+                  <InterruptToggle
+                    enabled={interruptConfig || false}
+                    onToggle={onInterruptConfigChange}
                   />
                   <p className="text-xs font-light text-gray-600">
                     The agent will stop and let you decide what to do before
@@ -285,63 +273,29 @@ function ToolSelectionCard({
   );
 }
 
-interface InterruptMultiSelectProps {
-  interruptConfig?: HumanInterruptConfig;
-  onInterruptConfigChange?: (config: HumanInterruptConfig) => void;
+interface InterruptToggleProps {
+  enabled: boolean;
+  onToggle?: (enabled: boolean) => void;
 }
 
-function InterruptMultiSelect({
-  interruptConfig,
-  onInterruptConfigChange,
-}: InterruptMultiSelectProps) {
-  const [open, setOpen] = useState(false);
-
-  const getSelectedOptions = () => {
-    if (!interruptConfig) {
-      return [];
+function InterruptToggle({ enabled, onToggle }: InterruptToggleProps) {
+  const handleClick = () => {
+    if (onToggle) {
+      onToggle(!enabled);
     }
-
-    const selected: string[] = [];
-    if (interruptConfig.allow_accept) selected.push("accept");
-    if (interruptConfig.allow_respond) selected.push("respond");
-    if (interruptConfig.allow_edit) selected.push("edit");
-    return selected;
   };
-
-  const handleSelect = (option: string) => {
-    if (!onInterruptConfigChange) return;
-
-    const selected = getSelectedOptions();
-    const newSelected = selected.includes(option)
-      ? selected.filter((item) => item !== option)
-      : [...selected, option];
-
-    const newConfig: HumanInterruptConfig = {
-      allow_ignore: false, // always use false
-      allow_accept: newSelected.includes("accept"),
-      allow_respond: newSelected.includes("respond"),
-      allow_edit: newSelected.includes("edit"),
-    };
-
-    onInterruptConfigChange(newConfig);
-  };
-
-  const selectedOptions = getSelectedOptions();
-  const displayText =
-    selectedOptions.length > 0
-      ? selectedOptions
-          .map((opt) => INTERRUPT_OPTIONS.find((o) => o.value === opt)?.label)
-          .join(", ")
-      : "Select interrupt options...";
 
   return (
-    <Combobox
-      open={open}
-      onOpenChange={setOpen}
-      displayText={displayText}
-      options={INTERRUPT_OPTIONS}
-      selectedOptions={selectedOptions}
-      onSelect={handleSelect}
-    />
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex h-8 w-16 items-center justify-center rounded-md border border-gray-300 bg-white text-lg font-medium transition-colors hover:bg-gray-50"
+    >
+      {enabled ? (
+        <span className="text-green-600">✓</span>
+      ) : (
+        <span className="text-red-500">✗</span>
+      )}
+    </button>
   );
 }

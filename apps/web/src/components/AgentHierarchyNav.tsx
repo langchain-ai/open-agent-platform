@@ -103,11 +103,6 @@ export function AgentHierarchyNav({
     );
   };
 
-  const INTERRUPT_OPTIONS = [
-    { value: "accept", label: "allow accept" },
-    { value: "respond", label: "allow respond" },
-    { value: "edit", label: "allow edit" },
-  ];
 
   const getInterruptConfig = (
     toolName: string,
@@ -119,20 +114,14 @@ export function AgentHierarchyNav({
     return all[toolName];
   };
 
-  const setInterruptConfig = (
-    toolName: string,
-    config: HumanInterruptConfig,
-  ) => {
+  const toggleInterruptConfig = (toolName: string) => {
     if (!toolsForm) return;
-    const all = (toolsForm.getValues("interruptConfig") || {}) as Record<
-      string,
-      HumanInterruptConfig
-    >;
-    toolsForm.setValue(
-      "interruptConfig",
-      { ...all, [toolName]: config },
-      { shouldDirty: true },
-    );
+    const current = getInterruptConfig(toolName) || false;
+    const allConfig = toolsForm.getValues("interruptConfig") || {};
+    toolsForm.setValue("interruptConfig", {
+      ...allConfig,
+      [toolName]: !current,
+    }, { shouldDirty: true });
   };
   return (
     <div className={cn("w-full bg-gray-50/50", compact ? "p-2" : "p-4")}>
@@ -234,7 +223,6 @@ export function AgentHierarchyNav({
                   ) : null;
                 })()}
               </div>
-              {/* Removed larger per-tool detail list to avoid duplication */}
               {isMainSelected && showAddMain && (
                 <div className="mt-2">
                   <Search
@@ -242,13 +230,7 @@ export function AgentHierarchyNav({
                     placeholder="Search tools to add..."
                   />
                   <div className="mt-1 rounded-md border border-gray-200 bg-white">
-                    <div className="flex">
-                      <div
-                        className={cn(
-                          "max-h-64 overflow-auto",
-                          selectedAddMain ? "w-2/3" : "w-full",
-                        )}
-                      >
+                    <div className="max-h-64 overflow-auto">
                         {(() => {
                           const selected = toolsForm?.watch("tools") || [];
                           const sorted = [...filteredTools].sort((a, b) => {
@@ -257,36 +239,73 @@ export function AgentHierarchyNav({
                             return bSel - aSel; // selected first
                           });
                           return sorted.slice(0, 50).map((tool) => (
-                            <div
-                              key={`add-main-${tool.name}`}
-                              className="group flex w-full items-stretch"
-                            >
-                              <button
-                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Always ensure it's selected and open interrupts
-                                  handleAddTool(tool.name);
-                                  setSelectedAddMain(tool.name);
-                                }}
-                              >
-                                <div className="flex items-center gap-2 font-medium">
-                                  <Check
-                                    className={cn(
-                                      "h-3.5 w-3.5",
-                                      (selected || []).includes(tool.name)
-                                        ? "text-[#2F6868]"
-                                        : "text-transparent",
-                                    )}
-                                  />
-                                  {_.startCase(tool.name)}
-                                </div>
-                                {tool.description && (
-                                  <div className="line-clamp-2 pl-6 text-xs text-gray-500">
-                                    {tool.description}
+                            <div key={`add-main-${tool.name}`}>
+                              <div className="group flex w-full items-stretch">
+                                <button
+                                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddTool(tool.name);
+                                    setSelectedAddMain(selectedAddMain === tool.name ? null : tool.name);
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 font-medium">
+                                    <Check
+                                      className={cn(
+                                        "h-3.5 w-3.5",
+                                        (selected || []).includes(tool.name)
+                                          ? "text-[#2F6868]"
+                                          : "text-transparent",
+                                      )}
+                                    />
+                                    {_.startCase(tool.name)}
                                   </div>
-                                )}
-                              </button>
+                                  {tool.description && (
+                                    <div className="line-clamp-2 pl-6 text-xs text-gray-500">
+                                      {tool.description}
+                                    </div>
+                                  )}
+                                </button>
+                              </div>
+                              {selectedAddMain === tool.name && (
+                                <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                  <div className="flex items-center justify-center gap-3">
+                                    <div className="text-xs font-medium text-gray-500 uppercase">
+                                      Interrupt
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      variant={getInterruptConfig(tool.name) === true ? "secondary" : "outline"}
+                                      className="h-8 w-16 justify-center text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const allConfig = toolsForm?.getValues("interruptConfig") || {};
+                                        toolsForm?.setValue("interruptConfig", {
+                                          ...allConfig,
+                                          [tool.name]: true,
+                                        }, { shouldDirty: true });
+                                      }}
+                                    >
+                                      true
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={getInterruptConfig(tool.name) === false ? "secondary" : "outline"}
+                                      className="h-8 w-16 justify-center text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const allConfig = toolsForm?.getValues("interruptConfig") || {};
+                                        toolsForm?.setValue("interruptConfig", {
+                                          ...allConfig,
+                                          [tool.name]: false,
+                                        }, { shouldDirty: true });
+                                      }}
+                                    >
+                                      false
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ));
                         })()}
@@ -295,67 +314,6 @@ export function AgentHierarchyNav({
                             No tools found
                           </div>
                         )}
-                      </div>
-                      {selectedAddMain && (
-                        <div className="w-1/3 border-l border-gray-200 p-2">
-                          <div className="flex flex-col gap-1">
-                            <div className="text-xs font-medium text-gray-500 uppercase">
-                              Interrupts
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {INTERRUPT_OPTIONS.map((opt) => {
-                                const current =
-                                  getInterruptConfig(selectedAddMain);
-                                const active = !!(
-                                  (opt.value === "accept" &&
-                                    current?.allow_accept) ||
-                                  (opt.value === "respond" &&
-                                    current?.allow_respond) ||
-                                  (opt.value === "edit" && current?.allow_edit)
-                                );
-                                return (
-                                  <Button
-                                    key={`int-main-${selectedAddMain}-${opt.value}`}
-                                    size="sm"
-                                    variant={active ? "secondary" : "outline"}
-                                    className="h-8 w-28 justify-center text-xs"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddTool(selectedAddMain);
-                                      const cfg = getInterruptConfig(
-                                        selectedAddMain,
-                                      ) || {
-                                        allow_ignore: false,
-                                        allow_accept: false,
-                                        allow_respond: false,
-                                        allow_edit: false,
-                                      };
-                                      const next: HumanInterruptConfig = {
-                                        ...cfg,
-                                        allow_accept:
-                                          opt.value === "accept"
-                                            ? !cfg.allow_accept
-                                            : cfg.allow_accept,
-                                        allow_respond:
-                                          opt.value === "respond"
-                                            ? !cfg.allow_respond
-                                            : cfg.allow_respond,
-                                        allow_edit:
-                                          opt.value === "edit"
-                                            ? !cfg.allow_edit
-                                            : cfg.allow_edit,
-                                      };
-                                      setInterruptConfig(selectedAddMain, next);
-                                    }}
-                                  >
-                                    {opt.label}
-                                  </Button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -518,15 +476,7 @@ export function AgentHierarchyNav({
                                 placeholder={`Search tools for ${subAgent.name}...`}
                               />
                               <div className="mt-1 rounded-md border border-gray-200 bg-white">
-                                <div className="flex">
-                                  <div
-                                    className={cn(
-                                      "max-h-64 overflow-auto",
-                                      selectedAddSub[index]
-                                        ? "w-2/3"
-                                        : "w-full",
-                                    )}
-                                  >
+                                <div className="max-h-64 overflow-auto">
                                     {(() => {
                                       const selected =
                                         toolsForm?.watch("tools") || [];
@@ -542,39 +492,76 @@ export function AgentHierarchyNav({
                                         },
                                       );
                                       return sorted.slice(0, 50).map((tool) => (
-                                        <div
-                                          key={`add-sa-${index}-${tool.name}`}
-                                          className="group flex w-full items-stretch"
-                                        >
-                                          <button
-                                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              // Always ensure it's selected and open interrupts
-                                              handleAddTool(tool.name);
-                                              setSelectedAddSub((m) => ({
-                                                ...m,
-                                                [index]: tool.name,
-                                              }));
-                                            }}
-                                          >
-                                            <div className="flex items-center gap-2 font-medium">
-                                              <Check
-                                                className={cn(
-                                                  "h-3.5 w-3.5",
-                                                  selected.includes(tool.name)
-                                                    ? "text-[#2F6868]"
-                                                    : "text-transparent",
-                                                )}
-                                              />
-                                              {_.startCase(tool.name)}
-                                            </div>
-                                            {tool.description && (
-                                              <div className="line-clamp-2 pl-6 text-xs text-gray-500">
-                                                {tool.description}
+                                        <div key={`add-sa-${index}-${tool.name}`}>
+                                          <div className="group flex w-full items-stretch">
+                                            <button
+                                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAddTool(tool.name);
+                                                setSelectedAddSub((m) => ({
+                                                  ...m,
+                                                  [index]: selectedAddSub[index] === tool.name ? null : tool.name,
+                                                }));
+                                              }}
+                                            >
+                                              <div className="flex items-center gap-2 font-medium">
+                                                <Check
+                                                  className={cn(
+                                                    "h-3.5 w-3.5",
+                                                    selected.includes(tool.name)
+                                                      ? "text-[#2F6868]"
+                                                      : "text-transparent",
+                                                  )}
+                                                />
+                                                {_.startCase(tool.name)}
                                               </div>
-                                            )}
-                                          </button>
+                                              {tool.description && (
+                                                <div className="line-clamp-2 pl-6 text-xs text-gray-500">
+                                                  {tool.description}
+                                                </div>
+                                              )}
+                                            </button>
+                                          </div>
+                                          {selectedAddSub[index] === tool.name && (
+                                            <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                              <div className="flex items-center justify-center gap-3">
+                                                <div className="text-xs font-medium text-gray-500 uppercase">
+                                                  Interrupt
+                                                </div>
+                                                <Button
+                                                  size="sm"
+                                                  variant={getInterruptConfig(tool.name) === true ? "secondary" : "outline"}
+                                                  className="h-8 w-16 justify-center text-xs"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const allConfig = toolsForm?.getValues("interruptConfig") || {};
+                                                    toolsForm?.setValue("interruptConfig", {
+                                                      ...allConfig,
+                                                      [tool.name]: true,
+                                                    }, { shouldDirty: true });
+                                                  }}
+                                                >
+                                                  true
+                                                </Button>
+                                                <Button
+                                                  size="sm"
+                                                  variant={getInterruptConfig(tool.name) === false ? "secondary" : "outline"}
+                                                  className="h-8 w-16 justify-center text-xs"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const allConfig = toolsForm?.getValues("interruptConfig") || {};
+                                                    toolsForm?.setValue("interruptConfig", {
+                                                      ...allConfig,
+                                                      [tool.name]: false,
+                                                    }, { shouldDirty: true });
+                                                  }}
+                                                >
+                                                  false
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       ));
                                     })()}
@@ -584,84 +571,8 @@ export function AgentHierarchyNav({
                                       </div>
                                     )}
                                   </div>
-                                  {selectedAddSub[index] && (
-                                    <div className="w-1/3 border-l border-gray-200 p-2">
-                                      <div className="flex flex-col gap-1">
-                                        <div className="text-xs font-medium text-gray-500 uppercase">
-                                          Interrupts
-                                        </div>
-                                        <div className="flex flex-wrap gap-1">
-                                          {INTERRUPT_OPTIONS.map((opt) => {
-                                            const current = getInterruptConfig(
-                                              selectedAddSub[index] as string,
-                                            );
-                                            const active = !!(
-                                              (opt.value === "accept" &&
-                                                current?.allow_accept) ||
-                                              (opt.value === "respond" &&
-                                                current?.allow_respond) ||
-                                              (opt.value === "edit" &&
-                                                current?.allow_edit)
-                                            );
-                                            return (
-                                              <Button
-                                                key={`int-sub-${index}-${selectedAddSub[index]}-${opt.value}`}
-                                                size="sm"
-                                                variant={
-                                                  active
-                                                    ? "secondary"
-                                                    : "outline"
-                                                }
-                                                className="h-8 w-28 justify-center text-xs"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  const toolName =
-                                                    selectedAddSub[
-                                                      index
-                                                    ] as string;
-                                                  handleAddTool(toolName);
-                                                  const cfg =
-                                                    getInterruptConfig(
-                                                      toolName,
-                                                    ) || {
-                                                      allow_ignore: false,
-                                                      allow_accept: false,
-                                                      allow_respond: false,
-                                                      allow_edit: false,
-                                                    };
-                                                  const next: HumanInterruptConfig =
-                                                    {
-                                                      ...cfg,
-                                                      allow_accept:
-                                                        opt.value === "accept"
-                                                          ? !cfg.allow_accept
-                                                          : cfg.allow_accept,
-                                                      allow_respond:
-                                                        opt.value === "respond"
-                                                          ? !cfg.allow_respond
-                                                          : cfg.allow_respond,
-                                                      allow_edit:
-                                                        opt.value === "edit"
-                                                          ? !cfg.allow_edit
-                                                          : cfg.allow_edit,
-                                                    };
-                                                  setInterruptConfig(
-                                                    toolName,
-                                                    next,
-                                                  );
-                                                }}
-                                              >
-                                                {opt.label}
-                                              </Button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  )}
                                 </div>
                               </div>
-                            </div>
                           )}
                         </div>
                       </div>
