@@ -7,10 +7,11 @@ import { MessageSquare } from "lucide-react";
 import { useAuthContext } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Agent } from "@/types/agent";
-import type { Thread } from "@langchain/langgraph-sdk";
+import type { Thread, Message } from "@langchain/langgraph-sdk";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
+import { extractStringFromMessageContent, truncateText } from "../utils";
 
 type Props = {
   agent: Agent | null;
@@ -72,12 +73,36 @@ function useThreads(args: {
       return response.map((t) => {
         // If a specific agent is selected, use it for title/desc
         if (agent?.assistant_id) {
+          // Try to derive a snippet from the last message in the thread
+          let snippet = "";
+          try {
+            if (
+              t.values &&
+              typeof t.values === "object" &&
+              "messages" in t.values
+            ) {
+              const messages = (t.values as { messages?: unknown[] }).messages;
+              if (Array.isArray(messages) && messages.length > 0) {
+                const last = messages[messages.length - 1] as Message;
+                snippet = truncateText(
+                  extractStringFromMessageContent(last),
+                  80,
+                );
+              }
+            }
+          } catch (err) {
+            console.warn(
+              `Failed to get last message for thread ${t.thread_id}:`,
+              err,
+            );
+          }
+
           return {
             id: t.thread_id,
             updatedAt: new Date(t.updated_at || t.created_at),
             status: t.status,
             title: defaultTitle,
-            description: defaultDesc,
+            description: snippet || defaultDesc,
             assistantId: agent.assistant_id,
           };
         }
@@ -91,12 +116,34 @@ function useThreads(args: {
           ? agentsByAssistantId.get(assistantId)
           : undefined;
 
+        // Try to derive a snippet from the last message in the thread
+        let snippet = "";
+        try {
+          if (
+            t.values &&
+            typeof t.values === "object" &&
+            "messages" in t.values
+          ) {
+            const messages = (t.values as { messages?: unknown[] }).messages;
+            if (Array.isArray(messages) && messages.length > 0) {
+              const last = messages[messages.length - 1] as Message;
+              snippet = truncateText(extractStringFromMessageContent(last), 80);
+            }
+          }
+        } catch (err) {
+          console.warn(
+            `Failed to get last message for thread ${t.thread_id}:`,
+            err,
+          );
+        }
+
         return {
           id: t.thread_id,
           updatedAt: new Date(t.updated_at || t.created_at),
           status: t.status,
           title: matched?.name || defaultTitle,
           description:
+            snippet ||
             (matched?.metadata?.description as string | undefined) ||
             defaultDesc,
           assistantId,
