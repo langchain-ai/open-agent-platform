@@ -2600,7 +2600,7 @@ __metadata:
     react-dom: ^19.0.0
     react-hook-form: ^7.62.0
     react-markdown: ^10.1.0
-    react-resizable-panels: ^3.0.2
+    react-resizable-panels: ^3.0.6
     react-syntax-highlighter: ^15.6.1
     rehype-katex: ^7.0.1
     rehype-raw: 7.0.0
@@ -2608,6 +2608,7 @@ __metadata:
     remark-math: ^6.0.0
     sonner: ^2.0.3
     supabase: ">=1.8.1"
+    swr: ^2.3.6
     tailwind-merge: ^3.0.2
     tailwindcss: ^4.0.13
     tailwindcss-animate: ^1.0.7
@@ -7769,7 +7770,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dequal@npm:^2.0.0":
+"dequal@npm:^2.0.0, dequal@npm:^2.0.3":
   version: 2.0.3
   resolution: "dequal@npm:2.0.3"
   checksum: 8679b850e1a3d0ebbc46ee780d5df7b478c23f335887464023a631d1b9af051ad4a6595a44220f9ff8ff95a8ddccf019b5ad778a976fd7bbf77383d36f412f90
@@ -15034,7 +15035,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-resizable-panels@npm:^3.0.2":
+"react-resizable-panels@npm:^3.0.2, react-resizable-panels@npm:^3.0.6":
   version: 3.0.6
   resolution: "react-resizable-panels@npm:3.0.6"
   peerDependencies:
@@ -16674,6 +16675,18 @@ __metadata:
   version: 1.0.0
   resolution: "supports-preserve-symlinks-flag@npm:1.0.0"
   checksum: 53b1e247e68e05db7b3808b99b892bd36fb096e6fba213a06da7fab22045e97597db425c724f2bbd6c99a3c295e1e73f3e4de78592289f38431049e1277ca0ae
+  languageName: node
+  linkType: hard
+
+"swr@npm:^2.3.6":
+  version: 2.3.6
+  resolution: "swr@npm:2.3.6"
+  dependencies:
+    dequal: ^2.0.3
+    use-sync-external-store: ^1.4.0
+  peerDependencies:
+    react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: c7cc7dfb73d2437a16951b7217f7a1e1b103cc19c85456a1da2cd07cefcb300fbd5a9a2df5abbbb608c92af8f77777c0c93e9c80e907f145cacf0bd8176360cb
   languageName: node
   linkType: hard
 

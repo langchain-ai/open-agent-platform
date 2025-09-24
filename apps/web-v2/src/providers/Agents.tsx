@@ -9,11 +9,12 @@ import React, {
   useRef,
 } from "react";
 import { getDeployments } from "@/lib/environment/deployments";
-import { Agent, AgentConfigType } from "@/types/agent";
+import { Agent } from "@/types/agent";
 import { Deployment } from "@/types/deployment";
 import {
   groupAgentsByGraphs,
   isSystemCreatedDefaultAssistant,
+  detectSupportedConfigs,
 } from "@/lib/agent-utils";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
@@ -93,11 +94,7 @@ async function getAgents(
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
-            supportedConfigs: [
-              "tools",
-              "deep_agent",
-              "triggers",
-            ] as AgentConfigType[],
+            supportedConfigs: detectSupportedConfigs(assistant),
           }));
         })
         .flat();
@@ -117,7 +114,7 @@ type AgentsContextType = {
    * Refreshes the agents list by fetching the latest agents from the API,
    * and updating the state.
    */
-  refreshAgents: () => Promise<void>;
+  refreshAgents: () => Promise<Agent[]>;
   /**
    * Whether the agents list is currently loading.
    */
@@ -155,19 +152,24 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       .finally(() => setLoading(false));
   }, [session?.accessToken]);
 
-  async function refreshAgents() {
+  async function refreshAgents(): Promise<Agent[]> {
     if (!session?.accessToken) {
       toast.error("No access token found", {
         richColors: true,
       });
-      return;
+      return [];
     }
     try {
       setRefreshAgentsLoading(true);
       const newAgents = await getAgents(deployments, session.accessToken);
-      setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
+      const updatedAgentsList = newAgents.filter(
+        (a) => !isSystemCreatedDefaultAssistant(a),
+      );
+      setAgents(updatedAgentsList);
+      return updatedAgentsList;
     } catch (e) {
       console.error("Failed to refresh agents", e);
+      return [];
     } finally {
       setRefreshAgentsLoading(false);
     }

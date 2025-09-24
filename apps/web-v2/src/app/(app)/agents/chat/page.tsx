@@ -5,7 +5,6 @@ import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { cn } from "@/lib/utils";
 import { Maximize2, Minimize2, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -25,6 +24,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 function ThreadHistoryHalf(): React.ReactNode {
   const [agentId, setAgentId] = useQueryState("agentId");
@@ -57,130 +61,138 @@ function ThreadHistoryHalf(): React.ReactNode {
 
   const isFullChat = fullChat === "1";
   return (
-    <div className="flex h-full w-full">
-      <div
-        className={cn(
-          "overflow-hidden border-gray-200 transition-all duration-300 ease-in-out",
-          isFullChat ? "w-0 border-r-0" : "w-1/2 border-r",
-        )}
-        aria-hidden={isFullChat}
-      >
-        <div className="border-b p-4">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-semibold">All Conversations</h2>
-            <div className="flex items-center gap-2">
-              {/* Agent selector */}
-              <Select
-                value={
-                  agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
-                }
-                onValueChange={async (v) => {
-                  if (v === "all") {
-                    await setAgentId(null);
-                    await setDeploymentId(null);
-                    return;
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="chat"
+    >
+      {!isFullChat && (
+        <>
+          <ResizablePanel
+            id="thread-history"
+            order={1}
+          >
+            <div className="flex flex-col gap-3 p-4">
+              <h2 className="text-base font-semibold whitespace-nowrap">
+                All Conversations
+              </h2>
+              <div className="flex w-full gap-2">
+                {/* Agent selector */}
+                <Select
+                  value={
+                    agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
                   }
-                  const [aid, did] = v.split(":");
-                  await setAgentId(aid || null);
-                  await setDeploymentId(did || null);
-                }}
-              >
-                <SelectTrigger className="h-8 w-[240px]">
-                  <SelectValue placeholder="All agents" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All agents</SelectItem>
-                  <SelectSeparator />
-                  {agents.map((a) => (
-                    <SelectItem
-                      key={`${a.assistant_id}:${a.deploymentId}`}
-                      value={`${a.assistant_id}:${a.deploymentId}`}
-                    >
-                      {a.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  onValueChange={async (v) => {
+                    if (v === "all") {
+                      await setAgentId(null);
+                      await setDeploymentId(null);
+                      return;
+                    }
+                    const [aid, did] = v.split(":");
+                    await setAgentId(aid || null);
+                    await setDeploymentId(did || null);
+                  }}
+                >
+                  <SelectTrigger className="h-8 flex-1">
+                    <SelectValue placeholder="All agents" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All agents</SelectItem>
+                    <SelectSeparator />
+                    {agents.map((a) => (
+                      <SelectItem
+                        key={`${a.assistant_id}:${a.deploymentId}`}
+                        value={`${a.assistant_id}:${a.deploymentId}`}
+                      >
+                        {a.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {/* Status filter */}
-              <Select
-                value={(statusFilter as string) || "all"}
-                onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
-              >
-                <SelectTrigger className="h-8 w-[220px]">
-                  <SelectValue placeholder="Filter status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectSeparator />
-                  <SelectGroup>
-                    <SelectLabel>Active</SelectLabel>
-                    <SelectItem value="idle">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-green-500" />
-                        Idle
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="busy">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-yellow-400" />
-                        Busy
-                      </span>
-                    </SelectItem>
-                  </SelectGroup>
-                  <SelectSeparator />
-                  <SelectGroup>
-                    <SelectLabel>Attention</SelectLabel>
-                    <SelectItem value="interrupted">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-red-500" />
-                        Interrupted
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="error">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="inline-block size-2 rounded-full bg-red-600" />
-                        Error
-                      </span>
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                {/* Status filter */}
+                <Select
+                  value={(statusFilter as string) || "all"}
+                  onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
+                >
+                  <SelectTrigger className="h-8 flex-1">
+                    <SelectValue placeholder="Filter status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Active</SelectLabel>
+                      <SelectItem value="idle">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-block size-2 rounded-full bg-green-500" />
+                          Idle
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="busy">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-block size-2 rounded-full bg-yellow-400" />
+                          Busy
+                        </span>
+                      </SelectItem>
+                    </SelectGroup>
+                    <SelectSeparator />
+                    <SelectGroup>
+                      <SelectLabel>Attention</SelectLabel>
+                      <SelectItem value="interrupted">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-block size-2 rounded-full bg-red-500" />
+                          Interrupted
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="error">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-block size-2 rounded-full bg-red-600" />
+                          Error
+                        </span>
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </div>
-        <ThreadHistoryAgentList
-          agent={selectedAgent}
-          deploymentId={deploymentId}
-          currentThreadId={currentThreadId}
-          showDraft={draft === "1"}
-          onThreadSelect={async (id, assistantId) => {
-            // In "All agents" view, ensure we set the agent so sending works
-            if (assistantId) {
-              await setAgentId(assistantId);
-            }
-            await setCurrentThreadId(id);
-            await setDraft(null);
-          }}
-          statusFilter={
-            ((statusFilter as string) || "all") as
-              | "all"
-              | "idle"
-              | "busy"
-              | "interrupted"
-              | "error"
-          }
-        />
-      </div>
-      <div
-        className={cn(
-          "transition-all duration-300 ease-in-out",
-          isFullChat ? "w-full" : "w-1/2",
-        )}
+            <div className="overflow-hidden border-gray-200 transition-all duration-300 ease-in-out">
+              <ThreadHistoryAgentList
+                agent={selectedAgent}
+                deploymentId={deploymentId}
+                currentThreadId={currentThreadId}
+                showDraft={draft === "1"}
+                onThreadSelect={async (id, assistantId) => {
+                  // In "All agents" view, ensure we set the agent so sending works
+                  if (assistantId) {
+                    await setAgentId(assistantId);
+                  }
+                  await setCurrentThreadId(id);
+                  await setDraft(null);
+                }}
+                statusFilter={
+                  ((statusFilter as string) || "all") as
+                    | "all"
+                    | "idle"
+                    | "busy"
+                    | "interrupted"
+                    | "error"
+                }
+              />
+            </div>
+          </ResizablePanel>
+          <ResizableHandle />
+        </>
+      )}
+      <ResizablePanel
+        id="chat"
+        className="relative"
+        order={2}
       >
-        <RightPaneChat />
-      </div>
-    </div>
+        <div className="absolute inset-0">
+          <RightPaneChat />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
 
@@ -236,7 +248,7 @@ function RightPaneChat(): React.ReactNode {
             {selectedAgent?.name || "Agent"}
           </h2>
           {typeof selectedAgent?.metadata?.description === "string" && (
-            <p className="text-muted-foreground truncate text-xs">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               {selectedAgent.metadata.description as string}
             </p>
           )}

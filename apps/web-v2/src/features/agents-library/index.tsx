@@ -34,6 +34,17 @@ export default function AgentsLibrary(): React.ReactNode {
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
 
+  const agentIdsWithTriggers = useMemo(() => {
+    if (!registrations) return new Set<string>();
+    const agentIds = new Set<string>();
+    registrations.forEach((registration) => {
+      registration.linked_agent_ids.forEach((agentId) => {
+        agentIds.add(agentId);
+      });
+    });
+    return agentIds;
+  }, [registrations]);
+
   useEffect(() => {
     if (showTriggersTab === false || showTriggersTab === undefined) {
       setTriggersLoading(false);
@@ -108,7 +119,7 @@ export default function AgentsLibrary(): React.ReactNode {
             value="agents"
             className="mt-6"
           >
-            <AgentsInterface />
+            <AgentsInterface agentIdsWithTriggers={agentIdsWithTriggers} />
           </TabsContent>
           <TabsContent
             value="triggers"
