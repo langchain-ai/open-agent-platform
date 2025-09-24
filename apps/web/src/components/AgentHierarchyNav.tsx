@@ -83,19 +83,34 @@ export function AgentHierarchyNav({
   const [showAllSub, setShowAllSub] = React.useState<Record<number, boolean>>(
     {},
   );
-  const [selectedAddMain, setSelectedAddMain] = React.useState<string | null>(
-    null,
+  // Allow multiple interrupt panels to be opened at once
+  const [openInterruptMain, setOpenInterruptMain] = React.useState<Set<string>>(
+    new Set(),
   );
-  const [selectedAddSub, setSelectedAddSub] = React.useState<
-    Record<number, string | null>
+  const [openInterruptSub, setOpenInterruptSub] = React.useState<
+    Record<number, Set<string>>
   >({});
 
   const handleAddTool = (toolName: string) => {
     if (!toolsForm) return;
     const current = toolsForm.getValues("tools") || [];
     if (!current.includes(toolName)) {
+      // Add tool and auto-open its interrupt panel
       toolsForm.setValue("tools", [...current, toolName], {
         shouldDirty: true,
+      });
+      setOpenInterruptMain((prev) => new Set(prev).add(toolName));
+    } else {
+      // Clicking again unselects
+      toolsForm.setValue(
+        "tools",
+        current.filter((t) => t !== toolName),
+        { shouldDirty: true },
+      );
+      setOpenInterruptMain((prev) => {
+        const next = new Set(prev);
+        next.delete(toolName);
+        return next;
       });
     }
   };
@@ -108,6 +123,11 @@ export function AgentHierarchyNav({
       current.filter((t) => t !== toolName),
       { shouldDirty: true },
     );
+    setOpenInterruptMain((prev) => {
+      const next = new Set(prev);
+      next.delete(toolName);
+      return next;
+    });
   };
 
   const getInterruptConfig = (
@@ -172,7 +192,13 @@ export function AgentHierarchyNav({
                         isMainSelected ? "pr-1" : "",
                       )}
                     >
-                      {t}
+                      <span className="truncate">{t}</span>
+                      {getInterruptConfig(t) === true && (
+                        <span
+                          title="Interrupts enabled"
+                          className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
+                        />
+                      )}
                       {isMainSelected && (
                         <button
                           onClick={(e) => {
@@ -241,12 +267,25 @@ export function AgentHierarchyNav({
                                 className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  const isAlreadySelected = (
+                                    selected || []
+                                  ).includes(tool.name);
+                                  // Use handleAddTool which adds/removes and manages open set
                                   handleAddTool(tool.name);
-                                  setSelectedAddMain(
-                                    selectedAddMain === tool.name
-                                      ? null
-                                      : tool.name,
-                                  );
+                                  // Ensure correct open state after selection intent
+                                  if (!isAlreadySelected) {
+                                    // We just selected; make sure it's open
+                                    setOpenInterruptMain((prev) =>
+                                      new Set(prev).add(tool.name),
+                                    );
+                                  } else {
+                                    // We just deselected; ensure it is closed
+                                    setOpenInterruptMain((prev) => {
+                                      const next = new Set(prev);
+                                      next.delete(tool.name);
+                                      return next;
+                                    });
+                                  }
                                 }}
                               >
                                 <div className="flex items-center gap-2 font-medium">
@@ -258,7 +297,17 @@ export function AgentHierarchyNav({
                                         : "text-transparent",
                                     )}
                                   />
-                                  {_.startCase(tool.name)}
+                                  <span className="truncate">
+                                    {_.startCase(tool.name)}
+                                  </span>
+                                  {getInterruptConfig(tool.name) === true && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="ml-1 h-4 px-1 text-[10px]"
+                                    >
+                                      interrupt
+                                    </Badge>
+                                  )}
                                 </div>
                                 {tool.description && (
                                   <div className="line-clamp-2 pl-6 text-xs text-gray-500">
@@ -266,8 +315,32 @@ export function AgentHierarchyNav({
                                   </div>
                                 )}
                               </button>
+                              <button
+                                type="button"
+                                className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                                title="Expand/collapse interrupt"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenInterruptMain((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(tool.name))
+                                      next.delete(tool.name);
+                                    else next.add(tool.name);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <ChevronDown
+                                  className={cn(
+                                    "h-4 w-4 transition-transform",
+                                    openInterruptMain.has(tool.name)
+                                      ? "rotate-180"
+                                      : "",
+                                  )}
+                                />
+                              </button>
                             </div>
-                            {selectedAddMain === tool.name && (
+                            {openInterruptMain.has(tool.name) && (
                               <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
                                 <div className="flex items-center justify-center gap-3">
                                   <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
@@ -279,8 +352,11 @@ export function AgentHierarchyNav({
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <p className="text-xs">
-                                            Pause execution and ask for user
-                                            approval before calling this tool
+                                            Enabling interrupts will pause the
+                                            agent before this tool's action is
+                                            executed, allowing you to approve,
+                                            reject, edit, or send feedback on
+                                            the proposed action.
                                           </p>
                                         </TooltipContent>
                                       </Tooltip>
@@ -308,7 +384,7 @@ export function AgentHierarchyNav({
                                         },
                                         { shouldDirty: true },
                                       );
-                                      setSelectedAddMain(null); // Close dropdown
+                                      // keep panel open for multi-edit
                                     }}
                                   >
                                     true
@@ -335,7 +411,7 @@ export function AgentHierarchyNav({
                                         },
                                         { shouldDirty: true },
                                       );
-                                      setSelectedAddMain(null); // Close dropdown
+                                      // keep panel open for multi-edit
                                     }}
                                   >
                                     false
@@ -468,7 +544,13 @@ export function AgentHierarchyNav({
                                   isSelected ? "pr-1" : "",
                                 )}
                               >
-                                {t}
+                                <span className="truncate">{t}</span>
+                                {getInterruptConfig(t) === true && (
+                                  <span
+                                    title="Interrupts enabled"
+                                    className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
+                                  />
+                                )}
                                 {isSelected && (
                                   <button
                                     onClick={(e) => {
@@ -535,15 +617,49 @@ export function AgentHierarchyNav({
                                             className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              handleAddTool(tool.name);
-                                              setSelectedAddSub((m) => ({
-                                                ...m,
-                                                [index]:
-                                                  selectedAddSub[index] ===
-                                                  tool.name
-                                                    ? null
-                                                    : tool.name,
-                                              }));
+                                              if (!toolsForm) return;
+                                              const current =
+                                                toolsForm.getValues("tools") ||
+                                                [];
+                                              const isAlreadySelected =
+                                                current.includes(tool.name);
+                                              if (!isAlreadySelected) {
+                                                // Select and open
+                                                toolsForm.setValue(
+                                                  "tools",
+                                                  [...current, tool.name],
+                                                  {
+                                                    shouldDirty: true,
+                                                  },
+                                                );
+                                                setOpenInterruptSub((prev) => {
+                                                  const next = { ...prev };
+                                                  const set = new Set(
+                                                    next[index] || [],
+                                                  );
+                                                  set.add(tool.name);
+                                                  next[index] = set;
+                                                  return next;
+                                                });
+                                              } else {
+                                                // Deselect and close
+                                                toolsForm.setValue(
+                                                  "tools",
+                                                  current.filter(
+                                                    (t) => t !== tool.name,
+                                                  ),
+                                                  { shouldDirty: true },
+                                                );
+                                                setOpenInterruptSub((prev) => {
+                                                  const next = { ...prev };
+                                                  const set = new Set(
+                                                    next[index] || [],
+                                                  );
+                                                  set.delete(tool.name);
+                                                  next[index] = set;
+                                                  return next;
+                                                });
+                                              }
                                             }}
                                           >
                                             <div className="flex items-center gap-2 font-medium">
@@ -555,7 +671,18 @@ export function AgentHierarchyNav({
                                                     : "text-transparent",
                                                 )}
                                               />
-                                              {_.startCase(tool.name)}
+                                              <span className="truncate">
+                                                {_.startCase(tool.name)}
+                                              </span>
+                                              {getInterruptConfig(tool.name) ===
+                                                true && (
+                                                <Badge
+                                                  variant="secondary"
+                                                  className="ml-1 h-4 px-1 text-[10px]"
+                                                >
+                                                  interrupt
+                                                </Badge>
+                                              )}
                                             </div>
                                             {tool.description && (
                                               <div className="line-clamp-2 pl-6 text-xs text-gray-500">
@@ -563,9 +690,40 @@ export function AgentHierarchyNav({
                                               </div>
                                             )}
                                           </button>
+                                          <button
+                                            type="button"
+                                            className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                                            title="Expand/collapse interrupt"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenInterruptSub((prev) => {
+                                                const next = { ...prev };
+                                                const set = new Set(
+                                                  next[index] || [],
+                                                );
+                                                if (set.has(tool.name))
+                                                  set.delete(tool.name);
+                                                else set.add(tool.name);
+                                                next[index] = set;
+                                                return next;
+                                              });
+                                            }}
+                                          >
+                                            <ChevronDown
+                                              className={cn(
+                                                "h-4 w-4 transition-transform",
+                                                openInterruptSub[index]?.has(
+                                                  tool.name,
+                                                )
+                                                  ? "rotate-180"
+                                                  : "",
+                                              )}
+                                            />
+                                          </button>
                                         </div>
-                                        {selectedAddSub[index] ===
-                                          tool.name && (
+                                        {openInterruptSub[index]?.has(
+                                          tool.name,
+                                        ) && (
                                           <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
                                             <div className="flex items-center justify-center gap-3">
                                               <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
@@ -577,9 +735,13 @@ export function AgentHierarchyNav({
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                       <p className="text-xs">
-                                                        Pause execution and ask
-                                                        for user approval before
-                                                        calling this tool
+                                                        Enabling interrupts will
+                                                        pause the agent before
+                                                        this tool's action is
+                                                        executed, allowing you
+                                                        to approve, reject,
+                                                        edit, or send feedback
+                                                        on the proposed action.
                                                       </p>
                                                     </TooltipContent>
                                                   </Tooltip>
@@ -609,10 +771,7 @@ export function AgentHierarchyNav({
                                                     },
                                                     { shouldDirty: true },
                                                   );
-                                                  setSelectedAddSub((m) => ({
-                                                    ...m,
-                                                    [index]: null,
-                                                  })); // Close dropdown
+                                                  // keep panel open for multi-edit
                                                 }}
                                               >
                                                 true
@@ -641,10 +800,7 @@ export function AgentHierarchyNav({
                                                     },
                                                     { shouldDirty: true },
                                                   );
-                                                  setSelectedAddSub((m) => ({
-                                                    ...m,
-                                                    [index]: null,
-                                                  })); // Close dropdown
+                                                  // keep panel open for multi-edit
                                                 }}
                                               >
                                                 false
