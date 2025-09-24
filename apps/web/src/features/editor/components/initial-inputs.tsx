@@ -185,7 +185,7 @@ function ClarifyingQuestions({
 const ASSISTANT_ID = "agent_generator";
 
 interface InitialInputsProps {
-  onAgentCreated?: (agentId: string, deploymentId: string) => Promise<void>;
+  onAgentCreated: (agentId: string, deploymentId: string) => Promise<void>;
 }
 
 export function InitialInputs({
@@ -247,9 +247,7 @@ export function InitialInputs({
       await refreshAgents();
 
       // Call the parent callback to handle navigation
-      if (onAgentCreated) {
-        await onAgentCreated(newAgent.assistant_id, deploymentId);
-      }
+      await onAgentCreated(newAgent.assistant_id, deploymentId);
 
       resetState();
     },
@@ -371,7 +369,7 @@ export function InitialInputs({
 
             await refreshAgents();
 
-            if (newAgentId && onAgentCreated) {
+            if (newAgentId) {
               const deployments = getDeployments();
               const deploymentId = deployments[0]?.id || "";
               await onAgentCreated(newAgentId, deploymentId);

@@ -34,9 +34,10 @@ export function EditorPageContent(): React.ReactNode {
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
 
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
+  const [newAgent, setNewAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
@@ -66,6 +67,15 @@ export function EditorPageContent(): React.ReactNode {
       if (!registrations || !triggers) return undefined;
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
+
+  // Auto-select first agent if none selected and we have agents
+  useEffect(() => {
+    if (!agentId && !newAgent && agents.length > 0) {
+      const firstAgent = agents[0];
+      setAgentId(firstAgent.assistant_id);
+      setDeploymentId(firstAgent.deploymentId);
+    }
+  }, [agentId, newAgent, agents, setAgentId, setDeploymentId]);
 
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
@@ -261,13 +271,31 @@ export function EditorPageContent(): React.ReactNode {
     setChatVersion((v) => v + 1);
   };
 
+  const handleAgentCreated = async (
+    createdAgentId: string,
+    createdDeploymentId: string,
+  ) => {
+    // Set the new agent as selected
+    await setAgentId(createdAgentId);
+    await setDeploymentId(createdDeploymentId);
+    // Clear the "new" flag to show the editor
+    await setNewAgent(null);
+    // Reset chat and trigger refresh
+    await setThreadId(null);
+    setChatVersion((v) => v + 1);
+  };
+
   if (!session) {
     return <div>Loading...</div>;
   }
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
-    return <InitialInputs />;
+  // Show new agent creation form if new=true parameter is present
+  if (newAgent === "true") {
+    return <InitialInputs onAgentCreated={handleAgentCreated} />;
+  }
+
+  if (!agentId) {
+    return <div>Loading...</div>;
   }
 
   return (
