@@ -160,31 +160,6 @@ export function EditorPageContent(): React.ReactNode {
     return <InitialInputs />;
   }
 
-  // Show loading or empty state if no agents exist yet
-  if (agents.length === 0) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">No agents found</p>
-          <button
-            onClick={() => window.location.href = "/editor?new=true"}
-            className="bg-[#2F6868] hover:bg-[#2F6868]/90 text-white px-4 py-2 rounded"
-          >
-            Create Your First Agent
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading state while agents are loading
-  if (!agentId && agents.length > 0) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div>Loading editor...</div>
-      </div>
-    );
-  }
 
   const handleAgentChange = async (value: string) => {
     const [selectedAgentId, selectedDeploymentId] = value.split(":");
