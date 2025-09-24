@@ -308,6 +308,7 @@ export function AgentHierarchyNav({
                                         },
                                         { shouldDirty: true },
                                       );
+                                      setSelectedAddMain(null); // Close dropdown
                                     }}
                                   >
                                     true
@@ -334,6 +335,7 @@ export function AgentHierarchyNav({
                                         },
                                         { shouldDirty: true },
                                       );
+                                      setSelectedAddMain(null); // Close dropdown
                                     }}
                                   >
                                     false
@@ -607,6 +609,10 @@ export function AgentHierarchyNav({
                                                     },
                                                     { shouldDirty: true },
                                                   );
+                                                  setSelectedAddSub((m) => ({
+                                                    ...m,
+                                                    [index]: null,
+                                                  })); // Close dropdown
                                                 }}
                                               >
                                                 true
@@ -635,6 +641,10 @@ export function AgentHierarchyNav({
                                                     },
                                                     { shouldDirty: true },
                                                   );
+                                                  setSelectedAddSub((m) => ({
+                                                    ...m,
+                                                    [index]: null,
+                                                  })); // Close dropdown
                                                 }}
                                               >
                                                 false
