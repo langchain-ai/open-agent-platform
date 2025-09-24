@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
-import { getOptimizerClient } from "@/lib/client";
+import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
 import { useMCPContext } from "@/providers/MCP";
@@ -207,10 +207,14 @@ export function InitialInputs({
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
+  const deployments = getDeployments();
+  const deploymentId =
+    deployments.find((d) => d.isDefault)?.id || deployments[0]?.id;
+
   const client = useMemo(() => {
-    if (!session?.accessToken) return null;
-    return getOptimizerClient(session.accessToken);
-  }, [session]);
+    if (!session?.accessToken || !deploymentId) return null;
+    return createClient(deploymentId, session.accessToken);
+  }, [session, deploymentId]);
 
   const stream = useStream({
     client: client ?? undefined,
@@ -241,10 +245,6 @@ export function InitialInputs({
 
       setCreatingAgent(true);
       await refreshAgents();
-
-      // Get deployment from the agent data or use default
-      const deployments = getDeployments();
-      const deploymentId = deployments[0]?.id || "";
 
       // Call the parent callback to handle navigation
       if (onAgentCreated) {

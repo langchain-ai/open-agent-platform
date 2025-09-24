@@ -12,51 +12,12 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { Agent } from "@/types/agent";
 import { Deployment } from "@/types/deployment";
 import {
-  groupAgentsByGraphs,
   isSystemCreatedDefaultAssistant,
   detectSupportedConfigs,
 } from "@/lib/agent-utils";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
-import { Assistant } from "@langchain/langgraph-sdk";
-import { getApiUrl } from "@/lib/api-url";
-
-async function getOrCreateDefaultAssistants(
-  deployment: Deployment,
-  accessToken?: string,
-): Promise<Assistant[]> {
-  const baseApiUrl = getApiUrl();
-
-  try {
-    const url = `${baseApiUrl}/langgraph/defaults?deploymentId=${deployment.id}`;
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-
-    if (accessToken) {
-      headers["Authorization"] = `Bearer ${accessToken}`;
-    }
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        `Failed to get default assistants: ${response.status} ${response.statusText} ${errorData.error || ""}`,
-      );
-    }
-
-    const defaultAssistants = await response.json();
-    return defaultAssistants;
-  } catch (error) {
-    console.error("Error getting default assistants:", error);
-    throw error instanceof Error ? error : new Error(String(error));
-  }
-}
 
 async function getAgents(
   deployments: Deployment[],
@@ -66,38 +27,17 @@ async function getAgents(
     async (deployment) => {
       const client = createClient(deployment.id, accessToken);
 
-      const [defaultAssistants, allUserAssistants] = await Promise.all([
-        getOrCreateDefaultAssistants(deployment, accessToken),
-        client.assistants.search({
-          limit: 100,
-        }),
-      ]);
-      const assistantMap = new Map<string, Assistant>();
-
-      // Add default assistants to the map
-      defaultAssistants.forEach((assistant) => {
-        assistantMap.set(assistant.assistant_id, assistant);
+      const allUserAssistants = await client.assistants.search({
+        // Only search for a single graph for now
+        graphId: deployment.graphs[0].id,
+        limit: 100,
       });
 
-      // Add user assistants to the map, potentially overriding defaults
-      allUserAssistants.forEach((assistant) => {
-        assistantMap.set(assistant.assistant_id, assistant);
-      });
-
-      // Convert map values back to array
-      const allAssistants: Assistant[] = Array.from(assistantMap.values());
-
-      const assistantsGroupedByGraphs = groupAgentsByGraphs(allAssistants);
-
-      return assistantsGroupedByGraphs
-        .map((group) => {
-          return group.map((assistant) => ({
-            ...assistant,
-            deploymentId: deployment.id,
-            supportedConfigs: detectSupportedConfigs(assistant),
-          }));
-        })
-        .flat();
+      return allUserAssistants.map((a) => ({
+        ...a,
+        deploymentId: deployment.id,
+        supportedConfigs: detectSupportedConfigs(a),
+      }));
     },
   );
 
