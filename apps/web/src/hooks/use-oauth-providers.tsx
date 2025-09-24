@@ -53,7 +53,7 @@ export function useOAuthProviders() {
 
   // Create a mapping from provider ID to display name
   const getProviderDisplayName = (providerId: string): string => {
-    const provider = providers.find(p => p.provider_id === providerId);
+    const provider = providers.find((p) => p.provider_id === providerId);
     return provider?.name || providerId;
   };
 

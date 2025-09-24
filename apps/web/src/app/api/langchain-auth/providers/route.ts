@@ -21,15 +21,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await fetch("https://api.host.langchain.com/v2/auth/providers", {
-      headers: {
-        "x-api-key": process.env.LANGSMITH_API_KEY!,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://api.host.langchain.com/v2/auth/providers",
+      {
+        headers: {
+          "x-api-key": process.env.LANGSMITH_API_KEY!,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch providers: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch providers: ${response.status} ${response.statusText}`,
+      );
     }
 
     const providers = await response.json();

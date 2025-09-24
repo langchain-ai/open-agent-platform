@@ -26,7 +26,7 @@ export function AuthRequiredDialog(props: {
       open={props.open}
       onOpenChange={props.onOpenChange}
     >
-      <AlertDialogContent className="max-h-[85vh] max-w-2xl border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400 flex flex-col">
+      <AlertDialogContent className="flex max-h-[85vh] max-w-2xl flex-col border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400">
         <AlertDialogHeader className="flex-shrink-0">
           <AlertDialogTitle className="flex flex-row items-center">
             <Info className="mr-2 h-4 w-4" />

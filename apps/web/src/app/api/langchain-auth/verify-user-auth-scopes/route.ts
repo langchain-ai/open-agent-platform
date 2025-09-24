@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       scopes,
       userId: payload.sub,
     });
-    console.log("authRes", authRes);
 
     if (authRes.authUrl) {
       return NextResponse.json(
