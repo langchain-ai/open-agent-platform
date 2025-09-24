@@ -8,10 +8,11 @@ import {
   Copy,
   Eye,
   EyeOff,
-  Settings,
   Zap,
   Users,
   ArrowRight,
+  Wrench,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
@@ -496,12 +497,13 @@ export function AgentConfig({
               size="sm"
               onClick={() => setCurrentView("instructions")}
               className={cn(
-                "h-8",
+                "h-8 gap-1",
                 currentView === "instructions" &&
                   "bg-[#2F6868] hover:bg-[#2F6868]/90",
               )}
               title="Instructions guide the agent"
             >
+              <FileText className="h-3 w-3" />
               Instructions
             </Button>
           )}
@@ -516,7 +518,7 @@ export function AgentConfig({
               )}
               title="Tools are invoked during runs"
             >
-              <Settings className="h-3 w-3" />
+              <Wrench className="h-3 w-3" />
               Tools
             </Button>
           )}
