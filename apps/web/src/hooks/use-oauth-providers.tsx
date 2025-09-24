@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useAuthContext } from "@/providers/Auth";
 
 interface OAuthProvider {
@@ -14,7 +14,20 @@ interface OAuthProvider {
   updated_at: string;
 }
 
-export function useOAuthProviders() {
+interface OAuthProvidersContextType {
+  providers: OAuthProvider[];
+  loading: boolean;
+  error: string | null;
+  getProviderDisplayName: (providerId: string) => string;
+}
+
+const OAuthProvidersContext = createContext<OAuthProvidersContextType | undefined>(undefined);
+
+interface OAuthProvidersProviderProps {
+  children: ReactNode;
+}
+
+export function OAuthProvidersProvider({ children }: OAuthProvidersProviderProps) {
   const [providers, setProviders] = useState<OAuthProvider[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,10 +70,24 @@ export function useOAuthProviders() {
     return provider?.name || providerId;
   };
 
-  return {
+  const value: OAuthProvidersContextType = {
     providers,
     loading,
     error,
     getProviderDisplayName,
   };
+
+  return (
+    <OAuthProvidersContext.Provider value={value}>
+      {children}
+    </OAuthProvidersContext.Provider>
+  );
+}
+
+export function useOAuthProviders(): OAuthProvidersContextType {
+  const context = useContext(OAuthProvidersContext);
+  if (context === undefined) {
+    throw new Error('useOAuthProviders must be used within an OAuthProvidersProvider');
+  }
+  return context;
 }
