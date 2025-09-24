@@ -14,6 +14,7 @@ import { Deployment } from "@/types/deployment";
 import {
   groupAgentsByGraphs,
   isSystemCreatedDefaultAssistant,
+  detectSupportedConfigs,
 } from "@/lib/agent-utils";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
@@ -93,11 +94,7 @@ async function getAgents(
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
-            supportedConfigs: [
-              "tools",
-              "deep_agent",
-              "triggers",
-            ] as AgentConfigType[],
+            supportedConfigs: detectSupportedConfigs(assistant),
           }));
         })
         .flat();

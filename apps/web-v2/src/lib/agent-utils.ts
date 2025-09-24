@@ -1,4 +1,4 @@
-import { Agent } from "@/types/agent";
+import { Agent, AgentConfigType } from "@/types/agent";
 import { getDeployments } from "./environment/deployments";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { Deployment } from "@/types/deployment";
@@ -126,4 +126,33 @@ export function isDefaultGraph(
   graphId: string,
 ): boolean {
   return deployment.graphs.find((g) => g.isDefault)?.id === graphId;
+}
+
+/**
+ * Analyzes an agent's configuration to determine what features it actually supports.
+ * @param agent The agent to analyze
+ * @returns Array of supported configuration types
+ */
+export function detectSupportedConfigs(agent: Agent | Assistant): AgentConfigType[] {
+  const supportedConfigs: AgentConfigType[] = [];
+  const configurable = agent.config?.configurable;
+
+  if (!configurable) {
+    return supportedConfigs;
+  }
+
+  // Check for tools configuration
+  if (configurable.tools && Array.isArray(configurable.tools.tools) && configurable.tools.tools.length > 0) {
+    supportedConfigs.push("tools");
+  }
+
+  // Check for sub-agents configuration
+  if (configurable.subagents && Array.isArray(configurable.subagents) && configurable.subagents.length > 0) {
+    supportedConfigs.push("subagents");
+  }
+
+  // Note: Triggers would need to be checked via external API call
+  // This would need to be added separately where we have access to trigger data
+
+  return supportedConfigs;
 }

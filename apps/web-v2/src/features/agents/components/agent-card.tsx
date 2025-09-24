@@ -62,40 +62,28 @@ import React from "react";
 function SupportedConfigBadge({
   type,
 }: {
-  type: "rag" | "tools" | "supervisor" | "deep_agent" | "triggers";
+  type: "tools" | "triggers" | "subagents";
 }) {
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger>
-          {type === "rag" && (
-            <Badge variant="brand">
-              <Brain />
-              RAG
-            </Badge>
-          )}
           {type === "tools" && (
-            <Badge variant="info">
-              <Wrench />
-              MCP Tools
-            </Badge>
-          )}
-          {type === "supervisor" && (
-            <Badge variant="brand">
-              <User />
-              Supervisor
-            </Badge>
-          )}
-          {type === "deep_agent" && (
             <Badge variant="secondary">
-              <BrainCircuit />
-              Deep Agent
+              <Wrench />
+              Tools
             </Badge>
           )}
           {type === "triggers" && (
             <Badge variant="secondary">
               <Webhook />
               Triggers
+            </Badge>
+          )}
+          {type === "subagents" && (
+            <Badge variant="brand">
+              <User />
+              Sub-agents
             </Badge>
           )}
         </TooltipTrigger>
