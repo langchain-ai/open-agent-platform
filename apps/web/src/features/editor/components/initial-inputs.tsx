@@ -204,7 +204,7 @@ export function InitialInputs({
   const [creatingAgent, setCreatingAgent] = useState(false);
 
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
-  const [enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
+  const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
   const client = useMemo(() => {

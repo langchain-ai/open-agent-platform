@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Client } from "@langchain/auth";
 import { decodeJWT } from "@/lib/jwt-utils";
 
 export async function GET(request: NextRequest) {
@@ -38,8 +37,6 @@ export async function GET(request: NextRequest) {
     }
 
     const providers = await response.json();
-    console.log("providers from API", providers);
-
     return NextResponse.json({ providers });
   } catch (error) {
     console.error("Error fetching OAuth providers", error);

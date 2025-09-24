@@ -8,8 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Copy, ExternalLink, Info } from "lucide-react";
-import { toast } from "sonner";
+import { ExternalLink, Info } from "lucide-react";
 import _ from "lodash";
 import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 

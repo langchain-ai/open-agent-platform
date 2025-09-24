@@ -30,7 +30,7 @@ export function useOAuthProviders() {
 
         const response = await fetch("/api/langchain-auth/providers", {
           headers: {
-            "x-access-token": session.accessToken,
+            "x-access-token": session.accessToken!,
           },
         });
 
