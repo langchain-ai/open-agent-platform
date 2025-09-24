@@ -177,7 +177,7 @@ export function AgentCard({
   return (
     <Card
       key={agent.assistant_id}
-      className="overflow-hidden min-w-80"
+      className="min-w-80 overflow-hidden"
     >
       <CardHeader className="space-y-2 pb-2">
         <div className="flex items-start justify-between">
