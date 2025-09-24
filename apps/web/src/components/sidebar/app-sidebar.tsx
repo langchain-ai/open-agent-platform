@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import {
-  Wrench,
-  Bot,
+  Settings,
+  Puzzle,
   MessageCircle,
-  Brain,
-  Inbox,
-  Webhook,
+  Plus,
+  Edit,
+  type LucideIcon,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
@@ -20,43 +20,49 @@ import {
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
 
-// This is sample data.
-const data = {
-  navMain: [
+interface NavigationItems {
+  mainNav: {
+    title: string;
+    url: string;
+    icon: LucideIcon;
+    isAgentCreator?: boolean;
+  }[];
+}
+
+const createNavigationItems = (): NavigationItems => ({
+  mainNav: [
     {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageCircle,
+      title: "New Agent",
+      url: "/editor?new=true",
+      icon: Plus,
+      isAgentCreator: true,
     },
     {
-      title: "Agents",
+      title: "Agent Library",
       url: "/agents",
-      icon: Bot,
+      icon: Puzzle,
     },
     {
-      title: "Tools",
-      url: "/tools",
-      icon: Wrench,
+      title: "Editor",
+      url: "/editor",
+      icon: Edit,
     },
     {
       title: "Inbox",
-      url: "/inbox",
-      icon: Inbox,
+      url: "/agents/chat",
+      icon: MessageCircle,
     },
     {
-      title: "Triggers",
-      url: "/triggers",
-      icon: Webhook,
-    },
-    {
-      title: "RAG",
-      url: "/rag",
-      icon: Brain,
+      title: "Settings",
+      url: "/settings",
+      icon: Settings,
     },
   ],
-};
+});
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const navItems = React.useMemo(() => createNavigationItems(), []);
+
   return (
     <Sidebar
       collapsible="icon"
@@ -64,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems.mainNav} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

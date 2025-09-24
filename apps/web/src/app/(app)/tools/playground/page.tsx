@@ -12,12 +12,13 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import React from "react";
+import { MCPProvider } from "@/providers/MCP";
 
 /**
- * The /tools page.
- * Contains the list of tools the user has access to.
+ * The /tools/playground page.
+ * Contains the tools playground interface.
  */
-export default function ToolsPage(): React.ReactNode {
+export default function ToolsPlaygroundPage(): React.ReactNode {
   return (
     <React.Suspense fallback={<div>Loading (layout)...</div>}>
       <Toaster />
@@ -37,7 +38,9 @@ export default function ToolsPage(): React.ReactNode {
           </Breadcrumb>
         </div>
       </header>
-      <ToolsPlaygroundInterface />
+      <MCPProvider>
+        <ToolsPlaygroundInterface />
+      </MCPProvider>
     </React.Suspense>
   );
 }

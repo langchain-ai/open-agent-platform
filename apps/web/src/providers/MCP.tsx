@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import useMCP from "../hooks/use-mcp";
+import useMCP from "@/hooks/use-mcp";
 
 type MCPContextType = ReturnType<typeof useMCP> & { loading: boolean };
 

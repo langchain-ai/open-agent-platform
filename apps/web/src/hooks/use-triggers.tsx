@@ -1,23 +1,18 @@
-import { Trigger } from "@/types/triggers";
+import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
 import { toast } from "sonner";
 
 type RegisterTriggerResponse =
   | {
-      authUrl: string;
+      success: boolean;
       registered: false;
+      auth_required: true;
+      auth_url: string;
+      auth_id: string;
     }
   | {
+      success: boolean;
       registered: true;
     };
-
-export interface ListUserTriggersData {
-  id: string;
-  user_id: string;
-  provider_id: string;
-  resource: unknown;
-  linked_assistant_ids?: string[];
-  created_at: string;
-}
 
 const constructTriggerUrl = (
   path: string,
@@ -76,10 +71,10 @@ export function useTriggers() {
     return triggers.data;
   };
 
-  const listUserTriggers = async (
+  const listTriggerRegistrations = async (
     accessToken: string,
-  ): Promise<ListUserTriggersData[] | undefined> => {
-    const triggersApiUrl = constructTriggerUrl("/api/user-triggers");
+  ): Promise<ListTriggerRegistrationsData[] | undefined> => {
+    const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
     if (!triggersApiUrl) {
       return;
     }
@@ -122,8 +117,11 @@ export function useTriggers() {
       },
       body:
         Object.keys(args.payload).length > 0
-          ? JSON.stringify(args.payload)
-          : undefined,
+          ? JSON.stringify({
+              type: args.id,
+              ...args.payload,
+            })
+          : JSON.stringify({ type: args.id }),
     });
 
     if (!response.ok) {
@@ -143,29 +141,29 @@ export function useTriggers() {
       agentId: string;
     },
   ): Promise<boolean> => {
-    const triggerApiUrl = constructTriggerUrl(
-      "/api/user-triggers/linked-assistants",
-    );
-    if (!triggerApiUrl) {
-      return false;
-    }
+    // Link the agent to each selected trigger individually
+    for (const triggerId of args.selectedTriggerIds) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+      );
+      if (!triggerApiUrl) {
+        return false;
+      }
 
-    const response = await fetch(triggerApiUrl, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        trigger_ids: args.selectedTriggerIds,
-        assistant_id: args.agentId,
-      }),
-    });
-
-    if (!response.ok) {
-      toast.error("Failed to setup agent trigger", {
-        richColors: true,
+      const response = await fetch(triggerApiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
-      return false;
+
+      if (!response.ok) {
+        toast.error("Failed to setup agent trigger", {
+          richColors: true,
+        });
+        return false;
+      }
     }
 
     return true;
@@ -176,41 +174,105 @@ export function useTriggers() {
     args: {
       agentId: string;
       selectedTriggerIds: string[];
+      currentTriggerIds?: string[];
     },
   ): Promise<boolean> => {
-    const triggerApiUrl = constructTriggerUrl(
-      "/api/user-triggers/edit-assistant",
+    const currentTriggerIds = args.currentTriggerIds || [];
+    const selectedTriggerIds = args.selectedTriggerIds;
+
+    // Determine which triggers to remove (in current but not in selected)
+    const triggersToRemove = currentTriggerIds.filter(
+      (id) => !selectedTriggerIds.includes(id),
     );
-    if (!triggerApiUrl) {
-      return false;
+
+    // Determine which triggers to add (in selected but not in current)
+    const triggersToAdd = selectedTriggerIds.filter(
+      (id) => !currentTriggerIds.includes(id),
+    );
+
+    // First, remove unselected trigger links
+    for (const triggerId of triggersToRemove) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+      );
+      if (!triggerApiUrl) {
+        continue;
+      }
+
+      const response = await fetch(triggerApiUrl, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to remove agent from trigger", {
+          richColors: true,
+        });
+        continue;
+      }
     }
 
-    const response = await fetch(triggerApiUrl, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({
-        trigger_ids: args.selectedTriggerIds,
-        assistant_id: args.agentId,
-      }),
-    });
+    // Then, add new trigger links
+    for (const triggerId of triggersToAdd) {
+      const triggerApiUrl = constructTriggerUrl(
+        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+      );
+      if (!triggerApiUrl) {
+        continue;
+      }
 
-    if (!response.ok) {
-      toast.error("Failed to update agent triggers", {
-        richColors: true,
+      const response = await fetch(triggerApiUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          assistant_id: args.agentId,
+        }),
       });
-      return false;
+
+      if (!response.ok) {
+        toast.error("Failed to add agent to trigger", {
+          richColors: true,
+        });
+        continue;
+      }
     }
 
     return true;
   };
 
+  const listAgentTriggers = async (
+    accessToken: string,
+    agentId: string,
+  ): Promise<string[]> => {
+    try {
+      // Get all user trigger registrations
+      const registrations = await listTriggerRegistrations(accessToken);
+      if (!registrations) {
+        return [];
+      }
+      // Filter to find registrations that have this agent linked
+      const agentTriggerIds = registrations
+        .filter((reg) => reg.linked_agent_ids?.includes(agentId))
+        .map((reg) => reg.id);
+
+      return agentTriggerIds;
+    } catch (error) {
+      console.error("Error listing agent triggers:", error);
+      return [];
+    }
+  };
+
   return {
     listTriggers,
-    listUserTriggers,
+    listUserTriggers: listTriggerRegistrations,
     registerTrigger,
     setupAgentTrigger,
     updateAgentTriggers,
+    listAgentTriggers,
   };
 }

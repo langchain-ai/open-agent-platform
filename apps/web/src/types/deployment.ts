@@ -5,14 +5,14 @@ export interface Deployment {
    */
   id: string;
   /**
-   * The API URL of the deployment.
-   */
-  deploymentUrl: string;
-  /**
    * The tenant ID of the deployment. This is obtained by calling
    * the `/info` endpoint of the deployment URL.
    */
   tenantId: string;
+  /**
+   * The API URL of the deployment.
+   */
+  deploymentUrl: string;
   /**
    * A custom name for the deployment. This is a custom field the user sets.
    */
@@ -22,21 +22,19 @@ export interface Deployment {
    */
   isDefault?: boolean;
   /**
-   * The ID of the default graph for this deployment. This should only be set for one deployment,
-   * and it should be the same deployment that isDefault is set to true on.
+   * The graphs (agents) to load for this deployment.
    */
-  defaultGraphId?: string;
+  graphs: Graph[];
+}
+
+export interface Graph {
   /**
-   * Whether this deployment requires API keys to be set. Defaults to false.
-   * When true, users will be warned if they haven't configured their API keys.
+   * The ID of the graph.
    */
-  requiresApiKeys?: boolean;
+  id: string;
   /**
-   * Custom message to display when API keys are required but not set.
+   * Whether or not this graph is the default graph for this deployment.
+   * This should only be set to true for one graph per deployment.
    */
-  apiKeysRequiredMessage?: string;
-  /**
-   * Whether or not the agent supports the Deep Agents spec
-   */
-  supportsDeepAgents?: boolean;
+  isDefault?: boolean;
 }

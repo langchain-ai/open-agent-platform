@@ -1,6 +1,6 @@
 "use client";
 
-import { AuthDebug } from "@/components/auth/debug";
+import DebugAuthInterface from "@/features/debug-auth";
 import { AuthProvider } from "@/providers/Auth";
 
 export default function DebugAuthPage() {
@@ -13,7 +13,7 @@ export default function DebugAuthPage() {
           only accessible in development mode.
         </p>
 
-        <AuthDebug />
+        <DebugAuthInterface />
 
         <div className="bg-muted/30 mt-8 rounded-lg border p-4">
           <h2 className="mb-2 text-lg font-medium">Testing Tips</h2>

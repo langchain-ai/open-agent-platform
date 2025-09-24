@@ -14,10 +14,8 @@ import { Deployment } from "@/types/deployment";
 import {
   groupAgentsByGraphs,
   isSystemCreatedDefaultAssistant,
-  isUserCreatedDefaultAssistant,
+  detectSupportedConfigs,
 } from "@/lib/agent-utils";
-import { useAgents } from "@/hooks/use-agents";
-import { extractConfigurationsFromAgent } from "@/lib/ui-config";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "./Auth";
 import { toast } from "sonner";
@@ -63,10 +61,6 @@ async function getOrCreateDefaultAssistants(
 async function getAgents(
   deployments: Deployment[],
   accessToken: string,
-  getAgentConfigSchema: (
-    agentId: string,
-    deploymentId: string,
-  ) => Promise<Record<string, any> | undefined>,
 ): Promise<Agent[]> {
   const agentsPromise: Promise<Agent[]>[] = deployments.map(
     async (deployment) => {
@@ -95,57 +89,15 @@ async function getAgents(
 
       const assistantsGroupedByGraphs = groupAgentsByGraphs(allAssistants);
 
-      const assistantsPromise: Promise<Agent[]>[] =
-        assistantsGroupedByGraphs.map(async (group) => {
-          // We must get the agent config schema for each graph in a deployment,
-          // not just for each deployment, as a deployment can have multiple graphs
-          // each with their own unique config schema.
-          const defaultAssistant =
-            group.find((a) => isUserCreatedDefaultAssistant(a)) ?? group[0];
-          const schema = await getAgentConfigSchema(
-            defaultAssistant.assistant_id,
-            deployment.id,
-          );
-
-          const supportedConfigs: string[] = [];
-          if (schema) {
-            const {
-              toolConfig,
-              ragConfig,
-              agentsConfig,
-              subAgentsConfig,
-              triggersConfig,
-            } = extractConfigurationsFromAgent({
-              agent: defaultAssistant,
-              schema,
-            });
-            if (toolConfig.length) {
-              supportedConfigs.push("tools");
-            }
-            if (ragConfig.length) {
-              supportedConfigs.push("rag");
-            }
-            if (agentsConfig.length) {
-              supportedConfigs.push("supervisor");
-            }
-            if (subAgentsConfig.length) {
-              supportedConfigs.push("deep_agent");
-            }
-            if (triggersConfig.length) {
-              supportedConfigs.push("triggers");
-            }
-          }
-
+      return assistantsGroupedByGraphs
+        .map((group) => {
           return group.map((assistant) => ({
             ...assistant,
             deploymentId: deployment.id,
-            supportedConfigs: supportedConfigs as [
-              "tools" | "rag" | "supervisor" | "deep_agent" | "triggers",
-            ],
+            supportedConfigs: detectSupportedConfigs(assistant),
           }));
-        });
-
-      return (await Promise.all(assistantsPromise)).flat();
+        })
+        .flat();
     },
   );
 
@@ -162,7 +114,7 @@ type AgentsContextType = {
    * Refreshes the agents list by fetching the latest agents from the API,
    * and updating the state.
    */
-  refreshAgents: () => Promise<void>;
+  refreshAgents: () => Promise<Agent[]>;
   /**
    * Whether the agents list is currently loading.
    */
@@ -178,12 +130,13 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { session } = useAuthContext();
-  const agentsState = useAgents();
   const deployments = getDeployments();
+
   const [agents, setAgents] = useState<Agent[]>([]);
-  const firstRequestMade = useRef(false);
   const [loading, setLoading] = useState(false);
   const [refreshAgentsLoading, setRefreshAgentsLoading] = useState(false);
+
+  const firstRequestMade = useRef(false);
 
   useEffect(() => {
     if (agents.length > 0 || firstRequestMade.current || !session?.accessToken)
@@ -191,11 +144,7 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
 
     firstRequestMade.current = true;
     setLoading(true);
-    getAgents(
-      deployments,
-      session.accessToken,
-      agentsState.getAgentConfigSchema,
-    )
+    getAgents(deployments, session.accessToken)
       // Never expose the system created default assistants to the user
       .then((a) =>
         setAgents(a.filter((a) => !isSystemCreatedDefaultAssistant(a))),
@@ -203,23 +152,24 @@ export const AgentsProvider: React.FC<{ children: ReactNode }> = ({
       .finally(() => setLoading(false));
   }, [session?.accessToken]);
 
-  async function refreshAgents() {
+  async function refreshAgents(): Promise<Agent[]> {
     if (!session?.accessToken) {
       toast.error("No access token found", {
         richColors: true,
       });
-      return;
+      return [];
     }
     try {
       setRefreshAgentsLoading(true);
-      const newAgents = await getAgents(
-        deployments,
-        session.accessToken,
-        agentsState.getAgentConfigSchema,
+      const newAgents = await getAgents(deployments, session.accessToken);
+      const updatedAgentsList = newAgents.filter(
+        (a) => !isSystemCreatedDefaultAssistant(a),
       );
-      setAgents(newAgents.filter((a) => !isSystemCreatedDefaultAssistant(a)));
+      setAgents(updatedAgentsList);
+      return updatedAgentsList;
     } catch (e) {
       console.error("Failed to refresh agents", e);
+      return [];
     } finally {
       setRefreshAgentsLoading(false);
     }

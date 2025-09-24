@@ -101,7 +101,7 @@ export default function AutoGrowTextarea({
     // Base look
     "w-full rounded-xl border border-gray-300 bg-white p-3",
     "text-sm leading-6 text-gray-900 placeholder:text-gray-400",
-    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+    "focus:outline-none focus:ring-2 focus:ring-[#2F6868] focus:border-[#2F6868]",
     "shadow-sm",
   );
 

@@ -9,9 +9,10 @@ export function getDeployments(): Deployment[] {
   const deployments: Deployment[] = JSON.parse(
     process.env.NEXT_PUBLIC_DEPLOYMENTS || "[]",
   );
+
   for (const deployment of deployments) {
     if (deployment.isDefault && !defaultExists) {
-      if (!deployment.defaultGraphId) {
+      if (!deployment.graphs.find((g) => g.isDefault)) {
         throw new Error("Default deployment must have a default graph ID");
       }
       defaultExists = true;
