@@ -392,8 +392,7 @@ export default function useInterruptedActions<
     currentNode,
     loading,
     threadId: threadData?.thread.thread_id || "",
-    isIgnoreAllowed:
-      Boolean(threadData?.interrupts?.[0]?.config?.allow_ignore) || true, // Default to true for invalid interrupts
+    isIgnoreAllowed: Boolean(threadData?.interrupts?.[0]?.config) || true, // Default to true for invalid interrupts
     supportsMultipleMethods:
       humanResponse.filter(
         (r) =>

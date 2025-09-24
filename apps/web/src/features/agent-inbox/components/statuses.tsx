@@ -17,11 +17,7 @@ export function InboxItemStatuses({
   }
 
   if (config) {
-    const isOnlyIgnoreAllowed =
-      config.allow_ignore &&
-      !config.allow_respond &&
-      !config.allow_edit &&
-      !config.allow_accept;
+    const isOnlyIgnoreAllowed = false; // With simplified boolean config, all actions are allowed if interrupts are enabled
 
     return (
       <div

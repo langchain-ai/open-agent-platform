@@ -28,20 +28,10 @@ export function SubAgentForm(props: {
   form: UseFormReturn<z.infer<typeof subAgentFormSchema>>;
   onSubmit: (values: z.infer<typeof subAgentFormSchema>) => void;
   interruptConfig: {
-    [toolName: string]: {
-      allow_accept: boolean;
-      allow_respond: boolean;
-      allow_edit: boolean;
-      allow_ignore: boolean;
-    };
+    [toolName: string]: boolean;
   };
   setInterruptConfig: (interruptConfig: {
-    [toolName: string]: {
-      allow_accept: boolean;
-      allow_respond: boolean;
-      allow_edit: boolean;
-      allow_ignore: boolean;
-    };
+    [toolName: string]: boolean;
   }) => void;
   isEditing?: boolean;
 }) {

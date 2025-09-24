@@ -2,15 +2,9 @@ import { BaseMessage } from "@langchain/core/messages";
 import { Thread, ThreadStatus } from "@langchain/langgraph-sdk";
 
 /**
- * Configuration for a human interrupt, specifying what actions
- * are allowed when handling the interrupt.
+ * Configuration for a human interrupt, simplified to just enabled/disabled.
  */
-export interface HumanInterruptConfig {
-  allow_ignore: boolean;
-  allow_respond: boolean;
-  allow_edit: boolean;
-  allow_accept: boolean;
-}
+export type HumanInterruptConfig = boolean;
 
 /**
  * Action request from the agent to the human.
