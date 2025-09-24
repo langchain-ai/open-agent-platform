@@ -31,7 +31,7 @@ export function EditorPageContent(): React.ReactNode {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
-  const [newAgent] = useQueryState("new");
+  const [newAgent, setNewAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
@@ -151,13 +151,27 @@ export function EditorPageContent(): React.ReactNode {
     setChatVersion((v) => v + 1);
   };
 
+  const handleAgentCreated = async (
+    createdAgentId: string,
+    createdDeploymentId: string,
+  ) => {
+    // Set the new agent as selected
+    await setAgentId(createdAgentId);
+    await setDeploymentId(createdDeploymentId);
+    // Clear the "new" flag to show the editor
+    await setNewAgent(null);
+    // Reset chat and trigger refresh
+    await setThreadId(null);
+    setChatVersion((v) => v + 1);
+  };
+
   if (!session) {
     return <div>Loading...</div>;
   }
 
   // Show new agent creation form if new=true parameter is present
   if (newAgent === "true") {
-    return <InitialInputs />;
+    return <InitialInputs onAgentCreated={handleAgentCreated} />;
   }
 
   const handleAgentChange = async (value: string) => {
