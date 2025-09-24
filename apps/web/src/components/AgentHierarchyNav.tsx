@@ -282,7 +282,7 @@ export function AgentHierarchyNav({
                                   {_.startCase(tool.name)}
                                 </div>
                                 {tool.description && (
-                                  <div className="line-clamp-2 text-xs text-gray-500">
+                                  <div className="line-clamp-2 pl-6 text-xs text-gray-500">
                                     {tool.description}
                                   </div>
                                 )}
@@ -570,7 +570,7 @@ export function AgentHierarchyNav({
                                               {_.startCase(tool.name)}
                                             </div>
                                             {tool.description && (
-                                              <div className="line-clamp-2 text-xs text-gray-500">
+                                              <div className="line-clamp-2 pl-6 text-xs text-gray-500">
                                                 {tool.description}
                                               </div>
                                             )}
