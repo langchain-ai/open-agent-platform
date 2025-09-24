@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
+import { AgentSelector } from "./components/agent-selector";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
@@ -24,6 +25,7 @@ export function EditorPageContent(): React.ReactNode {
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
+  const [newAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
@@ -138,9 +140,14 @@ export function EditorPageContent(): React.ReactNode {
     return <div>Loading...</div>;
   }
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
+  // Show new agent creation form if new=true parameter is present
+  if (newAgent === "true") {
     return <InitialInputs />;
+  }
+
+  // Show agent selector if no agent is selected
+  if (!agentId || !deploymentId) {
+    return <AgentSelector />;
   }
 
   return (

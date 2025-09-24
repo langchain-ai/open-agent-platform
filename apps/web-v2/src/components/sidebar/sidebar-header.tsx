@@ -23,7 +23,7 @@ export function SiteHeader() {
             asChild
             className="flex items-center justify-between gap-2 group-data-[collapsible=icon]:justify-center"
           >
-            <NextLink href="/agents/chat">
+            <NextLink href="/agents">
               {/* Show only trigger icon when collapsed */}
               <PanelLeftIcon
                 className="hidden !h-4 !w-4 flex-shrink-0 cursor-pointer group-data-[collapsible=icon]:block"
