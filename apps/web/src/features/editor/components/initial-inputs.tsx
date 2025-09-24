@@ -362,10 +362,7 @@ export function InitialInputs({
           onOpenChange={setAuthRequiredDialogOpen}
           authUrls={authRequiredUrls}
           handleSubmit={async () => {
-            const success = await validateAuth(enabledToolNames);
-            if (!success) {
-              return;
-            }
+            setAuthRequiredDialogOpen(false);
 
             await refreshAgents();
 
