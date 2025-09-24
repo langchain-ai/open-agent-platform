@@ -28,12 +28,7 @@ export function getInterruptFromThread(
               if (!interrupt[0]?.[1]) {
                 return {
                   action_request: { action: IMPROPER_SCHEMA, args: {} },
-                  config: {
-                    allow_ignore: true,
-                    allow_respond: false,
-                    allow_edit: false,
-                    allow_accept: false,
-                  },
+                  config: true,
                 } as HumanInterrupt;
               }
               return interrupt[0][1].value as HumanInterrupt;
@@ -124,12 +119,7 @@ export function getInterruptFromThread(
                 if (!value || typeof value !== "object") {
                   return {
                     action_request: { action: IMPROPER_SCHEMA, args: {} },
-                    config: {
-                      allow_ignore: true,
-                      allow_respond: false,
-                      allow_edit: false,
-                      allow_accept: false,
-                    },
+                    config: true,
                   } as HumanInterrupt;
                 }
 
@@ -151,23 +141,13 @@ export function getInterruptFromThread(
 
                 return {
                   action_request: { action: IMPROPER_SCHEMA, args: {} },
-                  config: {
-                    allow_ignore: true,
-                    allow_respond: false,
-                    allow_edit: false,
-                    allow_accept: false,
-                  },
+                  config: true,
                 } as HumanInterrupt;
               }
 
               return {
                 action_request: { action: IMPROPER_SCHEMA, args: {} },
-                config: {
-                  allow_ignore: true,
-                  allow_respond: false,
-                  allow_edit: false,
-                  allow_accept: false,
-                },
+                config: true,
               } as HumanInterrupt;
             });
 
@@ -177,22 +157,12 @@ export function getInterruptFromThread(
           // Default fallback
           return {
             action_request: { action: IMPROPER_SCHEMA, args: {} },
-            config: {
-              allow_ignore: true,
-              allow_respond: false,
-              allow_edit: false,
-              allow_accept: false,
-            },
+            config: true,
           } as HumanInterrupt;
         } catch (_) {
           return {
             action_request: { action: IMPROPER_SCHEMA, args: {} },
-            config: {
-              allow_ignore: true,
-              allow_respond: false,
-              allow_edit: false,
-              allow_accept: false,
-            },
+            config: true,
           } as HumanInterrupt;
         }
       });
@@ -204,12 +174,7 @@ export function getInterruptFromThread(
     return [
       {
         action_request: { action: IMPROPER_SCHEMA, args: {} },
-        config: {
-          allow_ignore: true,
-          allow_respond: false,
-          allow_edit: false,
-          allow_accept: false,
-        },
+        config: true,
       },
     ] as HumanInterrupt[];
   }

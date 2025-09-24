@@ -14,19 +14,9 @@ import { UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 import type { ToolInterruptConfig } from "./create-agent-tools-selection";
 
-const humanInterruptConfigSchema = z.object({
-  allow_accept: z.boolean(),
-  allow_respond: z.boolean(),
-  allow_edit: z.boolean(),
-  allow_ignore: z.boolean(),
-});
-
 export const agentToolsFormSchema = z.object({
   tools: z.array(z.string()),
-  interruptConfig: z
-    .record(z.string(), humanInterruptConfigSchema)
-    .default({})
-    .optional(),
+  interruptConfig: z.record(z.string(), z.boolean()).default({}).optional(),
 });
 
 export type AgentToolsFormValues = z.infer<typeof agentToolsFormSchema>;

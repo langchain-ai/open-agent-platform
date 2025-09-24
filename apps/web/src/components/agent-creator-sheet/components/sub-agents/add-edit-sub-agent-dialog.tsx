@@ -20,12 +20,7 @@ export function AddEditSubAgentDialog(props: {
 }) {
   const [open, setOpen] = useState(false);
   const [interruptConfig, setInterruptConfig] = useState<{
-    [toolName: string]: {
-      allow_accept: boolean;
-      allow_respond: boolean;
-      allow_edit: boolean;
-      allow_ignore: boolean;
-    };
+    [toolName: string]: boolean;
   }>({});
   const form = useForm<z.infer<typeof subAgentFormSchema>>({
     defaultValues: {

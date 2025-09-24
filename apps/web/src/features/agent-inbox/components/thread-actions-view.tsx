@@ -233,8 +233,8 @@ export function ThreadActionsView<
   // Safely access config for determining allowed actions
   const firstInterrupt = threadData.interrupts?.[0];
   const config = firstInterrupt?.config;
-  const ignoreAllowed = config?.allow_ignore ?? false;
-  const acceptAllowed = config?.allow_accept ?? false;
+  const ignoreAllowed = config ?? false;
+  const acceptAllowed = config ?? false;
 
   // Status Icon Logic
   const getStatusIcon = () => {

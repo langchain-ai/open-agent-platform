@@ -18,26 +18,16 @@ import { ConfigFieldProps } from "./types";
 import { MCPConfig } from "@/types/deep-agent";
 
 const getInterruptConfig = (
-  interruptConfig: Record<string, boolean | HumanInterruptConfig> | undefined,
+  interruptConfig: Record<string, HumanInterruptConfig> | undefined,
   label: string,
 ): HumanInterruptConfig | false => {
   // if there isn't an interrupt config, the tool doesn't exist yet, or it's set to false, return false.
   if (
     !interruptConfig ||
     !(label in interruptConfig) ||
-    (typeof interruptConfig[label] === "boolean" && !interruptConfig[label])
+    !interruptConfig[label]
   ) {
     return false;
-  }
-
-  // Should always be true in this case
-  if (typeof interruptConfig[label] === "boolean") {
-    return {
-      allow_accept: interruptConfig[label],
-      allow_ignore: interruptConfig[label],
-      allow_respond: interruptConfig[label],
-      allow_edit: interruptConfig[label],
-    };
   }
 
   return interruptConfig[label];

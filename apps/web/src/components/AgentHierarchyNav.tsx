@@ -14,11 +14,18 @@ import {
   Trash2,
   X,
   Check,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Search } from "@/components/ui/tool-search";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import _ from "lodash";
 import type { HumanInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 import type { UseFormReturn } from "react-hook-form";
@@ -76,19 +83,34 @@ export function AgentHierarchyNav({
   const [showAllSub, setShowAllSub] = React.useState<Record<number, boolean>>(
     {},
   );
-  const [selectedAddMain, setSelectedAddMain] = React.useState<string | null>(
-    null,
+  // Allow multiple interrupt panels to be opened at once
+  const [openInterruptMain, setOpenInterruptMain] = React.useState<Set<string>>(
+    new Set(),
   );
-  const [selectedAddSub, setSelectedAddSub] = React.useState<
-    Record<number, string | null>
+  const [openInterruptSub, setOpenInterruptSub] = React.useState<
+    Record<number, Set<string>>
   >({});
 
   const handleAddTool = (toolName: string) => {
     if (!toolsForm) return;
     const current = toolsForm.getValues("tools") || [];
     if (!current.includes(toolName)) {
+      // Add tool and auto-open its interrupt panel
       toolsForm.setValue("tools", [...current, toolName], {
         shouldDirty: true,
+      });
+      setOpenInterruptMain((prev) => new Set(prev).add(toolName));
+    } else {
+      // Clicking again unselects
+      toolsForm.setValue(
+        "tools",
+        current.filter((t) => t !== toolName),
+        { shouldDirty: true },
+      );
+      setOpenInterruptMain((prev) => {
+        const next = new Set(prev);
+        next.delete(toolName);
+        return next;
       });
     }
   };
@@ -101,13 +123,12 @@ export function AgentHierarchyNav({
       current.filter((t) => t !== toolName),
       { shouldDirty: true },
     );
+    setOpenInterruptMain((prev) => {
+      const next = new Set(prev);
+      next.delete(toolName);
+      return next;
+    });
   };
-
-  const INTERRUPT_OPTIONS = [
-    { value: "accept", label: "allow accept" },
-    { value: "respond", label: "allow respond" },
-    { value: "edit", label: "allow edit" },
-  ];
 
   const getInterruptConfig = (
     toolName: string,
@@ -117,22 +138,6 @@ export function AgentHierarchyNav({
       HumanInterruptConfig
     >;
     return all[toolName];
-  };
-
-  const setInterruptConfig = (
-    toolName: string,
-    config: HumanInterruptConfig,
-  ) => {
-    if (!toolsForm) return;
-    const all = (toolsForm.getValues("interruptConfig") || {}) as Record<
-      string,
-      HumanInterruptConfig
-    >;
-    toolsForm.setValue(
-      "interruptConfig",
-      { ...all, [toolName]: config },
-      { shouldDirty: true },
-    );
   };
   return (
     <div className={cn("w-full bg-gray-50/50", compact ? "p-2" : "p-4")}>
@@ -187,7 +192,13 @@ export function AgentHierarchyNav({
                         isMainSelected ? "pr-1" : "",
                       )}
                     >
-                      {t}
+                      <span className="truncate">{t}</span>
+                      {getInterruptConfig(t) === true && (
+                        <span
+                          title="Interrupts enabled"
+                          className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
+                        />
+                      )}
                       {isMainSelected && (
                         <button
                           onClick={(e) => {
@@ -234,7 +245,6 @@ export function AgentHierarchyNav({
                   ) : null;
                 })()}
               </div>
-              {/* Removed larger per-tool detail list to avoid duplication */}
               {isMainSelected && showAddMain && (
                 <div className="mt-2">
                   <Search
@@ -242,32 +252,40 @@ export function AgentHierarchyNav({
                     placeholder="Search tools to add..."
                   />
                   <div className="mt-1 rounded-md border border-gray-200 bg-white">
-                    <div className="flex">
-                      <div
-                        className={cn(
-                          "max-h-64 overflow-auto",
-                          selectedAddMain ? "w-2/3" : "w-full",
-                        )}
-                      >
-                        {(() => {
-                          const selected = toolsForm?.watch("tools") || [];
-                          const sorted = [...filteredTools].sort((a, b) => {
-                            const aSel = selected.includes(a.name) ? 1 : 0;
-                            const bSel = selected.includes(b.name) ? 1 : 0;
-                            return bSel - aSel; // selected first
-                          });
-                          return sorted.slice(0, 50).map((tool) => (
-                            <div
-                              key={`add-main-${tool.name}`}
-                              className="group flex w-full items-stretch"
-                            >
+                    <div className="max-h-64 overflow-auto">
+                      {(() => {
+                        const selected = toolsForm?.watch("tools") || [];
+                        const sorted = [...filteredTools].sort((a, b) => {
+                          const aSel = selected.includes(a.name) ? 1 : 0;
+                          const bSel = selected.includes(b.name) ? 1 : 0;
+                          return bSel - aSel; // selected first
+                        });
+                        return sorted.slice(0, 50).map((tool) => (
+                          <div key={`add-main-${tool.name}`}>
+                            <div className="group flex w-full items-stretch">
                               <button
                                 className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Always ensure it's selected and open interrupts
+                                  const isAlreadySelected = (
+                                    selected || []
+                                  ).includes(tool.name);
+                                  // Use handleAddTool which adds/removes and manages open set
                                   handleAddTool(tool.name);
-                                  setSelectedAddMain(tool.name);
+                                  // Ensure correct open state after selection intent
+                                  if (!isAlreadySelected) {
+                                    // We just selected; make sure it's open
+                                    setOpenInterruptMain((prev) =>
+                                      new Set(prev).add(tool.name),
+                                    );
+                                  } else {
+                                    // We just deselected; ensure it is closed
+                                    setOpenInterruptMain((prev) => {
+                                      const next = new Set(prev);
+                                      next.delete(tool.name);
+                                      return next;
+                                    });
+                                  }
                                 }}
                               >
                                 <div className="flex items-center gap-2 font-medium">
@@ -279,7 +297,17 @@ export function AgentHierarchyNav({
                                         : "text-transparent",
                                     )}
                                   />
-                                  {_.startCase(tool.name)}
+                                  <span className="truncate">
+                                    {_.startCase(tool.name)}
+                                  </span>
+                                  {getInterruptConfig(tool.name) === true && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="ml-1 h-4 px-1 text-[10px]"
+                                    >
+                                      interrupt
+                                    </Badge>
+                                  )}
                                 </div>
                                 {tool.description && (
                                   <div className="line-clamp-2 pl-6 text-xs text-gray-500">
@@ -287,73 +315,116 @@ export function AgentHierarchyNav({
                                   </div>
                                 )}
                               </button>
+                              <button
+                                type="button"
+                                className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                                title="Expand/collapse interrupt"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenInterruptMain((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(tool.name))
+                                      next.delete(tool.name);
+                                    else next.add(tool.name);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <ChevronDown
+                                  className={cn(
+                                    "h-4 w-4 transition-transform",
+                                    openInterruptMain.has(tool.name)
+                                      ? "rotate-180"
+                                      : "",
+                                  )}
+                                />
+                              </button>
                             </div>
-                          ));
-                        })()}
-                        {filteredTools.length === 0 && (
-                          <div className="px-3 py-2 text-xs text-gray-500">
-                            No tools found
-                          </div>
-                        )}
-                      </div>
-                      {selectedAddMain && (
-                        <div className="w-1/3 border-l border-gray-200 p-2">
-                          <div className="flex flex-col gap-1">
-                            <div className="text-xs font-medium text-gray-500 uppercase">
-                              Interrupts
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {INTERRUPT_OPTIONS.map((opt) => {
-                                const current =
-                                  getInterruptConfig(selectedAddMain);
-                                const active = !!(
-                                  (opt.value === "accept" &&
-                                    current?.allow_accept) ||
-                                  (opt.value === "respond" &&
-                                    current?.allow_respond) ||
-                                  (opt.value === "edit" && current?.allow_edit)
-                                );
-                                return (
+                            {openInterruptMain.has(tool.name) && (
+                              <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                <div className="flex items-center justify-center gap-3">
+                                  <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
+                                    <span>Interrupt</span>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <HelpCircle className="h-3 w-3 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">
+                                            Enabling interrupts will pause the
+                                            agent before this tool's action is
+                                            executed, allowing you to approve,
+                                            reject, edit, or send feedback on
+                                            the proposed action.
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
                                   <Button
-                                    key={`int-main-${selectedAddMain}-${opt.value}`}
                                     size="sm"
-                                    variant={active ? "secondary" : "outline"}
-                                    className="h-8 w-28 justify-center text-xs"
+                                    variant={
+                                      getInterruptConfig(tool.name) === true
+                                        ? "secondary"
+                                        : "outline"
+                                    }
+                                    className="h-8 w-16 justify-center text-xs"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleAddTool(selectedAddMain);
-                                      const cfg = getInterruptConfig(
-                                        selectedAddMain,
-                                      ) || {
-                                        allow_ignore: false,
-                                        allow_accept: false,
-                                        allow_respond: false,
-                                        allow_edit: false,
-                                      };
-                                      const next: HumanInterruptConfig = {
-                                        ...cfg,
-                                        allow_accept:
-                                          opt.value === "accept"
-                                            ? !cfg.allow_accept
-                                            : cfg.allow_accept,
-                                        allow_respond:
-                                          opt.value === "respond"
-                                            ? !cfg.allow_respond
-                                            : cfg.allow_respond,
-                                        allow_edit:
-                                          opt.value === "edit"
-                                            ? !cfg.allow_edit
-                                            : cfg.allow_edit,
-                                      };
-                                      setInterruptConfig(selectedAddMain, next);
+                                      const allConfig =
+                                        toolsForm?.getValues(
+                                          "interruptConfig",
+                                        ) || {};
+                                      toolsForm?.setValue(
+                                        "interruptConfig",
+                                        {
+                                          ...allConfig,
+                                          [tool.name]: true,
+                                        },
+                                        { shouldDirty: true },
+                                      );
+                                      // keep panel open for multi-edit
                                     }}
                                   >
-                                    {opt.label}
+                                    true
                                   </Button>
-                                );
-                              })}
-                            </div>
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      getInterruptConfig(tool.name) === false
+                                        ? "secondary"
+                                        : "outline"
+                                    }
+                                    className="h-8 w-16 justify-center text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const allConfig =
+                                        toolsForm?.getValues(
+                                          "interruptConfig",
+                                        ) || {};
+                                      toolsForm?.setValue(
+                                        "interruptConfig",
+                                        {
+                                          ...allConfig,
+                                          [tool.name]: false,
+                                        },
+                                        { shouldDirty: true },
+                                      );
+                                      // keep panel open for multi-edit
+                                    }}
+                                  >
+                                    false
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
+                        ));
+                      })()}
+                      {filteredTools.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-gray-500">
+                          No tools found
                         </div>
                       )}
                     </div>
@@ -473,7 +544,13 @@ export function AgentHierarchyNav({
                                   isSelected ? "pr-1" : "",
                                 )}
                               >
-                                {t}
+                                <span className="truncate">{t}</span>
+                                {getInterruptConfig(t) === true && (
+                                  <span
+                                    title="Interrupts enabled"
+                                    className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
+                                  />
+                                )}
                                 {isSelected && (
                                   <button
                                     onClick={(e) => {
@@ -518,44 +595,71 @@ export function AgentHierarchyNav({
                                 placeholder={`Search tools for ${subAgent.name}...`}
                               />
                               <div className="mt-1 rounded-md border border-gray-200 bg-white">
-                                <div className="flex">
-                                  <div
-                                    className={cn(
-                                      "max-h-64 overflow-auto",
-                                      selectedAddSub[index]
-                                        ? "w-2/3"
-                                        : "w-full",
-                                    )}
-                                  >
-                                    {(() => {
-                                      const selected =
-                                        toolsForm?.watch("tools") || [];
-                                      const sorted = [...filteredTools].sort(
-                                        (a, b) => {
-                                          const aSel = selected.includes(a.name)
-                                            ? 1
-                                            : 0;
-                                          const bSel = selected.includes(b.name)
-                                            ? 1
-                                            : 0;
-                                          return bSel - aSel;
-                                        },
-                                      );
-                                      return sorted.slice(0, 50).map((tool) => (
-                                        <div
-                                          key={`add-sa-${index}-${tool.name}`}
-                                          className="group flex w-full items-stretch"
-                                        >
+                                <div className="max-h-64 overflow-auto">
+                                  {(() => {
+                                    const selected =
+                                      toolsForm?.watch("tools") || [];
+                                    const sorted = [...filteredTools].sort(
+                                      (a, b) => {
+                                        const aSel = selected.includes(a.name)
+                                          ? 1
+                                          : 0;
+                                        const bSel = selected.includes(b.name)
+                                          ? 1
+                                          : 0;
+                                        return bSel - aSel;
+                                      },
+                                    );
+                                    return sorted.slice(0, 50).map((tool) => (
+                                      <div key={`add-sa-${index}-${tool.name}`}>
+                                        <div className="group flex w-full items-stretch">
                                           <button
                                             className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              // Always ensure it's selected and open interrupts
-                                              handleAddTool(tool.name);
-                                              setSelectedAddSub((m) => ({
-                                                ...m,
-                                                [index]: tool.name,
-                                              }));
+                                              if (!toolsForm) return;
+                                              const current =
+                                                toolsForm.getValues("tools") ||
+                                                [];
+                                              const isAlreadySelected =
+                                                current.includes(tool.name);
+                                              if (!isAlreadySelected) {
+                                                // Select and open
+                                                toolsForm.setValue(
+                                                  "tools",
+                                                  [...current, tool.name],
+                                                  {
+                                                    shouldDirty: true,
+                                                  },
+                                                );
+                                                setOpenInterruptSub((prev) => {
+                                                  const next = { ...prev };
+                                                  const set = new Set(
+                                                    next[index] || [],
+                                                  );
+                                                  set.add(tool.name);
+                                                  next[index] = set;
+                                                  return next;
+                                                });
+                                              } else {
+                                                // Deselect and close
+                                                toolsForm.setValue(
+                                                  "tools",
+                                                  current.filter(
+                                                    (t) => t !== tool.name,
+                                                  ),
+                                                  { shouldDirty: true },
+                                                );
+                                                setOpenInterruptSub((prev) => {
+                                                  const next = { ...prev };
+                                                  const set = new Set(
+                                                    next[index] || [],
+                                                  );
+                                                  set.delete(tool.name);
+                                                  next[index] = set;
+                                                  return next;
+                                                });
+                                              }
                                             }}
                                           >
                                             <div className="flex items-center gap-2 font-medium">
@@ -567,7 +671,18 @@ export function AgentHierarchyNav({
                                                     : "text-transparent",
                                                 )}
                                               />
-                                              {_.startCase(tool.name)}
+                                              <span className="truncate">
+                                                {_.startCase(tool.name)}
+                                              </span>
+                                              {getInterruptConfig(tool.name) ===
+                                                true && (
+                                                <Badge
+                                                  variant="secondary"
+                                                  className="ml-1 h-4 px-1 text-[10px]"
+                                                >
+                                                  interrupt
+                                                </Badge>
+                                              )}
                                             </div>
                                             {tool.description && (
                                               <div className="line-clamp-2 pl-6 text-xs text-gray-500">
@@ -575,88 +690,130 @@ export function AgentHierarchyNav({
                                               </div>
                                             )}
                                           </button>
+                                          <button
+                                            type="button"
+                                            className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                                            title="Expand/collapse interrupt"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenInterruptSub((prev) => {
+                                                const next = { ...prev };
+                                                const set = new Set(
+                                                  next[index] || [],
+                                                );
+                                                if (set.has(tool.name))
+                                                  set.delete(tool.name);
+                                                else set.add(tool.name);
+                                                next[index] = set;
+                                                return next;
+                                              });
+                                            }}
+                                          >
+                                            <ChevronDown
+                                              className={cn(
+                                                "h-4 w-4 transition-transform",
+                                                openInterruptSub[index]?.has(
+                                                  tool.name,
+                                                )
+                                                  ? "rotate-180"
+                                                  : "",
+                                              )}
+                                            />
+                                          </button>
                                         </div>
-                                      ));
-                                    })()}
-                                    {filteredTools.length === 0 && (
-                                      <div className="px-3 py-2 text-xs text-gray-500">
-                                        No tools found
-                                      </div>
-                                    )}
-                                  </div>
-                                  {selectedAddSub[index] && (
-                                    <div className="w-1/3 border-l border-gray-200 p-2">
-                                      <div className="flex flex-col gap-1">
-                                        <div className="text-xs font-medium text-gray-500 uppercase">
-                                          Interrupts
-                                        </div>
-                                        <div className="flex flex-wrap gap-1">
-                                          {INTERRUPT_OPTIONS.map((opt) => {
-                                            const current = getInterruptConfig(
-                                              selectedAddSub[index] as string,
-                                            );
-                                            const active = !!(
-                                              (opt.value === "accept" &&
-                                                current?.allow_accept) ||
-                                              (opt.value === "respond" &&
-                                                current?.allow_respond) ||
-                                              (opt.value === "edit" &&
-                                                current?.allow_edit)
-                                            );
-                                            return (
+                                        {openInterruptSub[index]?.has(
+                                          tool.name,
+                                        ) && (
+                                          <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                            <div className="flex items-center justify-center gap-3">
+                                              <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
+                                                <span>Interrupt</span>
+                                                <TooltipProvider>
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <HelpCircle className="h-3 w-3 cursor-help" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      <p className="text-xs">
+                                                        Enabling interrupts will
+                                                        pause the agent before
+                                                        this tool's action is
+                                                        executed, allowing you
+                                                        to approve, reject,
+                                                        edit, or send feedback
+                                                        on the proposed action.
+                                                      </p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </TooltipProvider>
+                                              </div>
                                               <Button
-                                                key={`int-sub-${index}-${selectedAddSub[index]}-${opt.value}`}
                                                 size="sm"
                                                 variant={
-                                                  active
+                                                  getInterruptConfig(
+                                                    tool.name,
+                                                  ) === true
                                                     ? "secondary"
                                                     : "outline"
                                                 }
-                                                className="h-8 w-28 justify-center text-xs"
+                                                className="h-8 w-16 justify-center text-xs"
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  const toolName =
-                                                    selectedAddSub[
-                                                      index
-                                                    ] as string;
-                                                  handleAddTool(toolName);
-                                                  const cfg =
-                                                    getInterruptConfig(
-                                                      toolName,
-                                                    ) || {
-                                                      allow_ignore: false,
-                                                      allow_accept: false,
-                                                      allow_respond: false,
-                                                      allow_edit: false,
-                                                    };
-                                                  const next: HumanInterruptConfig =
+                                                  const allConfig =
+                                                    toolsForm?.getValues(
+                                                      "interruptConfig",
+                                                    ) || {};
+                                                  toolsForm?.setValue(
+                                                    "interruptConfig",
                                                     {
-                                                      ...cfg,
-                                                      allow_accept:
-                                                        opt.value === "accept"
-                                                          ? !cfg.allow_accept
-                                                          : cfg.allow_accept,
-                                                      allow_respond:
-                                                        opt.value === "respond"
-                                                          ? !cfg.allow_respond
-                                                          : cfg.allow_respond,
-                                                      allow_edit:
-                                                        opt.value === "edit"
-                                                          ? !cfg.allow_edit
-                                                          : cfg.allow_edit,
-                                                    };
-                                                  setInterruptConfig(
-                                                    toolName,
-                                                    next,
+                                                      ...allConfig,
+                                                      [tool.name]: true,
+                                                    },
+                                                    { shouldDirty: true },
                                                   );
+                                                  // keep panel open for multi-edit
                                                 }}
                                               >
-                                                {opt.label}
+                                                true
                                               </Button>
-                                            );
-                                          })}
-                                        </div>
+                                              <Button
+                                                size="sm"
+                                                variant={
+                                                  getInterruptConfig(
+                                                    tool.name,
+                                                  ) === false
+                                                    ? "secondary"
+                                                    : "outline"
+                                                }
+                                                className="h-8 w-16 justify-center text-xs"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const allConfig =
+                                                    toolsForm?.getValues(
+                                                      "interruptConfig",
+                                                    ) || {};
+                                                  toolsForm?.setValue(
+                                                    "interruptConfig",
+                                                    {
+                                                      ...allConfig,
+                                                      [tool.name]: false,
+                                                    },
+                                                    { shouldDirty: true },
+                                                  );
+                                                  // keep panel open for multi-edit
+                                                }}
+                                              >
+                                                false
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
+                                    ));
+                                  })()}
+                                  {filteredTools.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-gray-500">
+                                      No tools found
                                     </div>
                                   )}
                                 </div>
