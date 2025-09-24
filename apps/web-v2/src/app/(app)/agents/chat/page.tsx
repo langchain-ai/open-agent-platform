@@ -71,11 +71,11 @@ function ThreadHistoryHalf(): React.ReactNode {
             id="thread-history"
             order={1}
           >
-            <div className="flex items-center justify-between gap-2 p-4">
+            <div className="flex flex-col gap-3 p-4">
               <h2 className="text-base font-semibold whitespace-nowrap">
                 All Conversations
               </h2>
-              <div className="flex items-center gap-2">
+              <div className="flex w-full gap-2">
                 {/* Agent selector */}
                 <Select
                   value={
@@ -97,7 +97,7 @@ function ThreadHistoryHalf(): React.ReactNode {
                     await setDraft(null);
                   }}
                 >
-                  <SelectTrigger className="h-8 w-[240px]">
+                  <SelectTrigger className="h-8 flex-1">
                     <SelectValue placeholder="All agents" />
                   </SelectTrigger>
                   <SelectContent>
@@ -119,7 +119,7 @@ function ThreadHistoryHalf(): React.ReactNode {
                   value={(statusFilter as string) || "all"}
                   onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
                 >
-                  <SelectTrigger className="h-8 w-[220px]">
+                  <SelectTrigger className="h-8 flex-1">
                     <SelectValue placeholder="Filter status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -262,7 +262,7 @@ function RightPaneChat(): React.ReactNode {
             {selectedAgent?.name || "Agent"}
           </h2>
           {typeof selectedAgent?.metadata?.description === "string" && (
-            <p className="text-muted-foreground truncate text-xs">
+            <p className="text-muted-foreground text-xs leading-relaxed">
               {selectedAgent.metadata.description as string}
             </p>
           )}

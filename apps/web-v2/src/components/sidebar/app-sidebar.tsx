@@ -5,7 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Bot,
   Plus,
   Edit,
   type LucideIcon,
@@ -20,38 +19,21 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { SiteHeader } from "./sidebar-header";
-import { useQueryState } from "nuqs";
 
 interface NavigationItems {
-  topNav: {
+  mainNav: {
     title: string;
     url: string;
     icon: LucideIcon;
     isAgentCreator?: boolean;
   }[];
-  workspace: (
-    | {
-        title: string;
-        url: string;
-        icon: LucideIcon;
-        isDropdown?: false;
-      }
-    | {
-        title: string;
-        icon: LucideIcon;
-        isDropdown: true;
-      }
-  )[];
 }
 
-const createNavigationItems = (
-  agentId: string | null,
-  deploymentId: string | null,
-): NavigationItems => ({
-  topNav: [
+const createNavigationItems = (): NavigationItems => ({
+  mainNav: [
     {
       title: "New Agent",
-      url: "/editor",
+      url: "/editor?new=true",
       icon: Plus,
       isAgentCreator: true,
     },
@@ -61,44 +43,25 @@ const createNavigationItems = (
       icon: Puzzle,
     },
     {
+      title: "Editor",
+      url: "/editor",
+      icon: Edit,
+    },
+    {
+      title: "Inbox",
+      url: "/agents/chat",
+      icon: MessageCircle,
+    },
+    {
       title: "Settings",
       url: "/settings",
       icon: Settings,
     },
   ],
-  workspace: [
-    {
-      title: "Select Agent",
-      icon: Bot,
-      isDropdown: true,
-    },
-    {
-      title: "Inbox",
-      url:
-        agentId && deploymentId
-          ? `/agents/chat?agentId=${agentId}&deploymentId=${deploymentId}`
-          : "/agents/chat",
-      icon: MessageCircle,
-    },
-    {
-      title: "Editor",
-      url:
-        agentId && deploymentId
-          ? `/editor?agentId=${agentId}&deploymentId=${deploymentId}`
-          : "/editor",
-      icon: Edit,
-    },
-  ],
 });
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
-
-  const navItems = React.useMemo(
-    () => createNavigationItems(agentId, deploymentId),
-    [agentId, deploymentId],
-  );
+  const navItems = React.useMemo(() => createNavigationItems(), []);
 
   return (
     <Sidebar
@@ -107,11 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     >
       <SiteHeader />
       <SidebarContent>
-        <NavMain items={navItems.topNav} />
-        <NavMain
-          items={navItems.workspace}
-          groupLabel="Workspace"
-        />
+        <NavMain items={navItems.mainNav} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
