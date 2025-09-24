@@ -8,7 +8,6 @@ import {
   Copy,
   Eye,
   EyeOff,
-  Settings,
   Zap,
   Users,
   ArrowRight,
