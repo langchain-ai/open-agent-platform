@@ -14,11 +14,18 @@ import {
   Trash2,
   X,
   Check,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Search } from "@/components/ui/tool-search";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import _ from "lodash";
 import type { HumanInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 import type { UseFormReturn } from "react-hook-form";
@@ -103,7 +110,6 @@ export function AgentHierarchyNav({
     );
   };
 
-
   const getInterruptConfig = (
     toolName: string,
   ): HumanInterruptConfig | undefined => {
@@ -112,16 +118,6 @@ export function AgentHierarchyNav({
       HumanInterruptConfig
     >;
     return all[toolName];
-  };
-
-  const toggleInterruptConfig = (toolName: string) => {
-    if (!toolsForm) return;
-    const current = getInterruptConfig(toolName) || false;
-    const allConfig = toolsForm.getValues("interruptConfig") || {};
-    toolsForm.setValue("interruptConfig", {
-      ...allConfig,
-      [toolName]: !current,
-    }, { shouldDirty: true });
   };
   return (
     <div className={cn("w-full bg-gray-50/50", compact ? "p-2" : "p-4")}>
@@ -231,89 +227,128 @@ export function AgentHierarchyNav({
                   />
                   <div className="mt-1 rounded-md border border-gray-200 bg-white">
                     <div className="max-h-64 overflow-auto">
-                        {(() => {
-                          const selected = toolsForm?.watch("tools") || [];
-                          const sorted = [...filteredTools].sort((a, b) => {
-                            const aSel = selected.includes(a.name) ? 1 : 0;
-                            const bSel = selected.includes(b.name) ? 1 : 0;
-                            return bSel - aSel; // selected first
-                          });
-                          return sorted.slice(0, 50).map((tool) => (
-                            <div key={`add-main-${tool.name}`}>
-                              <div className="group flex w-full items-stretch">
-                                <button
-                                  className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddTool(tool.name);
-                                    setSelectedAddMain(selectedAddMain === tool.name ? null : tool.name);
-                                  }}
-                                >
-                                  <div className="flex items-center gap-2 font-medium">
-                                    <Check
-                                      className={cn(
-                                        "h-3.5 w-3.5",
-                                        (selected || []).includes(tool.name)
-                                          ? "text-[#2F6868]"
-                                          : "text-transparent",
-                                      )}
-                                    />
-                                    {_.startCase(tool.name)}
+                      {(() => {
+                        const selected = toolsForm?.watch("tools") || [];
+                        const sorted = [...filteredTools].sort((a, b) => {
+                          const aSel = selected.includes(a.name) ? 1 : 0;
+                          const bSel = selected.includes(b.name) ? 1 : 0;
+                          return bSel - aSel; // selected first
+                        });
+                        return sorted.slice(0, 50).map((tool) => (
+                          <div key={`add-main-${tool.name}`}>
+                            <div className="group flex w-full items-stretch">
+                              <button
+                                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddTool(tool.name);
+                                  setSelectedAddMain(
+                                    selectedAddMain === tool.name
+                                      ? null
+                                      : tool.name,
+                                  );
+                                }}
+                              >
+                                <div className="flex items-center gap-2 font-medium">
+                                  <Check
+                                    className={cn(
+                                      "h-3.5 w-3.5",
+                                      (selected || []).includes(tool.name)
+                                        ? "text-[#2F6868]"
+                                        : "text-transparent",
+                                    )}
+                                  />
+                                  {_.startCase(tool.name)}
+                                </div>
+                                {tool.description && (
+                                  <div className="line-clamp-2 pl-6 text-xs text-gray-500">
+                                    {tool.description}
                                   </div>
-                                  {tool.description && (
-                                    <div className="line-clamp-2 pl-6 text-xs text-gray-500">
-                                      {tool.description}
-                                    </div>
-                                  )}
-                                </button>
-                              </div>
-                              {selectedAddMain === tool.name && (
-                                <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                                  <div className="flex items-center justify-center gap-3">
-                                    <div className="text-xs font-medium text-gray-500 uppercase">
-                                      Interrupt
-                                    </div>
-                                    <Button
-                                      size="sm"
-                                      variant={getInterruptConfig(tool.name) === true ? "secondary" : "outline"}
-                                      className="h-8 w-16 justify-center text-xs"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const allConfig = toolsForm?.getValues("interruptConfig") || {};
-                                        toolsForm?.setValue("interruptConfig", {
+                                )}
+                              </button>
+                            </div>
+                            {selectedAddMain === tool.name && (
+                              <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                <div className="flex items-center justify-center gap-3">
+                                  <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
+                                    <span>Interrupt</span>
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <HelpCircle className="h-3 w-3 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">
+                                            Pause execution and ask for user
+                                            approval before calling this tool
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      getInterruptConfig(tool.name) === true
+                                        ? "secondary"
+                                        : "outline"
+                                    }
+                                    className="h-8 w-16 justify-center text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const allConfig =
+                                        toolsForm?.getValues(
+                                          "interruptConfig",
+                                        ) || {};
+                                      toolsForm?.setValue(
+                                        "interruptConfig",
+                                        {
                                           ...allConfig,
                                           [tool.name]: true,
-                                        }, { shouldDirty: true });
-                                      }}
-                                    >
-                                      true
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant={getInterruptConfig(tool.name) === false ? "secondary" : "outline"}
-                                      className="h-8 w-16 justify-center text-xs"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const allConfig = toolsForm?.getValues("interruptConfig") || {};
-                                        toolsForm?.setValue("interruptConfig", {
+                                        },
+                                        { shouldDirty: true },
+                                      );
+                                    }}
+                                  >
+                                    true
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant={
+                                      getInterruptConfig(tool.name) === false
+                                        ? "secondary"
+                                        : "outline"
+                                    }
+                                    className="h-8 w-16 justify-center text-xs"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const allConfig =
+                                        toolsForm?.getValues(
+                                          "interruptConfig",
+                                        ) || {};
+                                      toolsForm?.setValue(
+                                        "interruptConfig",
+                                        {
                                           ...allConfig,
                                           [tool.name]: false,
-                                        }, { shouldDirty: true });
-                                      }}
-                                    >
-                                      false
-                                    </Button>
-                                  </div>
+                                        },
+                                        { shouldDirty: true },
+                                      );
+                                    }}
+                                  >
+                                    false
+                                  </Button>
                                 </div>
-                              )}
-                            </div>
-                          ));
-                        })()}
-                        {filteredTools.length === 0 && (
-                          <div className="px-3 py-2 text-xs text-gray-500">
-                            No tools found
+                              </div>
+                            )}
                           </div>
-                        )}
+                        ));
+                      })()}
+                      {filteredTools.length === 0 && (
+                        <div className="px-3 py-2 text-xs text-gray-500">
+                          No tools found
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -477,102 +512,147 @@ export function AgentHierarchyNav({
                               />
                               <div className="mt-1 rounded-md border border-gray-200 bg-white">
                                 <div className="max-h-64 overflow-auto">
-                                    {(() => {
-                                      const selected =
-                                        toolsForm?.watch("tools") || [];
-                                      const sorted = [...filteredTools].sort(
-                                        (a, b) => {
-                                          const aSel = selected.includes(a.name)
-                                            ? 1
-                                            : 0;
-                                          const bSel = selected.includes(b.name)
-                                            ? 1
-                                            : 0;
-                                          return bSel - aSel;
-                                        },
-                                      );
-                                      return sorted.slice(0, 50).map((tool) => (
-                                        <div key={`add-sa-${index}-${tool.name}`}>
-                                          <div className="group flex w-full items-stretch">
-                                            <button
-                                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleAddTool(tool.name);
-                                                setSelectedAddSub((m) => ({
-                                                  ...m,
-                                                  [index]: selectedAddSub[index] === tool.name ? null : tool.name,
-                                                }));
-                                              }}
-                                            >
-                                              <div className="flex items-center gap-2 font-medium">
-                                                <Check
-                                                  className={cn(
-                                                    "h-3.5 w-3.5",
-                                                    selected.includes(tool.name)
-                                                      ? "text-[#2F6868]"
-                                                      : "text-transparent",
-                                                  )}
-                                                />
-                                                {_.startCase(tool.name)}
+                                  {(() => {
+                                    const selected =
+                                      toolsForm?.watch("tools") || [];
+                                    const sorted = [...filteredTools].sort(
+                                      (a, b) => {
+                                        const aSel = selected.includes(a.name)
+                                          ? 1
+                                          : 0;
+                                        const bSel = selected.includes(b.name)
+                                          ? 1
+                                          : 0;
+                                        return bSel - aSel;
+                                      },
+                                    );
+                                    return sorted.slice(0, 50).map((tool) => (
+                                      <div key={`add-sa-${index}-${tool.name}`}>
+                                        <div className="group flex w-full items-stretch">
+                                          <button
+                                            className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAddTool(tool.name);
+                                              setSelectedAddSub((m) => ({
+                                                ...m,
+                                                [index]:
+                                                  selectedAddSub[index] ===
+                                                  tool.name
+                                                    ? null
+                                                    : tool.name,
+                                              }));
+                                            }}
+                                          >
+                                            <div className="flex items-center gap-2 font-medium">
+                                              <Check
+                                                className={cn(
+                                                  "h-3.5 w-3.5",
+                                                  selected.includes(tool.name)
+                                                    ? "text-[#2F6868]"
+                                                    : "text-transparent",
+                                                )}
+                                              />
+                                              {_.startCase(tool.name)}
+                                            </div>
+                                            {tool.description && (
+                                              <div className="line-clamp-2 pl-6 text-xs text-gray-500">
+                                                {tool.description}
                                               </div>
-                                              {tool.description && (
-                                                <div className="line-clamp-2 pl-6 text-xs text-gray-500">
-                                                  {tool.description}
-                                                </div>
-                                              )}
-                                            </button>
-                                          </div>
-                                          {selectedAddSub[index] === tool.name && (
-                                            <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                                              <div className="flex items-center justify-center gap-3">
-                                                <div className="text-xs font-medium text-gray-500 uppercase">
-                                                  Interrupt
-                                                </div>
-                                                <Button
-                                                  size="sm"
-                                                  variant={getInterruptConfig(tool.name) === true ? "secondary" : "outline"}
-                                                  className="h-8 w-16 justify-center text-xs"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const allConfig = toolsForm?.getValues("interruptConfig") || {};
-                                                    toolsForm?.setValue("interruptConfig", {
+                                            )}
+                                          </button>
+                                        </div>
+                                        {selectedAddSub[index] ===
+                                          tool.name && (
+                                          <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                                            <div className="flex items-center justify-center gap-3">
+                                              <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
+                                                <span>Interrupt</span>
+                                                <TooltipProvider>
+                                                  <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                      <HelpCircle className="h-3 w-3 cursor-help" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                      <p className="text-xs">
+                                                        Pause execution and ask
+                                                        for user approval before
+                                                        calling this tool
+                                                      </p>
+                                                    </TooltipContent>
+                                                  </Tooltip>
+                                                </TooltipProvider>
+                                              </div>
+                                              <Button
+                                                size="sm"
+                                                variant={
+                                                  getInterruptConfig(
+                                                    tool.name,
+                                                  ) === true
+                                                    ? "secondary"
+                                                    : "outline"
+                                                }
+                                                className="h-8 w-16 justify-center text-xs"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const allConfig =
+                                                    toolsForm?.getValues(
+                                                      "interruptConfig",
+                                                    ) || {};
+                                                  toolsForm?.setValue(
+                                                    "interruptConfig",
+                                                    {
                                                       ...allConfig,
                                                       [tool.name]: true,
-                                                    }, { shouldDirty: true });
-                                                  }}
-                                                >
-                                                  true
-                                                </Button>
-                                                <Button
-                                                  size="sm"
-                                                  variant={getInterruptConfig(tool.name) === false ? "secondary" : "outline"}
-                                                  className="h-8 w-16 justify-center text-xs"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const allConfig = toolsForm?.getValues("interruptConfig") || {};
-                                                    toolsForm?.setValue("interruptConfig", {
+                                                    },
+                                                    { shouldDirty: true },
+                                                  );
+                                                }}
+                                              >
+                                                true
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant={
+                                                  getInterruptConfig(
+                                                    tool.name,
+                                                  ) === false
+                                                    ? "secondary"
+                                                    : "outline"
+                                                }
+                                                className="h-8 w-16 justify-center text-xs"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const allConfig =
+                                                    toolsForm?.getValues(
+                                                      "interruptConfig",
+                                                    ) || {};
+                                                  toolsForm?.setValue(
+                                                    "interruptConfig",
+                                                    {
                                                       ...allConfig,
                                                       [tool.name]: false,
-                                                    }, { shouldDirty: true });
-                                                  }}
-                                                >
-                                                  false
-                                                </Button>
-                                              </div>
+                                                    },
+                                                    { shouldDirty: true },
+                                                  );
+                                                }}
+                                              >
+                                                false
+                                              </Button>
                                             </div>
-                                          )}
-                                        </div>
-                                      ));
-                                    })()}
-                                    {filteredTools.length === 0 && (
-                                      <div className="px-3 py-2 text-xs text-gray-500">
-                                        No tools found
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
+                                    ));
+                                  })()}
+                                  {filteredTools.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-gray-500">
+                                      No tools found
+                                    </div>
+                                  )}
                                 </div>
                               </div>
+                            </div>
                           )}
                         </div>
                       </div>

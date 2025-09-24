@@ -16,10 +16,7 @@ import type { ToolInterruptConfig } from "./create-agent-tools-selection";
 
 export const agentToolsFormSchema = z.object({
   tools: z.array(z.string()),
-  interruptConfig: z
-    .record(z.string(), z.boolean())
-    .default({})
-    .optional(),
+  interruptConfig: z.record(z.string(), z.boolean()).default({}).optional(),
 });
 
 export type AgentToolsFormValues = z.infer<typeof agentToolsFormSchema>;

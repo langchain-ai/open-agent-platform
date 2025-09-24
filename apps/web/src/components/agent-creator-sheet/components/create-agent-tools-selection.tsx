@@ -15,7 +15,6 @@ import { Search } from "@/components/ui/tool-search";
 
 export type HumanInterruptConfig = boolean;
 
-
 export type ToolInterruptConfig = Record<string, HumanInterruptConfig>;
 
 interface CreateAgentToolsSelectionProps {
