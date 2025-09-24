@@ -4,11 +4,20 @@ import { decodeJWT } from "@/lib/jwt-utils";
 export async function GET(request: NextRequest) {
   try {
     const jwtSecret = process.env.SUPABASE_JWT_SECRET;
+    const langsmithApiKey = process.env.LANGSMITH_API_KEY;
     const accessToken = request.headers.get("x-access-token");
+
     if (!accessToken || !jwtSecret) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 },
+      );
+    }
+
+    if (!langsmithApiKey) {
+      return NextResponse.json(
+        { error: "LANGSMITH_API_KEY environment variable is not configured" },
+        { status: 500 },
       );
     }
 
@@ -24,7 +33,7 @@ export async function GET(request: NextRequest) {
       "https://api.host.langchain.com/v2/auth/providers",
       {
         headers: {
-          "x-api-key": process.env.LANGSMITH_API_KEY!,
+          "x-api-key": langsmithApiKey,
           "Content-Type": "application/json",
         },
       },
