@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from "react";
 import { getDeployments } from "@/lib/environment/deployments";
-import { Agent, AgentConfigType } from "@/types/agent";
+import { Agent } from "@/types/agent";
 import { Deployment } from "@/types/deployment";
 import {
   groupAgentsByGraphs,

@@ -2,8 +2,6 @@
 
 import {
   Bot,
-  Brain,
-  BrainCircuit,
   Cloud,
   Edit,
   MessageSquare,
@@ -40,7 +38,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import {
+  isUserCreatedDefaultAssistant,
+  detectSupportedConfigs,
+} from "@/lib/agent-utils";
 import { useAgents } from "@/hooks/use-agents";
 import { useTriggers } from "@/hooks/use-triggers";
 import { useAuthContext } from "@/providers/Auth";
@@ -57,7 +58,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import React from "react";
+import React, { useMemo } from "react";
 
 function SupportedConfigBadge({
   type,
@@ -96,9 +97,22 @@ function SupportedConfigBadge({
 interface AgentCardProps {
   agent: Agent;
   showDeployment?: boolean;
+  agentIdsWithTriggers?: Set<string>;
 }
 
-export function AgentCard({ agent, showDeployment }: AgentCardProps) {
+export function AgentCard({
+  agent,
+  showDeployment,
+  agentIdsWithTriggers,
+}: AgentCardProps) {
+  // Enhance supportedConfigs with trigger information
+  const agentWitihConfigs = useMemo(
+    () => ({
+      ...agent,
+      supportedConfigs: detectSupportedConfigs(agent, agentIdsWithTriggers),
+    }),
+    [agent, agentIdsWithTriggers],
+  );
   const deployments = getDeployments();
   const selectedDeployment = deployments.find(
     (d) => d.id === agent.deploymentId,
@@ -207,7 +221,7 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
               {agent.metadata.description}
             </p>
           ) : null}
-          {agent.supportedConfigs?.map((config) => (
+          {agentWitihConfigs.supportedConfigs?.map((config) => (
             <SupportedConfigBadge
               key={`${agent.assistant_id}-${config}`}
               type={config}

@@ -9,7 +9,11 @@ import { TemplatesLoading } from "./templates-loading";
 import { AgentCard } from "../agent-card";
 import NextLink from "next/link";
 
-export function TemplatesList() {
+interface TemplatesListProps {
+  agentIdsWithTriggers?: Set<string>;
+}
+
+export function TemplatesList({ agentIdsWithTriggers }: TemplatesListProps) {
   const { agents, loading: agentsLoading } = useAgentsContext();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,6 +76,7 @@ export function TemplatesList() {
             <AgentCard
               key={`agent-${agent.assistant_id}`}
               agent={agent}
+              agentIdsWithTriggers={agentIdsWithTriggers}
             />
           ))}
         </div>
