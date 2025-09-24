@@ -24,7 +24,7 @@ export function AuthRequiredDialog(props: {
       open={props.open}
       onOpenChange={props.onOpenChange}
     >
-      <AlertDialogContent className="border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400 max-h-[85vh] max-w-2xl">
+      <AlertDialogContent className="max-h-[85vh] max-w-2xl border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400">
         <AlertDialogHeader className="flex-shrink-0">
           <AlertDialogTitle className="flex flex-row items-center">
             <Info className="mr-2 h-4 w-4" />
@@ -35,7 +35,7 @@ export function AuthRequiredDialog(props: {
             Changes".
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-3 overflow-y-auto flex-1 pr-2">
+        <div className="flex-1 space-y-3 overflow-y-auto pr-2">
           {props.authUrls.map((url, index) => (
             <div
               key={`${url.provider}-${index}`}
@@ -66,7 +66,9 @@ export function AuthRequiredDialog(props: {
               <Button variant="outline">Cancel</Button>
             </AlertDialogCancel>
           )}
-          <Button onClick={props.handleSubmit}>Continue after Authentication</Button>
+          <Button onClick={props.handleSubmit}>
+            Continue after Authentication
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
