@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
@@ -7,7 +7,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
 import { useMCPContext } from "@/providers/MCP";
 import { useStream } from "@langchain/langgraph-sdk/react";
-import { Assistant, Message } from "@langchain/langgraph-sdk";
+import { AIMessage, Assistant, Message } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import { Loader2 } from "lucide-react";
 import { getDeployments } from "@/lib/environment/deployments";
@@ -64,8 +64,16 @@ function AgentDescription({
   );
 }
 
+const getFollowupQuestionsMessage = (messages: Message[]) => {
+  return messages.findLast(
+    (message) =>
+      message.type === "ai" &&
+      message.tool_calls?.length &&
+      message.tool_calls[0].name === "FollowupQuestions",
+  ) as AIMessage | undefined;
+};
+
 interface ClarifyingQuestionsProps {
-  response: string;
   onResponseChange: (response: string) => void;
   onSubmit: () => void;
   messages: Message[];
@@ -74,52 +82,91 @@ interface ClarifyingQuestionsProps {
 }
 
 function ClarifyingQuestions({
-  response,
   onResponseChange,
   onSubmit,
   messages,
   loading,
   loadingText,
 }: ClarifyingQuestionsProps) {
-  const firstAiMessage = useMemo(() => {
-    return messages.find((message) => message.type === "ai");
+  const followupQuestionsMessage = useMemo(() => {
+    return getFollowupQuestionsMessage(messages);
   }, [messages]);
 
+  const followups: string[] | undefined =
+    followupQuestionsMessage?.tool_calls?.[0].args?.questions;
+
+  const [individualResponses, setIndividualResponses] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (followups && followups.length > 0 && individualResponses.length === 0) {
+      setIndividualResponses(new Array(followups.length).fill(""));
+    }
+  }, [followups, individualResponses.length]);
+
+  const handleIndividualResponseChange = (index: number, value: string) => {
+    const newResponses = [...individualResponses];
+    newResponses[index] = value;
+    setIndividualResponses(newResponses);
+
+    const mergedResponse = newResponses
+      .map((resp, idx) => `${idx + 1}. ${resp}`)
+      .filter((resp) => resp.trim() !== `${resp.split(".")[0]}.`)
+      .join("\n\n");
+
+    onResponseChange(mergedResponse);
+  };
+
+  if (!followups || followups.length === 0) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-3 p-6">
+        <div className="space-y-2">
+          <Label className="text-2xl font-semibold">Loading questions...</Label>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-3 p-6">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
       <div className="space-y-2">
         <Label className="text-2xl font-semibold">
           Please answer these clarifying questions
         </Label>
-
-        <div className="w-xl rounded-lg border bg-gray-50 p-4">
-          <p className="text-lg leading-relaxed whitespace-pre-wrap">
-            {firstAiMessage ? (firstAiMessage.content as string) : "Loading..."}
-          </p>
-        </div>
       </div>
 
-      <div className="w-full space-y-2">
-        <Label
-          htmlFor="clarifying-response"
-          className="text-lg font-medium"
-        >
-          Your response
-        </Label>
-        <AutoGrowTextarea
-          id="clarifying-response"
-          value={response}
-          onChange={(e) => onResponseChange(e.target.value)}
-          placeholder="Please provide your answers to the questions above..."
-          minRows={4}
-          maxRows={8}
-          className="w-full"
-        />
+      <div className="w-full space-y-6">
+        {followups.map((question, index) => (
+          <div
+            key={index}
+            className="space-y-2"
+          >
+            <div className="rounded-lg border bg-gray-50 p-4">
+              <p className="text-base leading-relaxed">
+                <span className="text-muted-foreground text-sm font-light">
+                  {index + 1}.{" "}
+                </span>
+                {question}
+              </p>
+            </div>
+
+            <AutoGrowTextarea
+              id={`question-${index}`}
+              value={individualResponses[index] || ""}
+              onChange={(e) =>
+                handleIndividualResponseChange(index, e.target.value)
+              }
+              placeholder={`Your answer to question ${index + 1}...`}
+              minRows={3}
+              maxRows={6}
+              className="w-full"
+            />
+          </div>
+        ))}
       </div>
 
       <Button
         onClick={onSubmit}
-        disabled={!response.trim() || loading}
+        disabled={!individualResponses.some((resp) => resp.trim()) || loading}
         className="w-full"
       >
         {loading ? (
@@ -128,7 +175,7 @@ function ClarifyingQuestions({
             {loadingText}
           </span>
         ) : (
-          "Submit Response"
+          "Submit Responses"
         )}
       </Button>
     </div>
@@ -258,12 +305,26 @@ export function InitialInputs({
   };
 
   const handleQuestionsSubmit = () => {
+    const followupQuestionsMessage = getFollowupQuestionsMessage(
+      stream.messages ?? [],
+    );
+    const toolCallId = followupQuestionsMessage?.tool_calls?.[0].id;
+    if (!toolCallId) {
+      toast.error("Failed to load followup questions", {
+        richColors: true,
+      });
+      return;
+    }
+
     setCreatingAgentLoadingText("Generating agent...");
+
     stream.submit(
       {
         messages: [
           {
-            role: "user",
+            role: "tool",
+            tool_call_id: toolCallId,
+            name: "FollowupQuestions",
             content: response,
           },
         ],
@@ -289,7 +350,6 @@ export function InitialInputs({
     return (
       <>
         <ClarifyingQuestions
-          response={response}
           onResponseChange={setResponse}
           onSubmit={handleQuestionsSubmit}
           messages={stream.messages ?? []}
@@ -306,12 +366,15 @@ export function InitialInputs({
             if (!success) {
               return;
             }
+
             await refreshAgents();
+
             if (newAgentId && onAgentCreated) {
               const deployments = getDeployments();
               const deploymentId = deployments[0]?.id || "";
               await onAgentCreated(newAgentId, deploymentId);
             }
+
             resetState();
           }}
         />
