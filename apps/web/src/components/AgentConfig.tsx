@@ -132,11 +132,9 @@ export function AgentConfig({
   });
 
   const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
-  
-  // Create custom schema that renders headers as bold paragraphs
+
   const schema = BlockNoteSchema.create({
     blockSpecs: {
-      // Include all default blocks except headers
       paragraph: defaultBlockSpecs.paragraph,
       bulletListItem: defaultBlockSpecs.bulletListItem,
       numberedListItem: defaultBlockSpecs.numberedListItem,
@@ -264,12 +262,13 @@ export function AgentConfig({
       ) {
         try {
           // Convert headers to bold text before parsing
-          const processedMarkdown = (currentInstructions as string)
-            .replace(/^#{1,6}\s+(.+)$/gm, '**$1**'); // Convert headers to bold text
-          
-          const blocks = await editor.tryParseMarkdownToBlocks(
-            processedMarkdown,
+          const processedMarkdown = (currentInstructions as string).replace(
+            /^#{1,6}\s+(.+)$/gm,
+            "**$1**",
           );
+
+          const blocks =
+            await editor.tryParseMarkdownToBlocks(processedMarkdown);
           editor.replaceBlocks(editor.document, blocks);
         } catch (error) {
           console.error("Error parsing markdown to blocks:", error);
