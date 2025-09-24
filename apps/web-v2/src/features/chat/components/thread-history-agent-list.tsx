@@ -157,7 +157,7 @@ export function ThreadHistoryAgentList({
   }, [displayItems, statusFilter]);
 
   return (
-    <div className={cn("flex h-full w-full flex-col", className)}>
+    <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
       <ScrollArea className="h-[calc(100vh-100px)]">
         {threads.isLoading ? (
           <div className="text-muted-foreground flex items-center justify-center p-12">
@@ -273,7 +273,7 @@ function Group({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-6">
+    <div className="mb-6 flex flex-col gap-1">
       <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
         {label}
       </h4>
@@ -319,13 +319,13 @@ function Row({
     <button
       onClick={onClick}
       className={cn(
-        "hover:bg-muted flex w-full max-w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
+        "hover:bg-muted grid cursor-pointer grid-cols-[auto_1fr] gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
         active ? "bg-muted" : "bg-transparent",
       )}
       aria-current={active}
     >
       <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-      <div className="flex w-full min-w-0 items-stretch justify-between gap-2 overflow-hidden">
+      <div className="flex w-full min-w-0 flex-shrink-0 items-stretch justify-between gap-2 overflow-hidden">
         <div className="min-w-0 flex-1 overflow-hidden">
           <div className="text-foreground mb-0.5 w-full max-w-full overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
             {title}
@@ -334,10 +334,10 @@ function Row({
             {description}
           </div>
         </div>
-        <div className="text-muted-foreground flex shrink-0 flex-col items-end justify-between pl-2 text-[11px]">
+        <div className="text-muted-foreground flex shrink-0 flex-col items-end pl-2 text-xs">
           <span
             className={cn(
-              "flex items-center gap-1 capitalize",
+              "mb-0.5 flex h-5 items-center gap-1 capitalize",
               statusTextClass,
             )}
           >
