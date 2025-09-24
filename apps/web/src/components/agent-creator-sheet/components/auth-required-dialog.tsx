@@ -11,6 +11,7 @@ import {
 import { Copy, ExternalLink, Info } from "lucide-react";
 import { toast } from "sonner";
 import _ from "lodash";
+import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 
 export function AuthRequiredDialog(props: {
   open: boolean;
@@ -19,6 +20,7 @@ export function AuthRequiredDialog(props: {
   authUrls: { provider: string; authUrl: string }[];
   hideCancel?: boolean;
 }) {
+  const { getProviderDisplayName } = useOAuthProviders();
   return (
     <AlertDialog
       open={props.open}
@@ -43,7 +45,7 @@ export function AuthRequiredDialog(props: {
             >
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  {_.startCase(url.provider)}
+                  {getProviderDisplayName(url.provider)}
                 </h4>
                 <Button
                   size="sm"
