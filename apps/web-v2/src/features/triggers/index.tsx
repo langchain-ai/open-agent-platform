@@ -33,7 +33,6 @@ export default function TriggersInterface({
   hideHeader = false,
   reloadTriggers,
 }: TriggersInterfaceProps) {
-  // No sidebar variant here — editor has its own SidebarTriggers component
   if (loading) {
     return (
       <Card>
