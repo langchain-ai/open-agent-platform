@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import AutoGrowTextarea from "@/components/ui/area-grow-textarea";
 import { getOptimizerClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
 import { toast } from "sonner";
-import { useQueryState } from "nuqs";
 import { useMCPContext } from "@/providers/MCP";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { Assistant, Message } from "@langchain/langgraph-sdk";
@@ -138,14 +137,17 @@ function ClarifyingQuestions({
 
 const ASSISTANT_ID = "agent_generator";
 
-export function InitialInputs(): React.ReactNode {
+interface InitialInputsProps {
+  onAgentCreated?: (agentId: string, deploymentId: string) => Promise<void>;
+}
+
+export function InitialInputs({
+  onAgentCreated,
+}: InitialInputsProps): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
   const { refreshAgents } = useAgentsContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
-
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [_agentId, setAgentId] = useQueryState("agentId");
 
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
@@ -162,15 +164,6 @@ export function InitialInputs(): React.ReactNode {
     if (!session?.accessToken) return null;
     return getOptimizerClient(session.accessToken);
   }, [session]);
-
-  const deployments = getDeployments();
-  useEffect(() => {
-    if (deploymentId) {
-      return;
-    }
-    const deployment = deployments.find((d) => d.isDefault) ?? deployments[0];
-    setDeploymentId(deployment.id);
-  }, [deploymentId, setDeploymentId]);
 
   const stream = useStream({
     client: client ?? undefined,
@@ -201,7 +194,16 @@ export function InitialInputs(): React.ReactNode {
 
       setCreatingAgent(true);
       await refreshAgents();
-      setAgentId(newAgent.assistant_id);
+
+      // Get deployment from the agent data or use default
+      const deployments = getDeployments();
+      const deploymentId = deployments[0]?.id || "";
+
+      // Call the parent callback to handle navigation
+      if (onAgentCreated) {
+        await onAgentCreated(newAgent.assistant_id, deploymentId);
+      }
+
       resetState();
     },
   });
@@ -305,8 +307,10 @@ export function InitialInputs(): React.ReactNode {
               return;
             }
             await refreshAgents();
-            if (newAgentId) {
-              await setAgentId(newAgentId);
+            if (newAgentId && onAgentCreated) {
+              const deployments = getDeployments();
+              const deploymentId = deployments[0]?.id || "";
+              await onAgentCreated(newAgentId, deploymentId);
             }
             resetState();
           }}
