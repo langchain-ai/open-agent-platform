@@ -71,9 +71,7 @@ export function TemplatesList({ agentIdsWithTriggers }: TemplatesListProps) {
           </Button>
         </div>
       ) : (
-        <div
-          className="grid grid-cols-[repeat(auto-fit,minmax(min(310px,100%),1fr))] gap-4"
-        >
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(310px,100%),1fr))] gap-4">
           {filteredAgents.map((agent) => (
             <AgentCard
               key={`agent-${agent.assistant_id}`}
