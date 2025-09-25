@@ -11,6 +11,7 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, HelpCircle, X } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import type { AgentToolsFormValues } from "@/components/agent-creator-sheet/components/agent-tools-form";
 import type { HumanInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 import {
@@ -37,7 +38,10 @@ export function MainAgentToolsDropdown({
   onToggleAdd?: (open: boolean) => void;
 }) {
   const { tools: allTools } = useMCPContext();
-  const selectedTools = (toolsForm?.watch("tools") ?? []) as string[];
+  const selectedTools = (useWatch({
+    control: toolsForm?.control,
+    name: "tools",
+  }) ?? []) as string[];
   const { filteredTools, debouncedSetSearchTerm } = useSearchTools(allTools, {
     preSelectedTools: selectedTools,
   });

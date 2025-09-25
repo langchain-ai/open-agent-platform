@@ -305,11 +305,11 @@ export function ToolsCombobox({
                     <Check
                       className={cn(
                         "flex-shrink-0",
-                        isSelected ? "opacity-100" : "opacity-0"
+                        isSelected ? "opacity-100" : "opacity-0",
                       )}
                     />
 
-                    <div className="flex flex-1 flex-col gap-1 min-w-0 ml-2">
+                    <div className="ml-2 flex min-w-0 flex-1 flex-col gap-1">
                       <p className="line-clamp-1 truncate font-medium">
                         {tool.name}
                       </p>

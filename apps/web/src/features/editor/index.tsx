@@ -6,7 +6,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
@@ -62,7 +62,6 @@ export function EditorPageContent(): React.ReactNode {
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
 
-
   const toolsForm = useAgentToolsForm();
   const triggersForm = useAgentTriggersForm();
   const [toolsDrafts, setToolsDrafts] = useState<
@@ -92,9 +91,12 @@ export function EditorPageContent(): React.ReactNode {
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
+    // Clear drafts so the updated agent configuration is properly reflected
+    setToolsDrafts({});
     // Clear threadId so subsequent messages start a fresh thread with new config
     await setThreadId(null);
     setChatVersion((v) => v + 1);
@@ -118,7 +120,6 @@ export function EditorPageContent(): React.ReactNode {
       setHeaderTitle(selectedAgent.name);
     }
   }, [selectedAgent?.assistant_id, selectedAgent?.name]);
-
 
   const currentTargetKey = "main";
 
@@ -150,8 +151,11 @@ export function EditorPageContent(): React.ReactNode {
 
   // Keep tools form values in sync, prefer draft if present
   useEffect(() => {
-    const savedTools = (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
-    const savedInterruptConfig = (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config || {};
+    const savedTools =
+      (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
+    const savedInterruptConfig =
+      (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
+      {};
 
     const draft = toolsDrafts[currentTargetKey];
     isApplyingToolsResetRef.current = true;
@@ -252,10 +256,28 @@ export function EditorPageContent(): React.ReactNode {
             </button>
             <button
               type="button"
-              onClick={() => saveRef.current?.()}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              onClick={async () => {
+                if (isSaving) return;
+                try {
+                  setIsSaving(true);
+                  await saveRef.current?.();
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              aria-busy={isSaving}
+              aria-live="polite"
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Save Changes
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>Save Changes</>
+              )}
             </button>
             <TooltipProvider>
               <Tooltip>
