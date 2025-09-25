@@ -1,23 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, Check, HelpCircle } from "lucide-react";
-import { Search } from "@/components/ui/tool-search";
-import { Switch } from "@/components/ui/switch";
-import { useMCPContext } from "@/providers/MCP";
-import { useSearchTools } from "@/hooks/use-search-tools";
-import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import _ from "lodash";
 import {
   Sheet,
   SheetContent,
@@ -35,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { SubAgent } from "@/types/sub-agent";
+import { SubagentToolsSelection } from "./subagent-tools-selection";
+import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 
 type SubAgentFormValues = {
   name: string;
@@ -62,15 +51,9 @@ export function SubAgentSheet({
       tools: editingSubAgent?.subAgent.tools || [],
     },
   });
-  const [interruptConfig, setInterruptConfig] = React.useState<
-    Record<string, boolean>
-  >({});
-  const [openInterrupts, setOpenInterrupts] = useState<Set<string>>(new Set());
-  const { tools: allTools } = useMCPContext();
+  const [interruptConfig, setInterruptConfig] =
+    React.useState<ToolInterruptConfig>({});
   const selectedTools = form.watch("tools") || [];
-  const { filteredTools, debouncedSetSearchTerm } = useSearchTools(allTools, {
-    preSelectedTools: selectedTools,
-  });
 
   // Reset form when editingSubAgent changes
   useEffect(() => {
@@ -95,16 +78,8 @@ export function SubAgentSheet({
     }
   }, [editingSubAgent, form]);
 
-  const handleToolToggle = (toolName: string) => {
-    const currentTools = form.getValues("tools") || [];
-    if (currentTools.includes(toolName)) {
-      form.setValue(
-        "tools",
-        currentTools.filter((t) => t !== toolName),
-      );
-    } else {
-      form.setValue("tools", [...currentTools, toolName]);
-    }
+  const handleToolsChange = (tools: string[]) => {
+    form.setValue("tools", tools);
   };
 
   const handleSubmit = (values: SubAgentFormValues) => {
@@ -205,111 +180,15 @@ export function SubAgentSheet({
                     Tools
                   </span>
                   <span className="text-[11px] text-gray-500">
-                    ({form.watch("tools")?.length || 0} selected)
+                    ({selectedTools.length} selected)
                   </span>
                 </div>
-                <Search
-                  onSearchChange={(term) => debouncedSetSearchTerm(term)}
-                  placeholder="Search tools..."
+                <SubagentToolsSelection
+                  selectedTools={selectedTools}
+                  onToolsChange={handleToolsChange}
+                  interruptConfig={interruptConfig}
+                  onInterruptConfigChange={setInterruptConfig}
                 />
-                <div className="max-h-60 overflow-y-auto rounded-md border md:max-h-72">
-                  {filteredTools.length > 0 ? (
-                    filteredTools.map((tool) => (
-                      <div key={tool.name}>
-                        <div className="flex items-stretch">
-                          <button
-                            className="flex-1 px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50"
-                            onClick={() => handleToolToggle(tool.name)}
-                          >
-                            <div className="flex items-center gap-2 font-medium">
-                              <Check
-                                className={cn(
-                                  "h-3.5 w-3.5",
-                                  selectedTools.includes(tool.name)
-                                    ? "text-[#2F6868]"
-                                    : "text-transparent",
-                                )}
-                              />
-                              <span className="truncate">
-                                {_.startCase(tool.name)}
-                              </span>
-                              {interruptConfig[tool.name] === true && (
-                                <span
-                                  title="Interrupts enabled"
-                                  className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
-                                />
-                              )}
-                            </div>
-                            {tool.description && (
-                              <div className="mt-0.5 line-clamp-1 pl-6 text-[11px] text-gray-500">
-                                {tool.description}
-                              </div>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            className="ml-auto px-2 text-gray-400 transition-colors hover:text-gray-600"
-                            title="Configure interrupt"
-                            onClick={() => {
-                              setOpenInterrupts((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(tool.name)) next.delete(tool.name);
-                                else next.add(tool.name);
-                                return next;
-                              });
-                            }}
-                          >
-                            <ChevronDown
-                              className={cn(
-                                "h-4 w-4 transition-transform",
-                                openInterrupts.has(tool.name)
-                                  ? "rotate-180"
-                                  : "",
-                              )}
-                            />
-                          </button>
-                        </div>
-                        {openInterrupts.has(tool.name) && (
-                          <div className="border-t border-gray-100 bg-gray-50 px-6 py-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
-                                <span>Interrupt</span>
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <HelpCircle className="h-3 w-3 cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p className="text-xs">
-                                        Enabling interrupts will pause the agent
-                                        before this tool's action is executed,
-                                        allowing you to approve, reject, edit,
-                                        or send feedback on the proposed action.
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              </div>
-                              <Switch
-                                checked={interruptConfig[tool.name] === true}
-                                onCheckedChange={(checked) => {
-                                  setInterruptConfig((prev) => ({
-                                    ...prev,
-                                    [tool.name]: checked,
-                                  }));
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="py-4 text-center text-sm text-gray-500">
-                      No tools found
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 

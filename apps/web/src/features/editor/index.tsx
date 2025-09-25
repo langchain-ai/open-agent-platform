@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
@@ -55,6 +56,7 @@ import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
 
 export function EditorPageContent(): React.ReactNode {
+  const router = useRouter();
   const { session } = useAuthContext();
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
@@ -88,6 +90,10 @@ export function EditorPageContent(): React.ReactNode {
 
   // UI: popover states handled by Popover components
   const [subAgentSheetOpen, setSubAgentSheetOpen] = useState(false);
+  const [editingSubAgent, setEditingSubAgent] = useState<{
+    subAgent: SubAgent;
+    index: number;
+  } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
@@ -148,12 +154,8 @@ export function EditorPageContent(): React.ReactNode {
     }
   }, [selectedAgent, currentEditTarget]);
 
-  const currentTargetKey = React.useMemo(() => {
-    if (!currentEditTarget) return "main";
-    return currentEditTarget.type === "subagent"
-      ? `sub:${currentEditTarget.index}`
-      : "main";
-  }, [currentEditTarget]);
+  // Tools should always reflect the main agent, never subagent
+  const currentTargetKey = "main";
 
   useEffect(() => {
     const subscription = toolsForm.watch((value) => {
@@ -181,20 +183,11 @@ export function EditorPageContent(): React.ReactNode {
   }, [toolsForm, currentTargetKey]);
 
   useEffect(() => {
-    const isSub = currentEditTarget?.type === "subagent";
-    const currentSubAgents =
-      (selectedAgent?.config?.configurable?.subagents as SubAgent[]) || [];
-    const sub =
-      isSub && typeof currentEditTarget?.index === "number"
-        ? currentSubAgents[currentEditTarget.index]
-        : null;
-    const savedTools = isSub
-      ? sub?.tools || []
-      : (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
-    const savedInterruptConfig = isSub
-      ? (sub as any)?.interrupt_config || {}
-      : (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
-        {};
+    const savedTools =
+      (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
+    const savedInterruptConfig =
+      (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
+      {};
 
     const draft = toolsDrafts[currentTargetKey];
     isApplyingToolsResetRef.current = true;
@@ -211,11 +204,6 @@ export function EditorPageContent(): React.ReactNode {
     }, 0);
   }, [
     selectedAgent?.assistant_id,
-    currentTargetKey,
-    currentEditTarget?.type === "subagent"
-      ? currentEditTarget.index
-      : undefined,
-    currentEditTarget?.type,
     selectedAgent?.config?.configurable,
     toolsDrafts,
     toolsForm,
@@ -302,7 +290,14 @@ export function EditorPageContent(): React.ReactNode {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setChatOpen(true)}
+              onClick={() => {
+                if (!agentId || !deploymentId) return;
+                const search = new URLSearchParams({
+                  agentId,
+                  deploymentId,
+                }).toString();
+                router.push(`/agents/chat?${search}`);
+              }}
               className="rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90"
             >
               Use agent
@@ -478,7 +473,10 @@ export function EditorPageContent(): React.ReactNode {
                 aria-label="Add sub-agent"
                 tooltip="Add sub-agent"
                 className="h-7 w-7 text-gray-600 hover:bg-gray-100"
-                onClick={() => setSubAgentSheetOpen(true)}
+                onClick={() => {
+                  setEditingSubAgent(null);
+                  setSubAgentSheetOpen(true);
+                }}
               >
                 <Plus className="h-3.5 w-3.5" />
               </TooltipIconButton>
@@ -505,29 +503,49 @@ export function EditorPageContent(): React.ReactNode {
                     subAgent: sa,
                     index,
                   });
+                  setEditingSubAgent({ subAgent: sa, index });
+                  setSubAgentSheetOpen(true);
                 }}
               />
             </div>
             <SubAgentSheet
               open={subAgentSheetOpen}
-              onOpenChange={setSubAgentSheetOpen}
+              onOpenChange={(open) => {
+                setSubAgentSheetOpen(open);
+                if (!open) setEditingSubAgent(null);
+              }}
+              editingSubAgent={editingSubAgent}
               onSubmit={(newSubAgent) => {
                 if (!selectedAgent) return;
                 const currentSubAgents =
                   (selectedAgent.config?.configurable
                     ?.subagents as SubAgent[]) || [];
-                const updatedSubAgents = [...currentSubAgents, newSubAgent];
+                let updatedSubAgents: SubAgent[];
+                let targetIndex: number;
+                if (editingSubAgent) {
+                  // Update existing subagent
+                  updatedSubAgents = currentSubAgents.map((sa, idx) =>
+                    idx === editingSubAgent.index ? newSubAgent : sa,
+                  );
+                  targetIndex = editingSubAgent.index;
+                } else {
+                  // Create new subagent
+                  updatedSubAgents = [...currentSubAgents, newSubAgent];
+                  targetIndex = updatedSubAgents.length - 1;
+                }
                 if (selectedAgent.config?.configurable) {
                   selectedAgent.config.configurable.subagents =
                     updatedSubAgents;
                 }
-                const newIndex = updatedSubAgents.length - 1;
                 setCurrentEditTarget({
                   type: "subagent",
                   subAgent: newSubAgent,
-                  index: newIndex,
+                  index: targetIndex,
                 });
-                toast.success(`Created ${newSubAgent.name} - ready to edit!`);
+                setEditingSubAgent(null);
+                toast.success(
+                  `${editingSubAgent ? "Updated" : "Created"} ${newSubAgent.name} - ready to edit!`,
+                );
               }}
             />
           </div>
