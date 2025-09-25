@@ -25,6 +25,7 @@ type ThreadItem = {
 type AgentSummary = {
   agent: Agent;
   latestThread?: ThreadItem;
+  interrupted?: number;
 };
 
 function useThreads(args: {
@@ -189,7 +190,11 @@ function useAgentSummaries(args: {
       // Fetch latest thread for each agent
       for (const agent of agents) {
         try {
-          const response = await client.threads.search({
+          const interrupted = await client.threads.count({
+            status: "interrupted",
+          });
+
+          const latest = await client.threads.search({
             limit: 1,
             sortBy: "updated_at",
             sortOrder: "desc",
@@ -200,8 +205,8 @@ function useAgentSummaries(args: {
           });
 
           let latestThread: ThreadItem | undefined;
-          if (response.length > 0) {
-            const t = response[0];
+          if (latest.length > 0) {
+            const t = latest[0];
             let snippet = "";
             try {
               if (
@@ -239,13 +244,17 @@ function useAgentSummaries(args: {
             };
           }
 
-          summaries.push({ agent, latestThread });
+          summaries.push({ agent, latestThread, interrupted });
         } catch (error) {
           console.warn(
             `Failed to fetch threads for agent ${agent.name}:`,
             error,
           );
-          summaries.push({ agent, latestThread: undefined });
+          summaries.push({
+            agent,
+            latestThread: undefined,
+            interrupted: undefined,
+          });
         }
       }
 
@@ -366,7 +375,7 @@ export function ThreadHistoryAgentList({
           <div className="bg-sidebar w-16 border-r transition-all duration-300 ease-in-out">
             <ScrollArea className="h-full w-full">
               <div className="flex flex-col items-center gap-2 p-2">
-                {agentSummaries.data?.map(({ agent }) => {
+                {agentSummaries.data?.map(({ agent, interrupted }) => {
                   const isSelected = selectedAgentId === agent.assistant_id;
 
                   return (
@@ -387,6 +396,12 @@ export function ThreadHistoryAgentList({
                       title={agent.name}
                     >
                       {agent.name?.charAt(0).toUpperCase() || "A"}
+
+                      {interrupted ? (
+                        <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white">
+                          {interrupted}
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}
@@ -568,7 +583,7 @@ function AgentSummaryCard({
   summary: AgentSummary;
   onClick: () => void;
 }) {
-  const { agent, latestThread } = summary;
+  const { agent, latestThread, interrupted } = summary;
 
   const formatTime = (date: Date) => {
     const now = new Date();
@@ -601,6 +616,12 @@ function AgentSummaryCard({
         >
           {agent.name?.charAt(0).toUpperCase() || "A"}
         </div>
+
+        {interrupted ? (
+          <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white">
+            {interrupted}
+          </span>
+        ) : null}
       </div>
 
       {/* Content */}

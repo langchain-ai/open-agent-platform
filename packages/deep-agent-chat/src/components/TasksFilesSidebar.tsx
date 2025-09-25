@@ -32,6 +32,72 @@ interface TasksFilesSidebarProps {
   assistantError: string | null;
 }
 
+export function FilesPopover(props: {
+  files: Record<string, string>;
+  setFiles: (files: Record<string, string>) => void;
+  editDisabled: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+
+  const handleSaveFile = useCallback(
+    (fileName: string, content: string) => {
+      const newFiles = {
+        ...props.files,
+        [fileName]: content,
+      };
+      props.setFiles(newFiles);
+      setSelectedFile({ path: fileName, content: content });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [props.files, props.setFiles],
+  );
+
+  return (
+    <>
+      {Object.keys(props.files).length === 0 ? (
+        <div className="flex h-full items-center justify-center p-4 text-center">
+          <p className="text-muted-foreground text-xs">No files created yet</p>
+        </div>
+      ) : (
+        <div className="p-1">
+          {Object.keys(props.files).map((file) => (
+            <div
+              key={file}
+              className="mb-1"
+            >
+              <div
+                className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
+                onClick={() => {
+                  setSelectedFile({ path: file, content: props.files[file] });
+                  setOpen(true);
+                }}
+              >
+                <FileText
+                  size={12}
+                  className="text-muted-foreground flex-shrink-0"
+                />
+                <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
+                  {file}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <FileViewDialog
+          file={selectedFile}
+          onSaveFile={handleSaveFile}
+          onClose={() => setOpen(false)}
+          editDisabled={props.editDisabled}
+        />
+      )}
+    </>
+  );
+}
+
 export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
   ({
     todos,
@@ -43,9 +109,6 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
     assistantError,
   }) => {
     const { isLoading, interrupt } = useChatContext();
-    const [isFileCreationDialogOpen, setIsFileCreationDialogOpen] =
-      useState(false);
-    const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
     const [tasksOpen, setTasksOpen] = useState(false);
     const [filesOpen, setFilesOpen] = useState(false);
 
@@ -76,22 +139,6 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       }
       prevFilesCount.current = filesCount;
     }, [filesCount]);
-
-    const handleCloseFileDialog = useCallback(() => {
-      setIsFileCreationDialogOpen(false);
-    }, []);
-
-    const handleSaveFile = useCallback(
-      (fileName: string, content: string) => {
-        const newFiles = {
-          ...files,
-          [fileName]: content,
-        };
-        setFiles(newFiles);
-        setSelectedFile({ path: fileName, content: content });
-      },
-      [files, setFiles],
-    );
 
     const getStatusIcon = useCallback((status: TodoItem["status"]) => {
       switch (status) {
@@ -127,6 +174,12 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
       };
     }, [todos]);
 
+    const groupedLabels = {
+      pending: "Pending",
+      in_progress: "In Progress",
+      completed: "Completed",
+    };
+
     return (
       <div className="min-h-0 w-full flex-1">
         <div className="font-inter flex h-full w-full flex-col p-0">
@@ -157,14 +210,18 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                     </div>
                   ) : (
                     <div className="ml-1 p-0.5">
-                      {groupedTodos.in_progress.length > 0 && (
+                      {Object.entries(groupedTodos).map(([status, todos]) => (
                         <div className="mb-4">
                           <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                            In Progress
+                            {
+                              groupedLabels[
+                                status as keyof typeof groupedLabels
+                              ]
+                            }
                           </h3>
-                          {groupedTodos.in_progress.map((todo, index) => (
+                          {todos.map((todo, index) => (
                             <div
-                              key={`in_progress_${todo.id}_${index}`}
+                              key={`${status}_${todo.id}_${index}`}
                               className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
                             >
                               {getStatusIcon(todo.status)}
@@ -174,45 +231,7 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
                             </div>
                           ))}
                         </div>
-                      )}
-
-                      {groupedTodos.pending.length > 0 && (
-                        <div className="mb-4">
-                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                            Pending
-                          </h3>
-                          {groupedTodos.pending.map((todo, index) => (
-                            <div
-                              key={`pending_${todo.id}_${index}`}
-                              className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
-                            >
-                              {getStatusIcon(todo.status)}
-                              <span className="flex-1 leading-relaxed break-words text-inherit">
-                                {todo.content}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {groupedTodos.completed.length > 0 && (
-                        <div className="mb-0">
-                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                            Completed
-                          </h3>
-                          {groupedTodos.completed.map((todo, index) => (
-                            <div
-                              key={`completed_${todo.id}_${index}`}
-                              className="mb-1.5 flex items-start gap-2 rounded-sm p-1 text-sm"
-                            >
-                              {getStatusIcon(todo.status)}
-                              <span className="flex-1 leading-relaxed break-words text-inherit">
-                                {todo.content}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      ))}
                     </div>
                   )}
                 </ScrollArea>
@@ -235,65 +254,11 @@ export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
               </button>
             </div>
             {filesOpen && (
-              <div className="bg-muted-secondary rounded-xl px-3 pb-2">
-                <div className="hidden justify-end pb-2">
-                  {/* <Button
-                      onClick={handleClickCreateButton}
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-3"
-                      disabled={isLoading === true || interrupt !== undefined}
-                    >
-                      <Plus size={16} className="mr-1" />
-                      Create New File
-                    </Button> */}
-                </div>
-                <ScrollArea className="h-full">
-                  {Object.keys(files).length === 0 ? (
-                    <div className="flex h-full items-center justify-center p-4 text-center">
-                      <p className="text-muted-foreground text-xs">
-                        No files created yet
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-1">
-                      {Object.keys(files).map((file) => (
-                        <div
-                          key={file}
-                          className="mb-1"
-                        >
-                          <div
-                            className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
-                            onClick={() => {
-                              setSelectedFile({
-                                path: file,
-                                content: files[file],
-                              });
-                              setIsFileCreationDialogOpen(true);
-                            }}
-                          >
-                            <FileText
-                              size={12}
-                              className="text-muted-foreground flex-shrink-0"
-                            />
-                            <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
-                              {file}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-                {isFileCreationDialogOpen && (
-                  <FileViewDialog
-                    file={selectedFile}
-                    onSaveFile={handleSaveFile}
-                    onClose={handleCloseFileDialog}
-                    editDisabled={isLoading === true || interrupt !== undefined}
-                  />
-                )}
-              </div>
+              <FilesPopover
+                files={files}
+                setFiles={setFiles}
+                editDisabled={isLoading === true || interrupt !== undefined}
+              />
             )}
 
             <OptimizationSidebar

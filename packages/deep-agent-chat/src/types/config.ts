@@ -14,4 +14,7 @@ export interface DeepAgentChatConfig {
   hideInternalToggle?: boolean;
   // Hide the sidebar with agent tasks, file system, and agent optimizer
   hideSidebar?: boolean;
+  // Controls the controls that are shown in the chat interface
+  controls?: React.ReactNode;
+  empty?: React.ReactNode;
 }
