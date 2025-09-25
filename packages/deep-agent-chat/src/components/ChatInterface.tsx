@@ -97,7 +97,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     onViewChange,
     controls,
     hideInternalToggle,
-    empty,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [tasksOpen, setTasksOpen] = useState(false);
