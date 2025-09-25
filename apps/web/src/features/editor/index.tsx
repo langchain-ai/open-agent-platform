@@ -224,14 +224,14 @@ export function EditorPageContent(): React.ReactNode {
         const { listTriggers, listUserTriggers, listAgentTriggers } =
           triggerFnsRef.current;
         const [t, r] = await Promise.all([
-          listTriggers(session.accessToken),
-          listUserTriggers(session.accessToken),
+          listTriggers(session.accessToken!),
+          listUserTriggers(session.accessToken!),
         ]);
         if (cancelled) return;
         setTriggers(t);
         setRegistrations(r);
         const ids = await listAgentTriggers(
-          session.accessToken,
+          session.accessToken!,
           selectedAgent.assistant_id,
         );
         if (cancelled) return;
