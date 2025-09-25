@@ -277,7 +277,7 @@ function RightPaneChat(): React.ReactNode {
 
       <div className="flex min-h-0 flex-1 flex-col pb-6">
         <DeepAgentChatInterface
-          key={`chat-${agentId || "all"}-${deploymentId}-${chatVersion}`}
+          key={`chat-${agentId || "all"}-${deploymentId}-${threadId}-${chatVersion}`}
           assistantId={agentId || ""}
           deploymentUrl={selectedDeployment?.deploymentUrl || ""}
           accessToken={session.accessToken || ""}
