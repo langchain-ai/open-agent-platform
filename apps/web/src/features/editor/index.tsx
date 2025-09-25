@@ -566,25 +566,27 @@ export function EditorPageContent(): React.ReactNode {
 
       {/* Bottom: Always-visible Instructions editor for main agent */}
       {selectedAgent && (
-        <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-t-0 border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
+        <div className="min-h-0 flex-1">
+          <div className="px-1 pb-2 text-sm font-semibold text-gray-700">
             Instructions
           </div>
-          <div className="h-full overflow-auto">
-            <AgentConfig
-              agent={selectedAgent}
-              editTarget={{ type: "main", agent: selectedAgent }}
-              onAgentUpdated={handleAgentUpdated}
-              hideTopTabs={true}
-              hideTitleSection={true}
-              externalTitle={headerTitle}
-              onExternalTitleChange={setHeaderTitle}
-              saveRef={saveRef}
-              toolsFormExternal={toolsForm}
-              triggersFormExternal={triggersForm}
-              view={"instructions"}
-              forceMainInstructionsView
-            />
+          <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="h-full overflow-auto">
+              <AgentConfig
+                agent={selectedAgent}
+                editTarget={{ type: "main", agent: selectedAgent }}
+                onAgentUpdated={handleAgentUpdated}
+                hideTopTabs={true}
+                hideTitleSection={true}
+                externalTitle={headerTitle}
+                onExternalTitleChange={setHeaderTitle}
+                saveRef={saveRef}
+                toolsFormExternal={toolsForm}
+                triggersFormExternal={triggersForm}
+                view={"instructions"}
+                forceMainInstructionsView
+              />
+            </div>
           </div>
         </div>
       )}
