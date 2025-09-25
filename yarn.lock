@@ -2557,6 +2557,7 @@ __metadata:
     "@supabase/ssr": ^0.6.1
     "@supabase/supabase-js": ^2.49.4
     "@tailwindcss/postcss": ^4.0.13
+    "@tailwindcss/typography": ^0.5.19
     "@tiptap/core": ^3.4.6
     "@tiptap/extension-gapcursor": ^3.4.5
     "@tiptap/extensions": ^3.4.5
@@ -4826,6 +4827,17 @@ __metadata:
     postcss: ^8.4.41
     tailwindcss: 4.1.13
   checksum: 2ad50989e0d78fa1e2587818e4ca0ca3f55be2590a7d4d4ef2d3d3f6555308514877398ab264cdc6cca999f42494ca0629e3b08ffe732b25dfad2b6f1d9efbd0
+  languageName: node
+  linkType: hard
+
+"@tailwindcss/typography@npm:^0.5.19":
+  version: 0.5.19
+  resolution: "@tailwindcss/typography@npm:0.5.19"
+  dependencies:
+    postcss-selector-parser: 6.0.10
+  peerDependencies:
+    tailwindcss: "*"
+  checksum: 6e5b25a2a24b8f112c9628b29aee4579ed024f368111937a5f3be7a4adc2d768c1aa9d5d5bb2d04972c7b49e526bcaade9f9e785e2e7a0b6be3d392f7ba02e17
   languageName: node
   linkType: hard
 
@@ -14201,6 +14213,16 @@ __metadata:
   peerDependencies:
     postcss: ^8.2.14
   checksum: 2c86ecf2d0ce68f27c87c7e24ae22dc6dd5515a89fcaf372b2627906e11f5c1f36e4a09e4c15c20fd4a23d628b3d945c35839f44496fbee9a25866258006671b
+  languageName: node
+  linkType: hard
+
+"postcss-selector-parser@npm:6.0.10":
+  version: 6.0.10
+  resolution: "postcss-selector-parser@npm:6.0.10"
+  dependencies:
+    cssesc: ^3.0.0
+    util-deprecate: ^1.0.2
+  checksum: 46afaa60e3d1998bd7adf6caa374baf857cc58d3ff944e29459c9a9e4680a7fe41597bd5b755fc81d7c388357e9bf67c0251d047c640a09f148e13606b8a8608
   languageName: node
   linkType: hard
 

@@ -56,11 +56,12 @@ import { SubagentsList } from "./components/subagents-list";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
-  const { agents, refreshAgents } = useAgentsContext();
+  const { agents, refreshAgents, loading: agentsLoading } = useAgentsContext();
   const deployments = getDeployments();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
+  const [isNewAgent] = useQueryState("new");
 
   const toolsForm = useAgentToolsForm();
   const triggersForm = useAgentTriggersForm();
@@ -110,10 +111,28 @@ export function EditorPageContent(): React.ReactNode {
     );
   }, [agents, agentId, deploymentId]);
 
+<<<<<<< HEAD
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
     [deploymentId, deployments],
   );
+=======
+  // Auto-select first agent if none selected but agents are available (but not when creating new)
+  useEffect(() => {
+    if (!agentId && !deploymentId && agents.length > 0 && !isNewAgent) {
+      const firstAgent = agents[0];
+      setAgentId(firstAgent.assistant_id);
+      setDeploymentId(firstAgent.deploymentId);
+    }
+  }, [agentId, deploymentId, agents, setAgentId, setDeploymentId, isNewAgent]);
+
+  // Initialize edit target when agent is selected
+  useEffect(() => {
+    if (selectedAgent && !currentEditTarget) {
+      setCurrentEditTarget({ type: "main", agent: selectedAgent });
+    }
+  }, [selectedAgent, currentEditTarget]);
+>>>>>>> brace/v2
 
   useEffect(() => {
     if (selectedAgent?.name) {
@@ -209,11 +228,16 @@ export function EditorPageContent(): React.ReactNode {
   // No chat panel in the new layout; thread reset happens on save where relevant
 
   if (!session) {
-    return <div>Loading...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
+  // Show loading while agents are being fetched
+  if (agentsLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  // Show the form if we: don't have an API URL, or don't have an assistant ID, AND (no agents available OR creating new agent)
+  if ((!agentId || !deploymentId) && (agents.length === 0 || isNewAgent)) {
     return (
       <InitialInputs
         onAgentCreated={async (agentId: string, deploymentId: string) => {
@@ -502,6 +526,7 @@ export function EditorPageContent(): React.ReactNode {
         </div>
       )}
 
+<<<<<<< HEAD
       {/* Slide-out chat on the right to test the agent */}
       <Sheet
         open={chatOpen}
@@ -538,6 +563,41 @@ export function EditorPageContent(): React.ReactNode {
           )}
         </SheetContent>
       </Sheet>
+=======
+      {/* Right column - Chat with Agent */}
+      <div className="flex min-h-0 w-1/4 flex-col">
+        <div className="mb-0 flex items-center justify-between gap-2 px-6">
+          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
+            Chat with your agent
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleNewThread}
+            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
+            title="Start new chat"
+          >
+            <SquarePen className="size-4" />
+          </Button>
+        </div>
+        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
+          <DeepAgentChatInterface
+            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
+            assistantId={agentId || ""}
+            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+            accessToken={session.accessToken || ""}
+            optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
+            optimizerAccessToken={session.accessToken || ""}
+            mode="oap"
+            SidebarTrigger={SidebarTrigger}
+            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+            view="chat"
+            hideInternalToggle={true}
+            hideSidebar={true}
+          />
+        </div>
+      </div>
+>>>>>>> brace/v2
     </div>
   );
 }

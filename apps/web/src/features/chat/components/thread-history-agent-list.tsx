@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
@@ -12,18 +12,6 @@ import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
 import { extractStringFromMessageContent, truncateText } from "../utils";
-import { useTriggers } from "@/hooks/use-triggers";
-import type { Trigger, ListTriggerRegistrationsData } from "@/types/triggers";
-
-type Props = {
-  agent: Agent | null;
-  deploymentId: string | null;
-  currentThreadId: string | null;
-  onThreadSelect: (id: string, assistantId?: string) => void;
-  showDraft?: boolean;
-  className?: string;
-  statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
-};
 
 type ThreadItem = {
   id: string;
@@ -32,7 +20,11 @@ type ThreadItem = {
   title: string;
   description: string;
   assistantId?: string;
-  triggerNames?: string[];
+};
+
+type AgentSummary = {
+  agent: Agent;
+  latestThread?: ThreadItem;
 };
 
 function useThreads(args: {
@@ -66,7 +58,12 @@ function useThreads(args: {
           string,
           string
         >;
+      } else {
+        params.metadata = {
+          graph_id: "deep_agent",
+        };
       }
+
       const response = await client.threads.search(params);
       const defaultTitle = agent?.name || "Agent";
       const defaultDesc =
@@ -78,17 +75,36 @@ function useThreads(args: {
         if (agent?.assistant_id) {
           // Try to derive a snippet from the last message in the thread
           let snippet = "";
+          let title = "";
+
+          const isMessages = (
+            values: unknown,
+          ): values is { messages: Message[] } => {
+            return (
+              typeof values === "object" &&
+              values !== null &&
+              "messages" in values &&
+              Array.isArray(values.messages)
+            );
+          };
+
           try {
-            if (
-              t.values &&
-              typeof t.values === "object" &&
-              "messages" in t.values
-            ) {
-              const messages = (t.values as { messages?: unknown[] }).messages;
-              if (Array.isArray(messages) && messages.length > 0) {
-                const last = messages[messages.length - 1] as Message;
+            if (isMessages(t.values)) {
+              const lastMessage = t.values.messages.at(-1);
+              const lastHuman = t.values.messages
+                .filter((t) => t.type === "human")
+                .at(-1);
+
+              if (lastMessage != null) {
                 snippet = truncateText(
-                  extractStringFromMessageContent(last),
+                  extractStringFromMessageContent(lastMessage),
+                  80,
+                );
+              }
+
+              if (lastHuman != null) {
+                title = truncateText(
+                  extractStringFromMessageContent(lastHuman),
                   80,
                 );
               }
@@ -104,7 +120,7 @@ function useThreads(args: {
             id: t.thread_id,
             updatedAt: new Date(t.updated_at || t.created_at),
             status: t.status,
-            title: defaultTitle,
+            title: title || defaultTitle,
             description: snippet || defaultDesc,
             assistantId: agent.assistant_id,
           };
@@ -156,100 +172,154 @@ function useThreads(args: {
   );
 }
 
+function useAgentSummaries(args: {
+  deploymentId: string | null;
+  agents: Agent[];
+}) {
+  const { session } = useAuthContext();
+
+  return useSWR(
+    { ...args, session },
+    async ({ deploymentId, agents, session }) => {
+      if (!deploymentId || !session?.accessToken) return [];
+
+      const client = createClient(deploymentId, session.accessToken);
+      const summaries: AgentSummary[] = [];
+
+      // Fetch latest thread for each agent
+      for (const agent of agents) {
+        try {
+          const response = await client.threads.search({
+            limit: 1,
+            sortBy: "updated_at",
+            sortOrder: "desc",
+            metadata: { assistant_id: agent.assistant_id } as Record<
+              string,
+              string
+            >,
+          });
+
+          let latestThread: ThreadItem | undefined;
+          if (response.length > 0) {
+            const t = response[0];
+            let snippet = "";
+            try {
+              if (
+                t.values &&
+                typeof t.values === "object" &&
+                "messages" in t.values
+              ) {
+                const messages = (t.values as { messages?: unknown[] })
+                  .messages;
+                if (Array.isArray(messages) && messages.length > 0) {
+                  const last = messages[messages.length - 1] as Message;
+                  snippet = truncateText(
+                    extractStringFromMessageContent(last),
+                    60,
+                  );
+                }
+              }
+            } catch (err) {
+              console.warn(
+                `Failed to get last message for thread ${t.thread_id}:`,
+                err,
+              );
+            }
+
+            latestThread = {
+              id: t.thread_id,
+              updatedAt: new Date(t.updated_at || t.created_at),
+              status: t.status,
+              title: agent.name || "Agent",
+              description:
+                snippet ||
+                (agent.metadata?.description as string) ||
+                "No description",
+              assistantId: agent.assistant_id,
+            };
+          }
+
+          summaries.push({ agent, latestThread });
+        } catch (error) {
+          console.warn(
+            `Failed to fetch threads for agent ${agent.name}:`,
+            error,
+          );
+          summaries.push({ agent, latestThread: undefined });
+        }
+      }
+
+      // Sort by latest thread update time
+      return summaries.sort((a, b) => {
+        if (!a.latestThread && !b.latestThread) return 0;
+        if (!a.latestThread) return 1;
+        if (!b.latestThread) return -1;
+        return (
+          b.latestThread.updatedAt.getTime() -
+          a.latestThread.updatedAt.getTime()
+        );
+      });
+    },
+  );
+}
+
+const getAgentColor = (name: string | undefined) => {
+  const firstChar = name?.charAt(0).toLowerCase();
+  switch (firstChar) {
+    case "a":
+      return "bg-blue-500";
+    case "b":
+      return "bg-green-500";
+    case "c":
+      return "bg-purple-500";
+    case "d":
+      return "bg-orange-500";
+    case "e":
+      return "bg-pink-500";
+    case "f":
+      return "bg-red-500";
+    default:
+      return "bg-gray-500";
+  }
+};
+
 export function ThreadHistoryAgentList({
-  agent,
   deploymentId,
   currentThreadId,
   onThreadSelect,
   showDraft = false,
   className,
   statusFilter = "all",
-}: Props) {
-  const { session } = useAuthContext();
+}: {
+  deploymentId: string | null;
+  currentThreadId: string | null;
+  onThreadSelect: (id: string, assistantId?: string) => void;
+  showDraft?: boolean;
+  className?: string;
+  statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
+}) {
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const { agents } = useAgentsContext();
-  const { listTriggers, listUserTriggers, listAgentTriggers } = useTriggers();
 
-  const [triggers, setTriggers] = useState<Trigger[]>([]);
-  const [registrations, setRegistrations] = useState<
-    ListTriggerRegistrationsData[]
-  >([]);
-  const [agentTriggers, setAgentTriggers] = useState<Record<string, string[]>>(
-    {},
+  // Filter agents for current deployment
+  const deploymentAgents = useMemo(
+    () => agents.filter((a) => a.deploymentId === deploymentId),
+    [agents, deploymentId],
   );
 
-  // Function to get trigger names for an agent - memoized to prevent infinite loops
-  const getTriggerNamesForAgent = useMemo(
+  const agent = useMemo(
     () =>
-      (agentId: string): string[] => {
-        const triggerIds = agentTriggers[agentId] || [];
-        const triggerNames: string[] = [];
-
-        triggerIds.forEach((registrationId) => {
-          const registration = registrations.find(
-            (r) => r.id === registrationId,
-          );
-          if (registration) {
-            const trigger = triggers.find(
-              (t) => t.id === registration.template_id,
-            );
-            if (trigger) {
-              triggerNames.push(trigger.displayName);
-            }
-          }
-        });
-
-        return triggerNames;
-      },
-    [agentTriggers, registrations, triggers],
+      deploymentAgents.find((a) => a.assistant_id === selectedAgentId) || null,
+    [deploymentAgents, selectedAgentId],
   );
 
-  const threads = useThreads({ deploymentId, agent });
-
-  // Load triggers data for displaying trigger names
-  useEffect(() => {
-    const loadTriggersData = async () => {
-      if (!session?.accessToken || agents.length === 0) return;
-
-      try {
-        const [triggersData, registrationsData] = await Promise.all([
-          listTriggers(session.accessToken),
-          listUserTriggers(session.accessToken),
-        ]);
-
-        if (triggersData) setTriggers(triggersData);
-        if (registrationsData) setRegistrations(registrationsData);
-
-        // Fetch agent triggers for all agents
-        const agentTriggersMap: Record<string, string[]> = {};
-        await Promise.all(
-          agents.map(async (agentItem) => {
-            const agentTriggerIds = await listAgentTriggers(
-              session.accessToken,
-              agentItem.assistant_id,
-            );
-            agentTriggersMap[agentItem.assistant_id] = agentTriggerIds;
-          }),
-        );
-        setAgentTriggers(agentTriggersMap);
-      } catch (error) {
-        console.error("Failed to load triggers data:", error);
-      }
-    };
-
-    loadTriggersData();
-  }, [session?.accessToken, agents.length]);
+  const threads = useThreads({ deploymentId, agent: agent });
+  const agentSummaries = useAgentSummaries({
+    deploymentId,
+    agents: deploymentAgents,
+  });
 
   const displayItems = useMemo(() => {
-    const baseItems = threads.data ?? [];
-
-    // Add trigger names to each thread item
-    const itemsWithTriggers: ThreadItem[] = baseItems.map((item) => ({
-      ...item,
-      triggerNames: item.assistantId
-        ? getTriggerNamesForAgent(item.assistantId)
-        : [],
-    }));
-
     if (showDraft && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
@@ -259,19 +329,11 @@ export function ThreadHistoryAgentList({
         description:
           (agent.metadata?.description as string | undefined) ||
           "No description",
-        assistantId: agent.assistant_id,
-        triggerNames: getTriggerNamesForAgent(agent.assistant_id),
       };
-      return [draft, ...itemsWithTriggers];
+      return [draft, ...(threads.data ?? [])];
     }
-    return itemsWithTriggers;
-  }, [
-    showDraft,
-    currentThreadId,
-    agent,
-    threads.data,
-    getTriggerNamesForAgent,
-  ]);
+    return threads.data ?? [];
+  }, [showDraft, currentThreadId, agent, threads.data]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, ThreadItem[]> = {
@@ -298,113 +360,108 @@ export function ThreadHistoryAgentList({
 
   return (
     <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
-      <ScrollArea className="h-[calc(100vh-100px)]">
-        {threads.isLoading ? (
-          <div className="text-muted-foreground flex items-center justify-center p-12">
-            Loading threads...
-          </div>
-        ) : !threads.data?.length ? (
-          <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
-            <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
-            <p>No threads yet</p>
-          </div>
-        ) : (
-          <div className="box-border w-full max-w-full overflow-hidden p-2">
-            {grouped.today.length > 0 && (
-              <Group label="Today">
-                {grouped.today.map((t) => (
-                  <Row
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    status={t.status}
-                    time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={
-                      t.id === currentThreadId ||
-                      (t.id === "__draft__" && !currentThreadId)
-                    }
-                    onClick={() => {
-                      if (t.id !== "__draft__")
-                        onThreadSelect(t.id, t.assistantId);
-                    }}
-                    triggerNames={t.triggerNames}
-                  />
-                ))}
-              </Group>
-            )}
-            {grouped.yesterday.length > 0 && (
-              <Group label="Yesterday">
-                {grouped.yesterday.map((t) => (
-                  <Row
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    status={t.status}
-                    time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={
-                      t.id === currentThreadId ||
-                      (t.id === "__draft__" && !currentThreadId)
-                    }
-                    onClick={() => {
-                      if (t.id !== "__draft__")
-                        onThreadSelect(t.id, t.assistantId);
-                    }}
-                    triggerNames={t.triggerNames}
-                  />
-                ))}
-              </Group>
-            )}
-            {grouped.week.length > 0 && (
-              <Group label="This Week">
-                {grouped.week.map((t) => (
-                  <Row
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    status={t.status}
-                    time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={
-                      t.id === currentThreadId ||
-                      (t.id === "__draft__" && !currentThreadId)
-                    }
-                    onClick={() => {
-                      if (t.id !== "__draft__")
-                        onThreadSelect(t.id, t.assistantId);
-                    }}
-                    triggerNames={t.triggerNames}
-                  />
-                ))}
-              </Group>
-            )}
-            {grouped.older.length > 0 && (
-              <Group label="Older">
-                {grouped.older.map((t) => (
-                  <Row
-                    key={t.id}
-                    id={t.id}
-                    title={t.title}
-                    description={t.description}
-                    status={t.status}
-                    time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
-                    active={
-                      t.id === currentThreadId ||
-                      (t.id === "__draft__" && !currentThreadId)
-                    }
-                    onClick={() => {
-                      if (t.id !== "__draft__")
-                        onThreadSelect(t.id, t.assistantId);
-                    }}
-                    triggerNames={t.triggerNames}
-                  />
-                ))}
-              </Group>
-            )}
+      <div className="relative flex h-full">
+        {/* Agent Sidebar - Only show when agent is selected */}
+        {selectedAgentId && (
+          <div className="bg-sidebar w-16 border-r transition-all duration-300 ease-in-out">
+            <ScrollArea className="h-full w-full">
+              <div className="flex flex-col items-center gap-2 p-2">
+                {agentSummaries.data?.map(({ agent }) => {
+                  const isSelected = selectedAgentId === agent.assistant_id;
+
+                  return (
+                    <button
+                      key={agent.assistant_id}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedAgentId(null);
+                        } else {
+                          setSelectedAgentId(agent.assistant_id);
+                        }
+                      }}
+                      className={cn(
+                        "relative flex h-12 w-12 items-center justify-center rounded-full font-semibold text-white transition-all duration-200 hover:scale-105",
+                        isSelected ? "ring-2 ring-[#2F6868] ring-offset-2" : "",
+                        getAgentColor(agent.name),
+                      )}
+                      title={agent.name}
+                    >
+                      {agent.name?.charAt(0).toUpperCase() || "A"}
+                    </button>
+                  );
+                })}
+              </div>
+            </ScrollArea>
           </div>
         )}
-      </ScrollArea>
+
+        {/* Main Content Area */}
+        <ScrollArea className="h-full w-full">
+          {!selectedAgentId ? (
+            // Show agent summaries
+            <div className="box-border w-full max-w-full overflow-hidden p-2">
+              {agentSummaries.isLoading ? (
+                <div className="text-muted-foreground flex items-center justify-center p-12">
+                  Loading agents...
+                </div>
+              ) : !agentSummaries.data?.length ? (
+                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
+                  <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
+                  <p>No agents available</p>
+                </div>
+              ) : (
+                <div>
+                  {agentSummaries.data.map((summary) => (
+                    <AgentSummaryCard
+                      key={summary.agent.assistant_id}
+                      summary={summary}
+                      onClick={() =>
+                        setSelectedAgentId(summary.agent.assistant_id)
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : threads.isLoading ? (
+            <div className="text-muted-foreground flex items-center justify-center p-12">
+              Loading threads...
+            </div>
+          ) : !threads.data?.length ? (
+            <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
+              <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
+              <p>No conversations yet</p>
+            </div>
+          ) : (
+            <div className="box-border w-full max-w-full overflow-hidden p-2">
+              {Object.entries(grouped)
+                .filter(([_, threads]) => threads.length > 0)
+                .map(([key, threads]) => (
+                  <Group
+                    key={key}
+                    label={key}
+                  >
+                    {threads.map((t) => (
+                      <Row
+                        key={t.id}
+                        {...t}
+                        time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
+                        active={
+                          t.id === currentThreadId ||
+                          (t.id === "__draft__" && !currentThreadId)
+                        }
+                        onClick={() => {
+                          if (t.id !== "__draft__")
+                            onThreadSelect(t.id, t.assistantId);
+                        }}
+                      />
+                    ))}
+                  </Group>
+                ))}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
     </div>
   );
 }
@@ -417,8 +474,8 @@ function Group({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-col gap-1">
-      <h4 className="text-muted-foreground m-0 p-2 text-xs font-semibold tracking-wide uppercase">
+    <div className="mb-4 flex flex-col gap-1">
+      <h4 className="text-muted-foreground m-0 px-3 py-2 text-xs font-semibold tracking-wide uppercase">
         {label}
       </h4>
       {children}
@@ -434,7 +491,6 @@ function Row({
   time,
   active,
   onClick,
-  triggerNames,
 }: {
   id: string;
   title: string;
@@ -443,73 +499,147 @@ function Row({
   time: string;
   active: boolean;
   onClick: () => void;
-  triggerNames?: string[];
 }) {
-  const statusTextClass =
-    status === "draft"
-      ? "text-gray-600"
-      : status === "busy"
-        ? "text-yellow-700"
-        : status === "idle"
-          ? "text-green-700"
-          : "text-red-700"; // interrupted or error
-  const statusDotClass =
-    status === "draft"
-      ? "bg-gray-400"
-      : status === "busy"
-        ? "bg-yellow-400"
-        : status === "idle"
-          ? "bg-green-500"
-          : "bg-red-500";
+  const formatTime = (timeStr: string) => {
+    const date = new Date(timeStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) {
+      return format(date, "HH:mm");
+    } else if (days === 1) {
+      return "Yesterday";
+    } else if (days < 7) {
+      return format(date, "EEEE");
+    } else {
+      return format(date, "MM/dd");
+    }
+  };
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        "hover:bg-muted grid cursor-pointer grid-cols-[auto_1fr] gap-2 overflow-hidden rounded-md border-none p-2 text-left transition-colors duration-200",
-        active ? "bg-muted" : "bg-transparent",
+        "grid w-full cursor-pointer items-center gap-3 rounded-lg border-none px-3 py-3 text-left transition-colors duration-200 hover:bg-gray-100",
+        active ? "border-l-4 bg-[#F4F3FF] text-[#1A1A1E]" : "bg-transparent",
       )}
       aria-current={active}
     >
-      <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-      <div className="flex w-full min-w-0 flex-shrink-0 items-stretch justify-between gap-2 overflow-hidden">
-        <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="mb-0.5 flex w-full max-w-full items-center gap-2 overflow-hidden">
-            <div className="text-foreground flex-shrink-0 overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
-              {title}
-            </div>
-            {triggerNames && triggerNames.length > 0 && (
-              <div className="flex flex-shrink flex-wrap gap-1">
-                {triggerNames.map((triggerName, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-blue-800"
-                  >
-                    {triggerName}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="text-muted-foreground mb-1 w-full max-w-full overflow-hidden text-xs text-ellipsis whitespace-nowrap">
-            {description}
-          </div>
+      {/* Content */}
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="truncate text-sm font-semibold text-gray-900">
+            {title}
+          </h3>
+          <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
+            {formatTime(time)}
+          </span>
         </div>
-        <div className="text-muted-foreground flex shrink-0 flex-col items-end pl-2 text-xs">
-          <span
-            className={cn(
-              "mb-0.5 flex h-5 items-center gap-1 capitalize",
-              statusTextClass,
-            )}
-          >
-            <span
+        <div className="flex items-center justify-between">
+          <p className="flex-1 truncate text-sm text-gray-600">{description}</p>
+          {/* Status indicator */}
+          <div className="ml-2 flex-shrink-0">
+            <div
               className={cn(
-                "inline-block size-1.5 rounded-full",
-                statusDotClass,
+                "h-2 w-2 rounded-full",
+                status === "idle"
+                  ? "bg-green-500"
+                  : status === "busy"
+                    ? "bg-yellow-400"
+                    : status === "interrupted"
+                      ? "bg-red-500"
+                      : status === "error"
+                        ? "bg-red-600"
+                        : "bg-gray-400",
               )}
             />
-            {status.replaceAll("_", " ")}
-          </span>
-          <span className="tabular-nums">{time}</span>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function AgentSummaryCard({
+  summary,
+  onClick,
+}: {
+  summary: AgentSummary;
+  onClick: () => void;
+}) {
+  const { agent, latestThread } = summary;
+
+  const formatTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (days === 0) {
+      return format(date, "HH:mm");
+    } else if (days === 1) {
+      return "Yesterday";
+    } else if (days < 7) {
+      return format(date, "EEEE");
+    } else {
+      return format(date, "MM/dd");
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className="grid w-full cursor-pointer grid-cols-[auto_1fr] items-center gap-3 rounded-lg border-none px-3 py-3 text-left transition-colors duration-200 hover:bg-gray-100"
+    >
+      {/* Avatar */}
+      <div className="relative flex-shrink-0">
+        <div
+          className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold text-white",
+            getAgentColor(agent.name || "A"),
+          )}
+        >
+          {agent.name?.charAt(0).toUpperCase() || "A"}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-center justify-between">
+          <h3 className="truncate text-sm font-semibold text-gray-900">
+            {agent.name}
+          </h3>
+          {latestThread && (
+            <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
+              {formatTime(latestThread.updatedAt)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="flex-1 truncate text-sm text-gray-600">
+            {latestThread
+              ? latestThread.description
+              : (agent.metadata?.description as string) || "No recent activity"}
+          </p>
+          {/* Status indicator for latest thread */}
+          {latestThread && (
+            <div className="ml-2 flex-shrink-0">
+              <div
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  latestThread.status === "idle"
+                    ? "bg-green-500"
+                    : latestThread.status === "busy"
+                      ? "bg-yellow-400"
+                      : latestThread.status === "interrupted"
+                        ? "bg-red-500"
+                        : latestThread.status === "error"
+                          ? "bg-red-600"
+                          : "bg-gray-400",
+                )}
+              />
+            </div>
+          )}
         </div>
       </div>
     </button>
