@@ -179,12 +179,17 @@ export function AgentConfig({
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
 
-  // Load triggers data
+  // Load triggers data (only when needed)
   useEffect(() => {
+    // If the triggers UI is hidden by flag, skip
     if (showTriggersTab === false || showTriggersTab === undefined) {
       setTriggersLoading(false);
       return;
     }
+    // If parent is managing the triggers form/data, avoid duplicate fetches
+    if (triggersFormExternal) return;
+    // Only fetch when the Triggers view is active for this component
+    if (currentView !== "triggers") return;
     if (!session?.accessToken || !agent) return;
 
     setTriggersLoading(true);
@@ -205,7 +210,17 @@ export function AgentConfig({
         }
       })
       .finally(() => setTriggersLoading(false));
-  }, [session?.accessToken, showTriggersTab, agent]);
+  }, [
+    session?.accessToken,
+    showTriggersTab,
+    agent,
+    currentView,
+    triggersFormExternal,
+    listTriggers,
+    listUserTriggers,
+    listAgentTriggers,
+    triggersForm,
+  ]);
 
   // Update edited values when edit target changes (not on every render)
   React.useEffect(() => {

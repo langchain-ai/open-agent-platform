@@ -7,7 +7,7 @@ import { useQueryState } from "nuqs";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -92,6 +92,28 @@ export function EditorPageContent(): React.ReactNode {
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  // Keep latest trigger functions in a ref so effect deps don't churn
+  const triggerFnsRef = React.useRef({
+    listTriggers,
+    listUserTriggers,
+    listAgentTriggers,
+  });
+  React.useEffect(() => {
+    triggerFnsRef.current = {
+      listTriggers,
+      listUserTriggers,
+      listAgentTriggers,
+    };
+  }, [listTriggers, listUserTriggers, listAgentTriggers]);
+  // Prevent duplicate loads for the same agent/token combo (helps in dev Strict Mode)
+  const loadedKeyRef = React.useRef<string | null>(null);
+  const setTriggerIds = React.useCallback(
+    (ids: string[]) => {
+      triggersForm.setValue("triggerIds", ids);
+    },
+    [triggersForm],
+  );
 
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
@@ -201,34 +223,44 @@ export function EditorPageContent(): React.ReactNode {
 
   // Load triggers lists and currently selected triggers for main agent
   useEffect(() => {
-    const load = async () => {
-      if (!session?.accessToken || !selectedAgent) return;
+    if (!session?.accessToken || !selectedAgent?.assistant_id) return;
+    const key = `${session.accessToken}:${selectedAgent.assistant_id}:${String(
+      showTriggersTab,
+    )}`;
+    if (loadedKeyRef.current === key) return;
+    loadedKeyRef.current = key;
+
+    let cancelled = false;
+    (async () => {
       try {
+        const { listTriggers, listUserTriggers, listAgentTriggers } =
+          triggerFnsRef.current;
         const [t, r] = await Promise.all([
           listTriggers(session.accessToken),
           listUserTriggers(session.accessToken),
         ]);
+        if (cancelled) return;
         setTriggers(t);
         setRegistrations(r);
         const ids = await listAgentTriggers(
           session.accessToken,
           selectedAgent.assistant_id,
         );
-        triggersForm.setValue("triggerIds", ids);
+        if (cancelled) return;
+        setTriggerIds(ids);
       } finally {
-        // Loading complete
+        // noop
       }
+    })();
+
+    return () => {
+      cancelled = true;
     };
-    load();
   }, [
     session?.accessToken,
     selectedAgent?.assistant_id,
     showTriggersTab,
-    listAgentTriggers,
-    listTriggers,
-    listUserTriggers,
-    selectedAgent,
-    triggersForm,
+    setTriggerIds,
   ]);
 
   // No chat panel in the new layout; thread reset happens on save where relevant
@@ -277,10 +309,20 @@ export function EditorPageContent(): React.ReactNode {
             </button>
             <button
               type="button"
-              onClick={() => saveRef.current?.()}
-              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              onClick={async () => {
+                if (!saveRef.current || isSaving) return;
+                try {
+                  setIsSaving(true);
+                  await saveRef.current();
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Save Changes
+              {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isSaving ? "Saving..." : "Save Changes"}
             </button>
             <TooltipProvider>
               <Tooltip>
