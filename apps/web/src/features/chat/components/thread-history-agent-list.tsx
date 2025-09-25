@@ -25,7 +25,7 @@ type ThreadItem = {
 type AgentSummary = {
   agent: Agent;
   latestThread?: ThreadItem;
-  interrupted?: number;
+  interrupted?: string;
 };
 
 function useThreads(args: {
@@ -250,7 +250,16 @@ function useAgentSummaries(args: {
             };
           }
 
-          summaries.push({ agent, latestThread, interrupted });
+          summaries.push({
+            agent,
+            latestThread,
+            interrupted:
+              interrupted > 99
+                ? "99+"
+                : interrupted > 0
+                  ? interrupted.toString()
+                  : undefined,
+          });
         } catch (error) {
           console.warn(
             `Failed to fetch threads for agent ${agent.name}:`,
@@ -668,7 +677,7 @@ function AgentSummaryCard({
         </div>
 
         {interrupted ? (
-          <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white">
+          <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-full border-[2px] bg-red-500 px-1 text-xs text-white">
             {interrupted}
           </span>
         ) : null}
