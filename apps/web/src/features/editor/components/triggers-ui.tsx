@@ -151,8 +151,12 @@ export function TriggersAddPopoverContent({
                     key={t.id}
                     className="px-3 py-3"
                   >
-                    <div className="mb-2 text-sm font-medium text-gray-800">
-                      {t.displayName}
+                    <div className="mb-2 flex items-center justify-between text-sm font-medium text-gray-800">
+                      <span>{t.displayName}</span>
+                      <AuthenticateTriggerDialog
+                        trigger={t}
+                        reloadTriggers={reloadTriggers}
+                      />
                     </div>
                     {t.description && (
                       <div className="mb-2 text-xs text-gray-500">
@@ -199,12 +203,6 @@ export function TriggersAddPopoverContent({
                         }}
                       />
                     )}
-                    <div className="mt-2">
-                      <AuthenticateTriggerDialog
-                        trigger={t}
-                        reloadTriggers={reloadTriggers}
-                      />
-                    </div>
                   </div>
                 );
               })}

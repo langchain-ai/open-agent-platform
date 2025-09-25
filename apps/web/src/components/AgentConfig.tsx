@@ -161,13 +161,6 @@ export function AgentConfig({
     },
   });
 
-  useEffect(() => {
-    if (saveRef) {
-      saveRef.current = async () => {
-        await handleSaveChanges();
-      };
-    }
-  }, [saveRef]);
 
   // Triggers state
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
@@ -496,6 +489,15 @@ export function AgentConfig({
     } finally {
     }
   };
+
+  // Assign saveRef to handleSaveChanges
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = async () => {
+        await handleSaveChanges();
+      };
+    }
+  }, [saveRef, handleSaveChanges]);
 
   if (!agent) {
     return (

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { generateFormFields } from "@/lib/triggers";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Trigger } from "@/types/triggers";
 import { useAuthContext } from "@/providers/Auth";
@@ -235,9 +235,9 @@ export function AuthenticateTriggerDialog(props: {
       <DialogTrigger asChild>
         <button
           onClick={() => setOpen(true)}
-          className="cursor-pointer rounded border border-green-700 px-2 py-1 text-sm text-green-800 transition-colors ease-in-out hover:border-green-800 hover:bg-green-50 hover:text-green-900"
+          className="cursor-pointer rounded border border-green-700 p-1 text-green-800 transition-colors ease-in-out hover:border-green-800 hover:bg-green-50 hover:text-green-900"
         >
-          Add
+          <Plus className="h-4 w-4" />
         </button>
       </DialogTrigger>
       <DialogContent className="p-6 sm:max-w-[425px]">

@@ -4,6 +4,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Search } from "@/components/ui/tool-search";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
@@ -128,7 +129,7 @@ export function MainAgentToolsDropdown({
           </Button>
         </div>
       )}
-      <div className="rounded-md bg-gray-50 p-2">
+      <div className="rounded-md bg-gray-50 p-2 pr-0">
         <div className="flex flex-wrap gap-1">
           {(() => {
             const list = selectedTools;
@@ -176,7 +177,7 @@ export function MainAgentToolsDropdown({
           )}
         </div>
         {effectiveShowAdd && (
-          <div className="mt-2">
+          <div className="mt-2 -mr-2">
             <Search
               onSearchChange={(term) => debouncedSetSearchTerm(term)}
               placeholder="Search tools to add..."
@@ -268,15 +269,9 @@ export function MainAgentToolsDropdown({
                                 </Tooltip>
                               </TooltipProvider>
                             </div>
-                            <Button
-                              size="sm"
-                              variant={
-                                getInterruptConfig(tool.name) === true
-                                  ? "secondary"
-                                  : "outline"
-                              }
-                              className="h-8 w-16 justify-center text-xs"
-                              onClick={() => {
+                            <Switch
+                              checked={getInterruptConfig(tool.name) === true}
+                              onCheckedChange={(checked) => {
                                 onEnsureMainSelected?.();
                                 const allConfig =
                                   toolsForm?.getValues("interruptConfig") || {};
@@ -284,38 +279,12 @@ export function MainAgentToolsDropdown({
                                   "interruptConfig",
                                   {
                                     ...allConfig,
-                                    [tool.name]: true,
+                                    [tool.name]: checked,
                                   },
                                   { shouldDirty: true },
                                 );
                               }}
-                            >
-                              true
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={
-                                getInterruptConfig(tool.name) === false
-                                  ? "secondary"
-                                  : "outline"
-                              }
-                              className="h-8 w-16 justify-center text-xs"
-                              onClick={() => {
-                                onEnsureMainSelected?.();
-                                const allConfig =
-                                  toolsForm?.getValues("interruptConfig") || {};
-                                toolsForm?.setValue(
-                                  "interruptConfig",
-                                  {
-                                    ...allConfig,
-                                    [tool.name]: false,
-                                  },
-                                  { shouldDirty: true },
-                                );
-                              }}
-                            >
-                              false
-                            </Button>
+                            />
                           </div>
                         </div>
                       )}

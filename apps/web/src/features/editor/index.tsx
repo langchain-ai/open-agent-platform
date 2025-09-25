@@ -36,6 +36,12 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -219,10 +225,6 @@ export function EditorPageContent(): React.ReactNode {
     session?.accessToken,
     selectedAgent?.assistant_id,
     showTriggersTab,
-    listAgentTriggers,
-    listTriggers,
-    listUserTriggers,
-    selectedAgent,
     triggersForm,
   ]);
 
@@ -250,7 +252,7 @@ export function EditorPageContent(): React.ReactNode {
     <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Page header with title/description and actions */}
       {selectedAgent && (
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="min-w-0">
             <input
               value={headerTitle}
@@ -265,10 +267,14 @@ export function EditorPageContent(): React.ReactNode {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setChatOpen(true)}
+              onClick={() => {
+                if (selectedAgent && deploymentId) {
+                  window.location.href = `/agents/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${deploymentId}`;
+                }
+              }}
               className="rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90"
             >
-              Test your agent
+              Use agent
             </button>
             <button
               type="button"
@@ -277,6 +283,22 @@ export function EditorPageContent(): React.ReactNode {
             >
               Save Changes
             </button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-md border border-gray-300 bg-gray-300 px-3 py-2 text-sm font-medium text-gray-500 shadow-sm cursor-not-allowed hover:bg-gray-300"
+                  >
+                    Train
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Use an optimizer to automatically make improvements to your agent.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       )}
@@ -503,7 +525,7 @@ export function EditorPageContent(): React.ReactNode {
         >
           <SheetHeader className="border-b px-4 py-2">
             <SheetTitle className="text-sm font-semibold">
-              Test your agent
+              Use agent
             </SheetTitle>
           </SheetHeader>
           {agentId && deploymentId && session?.accessToken ? (

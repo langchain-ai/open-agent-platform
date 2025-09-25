@@ -6,6 +6,7 @@ import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, HelpCircle } from "lucide-react";
 import {
@@ -71,7 +72,7 @@ export function ToolsAddPopoverContent({
   // using static icon per design
 
   return (
-    <div className="w-[560px] max-w-[90vw] p-3">
+    <div className="w-[560px] max-w-[90vw] p-2 pr-1">
       <Search
         onSearchChange={(term) => debouncedSetSearchTerm(term)}
         placeholder="Search tools..."
@@ -160,52 +161,21 @@ export function ToolsAddPopoverContent({
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={
-                          getInterruptConfig(tool.name) === true
-                            ? "secondary"
-                            : "outline"
-                        }
-                        className="h-8 w-16 justify-center text-xs"
-                        onClick={() => {
+                      <Switch
+                        checked={getInterruptConfig(tool.name) === true}
+                        onCheckedChange={(checked) => {
                           const allConfig =
                             toolsForm?.getValues("interruptConfig") || {};
                           toolsForm?.setValue(
                             "interruptConfig",
                             {
                               ...allConfig,
-                              [tool.name]: true,
+                              [tool.name]: checked,
                             },
                             { shouldDirty: true },
                           );
                         }}
-                      >
-                        true
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant={
-                          getInterruptConfig(tool.name) === false
-                            ? "secondary"
-                            : "outline"
-                        }
-                        className="h-8 w-16 justify-center text-xs"
-                        onClick={() => {
-                          const allConfig =
-                            toolsForm?.getValues("interruptConfig") || {};
-                          toolsForm?.setValue(
-                            "interruptConfig",
-                            {
-                              ...allConfig,
-                              [tool.name]: false,
-                            },
-                            { shouldDirty: true },
-                          );
-                        }}
-                      >
-                        false
-                      </Button>
+                      />
                     </div>
                   </div>
                 )}
