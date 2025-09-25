@@ -48,7 +48,7 @@ const createNavigationItems = (): NavigationItems => ({
       icon: Edit,
     },
     {
-      title: "Inbox",
+      title: "Chat",
       url: "/agents/chat",
       icon: MessageCircle,
     },
