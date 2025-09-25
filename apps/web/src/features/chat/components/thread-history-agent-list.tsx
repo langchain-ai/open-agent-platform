@@ -585,7 +585,9 @@ function Row({
       onClick={onClick}
       className={cn(
         "grid w-full cursor-pointer items-center gap-3 rounded-lg border-none px-3 py-3 text-left transition-colors duration-200 hover:bg-gray-100",
-        active ? "border-l-4 border-l-gray-300 bg-gray-100 text-[#1A1A1E]" : "bg-transparent",
+        active
+          ? "border-l-4 border-l-gray-300 bg-gray-100 text-[#1A1A1E]"
+          : "bg-transparent",
       )}
       aria-current={active}
     >
