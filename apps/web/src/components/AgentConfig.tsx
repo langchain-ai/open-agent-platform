@@ -58,6 +58,7 @@ interface AgentConfigProps {
   externalTitle?: string;
   onExternalTitleChange?: (v: string) => void;
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  forceMainInstructionsView?: boolean;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
@@ -77,6 +78,7 @@ export function AgentConfig({
   externalTitle,
   onExternalTitleChange,
   saveRef,
+  forceMainInstructionsView,
 }: AgentConfigProps) {
   const { session } = useAuthContext();
   const {
@@ -136,7 +138,13 @@ export function AgentConfig({
     },
   });
 
-  const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
+  const editorKey = forceMainInstructionsView
+    ? `${agent?.assistant_id}-main`
+    : `${agent?.assistant_id}-${
+        isEditingSubAgent
+          ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}`
+          : "main"
+      }`;
 
   const schema = BlockNoteSchema.create({
     blockSpecs: {
@@ -269,10 +277,13 @@ export function AgentConfig({
 
   React.useEffect(() => {
     const updateEditorContent = async () => {
-      const currentInstructions = isEditingSubAgent
-        ? currentSubAgent?.prompt || "No instructions provided"
-        : agent?.config?.configurable?.instructions ||
-          "No instructions provided";
+      const currentInstructions = forceMainInstructionsView
+        ? agent?.config?.configurable?.instructions ||
+          "No instructions provided"
+        : isEditingSubAgent
+          ? currentSubAgent?.prompt || "No instructions provided"
+          : agent?.config?.configurable?.instructions ||
+            "No instructions provided";
 
       if (
         currentInstructions &&
@@ -320,6 +331,7 @@ export function AgentConfig({
     editTarget?.type,
     editTarget?.type === "subagent" ? editTarget.index : null,
     editor,
+    forceMainInstructionsView,
   ]);
 
   React.useEffect(() => {

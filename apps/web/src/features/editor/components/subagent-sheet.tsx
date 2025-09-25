@@ -134,13 +134,13 @@ export function SubAgentSheet({
     >
       <SheetContent
         side="right"
-        className="flex flex-col sm:max-w-xl"
+        className="flex h-full min-h-0 flex-col sm:max-w-xl"
       >
-        <SheetHeader>
-          <SheetTitle>
+        <SheetHeader className="px-4 pt-3 pb-2">
+          <SheetTitle className="text-base">
             {editingSubAgent ? "Edit Subagent" : "Create Subagent"}
           </SheetTitle>
-          <SheetDescription>
+          <SheetDescription className="text-muted-foreground mt-1 text-xs leading-snug">
             {editingSubAgent
               ? "Edit this specialized subagent that can be called by your main agent."
               : "Create a specialized subagent that can be called by your main agent."}
@@ -148,16 +148,16 @@ export function SubAgentSheet({
         </SheetHeader>
         <Form {...form}>
           <form
-            className="flex flex-1 flex-col"
+            className="flex min-h-0 flex-1 flex-col"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
-            <div className="scrollbar-pretty-auto flex-1 space-y-6 overflow-auto p-4">
+            <div className="scrollbar-pretty-auto min-h-0 flex-1 space-y-4 overflow-auto p-3">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">
+                    <FormLabel className="text-xs font-semibold text-gray-700">
                       Agent Name
                     </FormLabel>
                     <FormControl>
@@ -167,7 +167,7 @@ export function SubAgentSheet({
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-xs">
                       A descriptive name for this subagent
                     </FormDescription>
                     <FormMessage />
@@ -180,18 +180,18 @@ export function SubAgentSheet({
                 name="prompt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">
+                    <FormLabel className="text-xs font-semibold text-gray-700">
                       Instructions
                     </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="You are a helpful assistant that..."
-                        rows={25}
-                        className="min-h-[400px] resize-y"
+                        rows={10}
+                        className="max-h-[25rem] min-h-[200px] resize-y"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
+                    <FormDescription className="text-xs">
                       Instructions that define how this subagent should behave
                     </FormDescription>
                     <FormMessage />
@@ -201,10 +201,10 @@ export function SubAgentSheet({
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-700">
+                  <span className="text-xs font-semibold text-gray-700">
                     Tools
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-[11px] text-gray-500">
                     ({form.watch("tools")?.length || 0} selected)
                   </span>
                 </div>
@@ -212,13 +212,13 @@ export function SubAgentSheet({
                   onSearchChange={(term) => debouncedSetSearchTerm(term)}
                   placeholder="Search tools..."
                 />
-                <div className="max-h-75 overflow-y-auto rounded-md border">
+                <div className="max-h-60 overflow-y-auto rounded-md border md:max-h-72">
                   {filteredTools.length > 0 ? (
                     filteredTools.map((tool) => (
                       <div key={tool.name}>
                         <div className="flex items-stretch">
                           <button
-                            className="flex-1 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                            className="flex-1 px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50"
                             onClick={() => handleToolToggle(tool.name)}
                           >
                             <div className="flex items-center gap-2 font-medium">
@@ -241,7 +241,7 @@ export function SubAgentSheet({
                               )}
                             </div>
                             {tool.description && (
-                              <div className="mt-1 line-clamp-2 pl-6 text-xs text-gray-500">
+                              <div className="mt-0.5 line-clamp-1 pl-6 text-[11px] text-gray-500">
                                 {tool.description}
                               </div>
                             )}
@@ -270,7 +270,7 @@ export function SubAgentSheet({
                           </button>
                         </div>
                         {openInterrupts.has(tool.name) && (
-                          <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
+                          <div className="border-t border-gray-100 bg-gray-50 px-6 py-2">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
                                 <span>Interrupt</span>
@@ -313,7 +313,7 @@ export function SubAgentSheet({
               </div>
             </div>
 
-            <div className="flex-shrink-0 p-4">
+            <div className="flex-shrink-0 border-t bg-white p-3">
               <Button
                 type="submit"
                 className="w-full"

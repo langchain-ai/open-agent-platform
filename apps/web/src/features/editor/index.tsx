@@ -553,6 +553,7 @@ export function EditorPageContent(): React.ReactNode {
               toolsFormExternal={toolsForm}
               triggersFormExternal={triggersForm}
               view={"instructions"}
+              forceMainInstructionsView
             />
           </div>
         </div>
