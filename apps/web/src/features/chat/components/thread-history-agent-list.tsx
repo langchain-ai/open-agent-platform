@@ -57,16 +57,18 @@ function useThreads(args: {
         limit: 50,
         sortBy: "created_at",
         sortOrder: "desc",
-        metadata: {
-          assistant_id: agent?.assistant_id,
-        },
       };
       if (agent?.assistant_id) {
         params.metadata = { assistant_id: agent.assistant_id } as Record<
           string,
           string
         >;
+      } else {
+        params.metadata = {
+          graph_id: "deep_agent",
+        };
       }
+
       const response = await client.threads.search(params);
       const defaultTitle = agent?.name || "Agent";
       const defaultDesc =
