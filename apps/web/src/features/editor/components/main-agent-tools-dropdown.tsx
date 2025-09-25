@@ -177,7 +177,7 @@ export function MainAgentToolsDropdown({
           )}
         </div>
         {effectiveShowAdd && (
-          <div className="mt-2 -mr-2">
+          <div className="mt-2">
             <Search
               onSearchChange={(term) => debouncedSetSearchTerm(term)}
               placeholder="Search tools to add..."
@@ -228,7 +228,7 @@ export function MainAgentToolsDropdown({
                         </button>
                         <button
                           type="button"
-                          className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                          className="ml-auto px-2 text-gray-400 transition-colors hover:text-gray-600"
                           title="Expand/collapse interrupt"
                           onClick={() => {
                             onEnsureMainSelected?.();

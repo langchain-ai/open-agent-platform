@@ -8,7 +8,7 @@ import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { EditTarget } from "@/components/AgentHierarchyNav";
+import type { EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
 import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
@@ -62,10 +62,6 @@ export function EditorPageContent(): React.ReactNode {
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
 
-  // State for hierarchical editing
-  const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
-    null,
-  );
 
   const toolsForm = useAgentToolsForm();
   const triggersForm = useAgentTriggersForm();
@@ -123,20 +119,8 @@ export function EditorPageContent(): React.ReactNode {
     }
   }, [selectedAgent?.assistant_id, selectedAgent?.name]);
 
-  // Initialize edit target when agent is selected
-  useEffect(() => {
-    if (selectedAgent && !currentEditTarget) {
-      setCurrentEditTarget({ type: "main", agent: selectedAgent });
-    }
-  }, [selectedAgent, currentEditTarget]);
 
-  // Utility to compute a stable key for the current edit target
-  const currentTargetKey = React.useMemo(() => {
-    if (!currentEditTarget) return "main";
-    return currentEditTarget.type === "subagent"
-      ? `sub:${currentEditTarget.index}`
-      : "main";
-  }, [currentEditTarget]);
+  const currentTargetKey = "main";
 
   // Persist draft tool changes per-target so switching targets doesn't lose draft edits
   useEffect(() => {
@@ -164,22 +148,10 @@ export function EditorPageContent(): React.ReactNode {
     return () => subscription.unsubscribe();
   }, [toolsForm, currentTargetKey]);
 
-  // Keep tools form values in sync when switching edit targets, prefer draft if present
+  // Keep tools form values in sync, prefer draft if present
   useEffect(() => {
-    const isSub = currentEditTarget?.type === "subagent";
-    const currentSubAgents =
-      (selectedAgent?.config?.configurable?.subagents as SubAgent[]) || [];
-    const sub =
-      isSub && typeof currentEditTarget?.index === "number"
-        ? currentSubAgents[currentEditTarget.index]
-        : null;
-    const savedTools = isSub
-      ? sub?.tools || []
-      : (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
-    const savedInterruptConfig = isSub
-      ? (sub as any)?.interrupt_config || {}
-      : (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
-        {};
+    const savedTools = (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
+    const savedInterruptConfig = (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config || {};
 
     const draft = toolsDrafts[currentTargetKey];
     isApplyingToolsResetRef.current = true;
@@ -197,8 +169,6 @@ export function EditorPageContent(): React.ReactNode {
   }, [
     selectedAgent?.assistant_id,
     currentTargetKey,
-    currentEditTarget?.index,
-    currentEditTarget?.type,
     selectedAgent?.config?.configurable,
     toolsDrafts,
     toolsForm,
@@ -382,14 +352,7 @@ export function EditorPageContent(): React.ReactNode {
                   aria-label="Add tool"
                   tooltip="Add tool"
                   className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
-                  onClick={() => {
-                    if (selectedAgent && currentEditTarget?.type !== "main") {
-                      setCurrentEditTarget({
-                        type: "main",
-                        agent: selectedAgent,
-                      });
-                    }
-                  }}
+                  onClick={() => {}}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </TooltipIconButton>
@@ -402,14 +365,7 @@ export function EditorPageContent(): React.ReactNode {
               >
                 <ToolsAddPopoverContent
                   toolsForm={toolsForm}
-                  onEnsureMainSelected={() => {
-                    if (selectedAgent && currentEditTarget?.type !== "main") {
-                      setCurrentEditTarget({
-                        type: "main",
-                        agent: selectedAgent,
-                      });
-                    }
-                  }}
+                  onEnsureMainSelected={() => {}}
                 />
               </PopoverContent>
             </Popover>
@@ -417,11 +373,7 @@ export function EditorPageContent(): React.ReactNode {
           <div className="p-3">
             <MainAgentToolsDropdown
               toolsForm={toolsForm}
-              onEnsureMainSelected={() => {
-                if (selectedAgent && currentEditTarget?.type !== "main") {
-                  setCurrentEditTarget({ type: "main", agent: selectedAgent });
-                }
-              }}
+              onEnsureMainSelected={() => {}}
               hideHeader
               hideTitle
             />
@@ -429,7 +381,7 @@ export function EditorPageContent(): React.ReactNode {
         </div>
 
         {/* Subagents (list with tools) */}
-        {selectedAgent && currentEditTarget && (
+        {selectedAgent && (
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
               <div className="text-sm font-semibold text-gray-700">
@@ -504,8 +456,8 @@ export function EditorPageContent(): React.ReactNode {
         )}
       </div>
 
-      {/* Bottom: Always-visible Instructions editor for current target */}
-      {selectedAgent && currentEditTarget && (
+      {/* Bottom: Always-visible Instructions editor */}
+      {selectedAgent && (
         <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-t-0 border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
             Instructions
@@ -513,7 +465,7 @@ export function EditorPageContent(): React.ReactNode {
           <div className="h-full overflow-auto">
             <AgentConfig
               agent={selectedAgent}
-              editTarget={currentEditTarget}
+              editTarget={{ type: "main", agent: selectedAgent }}
               onAgentUpdated={handleAgentUpdated}
               hideTopTabs={true}
               hideTitleSection={true}

@@ -248,7 +248,7 @@ export function SubAgentSheet({
                           </button>
                           <button
                             type="button"
-                            className="px-2 text-gray-400 transition-colors hover:text-gray-600"
+                            className="ml-auto px-2 text-gray-400 transition-colors hover:text-gray-600"
                             title="Configure interrupt"
                             onClick={() => {
                               setOpenInterrupts((prev) => {

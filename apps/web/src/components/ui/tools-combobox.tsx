@@ -300,13 +300,16 @@ export function ToolsCombobox({
                     key={tool.name}
                     value={tool.name}
                     onSelect={handleSelect}
-                    className="flex w-full items-center justify-between"
+                    className="flex w-full items-center"
                   >
                     <Check
-                      className={cn(isSelected ? "opacity-100" : "opacity-0")}
+                      className={cn(
+                        "flex-shrink-0",
+                        isSelected ? "opacity-100" : "opacity-0"
+                      )}
                     />
 
-                    <div className="flex flex-1 flex-col gap-1 pr-2">
+                    <div className="flex flex-1 flex-col gap-1 min-w-0 ml-2">
                       <p className="line-clamp-1 truncate font-medium">
                         {tool.name}
                       </p>
