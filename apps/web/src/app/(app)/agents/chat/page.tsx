@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
-import { TodoList } from "@/features/chat/components/todo-list";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -160,9 +159,7 @@ function ThreadHistoryHalf(): React.ReactNode {
           className="relative"
           order={2}
         >
-          <div className="absolute inset-0">
-            <RightPaneChat />
-          </div>
+          <RightPaneChat />
         </ResizablePanel>
       </ResizablePanelGroup>
     </>
@@ -188,7 +185,7 @@ function RightPaneChat(): React.ReactNode {
   const { agents } = useAgentsContext();
 
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [draft, setDraft] = useQueryState("draft");
   const [chatVersion] = useState(0);
@@ -214,24 +211,10 @@ function RightPaneChat(): React.ReactNode {
     );
   }
 
-  // If no thread selected and not composing a draft, show todo list
-  if (!threadId && draft !== "1") {
-    return (
-      <TodoList
-        deploymentId={deploymentId}
-        onThreadSelect={async (id, assistantId) => {
-          if (assistantId) {
-            await setAgentId(assistantId);
-          }
-          await setCurrentThreadId(id);
-          await setDraft(null);
-        }}
-      />
-    );
-  }
+  const isEmpty = !threadId && draft === "1";
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
+    <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid min-w-0 grid-cols-[1fr_auto] items-center border-b p-4">
         <span className="flex flex-col gap-1 truncate text-lg font-semibold text-gray-800">
           {selectedAgent?.name || "Agent"}
@@ -277,7 +260,7 @@ function RightPaneChat(): React.ReactNode {
 
       <div className="flex min-h-0 flex-1 flex-col pb-6">
         <DeepAgentChatInterface
-          key={`chat-${agentId || "all"}-${deploymentId}-${threadId}-${chatVersion}`}
+          key={`chat-${agentId || "all"}-${deploymentId}-${chatVersion}`}
           assistantId={agentId || ""}
           deploymentUrl={selectedDeployment?.deploymentUrl || ""}
           accessToken={session.accessToken || ""}
@@ -287,8 +270,35 @@ function RightPaneChat(): React.ReactNode {
           SidebarTrigger={SidebarTrigger}
           DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
           hideInternalToggle={true}
-          hideSidebar={true}
+          empty={isEmpty ? "true" : "false"}
           view="chat"
+          controls={
+            <Select
+              value={
+                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
+              }
+              onValueChange={async (v) => {
+                const [aid, did] = v.split(":");
+                await setAgentId(aid || null);
+                await setDeploymentId(did || null);
+                // Clear any previously selected thread when switching agents
+                await setCurrentThreadId(null);
+                await setDraft(null);
+              }}
+            >
+              <SelectTrigger>{selectedAgent?.name || "Agent"}</SelectTrigger>
+              <SelectContent>
+                {agents.map((a) => (
+                  <SelectItem
+                    key={`${a.assistant_id}:${a.deploymentId}`}
+                    value={`${a.assistant_id}:${a.deploymentId}`}
+                  >
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
         />
       </div>
     </div>

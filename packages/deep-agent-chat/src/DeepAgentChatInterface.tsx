@@ -2,13 +2,19 @@
 
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
-import { TasksFilesSidebar } from "./components/TasksFilesSidebar";
+import { FilesPopover } from "./components/TasksFilesSidebar";
 import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "./components/ui/popover";
+import { Button } from "./components/ui/button";
 
 function DeepAgentChatInterfaceInternal({
   assistantId,
@@ -19,7 +25,8 @@ function DeepAgentChatInterfaceInternal({
   view,
   onViewChange,
   hideInternalToggle,
-  hideSidebar,
+  controls,
+  empty,
 }: DeepAgentChatConfig) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
@@ -44,20 +51,6 @@ function DeepAgentChatInterfaceInternal({
         assistantId={assistantId}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
-          {!hideSidebar && (
-            <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
-              <TasksFilesSidebar
-                todos={todos}
-                files={files}
-                setFiles={setFiles}
-                activeAssistant={activeAssistant}
-                setActiveAssistant={setActiveAssistant}
-                setAssistantError={setAssistantError}
-                assistantError={assistantError}
-              />
-            </div>
-          )}
-
           <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white">
             <ChatInterface
               assistantId={assistantId}
@@ -67,11 +60,47 @@ function DeepAgentChatInterfaceInternal({
               assistantError={assistantError}
               setAssistantError={setAssistantError}
               setActiveAssistant={setActiveAssistant}
+              todos={todos}
               setTodos={setTodos}
               setFiles={setFiles}
               view={view}
               onViewChange={onViewChange}
               hideInternalToggle={hideInternalToggle}
+              empty={empty}
+              controls={
+                <>
+                  {controls}
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                      >
+                        Optimize
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent></PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                      >
+                        Files
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <FilesPopover
+                        files={files}
+                        setFiles={setFiles}
+                        editDisabled={false}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </>
+              }
             />
           </div>
         </div>
