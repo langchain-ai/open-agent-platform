@@ -91,7 +91,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
                 )}
               >
                 {isUser ? (
-                  <p className="m-0 text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="m-0 text-sm leading-relaxed break-all whitespace-pre-wrap">
                     {messageContent}
                   </p>
                 ) : hasContent ? (

@@ -84,7 +84,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const [input, setInput] = useState("");
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     const refreshActiveAssistant = useCallback(async () => {
       if (!assistantId || !client) {
@@ -177,14 +176,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
-
-    useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        textareaRef.current.style.height =
-          Math.min(textareaRef.current.scrollHeight, 120) + "px";
-      }
-    }, [input]);
 
     const submitDisabled = isLoading || !!interrupt || !!assistantError;
 
@@ -508,7 +499,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             className="border-border focus-within:border-primary focus-within:ring-primary mx-6 mb-6 flex w-auto items-center gap-3 rounded-2xl border px-4 py-3 transition-colors duration-200 ease-in-out focus-within:ring-offset-2"
           >
             <textarea
-              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -517,7 +507,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   ? "Running..."
                   : "Write your message..."
               }
-              className="font-inherit text-primary placeholder:text-tertiary flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm leading-6 outline-none"
+              className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent px-2 py-2 text-sm leading-6 outline-none"
               rows={1}
             />
             <div className="flex items-center gap-2 pr-2">

@@ -43,7 +43,7 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={activeAssistant}
         assistantId={assistantId}
       >
-        <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden p-4">
+        <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
           {!hideSidebar && (
             <div className="flex h-full w-[350px] flex-shrink-0 flex-col">
               <TasksFilesSidebar
@@ -58,7 +58,7 @@ function DeepAgentChatInterfaceInternal({
             </div>
           )}
 
-          <div className="border-border flex min-h-0 flex-1 flex-col rounded-xl border bg-white">
+          <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white">
             <ChatInterface
               assistantId={assistantId}
               activeAssistant={activeAssistant}
