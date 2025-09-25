@@ -1858,7 +1858,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:~0.1.0":
+"@langchain/langgraph-sdk@npm:^0.1.6, @langchain/langgraph-sdk@npm:~0.1.0":
   version: 0.1.6
   resolution: "@langchain/langgraph-sdk@npm:0.1.6"
   dependencies:
@@ -2416,6 +2416,7 @@ __metadata:
     tailwind-merge: ^3.3.1
     typescript: ^5
     typescript-eslint: ^8
+    use-stick-to-bottom: ^1.1.1
     uuid: ^11.1.0
   peerDependencies:
     next: ^15
@@ -2530,7 +2531,7 @@ __metadata:
     "@hookform/resolvers": ^5.2.2
     "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.0.109
+    "@langchain/langgraph-sdk": ^0.1.6
     "@modelcontextprotocol/sdk": ^1.11.4
     "@open-agent-platform/deep-agent-chat": "*"
     "@radix-ui/react-accordion": ^1.2.12
@@ -2616,7 +2617,7 @@ __metadata:
     turbo: ^2.5.0
     typescript: ~5.7.2
     typescript-eslint: ^8.22.0
-    use-stick-to-bottom: ^1.1.0
+    use-stick-to-bottom: ^1.1.1
     uuid: ^11.1.0
     zod: 3.23.8
     zustand: ^5.0.3
@@ -17624,7 +17625,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-stick-to-bottom@npm:^1.1.0":
+"use-stick-to-bottom@npm:^1.1.0, use-stick-to-bottom@npm:^1.1.1":
   version: 1.1.1
   resolution: "use-stick-to-bottom@npm:1.1.1"
   peerDependencies:

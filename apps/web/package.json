@@ -22,7 +22,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
-    "@langchain/langgraph-sdk": "^0.0.109",
+    "@langchain/langgraph-sdk": "^0.1.6",
     "@modelcontextprotocol/sdk": "^1.11.4",
     "@open-agent-platform/deep-agent-chat": "*",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -82,7 +82,7 @@
     "sonner": "^2.0.3",
     "swr": "^2.3.6",
     "tailwind-merge": "^3.0.2",
-    "use-stick-to-bottom": "^1.1.0",
+    "use-stick-to-bottom": "^1.1.1",
     "uuid": "^11.1.0",
     "zod": "3.23.8",
     "zustand": "^5.0.3"

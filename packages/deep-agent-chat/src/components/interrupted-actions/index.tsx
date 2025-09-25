@@ -30,7 +30,7 @@ export function ThreadActionsView({
 
   // Handle Valid Interrupted Threads
   return (
-    <div className="flex min-h-full w-full flex-col gap-9 p-12">
+    <div className="flex w-full flex-col gap-9 p-12">
       {/* Header */}
       <div className="flex w-full flex-wrap items-center justify-start gap-3">
         <div className="flex items-center gap-2">
