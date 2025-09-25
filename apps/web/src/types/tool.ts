@@ -26,4 +26,8 @@ export interface Tool {
    * The auth scopes this tool requires
    */
   scopes?: string[];
+  /**
+   * The default interrupt config of this tool
+   */
+  default_interrupt?: boolean;
 }
