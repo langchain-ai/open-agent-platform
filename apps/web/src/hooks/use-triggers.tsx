@@ -1,6 +1,5 @@
 import { ListTriggerRegistrationsData, Trigger } from "@/types/triggers";
 import { toast } from "sonner";
-import { useCallback, useMemo, useRef } from "react";
 
 type RegisterTriggerResponse =
   | {
@@ -47,90 +46,55 @@ const constructTriggerUrl = (
 };
 
 export function useTriggers() {
-  // Cache for API responses to prevent duplicate calls
-  const cacheRef = useRef<Map<string, { data: any; timestamp: number }>>(
-    new Map(),
-  );
-  const CACHE_DURATION = 5000; // 5 seconds cache
-
-  const getCacheKey = (endpoint: string, params?: string) =>
-    params ? `${endpoint}:${params}` : endpoint;
-
-  const getCachedData = (key: string) => {
-    const cached = cacheRef.current.get(key);
-    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-      return cached.data;
+  const listTriggers = async (
+    accessToken: string,
+  ): Promise<Trigger[] | undefined> => {
+    const triggerApiUrl = constructTriggerUrl("/api/triggers");
+    if (!triggerApiUrl) {
+      return;
     }
-    return null;
+
+    const response = await fetch(triggerApiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to list triggers", {
+        richColors: true,
+      });
+      return;
+    }
+
+    const triggers = await response.json();
+    return triggers.data;
   };
 
-  const setCachedData = (key: string, data: any) => {
-    cacheRef.current.set(key, { data, timestamp: Date.now() });
+  const listTriggerRegistrations = async (
+    accessToken: string,
+  ): Promise<ListTriggerRegistrationsData[] | undefined> => {
+    const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
+    if (!triggersApiUrl) {
+      return;
+    }
+
+    const response = await fetch(triggersApiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      toast.error("Failed to list user triggers", {
+        richColors: true,
+      });
+      return;
+    }
+
+    const triggers = await response.json();
+    return triggers.data;
   };
-
-  const listTriggers = useCallback(
-    async (accessToken: string): Promise<Trigger[] | undefined> => {
-      const cacheKey = getCacheKey("/api/triggers");
-      const cached = getCachedData(cacheKey);
-      if (cached) return cached;
-
-      const triggerApiUrl = constructTriggerUrl("/api/triggers");
-      if (!triggerApiUrl) {
-        return;
-      }
-
-      const response = await fetch(triggerApiUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        toast.error("Failed to list triggers", {
-          richColors: true,
-        });
-        return;
-      }
-
-      const triggers = await response.json();
-      setCachedData(cacheKey, triggers.data);
-      return triggers.data;
-    },
-    [getCacheKey, getCachedData, setCachedData],
-  );
-
-  const listTriggerRegistrations = useCallback(
-    async (
-      accessToken: string,
-    ): Promise<ListTriggerRegistrationsData[] | undefined> => {
-      const cacheKey = getCacheKey("/api/triggers/registrations");
-      const cached = getCachedData(cacheKey);
-      if (cached) return cached;
-
-      const triggersApiUrl = constructTriggerUrl("/api/triggers/registrations");
-      if (!triggersApiUrl) {
-        return;
-      }
-
-      const response = await fetch(triggersApiUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        toast.error("Failed to list user triggers", {
-          richColors: true,
-        });
-        return;
-      }
-
-      const triggers = await response.json();
-      setCachedData(cacheKey, triggers.data);
-      return triggers.data;
-    },
-    [getCacheKey, getCachedData, setCachedData],
-  );
 
   const registerTrigger = async (
     accessToken: string,
@@ -281,42 +245,34 @@ export function useTriggers() {
     return true;
   };
 
-  const listAgentTriggers = useCallback(
-    async (accessToken: string, agentId: string): Promise<string[]> => {
-      try {
-        const cacheKey = getCacheKey("/agent-triggers", agentId);
-        const cached = getCachedData(cacheKey);
-        if (cached) return cached;
-
-        // Get all user trigger registrations
-        const registrations = await listTriggerRegistrations(accessToken);
-        if (!registrations) {
-          return [];
-        }
-        // Filter to find registrations that have this agent linked
-        const agentTriggerIds = registrations
-          .filter((reg) => reg.linked_agent_ids?.includes(agentId))
-          .map((reg) => reg.id);
-
-        setCachedData(cacheKey, agentTriggerIds);
-        return agentTriggerIds;
-      } catch (error) {
-        console.error("Error listing agent triggers:", error);
+  const listAgentTriggers = async (
+    accessToken: string,
+    agentId: string,
+  ): Promise<string[]> => {
+    try {
+      // Get all user trigger registrations
+      const registrations = await listTriggerRegistrations(accessToken);
+      if (!registrations) {
         return [];
       }
-    },
-    [getCacheKey, getCachedData, setCachedData, listTriggerRegistrations],
-  );
+      // Filter to find registrations that have this agent linked
+      const agentTriggerIds = registrations
+        .filter((reg) => reg.linked_agent_ids?.includes(agentId))
+        .map((reg) => reg.id);
 
-  return useMemo(
-    () => ({
-      listTriggers,
-      listUserTriggers: listTriggerRegistrations,
-      registerTrigger,
-      setupAgentTrigger,
-      updateAgentTriggers,
-      listAgentTriggers,
-    }),
-    [listTriggers, listTriggerRegistrations, listAgentTriggers],
-  );
+      return agentTriggerIds;
+    } catch (error) {
+      console.error("Error listing agent triggers:", error);
+      return [];
+    }
+  };
+
+  return {
+    listTriggers,
+    listUserTriggers: listTriggerRegistrations,
+    registerTrigger,
+    setupAgentTrigger,
+    updateAgentTriggers,
+    listAgentTriggers,
+  };
 }
