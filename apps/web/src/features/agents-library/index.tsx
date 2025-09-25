@@ -38,9 +38,14 @@ export default function AgentsLibrary(): React.ReactNode {
     if (!registrations) return new Set<string>();
     const agentIds = new Set<string>();
     registrations.forEach((registration) => {
-      registration.linked_agent_ids.forEach((agentId) => {
-        agentIds.add(agentId);
-      });
+      if (
+        registration.linked_agent_ids &&
+        Array.isArray(registration.linked_agent_ids)
+      ) {
+        registration.linked_agent_ids.forEach((agentId) => {
+          agentIds.add(agentId);
+        });
+      }
     });
     return agentIds;
   }, [registrations]);

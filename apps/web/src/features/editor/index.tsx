@@ -3,37 +3,55 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
-import { getDeployments } from "@/lib/environment/deployments";
 import { useQueryState } from "nuqs";
 import { AgentConfig } from "@/components/AgentConfig";
-import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { SquarePen } from "lucide-react";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { AgentHierarchyNav, EditTarget } from "@/components/AgentHierarchyNav";
+import { EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
 import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
 import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
 import { useAgentTriggersForm } from "@/components/agent-creator-sheet/components/agent-triggers-form";
-import { SidebarTriggers } from "@/features/editor/components/sidebar-triggers";
 import { useTriggers } from "@/hooks/use-triggers";
 import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 import type {
   GroupedTriggerRegistrationsByProvider,
-  Trigger,
   ListTriggerRegistrationsData,
+  Trigger,
 } from "@/types/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import type { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { MainAgentToolsDropdown } from "./components/main-agent-tools-dropdown";
+import {
+  SelectedTriggersStrip,
+  TriggersAddPopoverContent,
+} from "./components/triggers-ui";
+import { ToolsAddPopoverContent } from "./components/tools-add-popover-content";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverAnchor,
+} from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
+import { getDeployments } from "@/lib/environment/deployments";
+import { SubAgentSheet } from "./components/subagent-sheet";
+import { SubagentsList } from "./components/subagents-list";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
-
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
@@ -43,20 +61,15 @@ export function EditorPageContent(): React.ReactNode {
     null,
   );
 
-  // Force re-render when sub-agents change
-  const [subAgentsVersion, setSubAgentsVersion] = useState(0);
-  const [chatVersion, setChatVersion] = useState(0);
-  // External forms for tools/triggers for shared state
   const toolsForm = useAgentToolsForm();
   const triggersForm = useAgentTriggersForm();
   const [toolsDrafts, setToolsDrafts] = useState<
     Record<string, { tools: string[]; interruptConfig: ToolInterruptConfig }>
   >({});
   const isApplyingToolsResetRef = React.useRef(false);
-  // Triggers data for sidebar
+  // Triggers API access/data
   const { listTriggers, listUserTriggers, listAgentTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
-  const [triggersLoading, setTriggersLoading] = useState(false);
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
   const [registrations, setRegistrations] = useState<
     ListTriggerRegistrationsData[] | undefined
@@ -67,6 +80,13 @@ export function EditorPageContent(): React.ReactNode {
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
 
+  // UI: popover states handled by Popover components
+  const [subAgentSheetOpen, setSubAgentSheetOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatVersion, setChatVersion] = useState(0);
+  const [headerTitle, setHeaderTitle] = useState<string>("");
+  const saveRef = React.useRef<(() => Promise<void>) | null>(null);
+
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
     // Clear threadId so subsequent messages start a fresh thread with new config
@@ -75,17 +95,23 @@ export function EditorPageContent(): React.ReactNode {
     toast.success("Agent saved. New chat started with latest config.");
   }, [refreshAgents, setThreadId]);
 
-  const selectedDeployment = useMemo(
-    () => deployments.find((d) => d.id === deploymentId),
-    [deploymentId],
-  );
-
   const selectedAgent = useMemo(() => {
     return agents.find(
       (agent) =>
         agent.assistant_id === agentId && agent.deploymentId === deploymentId,
     );
   }, [agents, agentId, deploymentId]);
+
+  const selectedDeployment = useMemo(
+    () => deployments.find((d) => d.id === deploymentId),
+    [deploymentId, deployments],
+  );
+
+  useEffect(() => {
+    if (selectedAgent?.name) {
+      setHeaderTitle(selectedAgent.name);
+    }
+  }, [selectedAgent?.assistant_id, selectedAgent?.name]);
 
   // Initialize edit target when agent is selected
   useEffect(() => {
@@ -158,17 +184,20 @@ export function EditorPageContent(): React.ReactNode {
     setTimeout(() => {
       isApplyingToolsResetRef.current = false;
     }, 0);
-  }, [selectedAgent?.assistant_id, currentTargetKey]);
+  }, [
+    selectedAgent?.assistant_id,
+    currentTargetKey,
+    currentEditTarget?.index,
+    currentEditTarget?.type,
+    selectedAgent?.config?.configurable,
+    toolsDrafts,
+    toolsForm,
+  ]);
 
-  // Load triggers for sidebar; only for main agent
+  // Load triggers lists and currently selected triggers for main agent
   useEffect(() => {
     const load = async () => {
-      if (showTriggersTab === false || showTriggersTab === undefined) {
-        setTriggersLoading(false);
-        return;
-      }
       if (!session?.accessToken || !selectedAgent) return;
-      setTriggersLoading(true);
       try {
         const [t, r] = await Promise.all([
           listTriggers(session.accessToken),
@@ -182,84 +211,22 @@ export function EditorPageContent(): React.ReactNode {
         );
         triggersForm.setValue("triggerIds", ids);
       } finally {
-        setTriggersLoading(false);
+        // Loading complete
       }
     };
     load();
-  }, [session?.accessToken, selectedAgent?.assistant_id, showTriggersTab]);
+  }, [
+    session?.accessToken,
+    selectedAgent?.assistant_id,
+    showTriggersTab,
+    listAgentTriggers,
+    listTriggers,
+    listUserTriggers,
+    selectedAgent,
+    triggersForm,
+  ]);
 
-  const handleCreateSubAgent = () => {
-    if (!selectedAgent) return;
-
-    // Create a blank sub-agent
-    const newSubAgent: SubAgent = {
-      name: `Sub-agent ${((selectedAgent.config?.configurable?.subagents as SubAgent[])?.length || 0) + 1}`,
-      description: "",
-      prompt: "",
-      tools: [],
-      mcp_server: process.env.NEXT_PUBLIC_MCP_SERVER_URL || "",
-    };
-
-    // Add to the main agent's sub-agents list
-    const currentSubAgents =
-      (selectedAgent.config?.configurable?.subagents as SubAgent[]) || [];
-    const updatedSubAgents = [...currentSubAgents, newSubAgent];
-
-    // Update the agent's config (this will be saved when they hit save)
-    if (selectedAgent.config?.configurable) {
-      selectedAgent.config.configurable.subagents = updatedSubAgents;
-    }
-
-    // Force a re-render to update the hierarchy navigation
-    setSubAgentsVersion((prev) => prev + 1);
-
-    // Immediately switch to editing the new sub-agent
-    const newIndex = updatedSubAgents.length - 1;
-    setCurrentEditTarget({
-      type: "subagent",
-      subAgent: newSubAgent,
-      index: newIndex,
-    });
-
-    toast.success(`Created ${newSubAgent.name} - ready to edit!`);
-  };
-
-  const handleDeleteSubAgent = (index: number) => {
-    if (!selectedAgent) return;
-
-    const currentSubAgents =
-      (selectedAgent.config?.configurable?.subagents as SubAgent[]) || [];
-    if (index < 0 || index >= currentSubAgents.length) return;
-
-    const updatedSubAgents = currentSubAgents.filter((_, i) => i !== index);
-
-    if (selectedAgent.config?.configurable) {
-      selectedAgent.config.configurable.subagents = updatedSubAgents;
-    }
-
-    // Update current edit target if needed
-    if (currentEditTarget?.type === "subagent") {
-      if (updatedSubAgents.length === 0) {
-        setCurrentEditTarget({ type: "main", agent: selectedAgent });
-      } else {
-        const newIndex = Math.min(index, updatedSubAgents.length - 1);
-        setCurrentEditTarget({
-          type: "subagent",
-          subAgent: updatedSubAgents[newIndex],
-          index: newIndex,
-        });
-      }
-    }
-
-    setSubAgentsVersion((prev) => prev + 1);
-    toast.success("Sub-agent removed. Click Save Changes to persist.");
-  };
-
-  const handleNewThread = async () => {
-    // Clear threadId to start a fresh chat thread while keeping the agent selection
-    await setThreadId(null);
-    setChatVersion((v) => v + 1);
-  };
+  // No chat panel in the new layout; thread reset happens on save where relevant
 
   if (!session) {
     return <div>Loading...</div>;
@@ -277,115 +244,292 @@ export function EditorPageContent(): React.ReactNode {
     );
   }
 
+  // no-op
+
   return (
-    <div className="flex h-screen gap-4 p-4">
-      {/* Left column: Top half Triggers, bottom half Sub-agents hierarchy */}
-      <div className="w-[24rem] flex-shrink-0">
-        <div className="scrollbar-pretty-auto h-full overflow-auto pr-0">
-          <SidebarTriggers
-            groupedTriggers={groupedTriggers}
-            loading={triggersLoading}
-            showTriggersTab={showTriggersTab}
-            form={triggersForm}
-            hideHeader={false}
-            targetLabel={
-              selectedAgent ? `${selectedAgent.name} (Main)` : "Main Agent"
-            }
-            note={
-              currentEditTarget?.type === "subagent"
-                ? "Triggers are configured for the main agent"
-                : undefined
-            }
-            reloadTriggers={async () => {
-              if (!session?.accessToken || !selectedAgent) return;
-              setTriggersLoading(true);
-              try {
-                const [t, r] = await Promise.all([
-                  listTriggers(session.accessToken),
-                  listUserTriggers(session.accessToken),
-                ]);
-                setTriggers(t);
-                setRegistrations(r);
-                const ids = await listAgentTriggers(
-                  session.accessToken,
-                  selectedAgent.assistant_id,
-                );
-                triggersForm.setValue("triggerIds", ids);
-              } finally {
-                setTriggersLoading(false);
-              }
-            }}
-          />
-          <div className="my-5 h-px w-full bg-gray-200" />
-          <div className="flex cursor-default items-center gap-1 px-3 py-3 text-xs font-medium text-gray-500 uppercase">
-            Hierarchy
-          </div>
-          {selectedAgent && currentEditTarget && (
-            <AgentHierarchyNav
-              key={subAgentsVersion}
-              agent={selectedAgent}
-              currentTarget={currentEditTarget}
-              onTargetChange={setCurrentEditTarget}
-              onCreateSubAgent={handleCreateSubAgent}
-              onDeleteSubAgent={handleDeleteSubAgent}
-              compact
-              toolsForm={toolsForm}
+    <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
+      {/* Page header with title/description and actions */}
+      {selectedAgent && (
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <div className="min-w-0">
+            <input
+              value={headerTitle}
+              onChange={(e) => setHeaderTitle(e.target.value)}
+              placeholder="Agent name..."
+              className="w-full truncate border-none bg-transparent text-[28px] leading-snug font-bold text-gray-900 outline-none focus:outline-none"
             />
-          )}
+            <div className="mt-0.5 truncate text-sm text-gray-600">
+              {(selectedAgent.metadata as any)?.description || ""}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setChatOpen(true)}
+              className="rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90"
+            >
+              Test your agent
+            </button>
+            <button
+              type="button"
+              onClick={() => saveRef.current?.()}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
+      )}
+      {/* Top process sections */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {/* Triggers (Main Agent) */}
+        {showTriggersTab !== false && (
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+              <div className="text-sm font-semibold text-gray-700">
+                Triggers
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <TooltipIconButton
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Add trigger"
+                    tooltip="Add trigger"
+                    className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </TooltipIconButton>
+                </PopoverTrigger>
+                <PopoverAnchor className="block h-0 w-0" />
+                <PopoverContent
+                  align="start"
+                  sideOffset={6}
+                  className="max-w-[95vw] min-w-[600px] p-0"
+                >
+                  <TriggersAddPopoverContent
+                    groupedTriggers={groupedTriggers}
+                    form={triggersForm}
+                    reloadTriggers={async () => {
+                      if (!session?.accessToken || !selectedAgent) return;
+                      try {
+                        const [t, r] = await Promise.all([
+                          listTriggers(session.accessToken),
+                          listUserTriggers(session.accessToken),
+                        ]);
+                        setTriggers(t);
+                        setRegistrations(r);
+                        const ids = await listAgentTriggers(
+                          session.accessToken,
+                          selectedAgent.assistant_id,
+                        );
+                        triggersForm.setValue("triggerIds", ids);
+                      } catch (error) {
+                        console.error("Failed to reload triggers:", error);
+                      }
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="p-3">
+              <SelectedTriggersStrip
+                groupedTriggers={groupedTriggers}
+                form={triggersForm}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Tools (Current target; default main) */}
+        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+            <div className="text-sm font-semibold text-gray-700">Tools</div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <TooltipIconButton
+                  size="sm"
+                  variant="ghost"
+                  aria-label="Add tool"
+                  tooltip="Add tool"
+                  className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
+                  onClick={() => {
+                    if (selectedAgent && currentEditTarget?.type !== "main") {
+                      setCurrentEditTarget({
+                        type: "main",
+                        agent: selectedAgent,
+                      });
+                    }
+                  }}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </TooltipIconButton>
+              </PopoverTrigger>
+              <PopoverAnchor className="block h-0 w-0" />
+              <PopoverContent
+                align="start"
+                sideOffset={6}
+                className="max-w-[95vw] min-w-[600px] p-0"
+              >
+                <ToolsAddPopoverContent
+                  toolsForm={toolsForm}
+                  onEnsureMainSelected={() => {
+                    if (selectedAgent && currentEditTarget?.type !== "main") {
+                      setCurrentEditTarget({
+                        type: "main",
+                        agent: selectedAgent,
+                      });
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="p-3">
+            <MainAgentToolsDropdown
+              toolsForm={toolsForm}
+              onEnsureMainSelected={() => {
+                if (selectedAgent && currentEditTarget?.type !== "main") {
+                  setCurrentEditTarget({ type: "main", agent: selectedAgent });
+                }
+              }}
+              hideHeader
+              hideTitle
+            />
+          </div>
+        </div>
+
+        {/* Subagents (list with tools) */}
+        {selectedAgent && currentEditTarget && (
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+              <div className="text-sm font-semibold text-gray-700">
+                Subagents
+              </div>
+              <TooltipIconButton
+                size="sm"
+                variant="ghost"
+                aria-label="Add sub-agent"
+                tooltip="Add sub-agent"
+                className="h-7 w-7 text-gray-600 hover:bg-gray-100"
+                onClick={() => setSubAgentSheetOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </TooltipIconButton>
+            </div>
+            <div className="max-h-[32rem] overflow-auto p-3">
+              <SubagentsList
+                subAgents={
+                  (selectedAgent.config?.configurable
+                    ?.subagents as SubAgent[]) || []
+                }
+                selectedIndex={
+                  currentEditTarget.type === "subagent"
+                    ? currentEditTarget.index
+                    : null
+                }
+                onSelect={(index) => {
+                  const subAgents =
+                    (selectedAgent.config?.configurable
+                      ?.subagents as SubAgent[]) || [];
+                  const sa = subAgents[index];
+                  if (!sa) return;
+                  setCurrentEditTarget({
+                    type: "subagent",
+                    subAgent: sa,
+                    index,
+                  });
+                }}
+              />
+            </div>
+            <SubAgentSheet
+              open={subAgentSheetOpen}
+              onOpenChange={setSubAgentSheetOpen}
+              onSubmit={(newSubAgent) => {
+                if (!selectedAgent) return;
+                const currentSubAgents =
+                  (selectedAgent.config?.configurable
+                    ?.subagents as SubAgent[]) || [];
+                const updatedSubAgents = [...currentSubAgents, newSubAgent];
+                if (selectedAgent.config?.configurable) {
+                  selectedAgent.config.configurable.subagents =
+                    updatedSubAgents;
+                }
+                const newIndex = updatedSubAgents.length - 1;
+                setCurrentEditTarget({
+                  type: "subagent",
+                  subAgent: newSubAgent,
+                  index: newIndex,
+                });
+                toast.success(`Created ${newSubAgent.name} - ready to edit!`);
+              }}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Middle column - Agent Configuration */}
-      <div className="flex-1">
-        <div className="border-border flex h-full min-h-0 flex-1 flex-col rounded-xl border bg-white">
-          {currentEditTarget && (
+      {/* Bottom: Always-visible Instructions editor for current target */}
+      {selectedAgent && currentEditTarget && (
+        <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-t-0 border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
+            Instructions
+          </div>
+          <div className="h-full overflow-auto">
             <AgentConfig
-              agent={selectedAgent || null}
+              agent={selectedAgent}
               editTarget={currentEditTarget}
               onAgentUpdated={handleAgentUpdated}
-              hideTopTabs={false}
-              hideTriggersTab={true}
-              hideToolsTab={true}
+              hideTopTabs={true}
+              hideTitleSection={true}
+              externalTitle={headerTitle}
+              onExternalTitleChange={setHeaderTitle}
+              saveRef={saveRef}
               toolsFormExternal={toolsForm}
               triggersFormExternal={triggersForm}
+              view={"instructions"}
             />
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Right column - Chat with Agent */}
-      <div className="flex min-h-0 w-1/4 flex-col">
-        <div className="mb-0 flex items-center justify-between gap-2 px-6">
-          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
-            Chat with your agent
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNewThread}
-            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
-            title="Start new chat"
-          >
-            <SquarePen className="size-4" />
-          </Button>
-        </div>
-        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
-          <DeepAgentChatInterface
-            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-            assistantId={agentId}
-            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-            accessToken={session.accessToken || ""}
-            optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
-            optimizerAccessToken={session.accessToken || ""}
-            mode="oap"
-            SidebarTrigger={SidebarTrigger}
-            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-            view="chat"
-            hideInternalToggle={true}
-            hideSidebar={true}
-          />
-        </div>
-      </div>
+      {/* Slide-out chat on the right to test the agent */}
+      <Sheet
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+      >
+        <SheetContent
+          side="right"
+          className="w-[min(90vw,520px)] p-0 sm:max-w-lg"
+        >
+          <SheetHeader className="border-b px-4 py-2">
+            <SheetTitle className="text-sm font-semibold">
+              Test your agent
+            </SheetTitle>
+          </SheetHeader>
+          {agentId && deploymentId && session?.accessToken ? (
+            <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col">
+              <DeepAgentChatInterface
+                key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
+                assistantId={agentId}
+                deploymentUrl={selectedDeployment?.deploymentUrl || ""}
+                accessToken={session.accessToken || ""}
+                optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
+                optimizerAccessToken={session.accessToken || ""}
+                mode="oap"
+                SidebarTrigger={SidebarTrigger}
+                DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
+                view="chat"
+                hideInternalToggle={true}
+                hideSidebar={true}
+              />
+            </div>
+          ) : (
+            <div className="p-4 text-sm text-gray-500">
+              Select an agent to test
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

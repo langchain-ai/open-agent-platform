@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
@@ -12,6 +12,8 @@ import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
 import { extractStringFromMessageContent, truncateText } from "../utils";
+import { useTriggers } from "@/hooks/use-triggers";
+import type { Trigger, ListTriggerRegistrationsData } from "@/types/triggers";
 
 type Props = {
   agent: Agent | null;
@@ -30,6 +32,7 @@ type ThreadItem = {
   title: string;
   description: string;
   assistantId?: string;
+  triggerNames?: string[];
 };
 
 function useThreads(args: {
@@ -162,9 +165,91 @@ export function ThreadHistoryAgentList({
   className,
   statusFilter = "all",
 }: Props) {
+  const { session } = useAuthContext();
+  const { agents } = useAgentsContext();
+  const { listTriggers, listUserTriggers, listAgentTriggers } = useTriggers();
+
+  const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [registrations, setRegistrations] = useState<
+    ListTriggerRegistrationsData[]
+  >([]);
+  const [agentTriggers, setAgentTriggers] = useState<Record<string, string[]>>(
+    {},
+  );
+
+  // Function to get trigger names for an agent - memoized to prevent infinite loops
+  const getTriggerNamesForAgent = useMemo(
+    () =>
+      (agentId: string): string[] => {
+        const triggerIds = agentTriggers[agentId] || [];
+        const triggerNames: string[] = [];
+
+        triggerIds.forEach((registrationId) => {
+          const registration = registrations.find(
+            (r) => r.id === registrationId,
+          );
+          if (registration) {
+            const trigger = triggers.find(
+              (t) => t.id === registration.template_id,
+            );
+            if (trigger) {
+              triggerNames.push(trigger.displayName);
+            }
+          }
+        });
+
+        return triggerNames;
+      },
+    [agentTriggers, registrations, triggers],
+  );
+
   const threads = useThreads({ deploymentId, agent });
 
+  // Load triggers data for displaying trigger names
+  useEffect(() => {
+    const loadTriggersData = async () => {
+      if (!session?.accessToken || agents.length === 0) return;
+
+      try {
+        const [triggersData, registrationsData] = await Promise.all([
+          listTriggers(session.accessToken),
+          listUserTriggers(session.accessToken),
+        ]);
+
+        if (triggersData) setTriggers(triggersData);
+        if (registrationsData) setRegistrations(registrationsData);
+
+        // Fetch agent triggers for all agents
+        const agentTriggersMap: Record<string, string[]> = {};
+        await Promise.all(
+          agents.map(async (agentItem) => {
+            const agentTriggerIds = await listAgentTriggers(
+              session.accessToken,
+              agentItem.assistant_id,
+            );
+            agentTriggersMap[agentItem.assistant_id] = agentTriggerIds;
+          }),
+        );
+        setAgentTriggers(agentTriggersMap);
+      } catch (error) {
+        console.error("Failed to load triggers data:", error);
+      }
+    };
+
+    loadTriggersData();
+  }, [session?.accessToken, agents.length]);
+
   const displayItems = useMemo(() => {
+    const baseItems = threads.data ?? [];
+
+    // Add trigger names to each thread item
+    const itemsWithTriggers: ThreadItem[] = baseItems.map((item) => ({
+      ...item,
+      triggerNames: item.assistantId
+        ? getTriggerNamesForAgent(item.assistantId)
+        : [],
+    }));
+
     if (showDraft && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
@@ -174,11 +259,19 @@ export function ThreadHistoryAgentList({
         description:
           (agent.metadata?.description as string | undefined) ||
           "No description",
+        assistantId: agent.assistant_id,
+        triggerNames: getTriggerNamesForAgent(agent.assistant_id),
       };
-      return [draft, ...(threads.data ?? [])];
+      return [draft, ...itemsWithTriggers];
     }
-    return threads.data ?? [];
-  }, [showDraft, currentThreadId, agent, threads.data]);
+    return itemsWithTriggers;
+  }, [
+    showDraft,
+    currentThreadId,
+    agent,
+    threads.data,
+    getTriggerNamesForAgent,
+  ]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, ThreadItem[]> = {
@@ -235,6 +328,7 @@ export function ThreadHistoryAgentList({
                       if (t.id !== "__draft__")
                         onThreadSelect(t.id, t.assistantId);
                     }}
+                    triggerNames={t.triggerNames}
                   />
                 ))}
               </Group>
@@ -257,6 +351,7 @@ export function ThreadHistoryAgentList({
                       if (t.id !== "__draft__")
                         onThreadSelect(t.id, t.assistantId);
                     }}
+                    triggerNames={t.triggerNames}
                   />
                 ))}
               </Group>
@@ -279,6 +374,7 @@ export function ThreadHistoryAgentList({
                       if (t.id !== "__draft__")
                         onThreadSelect(t.id, t.assistantId);
                     }}
+                    triggerNames={t.triggerNames}
                   />
                 ))}
               </Group>
@@ -301,6 +397,7 @@ export function ThreadHistoryAgentList({
                       if (t.id !== "__draft__")
                         onThreadSelect(t.id, t.assistantId);
                     }}
+                    triggerNames={t.triggerNames}
                   />
                 ))}
               </Group>
@@ -337,6 +434,7 @@ function Row({
   time,
   active,
   onClick,
+  triggerNames,
 }: {
   id: string;
   title: string;
@@ -345,6 +443,7 @@ function Row({
   time: string;
   active: boolean;
   onClick: () => void;
+  triggerNames?: string[];
 }) {
   const statusTextClass =
     status === "draft"
@@ -374,8 +473,22 @@ function Row({
       <MessageSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
       <div className="flex w-full min-w-0 flex-shrink-0 items-stretch justify-between gap-2 overflow-hidden">
         <div className="min-w-0 flex-1 overflow-hidden">
-          <div className="text-foreground mb-0.5 w-full max-w-full overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
-            {title}
+          <div className="mb-0.5 flex w-full max-w-full items-center gap-2 overflow-hidden">
+            <div className="text-foreground flex-shrink-0 overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap">
+              {title}
+            </div>
+            {triggerNames && triggerNames.length > 0 && (
+              <div className="flex flex-shrink flex-wrap gap-1">
+                {triggerNames.map((triggerName, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium whitespace-nowrap text-blue-800"
+                  >
+                    {triggerName}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="text-muted-foreground mb-1 w-full max-w-full overflow-hidden text-xs text-ellipsis whitespace-nowrap">
             {description}
