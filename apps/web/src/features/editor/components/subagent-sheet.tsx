@@ -36,11 +36,13 @@ export function SubAgentSheet({
   open,
   onOpenChange,
   onSubmit,
+  onDelete,
   editingSubAgent,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (subAgent: SubAgent) => void;
+  onDelete?: (index: number) => void;
   editingSubAgent?: { subAgent: SubAgent; index: number } | null;
 }) {
   const form = useForm<SubAgentFormValues>({
@@ -100,6 +102,16 @@ export function SubAgentSheet({
     // reset
     form.reset({ name: "", description: "", prompt: "", tools: [] });
     setInterruptConfig({});
+  };
+
+  const handleDelete = () => {
+    if (editingSubAgent && onDelete) {
+      onDelete(editingSubAgent.index);
+      onOpenChange(false);
+      // reset
+      form.reset({ name: "", description: "", prompt: "", tools: [] });
+      setInterruptConfig({});
+    }
   };
 
   return (
@@ -193,12 +205,31 @@ export function SubAgentSheet({
             </div>
 
             <div className="flex-shrink-0 border-t bg-white p-3">
-              <Button
-                type="submit"
-                className="w-full"
-              >
-                {editingSubAgent ? "Update Subagent" : "Create Subagent"}
-              </Button>
+              {editingSubAgent ? (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleDelete}
+                    className="flex-1"
+                  >
+                    Delete Subagent
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="flex-1"
+                  >
+                    Update Subagent
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full"
+                >
+                  Create Subagent
+                </Button>
+              )}
             </div>
           </form>
         </Form>

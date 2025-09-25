@@ -147,7 +147,7 @@ export function EditorPageContent(): React.ReactNode {
     }
   }, [selectedAgent?.assistant_id, selectedAgent?.name]);
 
-  // Initialize edit target when agent is selected
+  // Initialize edit target when agent is selected (used for subagents list selection)
   useEffect(() => {
     if (selectedAgent && !currentEditTarget) {
       setCurrentEditTarget({ type: "main", agent: selectedAgent });
@@ -414,14 +414,6 @@ export function EditorPageContent(): React.ReactNode {
                   aria-label="Add tool"
                   tooltip="Add tool"
                   className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
-                  onClick={() => {
-                    if (selectedAgent && currentEditTarget?.type !== "main") {
-                      setCurrentEditTarget({
-                        type: "main",
-                        agent: selectedAgent,
-                      });
-                    }
-                  }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </TooltipIconButton>
@@ -432,28 +424,13 @@ export function EditorPageContent(): React.ReactNode {
                 sideOffset={6}
                 className="max-w-[95vw] min-w-[600px] p-0"
               >
-                <ToolsAddPopoverContent
-                  toolsForm={toolsForm}
-                  onEnsureMainSelected={() => {
-                    if (selectedAgent && currentEditTarget?.type !== "main") {
-                      setCurrentEditTarget({
-                        type: "main",
-                        agent: selectedAgent,
-                      });
-                    }
-                  }}
-                />
+                <ToolsAddPopoverContent toolsForm={toolsForm} />
               </PopoverContent>
             </Popover>
           </div>
           <div className="p-3">
             <MainAgentToolsDropdown
               toolsForm={toolsForm}
-              onEnsureMainSelected={() => {
-                if (selectedAgent && currentEditTarget?.type !== "main") {
-                  setCurrentEditTarget({ type: "main", agent: selectedAgent });
-                }
-              }}
               hideHeader
               hideTitle
             />
@@ -461,7 +438,7 @@ export function EditorPageContent(): React.ReactNode {
         </div>
 
         {/* Subagents (list with tools) */}
-        {selectedAgent && currentEditTarget && (
+        {selectedAgent && (
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
               <div className="text-sm font-semibold text-gray-700">
@@ -488,7 +465,7 @@ export function EditorPageContent(): React.ReactNode {
                     ?.subagents as SubAgent[]) || []
                 }
                 selectedIndex={
-                  currentEditTarget.type === "subagent"
+                  currentEditTarget?.type === "subagent"
                     ? currentEditTarget.index
                     : null
                 }
@@ -547,13 +524,48 @@ export function EditorPageContent(): React.ReactNode {
                   `${editingSubAgent ? "Updated" : "Created"} ${newSubAgent.name} - ready to edit!`,
                 );
               }}
+              onDelete={(index) => {
+                if (!selectedAgent) return;
+                const currentSubAgents =
+                  (selectedAgent.config?.configurable
+                    ?.subagents as SubAgent[]) || [];
+                const deletedSubAgent = currentSubAgents[index];
+                const updatedSubAgents = currentSubAgents.filter(
+                  (_, idx) => idx !== index,
+                );
+
+                if (selectedAgent.config?.configurable) {
+                  selectedAgent.config.configurable.subagents =
+                    updatedSubAgents;
+                }
+
+                // Reset edit target to main if we were editing the deleted subagent
+                if (
+                  currentEditTarget?.type === "subagent" &&
+                  currentEditTarget.index === index
+                ) {
+                  setCurrentEditTarget({ type: "main", agent: selectedAgent });
+                } else if (
+                  currentEditTarget?.type === "subagent" &&
+                  currentEditTarget.index > index
+                ) {
+                  // Adjust index if we were editing a subagent after the deleted one
+                  setCurrentEditTarget({
+                    ...currentEditTarget,
+                    index: currentEditTarget.index - 1,
+                  });
+                }
+
+                setEditingSubAgent(null);
+                toast.success(`Deleted ${deletedSubAgent?.name || "subagent"}`);
+              }}
             />
           </div>
         )}
       </div>
 
-      {/* Bottom: Always-visible Instructions editor for current target */}
-      {selectedAgent && currentEditTarget && (
+      {/* Bottom: Always-visible Instructions editor for main agent */}
+      {selectedAgent && (
         <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-t-0 border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
             Instructions
@@ -561,7 +573,7 @@ export function EditorPageContent(): React.ReactNode {
           <div className="h-full overflow-auto">
             <AgentConfig
               agent={selectedAgent}
-              editTarget={currentEditTarget}
+              editTarget={{ type: "main", agent: selectedAgent }}
               onAgentUpdated={handleAgentUpdated}
               hideTopTabs={true}
               hideTitleSection={true}
