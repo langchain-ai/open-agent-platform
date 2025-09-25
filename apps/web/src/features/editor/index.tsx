@@ -6,9 +6,8 @@ import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import type { EditTarget } from "@/components/AgentHierarchyNav";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
 import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
@@ -56,12 +55,16 @@ import { SubagentsList } from "./components/subagents-list";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
-  const { agents, refreshAgents, loading: agentsLoading } = useAgentsContext();
+  const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
-  const [isNewAgent] = useQueryState("new");
+
+  // State for hierarchical editing
+  const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
+    null,
+  );
 
   const toolsForm = useAgentToolsForm();
   const triggersForm = useAgentTriggersForm();
@@ -84,20 +87,13 @@ export function EditorPageContent(): React.ReactNode {
 
   // UI: popover states handled by Popover components
   const [subAgentSheetOpen, setSubAgentSheetOpen] = useState(false);
-  const [editingSubAgent, setEditingSubAgent] = useState<{
-    subAgent: SubAgent;
-    index: number;
-  } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
 
   const handleAgentUpdated = React.useCallback(async () => {
     await refreshAgents();
-    // Clear drafts so the updated agent configuration is properly reflected
-    setToolsDrafts({});
     // Clear threadId so subsequent messages start a fresh thread with new config
     await setThreadId(null);
     setChatVersion((v) => v + 1);
@@ -111,28 +107,10 @@ export function EditorPageContent(): React.ReactNode {
     );
   }, [agents, agentId, deploymentId]);
 
-<<<<<<< HEAD
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
     [deploymentId, deployments],
   );
-=======
-  // Auto-select first agent if none selected but agents are available (but not when creating new)
-  useEffect(() => {
-    if (!agentId && !deploymentId && agents.length > 0 && !isNewAgent) {
-      const firstAgent = agents[0];
-      setAgentId(firstAgent.assistant_id);
-      setDeploymentId(firstAgent.deploymentId);
-    }
-  }, [agentId, deploymentId, agents, setAgentId, setDeploymentId, isNewAgent]);
-
-  // Initialize edit target when agent is selected
-  useEffect(() => {
-    if (selectedAgent && !currentEditTarget) {
-      setCurrentEditTarget({ type: "main", agent: selectedAgent });
-    }
-  }, [selectedAgent, currentEditTarget]);
->>>>>>> brace/v2
 
   useEffect(() => {
     if (selectedAgent?.name) {
@@ -140,9 +118,20 @@ export function EditorPageContent(): React.ReactNode {
     }
   }, [selectedAgent?.assistant_id, selectedAgent?.name]);
 
-  const currentTargetKey = "main";
+  // Initialize edit target when agent is selected
+  useEffect(() => {
+    if (selectedAgent && !currentEditTarget) {
+      setCurrentEditTarget({ type: "main", agent: selectedAgent });
+    }
+  }, [selectedAgent, currentEditTarget]);
 
-  // Persist draft tool changes per-target so switching targets doesn't lose draft edits
+  const currentTargetKey = React.useMemo(() => {
+    if (!currentEditTarget) return "main";
+    return currentEditTarget.type === "subagent"
+      ? `sub:${currentEditTarget.index}`
+      : "main";
+  }, [currentEditTarget]);
+
   useEffect(() => {
     const subscription = toolsForm.watch((value) => {
       if (isApplyingToolsResetRef.current) return;
@@ -160,7 +149,7 @@ export function EditorPageContent(): React.ReactNode {
           JSON.stringify(prevDraft.interruptConfig || {}) ===
             JSON.stringify(draft.interruptConfig || {})
         ) {
-          return prev; // no change
+          return prev;
         }
         return { ...prev, [currentTargetKey]: draft };
       });
@@ -168,13 +157,21 @@ export function EditorPageContent(): React.ReactNode {
     return () => subscription.unsubscribe();
   }, [toolsForm, currentTargetKey]);
 
-  // Keep tools form values in sync, prefer draft if present
   useEffect(() => {
-    const savedTools =
-      (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
-    const savedInterruptConfig =
-      (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
-      {};
+    const isSub = currentEditTarget?.type === "subagent";
+    const currentSubAgents =
+      (selectedAgent?.config?.configurable?.subagents as SubAgent[]) || [];
+    const sub =
+      isSub && typeof currentEditTarget?.index === "number"
+        ? currentSubAgents[currentEditTarget.index]
+        : null;
+    const savedTools = isSub
+      ? sub?.tools || []
+      : (selectedAgent?.config?.configurable as any)?.tools?.tools || [];
+    const savedInterruptConfig = isSub
+      ? (sub as any)?.interrupt_config || {}
+      : (selectedAgent?.config?.configurable as any)?.tools?.interrupt_config ||
+        {};
 
     const draft = toolsDrafts[currentTargetKey];
     isApplyingToolsResetRef.current = true;
@@ -192,6 +189,8 @@ export function EditorPageContent(): React.ReactNode {
   }, [
     selectedAgent?.assistant_id,
     currentTargetKey,
+    currentEditTarget?.index,
+    currentEditTarget?.type,
     selectedAgent?.config?.configurable,
     toolsDrafts,
     toolsForm,
@@ -222,22 +221,21 @@ export function EditorPageContent(): React.ReactNode {
     session?.accessToken,
     selectedAgent?.assistant_id,
     showTriggersTab,
+    listAgentTriggers,
+    listTriggers,
+    listUserTriggers,
+    selectedAgent,
     triggersForm,
   ]);
 
   // No chat panel in the new layout; thread reset happens on save where relevant
 
   if (!session) {
-    return <div className="p-4">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
-  // Show loading while agents are being fetched
-  if (agentsLoading) {
-    return <div className="p-4">Loading...</div>;
-  }
-
-  // Show the form if we: don't have an API URL, or don't have an assistant ID, AND (no agents available OR creating new agent)
-  if ((!agentId || !deploymentId) && (agents.length === 0 || isNewAgent)) {
+  // Show the form if we: don't have an API URL, or don't have an assistant ID
+  if (!agentId || !deploymentId) {
     return (
       <InitialInputs
         onAgentCreated={async (agentId: string, deploymentId: string) => {
@@ -254,7 +252,7 @@ export function EditorPageContent(): React.ReactNode {
     <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Page header with title/description and actions */}
       {selectedAgent && (
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
           <div className="min-w-0">
             <input
               value={headerTitle}
@@ -269,39 +267,17 @@ export function EditorPageContent(): React.ReactNode {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => {
-                if (selectedAgent && deploymentId) {
-                  window.location.href = `/agents/chat?agentId=${selectedAgent.assistant_id}&deploymentId=${deploymentId}`;
-                }
-              }}
+              onClick={() => setChatOpen(true)}
               className="rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90"
             >
               Use agent
             </button>
             <button
               type="button"
-              onClick={async () => {
-                if (isSaving) return;
-                try {
-                  setIsSaving(true);
-                  await saveRef.current?.();
-                } finally {
-                  setIsSaving(false);
-                }
-              }}
-              aria-busy={isSaving}
-              aria-live="polite"
-              disabled={isSaving}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={() => saveRef.current?.()}
+              className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>Save Changes</>
-              )}
+              Save Changes
             </button>
             <TooltipProvider>
               <Tooltip>
@@ -398,7 +374,14 @@ export function EditorPageContent(): React.ReactNode {
                   aria-label="Add tool"
                   tooltip="Add tool"
                   className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
-                  onClick={() => {}}
+                  onClick={() => {
+                    if (selectedAgent && currentEditTarget?.type !== "main") {
+                      setCurrentEditTarget({
+                        type: "main",
+                        agent: selectedAgent,
+                      });
+                    }
+                  }}
                 >
                   <Plus className="h-3.5 w-3.5" />
                 </TooltipIconButton>
@@ -411,7 +394,14 @@ export function EditorPageContent(): React.ReactNode {
               >
                 <ToolsAddPopoverContent
                   toolsForm={toolsForm}
-                  onEnsureMainSelected={() => {}}
+                  onEnsureMainSelected={() => {
+                    if (selectedAgent && currentEditTarget?.type !== "main") {
+                      setCurrentEditTarget({
+                        type: "main",
+                        agent: selectedAgent,
+                      });
+                    }
+                  }}
                 />
               </PopoverContent>
             </Popover>
@@ -419,7 +409,11 @@ export function EditorPageContent(): React.ReactNode {
           <div className="p-3">
             <MainAgentToolsDropdown
               toolsForm={toolsForm}
-              onEnsureMainSelected={() => {}}
+              onEnsureMainSelected={() => {
+                if (selectedAgent && currentEditTarget?.type !== "main") {
+                  setCurrentEditTarget({ type: "main", agent: selectedAgent });
+                }
+              }}
               hideHeader
               hideTitle
             />
@@ -427,7 +421,7 @@ export function EditorPageContent(): React.ReactNode {
         </div>
 
         {/* Subagents (list with tools) */}
-        {selectedAgent && (
+        {selectedAgent && currentEditTarget && (
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
               <div className="text-sm font-semibold text-gray-700">
@@ -450,60 +444,53 @@ export function EditorPageContent(): React.ReactNode {
                   (selectedAgent.config?.configurable
                     ?.subagents as SubAgent[]) || []
                 }
-                selectedIndex={null}
+                selectedIndex={
+                  currentEditTarget.type === "subagent"
+                    ? currentEditTarget.index
+                    : null
+                }
                 onSelect={(index) => {
                   const subAgents =
                     (selectedAgent.config?.configurable
                       ?.subagents as SubAgent[]) || [];
                   const sa = subAgents[index];
                   if (!sa) return;
-                  setEditingSubAgent({ subAgent: sa, index });
-                  setSubAgentSheetOpen(true);
+                  setCurrentEditTarget({
+                    type: "subagent",
+                    subAgent: sa,
+                    index,
+                  });
                 }}
               />
             </div>
             <SubAgentSheet
               open={subAgentSheetOpen}
-              onOpenChange={(open) => {
-                setSubAgentSheetOpen(open);
-                if (!open) {
-                  setEditingSubAgent(null);
-                }
-              }}
-              editingSubAgent={editingSubAgent}
-              onSubmit={(subAgent) => {
+              onOpenChange={setSubAgentSheetOpen}
+              onSubmit={(newSubAgent) => {
                 if (!selectedAgent) return;
                 const currentSubAgents =
                   (selectedAgent.config?.configurable
                     ?.subagents as SubAgent[]) || [];
-
-                if (editingSubAgent) {
-                  // Edit existing subagent
-                  const updatedSubAgents = [...currentSubAgents];
-                  updatedSubAgents[editingSubAgent.index] = subAgent;
-                  if (selectedAgent.config?.configurable) {
-                    selectedAgent.config.configurable.subagents =
-                      updatedSubAgents;
-                  }
-                  toast.success(`Updated ${subAgent.name}!`);
-                } else {
-                  // Create new subagent
-                  const updatedSubAgents = [...currentSubAgents, subAgent];
-                  if (selectedAgent.config?.configurable) {
-                    selectedAgent.config.configurable.subagents =
-                      updatedSubAgents;
-                  }
-                  toast.success(`Created ${subAgent.name}!`);
+                const updatedSubAgents = [...currentSubAgents, newSubAgent];
+                if (selectedAgent.config?.configurable) {
+                  selectedAgent.config.configurable.subagents =
+                    updatedSubAgents;
                 }
-                setEditingSubAgent(null);
+                const newIndex = updatedSubAgents.length - 1;
+                setCurrentEditTarget({
+                  type: "subagent",
+                  subAgent: newSubAgent,
+                  index: newIndex,
+                });
+                toast.success(`Created ${newSubAgent.name} - ready to edit!`);
               }}
             />
           </div>
         )}
       </div>
 
-      {/* Bottom: Always-visible Instructions editor */}
-      {selectedAgent && (
+      {/* Bottom: Always-visible Instructions editor for current target */}
+      {selectedAgent && currentEditTarget && (
         <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-t-0 border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700">
             Instructions
@@ -511,7 +498,7 @@ export function EditorPageContent(): React.ReactNode {
           <div className="h-full overflow-auto">
             <AgentConfig
               agent={selectedAgent}
-              editTarget={{ type: "main", agent: selectedAgent }}
+              editTarget={currentEditTarget}
               onAgentUpdated={handleAgentUpdated}
               hideTopTabs={true}
               hideTitleSection={true}
@@ -526,7 +513,6 @@ export function EditorPageContent(): React.ReactNode {
         </div>
       )}
 
-<<<<<<< HEAD
       {/* Slide-out chat on the right to test the agent */}
       <Sheet
         open={chatOpen}
@@ -563,41 +549,6 @@ export function EditorPageContent(): React.ReactNode {
           )}
         </SheetContent>
       </Sheet>
-=======
-      {/* Right column - Chat with Agent */}
-      <div className="flex min-h-0 w-1/4 flex-col">
-        <div className="mb-0 flex items-center justify-between gap-2 px-6">
-          <h2 className="text-base font-semibold text-gray-800 md:text-lg">
-            Chat with your agent
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNewThread}
-            className="shadow-icon-button size-6 rounded border border-[#2F6868] bg-[#2F6868] p-2 text-white hover:bg-[#2F6868] hover:text-gray-50"
-            title="Start new chat"
-          >
-            <SquarePen className="size-4" />
-          </Button>
-        </div>
-        <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
-          <DeepAgentChatInterface
-            key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-            assistantId={agentId || ""}
-            deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-            accessToken={session.accessToken || ""}
-            optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
-            optimizerAccessToken={session.accessToken || ""}
-            mode="oap"
-            SidebarTrigger={SidebarTrigger}
-            DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-            view="chat"
-            hideInternalToggle={true}
-            hideSidebar={true}
-          />
-        </div>
-      </div>
->>>>>>> brace/v2
     </div>
   );
 }
