@@ -15,6 +15,7 @@ import {
   PopoverTrigger,
 } from "./components/ui/popover";
 import { Button } from "./components/ui/button";
+import { FileIcon } from "lucide-react";
 
 function DeepAgentChatInterfaceInternal({
   assistantId,
@@ -71,7 +72,7 @@ function DeepAgentChatInterfaceInternal({
                 <>
                   {controls}
 
-                  <Popover>
+                  {/* <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -81,13 +82,14 @@ function DeepAgentChatInterfaceInternal({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent></PopoverContent>
-                  </Popover>
+                  </Popover> */}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
                         variant="outline"
                       >
+                        <FileIcon />
                         Files
                       </Button>
                     </PopoverTrigger>

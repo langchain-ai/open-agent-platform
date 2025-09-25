@@ -513,6 +513,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             };
 
             const activeTask = todos.find((t) => t.status === "in_progress");
+            const remainingTasks = totalTasks - groupedTodos.pending.length;
+            const isCompleted = totalTasks === remainingTasks;
 
             return (
               <div className="bg-sidebar border-b">
@@ -529,7 +531,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 >
                   <span className="text-sm font-medium">Tasks</span>
 
-                  {!tasksOpen && (
+                  {!tasksOpen && !isCompleted && (
                     <>
                       <span className="text-sm">
                         {totalTasks - groupedTodos.pending.length}/{totalTasks}
@@ -539,35 +541,43 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       </span>
                     </>
                   )}
+
+                  {!tasksOpen && isCompleted && (
+                    <span className="min-w-0 truncate text-sm">
+                      All tasks completed
+                    </span>
+                  )}
                 </button>
                 {tasksOpen && (
                   <div
                     ref={tasksContainerRef}
                     className="max-h-60 overflow-y-auto px-4.5"
                   >
-                    {Object.entries(groupedTodos).map(([status, todos]) => (
-                      <div className="mb-4">
-                        <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                          {
+                    {Object.entries(groupedTodos)
+                      .filter(([_, todos]) => todos.length > 0)
+                      .map(([status, todos]) => (
+                        <div className="mb-4">
+                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
                             {
-                              pending: "Pending",
-                              in_progress: "In Progress",
-                              completed: "Completed",
-                            }[status]
-                          }
-                        </h3>
-                        <div className="grid grid-cols-[auto_1fr] gap-3 rounded-sm p-1 pl-0 text-sm">
-                          {todos.map((todo, index) => (
-                            <Fragment key={`${status}_${todo.id}_${index}`}>
-                              {getStatusIcon(todo.status, "mt-0.5")}
-                              <span className="break-words text-inherit">
-                                {todo.content}
-                              </span>
-                            </Fragment>
-                          ))}
+                              {
+                                pending: "Pending",
+                                in_progress: "In Progress",
+                                completed: "Completed",
+                              }[status]
+                            }
+                          </h3>
+                          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-sm p-1 pl-0 text-sm">
+                            {todos.map((todo, index) => (
+                              <Fragment key={`${status}_${todo.id}_${index}`}>
+                                {getStatusIcon(todo.status, "mt-0.5")}
+                                <span className="break-words text-inherit">
+                                  {todo.content}
+                                </span>
+                              </Fragment>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </div>
