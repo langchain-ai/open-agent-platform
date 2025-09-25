@@ -286,21 +286,63 @@ const getAgentColor = (name: string | undefined) => {
   const firstChar = name?.charAt(0).toLowerCase();
   switch (firstChar) {
     case "a":
-      return "bg-blue-500";
+      return "bg-[#2F6868]";
     case "b":
-      return "bg-green-500";
+      return "bg-[#3D7575]";
     case "c":
-      return "bg-purple-500";
+      return "bg-[#4B8282]";
     case "d":
-      return "bg-orange-500";
+      return "bg-[#599090]";
     case "e":
-      return "bg-pink-500";
+      return "bg-[#679D9D]";
     case "f":
-      return "bg-red-500";
+      return "bg-[#75AAAA]";
+    case "g":
+      return "bg-[#83B7B7]";
+    case "h":
+      return "bg-[#91C4C4]";
+    case "i":
+      return "bg-[#9FD1D1]";
+    case "j":
+      return "bg-[#ADDEDE]";
+    case "k":
+      return "bg-[#3D7575]";
+    case "l":
+      return "bg-[#4B8282]";
+    case "m":
+      return "bg-[#599090]";
+    case "n":
+      return "bg-[#679D9D]";
+    case "o":
+      return "bg-[#75AAAA]";
+    case "p":
+      return "bg-[#83B7B7]";
+    case "q":
+      return "bg-[#91C4C4]";
+    case "r":
+      return "bg-[#9FD1D1]";
+    case "s":
+      return "bg-[#ADDEDE]";
+    case "t":
+      return "bg-[#3D7575]";
+    case "u":
+      return "bg-[#4B8282]";
+    case "v":
+      return "bg-[#599090]";
+    case "w":
+      return "bg-[#679D9D]";
+    case "x":
+      return "bg-[#75AAAA]";
+    case "y":
+      return "bg-[#83B7B7]";
+    case "z":
+      return "bg-[#91C4C4]";
     default:
-      return "bg-gray-500";
+      return "bg-[#2F6868]";
   }
 };
+
+// Row background uses the default hover and active styles.
 
 export function ThreadHistoryAgentList({
   deploymentId,
@@ -547,7 +589,9 @@ function Row({
       onClick={onClick}
       className={cn(
         "grid w-full cursor-pointer items-center gap-3 rounded-lg border-none px-3 py-3 text-left transition-colors duration-200 hover:bg-gray-100",
-        active ? "border-l-4 bg-[#F4F3FF] text-[#1A1A1E]" : "bg-transparent",
+        active
+          ? "border-l-4 border-l-gray-300 bg-gray-100 text-[#1A1A1E]"
+          : "bg-transparent",
       )}
       aria-current={active}
     >
