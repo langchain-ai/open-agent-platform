@@ -31,12 +31,13 @@ import type { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
 
 export function EditorPageContent(): React.ReactNode {
   const { session } = useAuthContext();
-  const { agents, refreshAgents } = useAgentsContext();
+  const { agents, refreshAgents, loading: agentsLoading } = useAgentsContext();
   const deployments = getDeployments();
 
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
+  const [isNewAgent] = useQueryState("new");
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
@@ -86,6 +87,15 @@ export function EditorPageContent(): React.ReactNode {
         agent.assistant_id === agentId && agent.deploymentId === deploymentId,
     );
   }, [agents, agentId, deploymentId]);
+
+  // Auto-select first agent if none selected but agents are available (but not when creating new)
+  useEffect(() => {
+    if (!agentId && !deploymentId && agents.length > 0 && !isNewAgent) {
+      const firstAgent = agents[0];
+      setAgentId(firstAgent.assistant_id);
+      setDeploymentId(firstAgent.deploymentId);
+    }
+  }, [agentId, deploymentId, agents, setAgentId, setDeploymentId, isNewAgent]);
 
   // Initialize edit target when agent is selected
   useEffect(() => {
@@ -262,11 +272,16 @@ export function EditorPageContent(): React.ReactNode {
   };
 
   if (!session) {
-    return <div>Loading...</div>;
+    return <div className="p-4">Loading...</div>;
   }
 
-  // Show the form if we: don't have an API URL, or don't have an assistant ID
-  if (!agentId || !deploymentId) {
+  // Show loading while agents are being fetched
+  if (agentsLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  // Show the form if we: don't have an API URL, or don't have an assistant ID, AND (no agents available OR creating new agent)
+  if ((!agentId || !deploymentId) && (agents.length === 0 || isNewAgent)) {
     return (
       <InitialInputs
         onAgentCreated={async (agentId: string, deploymentId: string) => {
@@ -372,7 +387,7 @@ export function EditorPageContent(): React.ReactNode {
         <div className="-mt-2 flex min-h-0 flex-1 flex-col pb-6">
           <DeepAgentChatInterface
             key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-            assistantId={agentId}
+            assistantId={agentId || ""}
             deploymentUrl={selectedDeployment?.deploymentUrl || ""}
             accessToken={session.accessToken || ""}
             optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}

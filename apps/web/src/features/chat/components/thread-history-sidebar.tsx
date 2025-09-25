@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, MessagesSquare } from "lucide-react";
 import { createClient } from "@/lib/client";
 import type { ChatHistoryItem } from "../types";
-import { extractStringFromMessageContent } from "../utils";
+import { extractStringFromMessageContent, truncateText } from "../utils";
 import { Message } from "@langchain/langgraph-sdk";
 import { useQueryState } from "nuqs";
 import { useAuthContext } from "@/providers/Auth";
@@ -55,14 +55,14 @@ const fetchThreadsData = async (
           messages.length > 0 &&
           thread.status !== "busy"
         ) {
-          displayContent = extractStringFromMessageContent(
-            messages[0] as Message,
-          );
+          const lastMessage = messages[messages.length - 1] as Message;
+          const text = extractStringFromMessageContent(lastMessage);
+          displayContent = truncateText(text, 80);
         }
       }
     } catch (error) {
       console.warn(
-        `Failed to get first message for thread ${thread.thread_id}:`,
+        `Failed to get last message for thread ${thread.thread_id}:`,
         error,
       );
     }

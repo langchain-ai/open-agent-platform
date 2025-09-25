@@ -23,3 +23,8 @@ export function extractStringFromMessageContent(message: Message): string {
           .join("")
       : "";
 }
+
+export function truncateText(str: string, maxLength: number = 80): string {
+  if (!str) return "";
+  return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
+}
