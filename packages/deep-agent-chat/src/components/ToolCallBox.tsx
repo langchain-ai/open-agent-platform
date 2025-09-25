@@ -7,9 +7,11 @@ import {
   Terminal,
   AlertCircle,
   Loader2,
+  CircleCheckBigIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { ToolCall } from "../types";
+import { cn } from "../lib/utils";
 
 interface ToolCallBoxProps {
   toolCall: ToolCall;
@@ -43,7 +45,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   const statusIcon = useMemo(() => {
     switch (status) {
       case "completed":
-        return null;
+        return <CircleCheckBigIcon />;
       case "error":
         return (
           <AlertCircle
@@ -82,18 +84,25 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
   const hasContent = result || Object.keys(args).length > 0;
 
   return (
-    <div className="bg-card w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none outline-none">
+    <div
+      className={cn(
+        "hover:bg-accent w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none transition-colors duration-200 outline-none",
+        isExpanded && hasContent && "bg-accent",
+      )}
+    >
       <Button
         variant="ghost"
         size="sm"
         onClick={toggleExpanded}
-        className="hover:bg-accent flex w-full items-center justify-between gap-2 border-none px-4 py-2 text-left shadow-none transition-colors duration-200 outline-none disabled:cursor-default"
+        className={cn(
+          "flex w-full items-center justify-between gap-2 border-none px-2 py-2 text-left shadow-none outline-none disabled:cursor-default",
+        )}
         disabled={!hasContent}
       >
         <div className="flex w-full items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {statusIcon}
-            <span className="text-[15px] leading-[140%] font-medium tracking-[-0.6px] text-[#3F3F46]">
+            <span className="text-[15px] font-medium tracking-[-0.6px] text-[#3F3F46]">
               {name}
             </span>
           </div>
@@ -113,7 +122,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
       </Button>
 
       {isExpanded && hasContent && (
-        <div className="border-border border-t px-4 pb-4">
+        <div className="px-4 pb-4">
           {Object.keys(args).length > 0 && (
             <div className="mt-4">
               <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
