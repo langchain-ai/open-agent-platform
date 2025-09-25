@@ -14,6 +14,8 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 import { AuthRequiredDialog } from "@/components/agent-creator-sheet/components/auth-required-dialog";
+import { useTriggers } from "@/hooks/use-triggers";
+import { Trigger } from "@/types/triggers";
 
 interface AgentDescriptionProps {
   description: string;
@@ -193,8 +195,11 @@ export function InitialInputs({
 }: InitialInputsProps): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
+  const { listTriggers } = useTriggers();
   const { refreshAgents } = useAgentsContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
+
+  const [triggers, setTriggers] = useState<Trigger[]>([]);
 
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
@@ -215,6 +220,13 @@ export function InitialInputs({
     if (!session?.accessToken || !deploymentId) return null;
     return createClient(deploymentId, session.accessToken);
   }, [session, deploymentId]);
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+    listTriggers(session.accessToken)
+      .then((triggers) => setTriggers(triggers ?? []))
+      .catch((error) => console.error(error));
+  }, [session]);
 
   const stream = useStream({
     client: client ?? undefined,
@@ -299,7 +311,14 @@ export function InitialInputs({
           content: description,
         },
       ],
-      tools: tools.map((tool) => tool.name),
+      tools: tools.map((tool) => ({
+        name: tool.name,
+        default_interrupt: tool.default_interrupt,
+      })),
+      triggers: triggers.map((t) => ({
+        name: t.displayName,
+        description: t.description ?? "",
+      })),
     });
     setStep(2);
   };
