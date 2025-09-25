@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useAgentsContext } from "@/providers/Agents";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
+import { EditTarget } from "@/components/AgentHierarchyNav";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Plus } from "lucide-react";
@@ -189,7 +190,9 @@ export function EditorPageContent(): React.ReactNode {
   }, [
     selectedAgent?.assistant_id,
     currentTargetKey,
-    currentEditTarget?.index,
+    currentEditTarget?.type === "subagent"
+      ? currentEditTarget.index
+      : undefined,
     currentEditTarget?.type,
     selectedAgent?.config?.configurable,
     toolsDrafts,
