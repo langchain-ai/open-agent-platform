@@ -88,6 +88,10 @@ export function EditorPageContent(): React.ReactNode {
 
   // UI: popover states handled by Popover components
   const [subAgentSheetOpen, setSubAgentSheetOpen] = useState(false);
+  const [editingSubAgent, setEditingSubAgent] = useState<{
+    subAgent: SubAgent;
+    index: number;
+  } | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
@@ -289,13 +293,16 @@ export function EditorPageContent(): React.ReactNode {
                   <button
                     type="button"
                     disabled
-                    className="rounded-md border border-gray-300 bg-gray-300 px-3 py-2 text-sm font-medium text-gray-500 shadow-sm cursor-not-allowed hover:bg-gray-300"
+                    className="cursor-not-allowed rounded-md border border-gray-300 bg-gray-300 px-3 py-2 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-300"
                   >
                     Train
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Use an optimizer to automatically make improvements to your agent.</p>
+                  <p>
+                    Use an optimizer to automatically make improvements to your
+                    agent.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -445,45 +452,52 @@ export function EditorPageContent(): React.ReactNode {
                   (selectedAgent.config?.configurable
                     ?.subagents as SubAgent[]) || []
                 }
-                selectedIndex={
-                  currentEditTarget.type === "subagent"
-                    ? currentEditTarget.index
-                    : null
-                }
+                selectedIndex={null}
                 onSelect={(index) => {
                   const subAgents =
                     (selectedAgent.config?.configurable
                       ?.subagents as SubAgent[]) || [];
                   const sa = subAgents[index];
                   if (!sa) return;
-                  setCurrentEditTarget({
-                    type: "subagent",
-                    subAgent: sa,
-                    index,
-                  });
+                  setEditingSubAgent({ subAgent: sa, index });
+                  setSubAgentSheetOpen(true);
                 }}
               />
             </div>
             <SubAgentSheet
               open={subAgentSheetOpen}
-              onOpenChange={setSubAgentSheetOpen}
-              onSubmit={(newSubAgent) => {
+              onOpenChange={(open) => {
+                setSubAgentSheetOpen(open);
+                if (!open) {
+                  setEditingSubAgent(null);
+                }
+              }}
+              editingSubAgent={editingSubAgent}
+              onSubmit={(subAgent) => {
                 if (!selectedAgent) return;
                 const currentSubAgents =
                   (selectedAgent.config?.configurable
                     ?.subagents as SubAgent[]) || [];
-                const updatedSubAgents = [...currentSubAgents, newSubAgent];
-                if (selectedAgent.config?.configurable) {
-                  selectedAgent.config.configurable.subagents =
-                    updatedSubAgents;
+
+                if (editingSubAgent) {
+                  // Edit existing subagent
+                  const updatedSubAgents = [...currentSubAgents];
+                  updatedSubAgents[editingSubAgent.index] = subAgent;
+                  if (selectedAgent.config?.configurable) {
+                    selectedAgent.config.configurable.subagents =
+                      updatedSubAgents;
+                  }
+                  toast.success(`Updated ${subAgent.name}!`);
+                } else {
+                  // Create new subagent
+                  const updatedSubAgents = [...currentSubAgents, subAgent];
+                  if (selectedAgent.config?.configurable) {
+                    selectedAgent.config.configurable.subagents =
+                      updatedSubAgents;
+                  }
+                  toast.success(`Created ${subAgent.name}!`);
                 }
-                const newIndex = updatedSubAgents.length - 1;
-                setCurrentEditTarget({
-                  type: "subagent",
-                  subAgent: newSubAgent,
-                  index: newIndex,
-                });
-                toast.success(`Created ${newSubAgent.name} - ready to edit!`);
+                setEditingSubAgent(null);
               }}
             />
           </div>
@@ -524,9 +538,7 @@ export function EditorPageContent(): React.ReactNode {
           className="w-[min(90vw,520px)] p-0 sm:max-w-lg"
         >
           <SheetHeader className="border-b px-4 py-2">
-            <SheetTitle className="text-sm font-semibold">
-              Use agent
-            </SheetTitle>
+            <SheetTitle className="text-sm font-semibold">Use agent</SheetTitle>
           </SheetHeader>
           {agentId && deploymentId && session?.accessToken ? (
             <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col">

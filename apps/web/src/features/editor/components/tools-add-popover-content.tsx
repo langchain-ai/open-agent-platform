@@ -5,7 +5,6 @@ import { Search } from "@/components/ui/tool-search";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, HelpCircle } from "lucide-react";
@@ -142,7 +141,7 @@ export function ToolsAddPopoverContent({
                 </div>
                 {openInterrupt.has(tool.name) && (
                   <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
                         <span>Interrupt</span>
                         <TooltipProvider>

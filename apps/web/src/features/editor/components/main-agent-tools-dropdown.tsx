@@ -250,7 +250,7 @@ export function MainAgentToolsDropdown({
                       </div>
                       {openInterrupt.has(tool.name) && (
                         <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                          <div className="flex items-center justify-center gap-3">
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
                               <span>Interrupt</span>
                               <TooltipProvider>

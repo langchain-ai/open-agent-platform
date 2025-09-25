@@ -161,7 +161,6 @@ export function AgentConfig({
     },
   });
 
-
   // Triggers state
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
   const [registrations, setRegistrations] = useState<
@@ -486,7 +485,6 @@ export function AgentConfig({
     } catch (error) {
       console.error("Error saving agent configuration:", error);
       toast.error("Failed to save configuration");
-    } finally {
     }
   };
 
