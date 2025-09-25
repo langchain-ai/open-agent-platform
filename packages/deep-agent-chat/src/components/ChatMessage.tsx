@@ -81,13 +81,13 @@ export const ChatMessage = React.memo<ChatMessageProps>(
           isUser && "flex-row-reverse",
         )}
       >
-        <div className="max-w-[70%] min-w-0 flex-shrink-0">
+        <div className={cn("max-w-full min-w-0 flex-shrink-0", isUser && "max-w-[70%]")}>
           {(hasContent || debugMode) && (
             <div className={cn("relative flex items-end gap-0")}>
               <div
                 className={cn(
                   "mt-4 overflow-hidden rounded-xl text-sm leading-[150%] font-normal break-words text-[#1A1A1E]",
-                  isUser ? "bg-[#F4F3FF] px-4 py-3" : "bg-[#F4F4F5] p-3",
+                  isUser ? "bg-muted px-4 py-3 rounded-br-none border" : null,
                 )}
               >
                 {isUser ? (

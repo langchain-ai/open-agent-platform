@@ -34,6 +34,7 @@ import { useQueryState } from "nuqs";
 import { cn } from "../lib/utils";
 import { ThreadActionsView } from "./interrupted-actions";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
+import { useStickToBottom } from "use-stick-to-bottom";
 
 interface ChatInterfaceProps {
   assistantId: string;
@@ -121,8 +122,9 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const { client } = useClients();
 
     const [input, setInput] = useState("");
+    const { scrollRef, contentRef } = useStickToBottom();
+
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const refreshActiveAssistant = useCallback(async () => {
       if (!assistantId || !client) {
@@ -452,52 +454,48 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     }
 
     return (
-      <div className="flex h-full w-full flex-col font-sans">
-        {toggle}
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex flex-1 flex-col overflow-hidden">
-            {/* {isThreadLoading && (
-              <div className="absolute top-0 left-0 z-10 flex h-full w-full justify-center pt-[100px]">
-                <LoaderCircle className="text-primary flex h-[50px] w-[50px] animate-spin items-center justify-center" />
-              </div>
-            )} */}
-            <div className="flex-1 overflow-y-auto px-6 pt-4 pb-4">
-              {processedMessages.map((data, index) => (
-                <ChatMessage
-                  key={data.message.id}
-                  message={data.message}
-                  toolCalls={data.toolCalls}
-                  onRestartFromAIMessage={handleRestartFromAIMessage}
-                  onRestartFromSubTask={handleRestartFromSubTask}
-                  debugMode={debugMode}
-                  isLoading={isLoading}
-                  isLastMessage={index === processedMessages.length - 1}
-                />
-              ))}
-              {interrupt && (
-                <ThreadActionsView
-                  interrupt={interrupt}
-                  threadId={threadId}
-                />
-              )}
-              {interrupt && debugMode && (
-                <div className="mt-4">
-                  <Button
-                    onClick={handleContinue}
-                    variant="outline"
-                    className="rounded-full px-3 py-1 text-xs"
-                  >
-                    Continue
-                  </Button>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
+      <div
+        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
+        ref={scrollRef}
+      >
+        <div
+          className="flex-grow px-6 pt-4 pb-10"
+          ref={contentRef}
+        >
+          {processedMessages.map((data, index) => (
+            <ChatMessage
+              key={data.message.id}
+              message={data.message}
+              toolCalls={data.toolCalls}
+              onRestartFromAIMessage={handleRestartFromAIMessage}
+              onRestartFromSubTask={handleRestartFromSubTask}
+              debugMode={debugMode}
+              isLoading={isLoading}
+              isLastMessage={index === processedMessages.length - 1}
+            />
+          ))}
+          {interrupt && (
+            <ThreadActionsView
+              interrupt={interrupt}
+              threadId={threadId}
+            />
+          )}
+          {interrupt && debugMode && (
+            <div className="mt-4">
+              <Button
+                onClick={handleContinue}
+                variant="outline"
+                className="rounded-full px-3 py-1 text-xs"
+              >
+                Continue
+              </Button>
             </div>
-          </div>
+          )}
         </div>
+
         <div
           className={cn(
-            "mx-4 flex flex-col overflow-hidden rounded-xl border",
+            "bg-background sticky bottom-6 z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
             "transition-colors duration-200 ease-in-out",
           )}
         >

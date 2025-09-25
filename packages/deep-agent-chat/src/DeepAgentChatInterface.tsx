@@ -52,27 +52,26 @@ function DeepAgentChatInterfaceInternal({
         assistantId={assistantId}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
-          <div className="flex min-h-0 flex-1 flex-col rounded-xl bg-white">
-            <ChatInterface
-              assistantId={assistantId}
-              activeAssistant={activeAssistant}
-              debugMode={debugMode}
-              setDebugMode={setDebugMode}
-              assistantError={assistantError}
-              setAssistantError={setAssistantError}
-              setActiveAssistant={setActiveAssistant}
-              todos={todos}
-              setTodos={setTodos}
-              setFiles={setFiles}
-              view={view}
-              onViewChange={onViewChange}
-              hideInternalToggle={hideInternalToggle}
-              empty={empty}
-              controls={
-                <>
-                  {controls}
+          <ChatInterface
+            assistantId={assistantId}
+            activeAssistant={activeAssistant}
+            debugMode={debugMode}
+            setDebugMode={setDebugMode}
+            assistantError={assistantError}
+            setAssistantError={setAssistantError}
+            setActiveAssistant={setActiveAssistant}
+            todos={todos}
+            setTodos={setTodos}
+            setFiles={setFiles}
+            view={view}
+            onViewChange={onViewChange}
+            hideInternalToggle={hideInternalToggle}
+            empty={empty}
+            controls={
+              <>
+                {controls}
 
-                  {/* <Popover>
+                {/* <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -83,28 +82,27 @@ function DeepAgentChatInterfaceInternal({
                     </PopoverTrigger>
                     <PopoverContent></PopoverContent>
                   </Popover> */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                      >
-                        <FileIcon />
-                        Files
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent>
-                      <FilesPopover
-                        files={files}
-                        setFiles={setFiles}
-                        editDisabled={false}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </>
-              }
-            />
-          </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                    >
+                      <FileIcon />
+                      Files
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <FilesPopover
+                      files={files}
+                      setFiles={setFiles}
+                      editDisabled={false}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </>
+            }
+          />
         </div>
       </ChatProvider>
     </ClientProvider>

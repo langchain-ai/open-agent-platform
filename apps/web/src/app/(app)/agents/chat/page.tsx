@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
@@ -188,7 +188,7 @@ function RightPaneChat(): React.ReactNode {
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [draft, setDraft] = useQueryState("draft");
-  const [chatVersion] = useState(0);
+  const [chatVersion, setChatVersion] = useState(0);
   const [fullChat, setFullChat] = useQueryState("fullChat");
 
   const deployments = getDeployments();
@@ -201,6 +201,15 @@ function RightPaneChat(): React.ReactNode {
     () => agents.find((a) => a.assistant_id === agentId) || null,
     [agents, agentId],
   );
+
+  const prevThreadId = useRef(threadId);
+
+  if (prevThreadId.current !== threadId) {
+    if (!(prevThreadId.current == null && threadId !== null)) {
+      setChatVersion((v) => v + 1);
+    }
+    prevThreadId.current = threadId;
+  }
 
   // Guard missing essentials
   if (!deploymentId || !session?.accessToken) {
@@ -258,7 +267,7 @@ function RightPaneChat(): React.ReactNode {
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col pb-6">
+      <div className="flex min-h-0 flex-1 flex-col">
         <DeepAgentChatInterface
           key={`chat-${agentId || "all"}-${deploymentId}-${chatVersion}`}
           assistantId={agentId || ""}
