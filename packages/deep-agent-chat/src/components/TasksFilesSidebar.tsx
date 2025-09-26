@@ -60,12 +60,9 @@ export function FilesPopover(props: {
           <p className="text-muted-foreground text-xs">No files created yet</p>
         </div>
       ) : (
-        <div className="p-1">
+        <div className="space-y-1 p-1">
           {Object.keys(props.files).map((file) => (
-            <div
-              key={file}
-              className="mb-1"
-            >
+            <div key={file}>
               <div
                 className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
                 onClick={() => {

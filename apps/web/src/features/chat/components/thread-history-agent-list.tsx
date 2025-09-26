@@ -1,345 +1,16 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
-import { useAuthContext } from "@/providers/Auth";
-import { createClient } from "@/lib/client";
-import type { Agent } from "@/types/agent";
-import type { Thread, Message } from "@langchain/langgraph-sdk";
+import type { Thread } from "@langchain/langgraph-sdk";
+import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
-import useSWR from "swr";
-import { extractStringFromMessageContent, truncateText } from "../utils";
-
-type ThreadItem = {
-  id: string;
-  updatedAt: Date;
-  status: Thread["status"] | "draft";
-  title: string;
-  description: string;
-  assistantId?: string;
-};
-
-type AgentSummary = {
-  agent: Agent;
-  latestThread?: ThreadItem;
-  interrupted?: string;
-};
-
-function useThreads(args: {
-  deploymentId: string | null;
-  agent: Agent | null;
-}) {
-  const { session } = useAuthContext();
-  const { agents } = useAgentsContext();
-
-  return useSWR(
-    { ...args, agents, session },
-    async ({ deploymentId, agent, agents, session }) => {
-      if (!deploymentId || !session?.accessToken) return [];
-
-      // Build a quick lookup for agents in the current deployment
-      const agentsByAssistantId = new Map<string, Agent>(
-        agents
-          .filter((a) => a.deploymentId === args.deploymentId)
-          .map((a) => [a.assistant_id, a]),
-      );
-
-      const client = createClient(deploymentId, session.accessToken);
-      const params: Parameters<typeof client.threads.search>[0] = {
-        // TODO: use useSWRInfinite to fetch multiple pages
-        limit: 50,
-        sortBy: "created_at",
-        sortOrder: "desc",
-      };
-      if (agent?.assistant_id) {
-        params.metadata = { assistant_id: agent.assistant_id } as Record<
-          string,
-          string
-        >;
-      } else {
-        params.metadata = {
-          graph_id: "deep_agent",
-        };
-      }
-
-      const response = await client.threads.search(params);
-      const defaultTitle = agent?.name || "Agent";
-      const defaultDesc =
-        (agent?.metadata?.description as string | undefined) ||
-        "No description";
-
-      return response.map((t) => {
-        // If a specific agent is selected, use it for title/desc
-        if (agent?.assistant_id) {
-          // Try to derive a snippet from the last message in the thread
-          let snippet = "";
-          let title = "";
-
-          const isMessages = (
-            values: unknown,
-          ): values is { messages: Message[] } => {
-            return (
-              typeof values === "object" &&
-              values !== null &&
-              "messages" in values &&
-              Array.isArray(values.messages)
-            );
-          };
-
-          try {
-            if (isMessages(t.values)) {
-              const lastMessage = t.values.messages.at(-1);
-              const lastHuman = t.values.messages
-                .filter((t) => t.type === "human")
-                .at(-1);
-
-              if (lastMessage != null) {
-                snippet = truncateText(
-                  extractStringFromMessageContent(lastMessage),
-                  80,
-                );
-              }
-
-              if (lastHuman != null) {
-                title = truncateText(
-                  extractStringFromMessageContent(lastHuman),
-                  80,
-                );
-              }
-            }
-          } catch (err) {
-            console.warn(
-              `Failed to get last message for thread ${t.thread_id}:`,
-              err,
-            );
-          }
-
-          return {
-            id: t.thread_id,
-            updatedAt: new Date(t.updated_at || t.created_at),
-            status: t.status,
-            title: title || defaultTitle,
-            description: snippet || defaultDesc,
-            assistantId: agent.assistant_id,
-          };
-        }
-
-        // Otherwise, try to derive the agent from thread metadata
-        const meta = (t as unknown as { metadata?: Record<string, unknown> })
-          .metadata;
-        const assistantId =
-          (meta?.["assistant_id"] as string | undefined) || undefined;
-        const matched = assistantId
-          ? agentsByAssistantId.get(assistantId)
-          : undefined;
-
-        // Try to derive a snippet from the last message in the thread
-        let snippet = "";
-        try {
-          if (
-            t.values &&
-            typeof t.values === "object" &&
-            "messages" in t.values
-          ) {
-            const messages = (t.values as { messages?: unknown[] }).messages;
-            if (Array.isArray(messages) && messages.length > 0) {
-              const last = messages[messages.length - 1] as Message;
-              snippet = truncateText(extractStringFromMessageContent(last), 80);
-            }
-          }
-        } catch (err) {
-          console.warn(
-            `Failed to get last message for thread ${t.thread_id}:`,
-            err,
-          );
-        }
-
-        return {
-          id: t.thread_id,
-          updatedAt: new Date(t.updated_at || t.created_at),
-          status: t.status,
-          title: matched?.name || defaultTitle,
-          description:
-            snippet ||
-            (matched?.metadata?.description as string | undefined) ||
-            defaultDesc,
-          assistantId,
-        };
-      });
-    },
-  );
-}
-
-function useAgentSummaries(args: {
-  deploymentId: string | null;
-  agents: Agent[];
-}) {
-  const { session } = useAuthContext();
-
-  return useSWR(
-    { ...args, session },
-    async ({ deploymentId, agents, session }) => {
-      if (!deploymentId || !session?.accessToken) return [];
-
-      const client = createClient(deploymentId, session.accessToken);
-      const summaries: AgentSummary[] = [];
-
-      // Fetch latest thread for each agent
-      for (const agent of agents) {
-        try {
-          const interrupted = await client.threads.count({
-            status: "interrupted",
-            metadata: { assistant_id: agent.assistant_id },
-          });
-
-          const latest = await client.threads.search({
-            limit: 1,
-            sortBy: "updated_at",
-            sortOrder: "desc",
-            metadata: { assistant_id: agent.assistant_id },
-          });
-
-          let latestThread: ThreadItem | undefined;
-          if (latest.length > 0) {
-            const t = latest[0];
-            let snippet = "";
-            try {
-              if (
-                t.values &&
-                typeof t.values === "object" &&
-                "messages" in t.values
-              ) {
-                const messages = (t.values as { messages?: unknown[] })
-                  .messages;
-                if (Array.isArray(messages) && messages.length > 0) {
-                  const last = messages[messages.length - 1] as Message;
-                  snippet = truncateText(
-                    extractStringFromMessageContent(last),
-                    60,
-                  );
-                }
-              }
-            } catch (err) {
-              console.warn(
-                `Failed to get last message for thread ${t.thread_id}:`,
-                err,
-              );
-            }
-
-            latestThread = {
-              id: t.thread_id,
-              updatedAt: new Date(t.updated_at || t.created_at),
-              status: t.status,
-              title: agent.name || "Agent",
-              description:
-                snippet ||
-                (agent.metadata?.description as string) ||
-                "No description",
-              assistantId: agent.assistant_id,
-            };
-          }
-
-          summaries.push({
-            agent,
-            latestThread,
-            interrupted:
-              interrupted > 99
-                ? "99+"
-                : interrupted > 0
-                  ? interrupted.toString()
-                  : undefined,
-          });
-        } catch (error) {
-          console.warn(
-            `Failed to fetch threads for agent ${agent.name}:`,
-            error,
-          );
-          summaries.push({
-            agent,
-            latestThread: undefined,
-            interrupted: undefined,
-          });
-        }
-      }
-
-      // Sort by latest thread update time
-      return summaries.sort((a, b) => {
-        if (!a.latestThread && !b.latestThread) return 0;
-        if (!a.latestThread) return 1;
-        if (!b.latestThread) return -1;
-        return (
-          b.latestThread.updatedAt.getTime() -
-          a.latestThread.updatedAt.getTime()
-        );
-      });
-    },
-  );
-}
-
-const getAgentColor = (name: string | undefined) => {
-  const firstChar = name?.charAt(0).toLowerCase();
-  switch (firstChar) {
-    case "a":
-      return "bg-[#2F6868]";
-    case "b":
-      return "bg-[#3D7575]";
-    case "c":
-      return "bg-[#4B8282]";
-    case "d":
-      return "bg-[#599090]";
-    case "e":
-      return "bg-[#679D9D]";
-    case "f":
-      return "bg-[#75AAAA]";
-    case "g":
-      return "bg-[#83B7B7]";
-    case "h":
-      return "bg-[#91C4C4]";
-    case "i":
-      return "bg-[#9FD1D1]";
-    case "j":
-      return "bg-[#ADDEDE]";
-    case "k":
-      return "bg-[#3D7575]";
-    case "l":
-      return "bg-[#4B8282]";
-    case "m":
-      return "bg-[#599090]";
-    case "n":
-      return "bg-[#679D9D]";
-    case "o":
-      return "bg-[#75AAAA]";
-    case "p":
-      return "bg-[#83B7B7]";
-    case "q":
-      return "bg-[#91C4C4]";
-    case "r":
-      return "bg-[#9FD1D1]";
-    case "s":
-      return "bg-[#ADDEDE]";
-    case "t":
-      return "bg-[#3D7575]";
-    case "u":
-      return "bg-[#4B8282]";
-    case "v":
-      return "bg-[#599090]";
-    case "w":
-      return "bg-[#679D9D]";
-    case "x":
-      return "bg-[#75AAAA]";
-    case "y":
-      return "bg-[#83B7B7]";
-    case "z":
-      return "bg-[#91C4C4]";
-    default:
-      return "bg-[#2F6868]";
-  }
-};
-
-// Row background uses the default hover and active styles.
+import { useThreads, useAgentSummaries } from "../utils";
+import { getAgentColor } from "@/features/agents/utils";
+import { useQueryState } from "nuqs";
 
 export function ThreadHistoryAgentList({
   deploymentId,
@@ -356,7 +27,8 @@ export function ThreadHistoryAgentList({
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
+  const [_, setCurrentThreadId] = useQueryState("threadId");
   const { agents } = useAgentsContext();
 
   // Filter agents for current deployment
@@ -371,11 +43,8 @@ export function ThreadHistoryAgentList({
     [deploymentAgents, selectedAgentId],
   );
 
-  const threads = useThreads({ deploymentId, agent: agent });
-  const agentSummaries = useAgentSummaries({
-    deploymentId,
-    agents: deploymentAgents,
-  });
+  const threads = useThreads({ deploymentId, agent });
+  const agentSummaries = useAgentSummaries({ deploymentId });
 
   const displayItems = useMemo(() => {
     if (showDraft && !currentThreadId && agent) {
@@ -420,7 +89,7 @@ export function ThreadHistoryAgentList({
     <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
       <div className="relative flex h-full">
         {/* Agent Sidebar - Only show when agent is selected */}
-        {selectedAgentId && (
+        {selectedAgentId != null && (
           <div className="bg-sidebar w-16 border-r transition-all duration-300 ease-in-out">
             <ScrollArea className="h-full w-full">
               <div className="flex flex-col items-center gap-2 p-2">
@@ -431,20 +100,17 @@ export function ThreadHistoryAgentList({
                     <button
                       key={agent.assistant_id}
                       onClick={() => {
-                        if (isSelected) {
-                          setSelectedAgentId(null);
-                        } else {
-                          setSelectedAgentId(agent.assistant_id);
-                        }
+                        setSelectedAgentId(agent.assistant_id);
+                        setCurrentThreadId(null);
                       }}
                       className={cn(
                         "relative flex h-12 w-12 items-center justify-center rounded-full font-semibold text-white transition-all duration-200 hover:scale-105",
                         isSelected ? "ring-2 ring-[#2F6868] ring-offset-2" : "",
-                        getAgentColor(agent.name),
                       )}
+                      style={{ backgroundColor: getAgentColor(agent.name) }}
                       title={agent.name}
                     >
-                      {agent.name?.charAt(0).toUpperCase() || "A"}
+                      {agent.name?.slice(0, 2).toUpperCase()}
 
                       {interrupted ? (
                         <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white">
@@ -461,37 +127,11 @@ export function ThreadHistoryAgentList({
 
         {/* Main Content Area */}
         <ScrollArea className="h-full w-full">
-          {!selectedAgentId ? (
-            // Show agent summaries
-            <div className="box-border w-full max-w-full overflow-hidden p-2">
-              {agentSummaries.isLoading ? (
-                <div className="text-muted-foreground flex items-center justify-center p-12">
-                  Loading agents...
-                </div>
-              ) : !agentSummaries.data?.length ? (
-                <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
-                  <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
-                  <p>No agents available</p>
-                </div>
-              ) : (
-                <div>
-                  {agentSummaries.data.map((summary) => (
-                    <AgentSummaryCard
-                      key={summary.agent.assistant_id}
-                      summary={summary}
-                      onClick={() =>
-                        setSelectedAgentId(summary.agent.assistant_id)
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : threads.isLoading ? (
+          {threads.isLoading ? (
             <div className="text-muted-foreground flex items-center justify-center p-12">
               Loading threads...
             </div>
-          ) : !threads.data?.length ? (
+          ) : !displayItems?.length ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
               <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
               <p>No conversations yet</p>
@@ -627,7 +267,7 @@ function Row({
   );
 }
 
-function AgentSummaryCard({
+export function AgentSummaryCard({
   summary,
   onClick,
 }: {
@@ -652,6 +292,28 @@ function AgentSummaryCard({
     }
   };
 
+  const formatTimeElapsed = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) {
+      return "Just now";
+    } else if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else if (days === 1) {
+      return "1 day ago";
+    } else if (days < 7) {
+      return `${days} days ago`;
+    } else {
+      return format(date, "MMM dd");
+    }
+  };
+
   return (
     <button
       onClick={onClick}
@@ -660,12 +322,10 @@ function AgentSummaryCard({
       {/* Avatar */}
       <div className="relative flex-shrink-0">
         <div
-          className={cn(
-            "flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold text-white",
-            getAgentColor(agent.name || "A"),
-          )}
+          className="flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold text-white"
+          style={{ backgroundColor: getAgentColor(agent.name) }}
         >
-          {agent.name?.charAt(0).toUpperCase() || "A"}
+          {agent.name?.slice(0, 2).toUpperCase()}
         </div>
 
         {interrupted ? (
@@ -690,8 +350,10 @@ function AgentSummaryCard({
         <div className="flex items-center justify-between">
           <p className="flex-1 truncate text-sm text-gray-600">
             {latestThread
-              ? latestThread.description
-              : (agent.metadata?.description as string) || "No recent activity"}
+              ? `${latestThread.status === "busy" ? "Busy • " : ""}Last thread ${formatTimeElapsed(latestThread.updatedAt)}${interrupted ? ` • ${interrupted} interrupt${interrupted === "1" ? "" : "s"}` : ""}`
+              : interrupted
+                ? `${interrupted} interrupt${interrupted === "1" ? "" : "s"}`
+                : "No recent activity"}
           </p>
           {/* Status indicator for latest thread */}
           {latestThread && (
