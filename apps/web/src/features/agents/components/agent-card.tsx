@@ -16,18 +16,10 @@ import {
   Card,
   CardFooter,
   CardHeader,
-  CardTitle,
-  CardContent,
+  CardTitle
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Agent } from "@/types/agent";
-import { AgentGraphVisualization } from "@/features/agent-graph-visualization";
+// import { AgentGraphVisualization } from "@/features/agent-graph-visualization"; // View Graph disabled
 import _ from "lodash";
 import NextLink from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -119,7 +111,6 @@ export function AgentCard({
   );
 
   const isDefaultAgent = isUserCreatedDefaultAssistant(agent);
-  const hasConfigurable = Boolean(agent.config?.configurable);
 
   const { deleteAgent } = useAgents();
   const { listAgentTriggers, updateAgentTriggers } = useTriggers();
@@ -217,7 +208,7 @@ export function AgentCard({
         <div className="flex flex-0 flex-wrap items-center justify-start gap-2">
           {agent.metadata?.description &&
           typeof agent.metadata.description === "string" ? (
-            <p className="text-muted-foreground mt-1 text-sm">
+            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
               {agent.metadata.description}
             </p>
           ) : null}
@@ -230,31 +221,16 @@ export function AgentCard({
         </div>
       </CardHeader>
 
+      {/** View Graph temporarily disabled
       {hasConfigurable && (
         <CardContent className="pt-0 pb-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
-                <Bot className="mr-2 h-4 w-4" />
-                View Graph
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-full min-w-[80vw]">
-              <DialogHeader>
-                <DialogTitle>Agent Graph: {agent.name}</DialogTitle>
-              </DialogHeader>
-              <AgentGraphVisualization
-                configurable={agent.config?.configurable || {}}
-                name={agent.name}
-              />
-            </DialogContent>
-          </Dialog>
+          <Button variant="outline" size="sm" className="w-full" disabled>
+            <Bot className="mr-2 h-4 w-4" />
+            View Graph
+          </Button>
         </CardContent>
       )}
+      */}
 
       <CardFooter className="mt-auto flex w-full items-center gap-2 pt-2">
         {!isDefaultAgent && (
