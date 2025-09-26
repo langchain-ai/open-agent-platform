@@ -1858,9 +1858,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:^0.1.6, @langchain/langgraph-sdk@npm:~0.1.0":
-  version: 0.1.6
-  resolution: "@langchain/langgraph-sdk@npm:0.1.6"
+"@langchain/langgraph-sdk@npm:^0.1.7, @langchain/langgraph-sdk@npm:~0.1.0":
+  version: 0.1.7
+  resolution: "@langchain/langgraph-sdk@npm:0.1.7"
   dependencies:
     "@types/json-schema": ^7.0.15
     p-queue: ^6.6.2
@@ -1877,7 +1877,7 @@ __metadata:
       optional: true
     react-dom:
       optional: true
-  checksum: ae235c630f184feb42b449bc0fb75c9fdf41c9df337a744b64b63bb4c39a824bfc90814874733fa34d9eb37f0fe0da0fc6e78aa71f53b69b29b87522eb35dd4e
+  checksum: 213033d7dff7b2718515ab59c53c82229c0ba3e23a90d35fa4b0007755ae99750c1c995bb5e3d13eae593b0aaf07f7156bcad0f2ef53941de7fc177264d67fc3
   languageName: node
   linkType: hard
 
@@ -2531,7 +2531,7 @@ __metadata:
     "@hookform/resolvers": ^5.2.2
     "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.1.6
+    "@langchain/langgraph-sdk": ^0.1.7
     "@modelcontextprotocol/sdk": ^1.11.4
     "@open-agent-platform/deep-agent-chat": "*"
     "@radix-ui/react-accordion": ^1.2.12

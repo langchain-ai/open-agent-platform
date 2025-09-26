@@ -45,6 +45,7 @@ interface ChatInterfaceProps {
   setAssistantError: (error: string | null) => void;
   setActiveAssistant: (assistant: Assistant | null) => void;
   setTodos: (todos: TodoItem[]) => void;
+  files: Record<string, string>;
   setFiles: (files: Record<string, string>) => void;
   // Optional controlled view props from host app
   view?: "chat" | "workflow";
@@ -98,6 +99,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     onViewChange,
     controls,
     hideInternalToggle,
+    empty,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [tasksOpen, setTasksOpen] = useState(false);
@@ -284,7 +286,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     // Reserved: additional UI state
     // TODO: can we make this part of the hook?
     const processedMessages = useMemo(() => {
-      /* 
+      /*
      1. Loop through all messages
      2. For each AI message, add the AI message, and any tool calls to the messageMap
      3. For each tool message, find the corresponding tool call in the messageMap and update the status and output
@@ -518,32 +520,50 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 <button
                   type="button"
                   onClick={() => setTasksOpen((prev) => !prev)}
-                  className={cn(
-                    "grid w-full items-center gap-3 px-4.5 py-3 text-left",
-                    !tasksOpen
-                      ? "grid-cols-[auto_auto_1fr]"
-                      : "grid-cols-[1fr]",
-                  )}
+                  className="grid w-full cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-3 px-4.5 py-3 text-left"
                   aria-expanded={tasksOpen}
                 >
-                  <span className="text-sm font-medium">Tasks</span>
+                  {(() => {
+                    if (tasksOpen) {
+                      return <span className="text-sm font-medium">Tasks</span>;
+                    }
 
-                  {!tasksOpen && !isCompleted && (
-                    <>
-                      <span className="text-sm">
-                        {totalTasks - groupedTodos.pending.length}/{totalTasks}
-                      </span>
-                      <span className="min-w-0 truncate text-sm">
-                        {activeTask?.content}
-                      </span>
-                    </>
-                  )}
+                    if (isCompleted) {
+                      return [
+                        <CheckCircle
+                          size={16}
+                          className="text-success/80"
+                        />,
+                        <span className="min-w-0 truncate text-sm font-medium">
+                          All tasks completed
+                        </span>,
+                      ];
+                    }
 
-                  {!tasksOpen && isCompleted && (
-                    <span className="min-w-0 truncate text-sm">
-                      All tasks completed
-                    </span>
-                  )}
+                    if (activeTask != null) {
+                      return [
+                        getStatusIcon(activeTask.status),
+                        <span className="min-w-0 truncate text-sm font-medium">
+                          Task {totalTasks - groupedTodos.pending.length} of{" "}
+                          {totalTasks}
+                        </span>,
+                        <span className="text-muted-foreground min-w-0 gap-2 truncate text-sm">
+                          {activeTask.content}
+                        </span>,
+                      ];
+                    }
+
+                    return [
+                      <Circle
+                        size={16}
+                        className="text-tertiary/70"
+                      />,
+                      <span className="min-w-0 truncate text-sm font-medium">
+                        Task {totalTasks - groupedTodos.pending.length} of{" "}
+                        {totalTasks}
+                      </span>,
+                    ];
+                  })()}
                 </button>
                 {tasksOpen && (
                   <div
@@ -636,6 +656,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             </div>
           </form>
         </div>
+
+        {empty != null && <div className="flex-grow">{empty}</div>}
       </div>
     );
   },
