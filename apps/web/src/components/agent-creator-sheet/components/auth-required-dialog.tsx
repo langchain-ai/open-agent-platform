@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -30,32 +30,16 @@ export function AuthRequiredDialog(props: {
   const { getProviderDisplayName } = useOAuthProviders();
   const auth = useAuthContext();
 
-  const [localSelectedRegistrations, setLocalSelectedRegistrations] = useState<
-    string[]
-  >(props.selectedTriggerRegistrationIds ?? []);
-
-  useEffect(() => {
-    if (props.selectedTriggerRegistrationIds) {
-      setLocalSelectedRegistrations(props.selectedTriggerRegistrationIds);
-    }
-  }, [props.selectedTriggerRegistrationIds]);
-
   const shouldShowTriggers = !!props.groupedTriggers;
 
   const handleSelectedRegistrationsChange = useCallback(
     (registrationIds: string[]) => {
-      if (props.onSelectedTriggerRegistrationIdsChange) {
-        props.onSelectedTriggerRegistrationIdsChange(registrationIds);
-      } else {
-        setLocalSelectedRegistrations(registrationIds);
-      }
+      props.onSelectedTriggerRegistrationIdsChange?.(registrationIds);
     },
     [props.onSelectedTriggerRegistrationIdsChange],
   );
 
-  const selectedRegistrations = props.onSelectedTriggerRegistrationIdsChange
-    ? (props.selectedTriggerRegistrationIds ?? [])
-    : localSelectedRegistrations;
+  const selectedRegistrations = props.selectedTriggerRegistrationIds ?? [];
 
   const reloadTriggers = useCallback(async () => {
     if (!auth.session?.accessToken) return;
