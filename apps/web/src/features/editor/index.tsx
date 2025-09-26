@@ -24,6 +24,7 @@ import type {
 } from "@/types/triggers";
 import { useFlags } from "launchdarkly-react-client-sdk";
 import type { LaunchDarklyFeatureFlags } from "@/types/launch-darkly";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 import { MainAgentToolsDropdown } from "./components/main-agent-tools-dropdown";
 import {
   SelectedTriggersStrip,
@@ -93,6 +94,12 @@ export function EditorPageContent(): React.ReactNode {
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Track first visit to editor page for glow effect
+  const [hasVisitedEditor, setHasVisitedEditor] = useLocalStorage(
+    "hasVisitedEditor",
+    false
+  );
   // Keep latest trigger functions in a ref so effect deps don't churn
   const triggerFnsRef = React.useRef({
     listTriggers,
@@ -286,13 +293,19 @@ export function EditorPageContent(): React.ReactNode {
               type="button"
               onClick={() => {
                 if (!agentId || !deploymentId) return;
+                // Mark as visited when button is clicked
+                setHasVisitedEditor(true);
                 const search = new URLSearchParams({
                   agentId,
                   deploymentId,
                 }).toString();
                 router.push(`/agents/chat?${search}`);
               }}
-              className="rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90"
+              className={`rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90 transition-all duration-300 ${
+                !hasVisitedEditor
+                  ? "animate-pulse shadow-lg shadow-[#2F6868]/50 ring-2 ring-[#2F6868]/30 ring-offset-2"
+                  : ""
+              }`}
             >
               Use agent
             </button>
