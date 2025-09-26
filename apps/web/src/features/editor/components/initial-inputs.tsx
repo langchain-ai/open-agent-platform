@@ -209,7 +209,8 @@ export function InitialInputs({
 }: InitialInputsProps): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
-  const { listTriggers, listUserTriggers, setupAgentTrigger, registerTrigger } = useTriggers();
+  const { listTriggers, listUserTriggers, setupAgentTrigger, registerTrigger } =
+    useTriggers();
   const { refreshAgents } = useAgentsContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
 
@@ -246,8 +247,8 @@ export function InitialInputs({
         return undefined;
 
       // Filter out cron triggers from the enabled trigger IDs for auth dialog
-      const nonCronTriggerIds = enabledTriggerIds.filter(triggerId => {
-        const trigger = triggers.find(t => t.id === triggerId);
+      const nonCronTriggerIds = enabledTriggerIds.filter((triggerId) => {
+        const trigger = triggers.find((t) => t.id === triggerId);
         return trigger && !isCronTrigger(trigger);
       });
 
@@ -322,15 +323,16 @@ export function InitialInputs({
         await handleAutoCronSetup(
           data.generate_config.cron_schedule,
           newAgent.assistant_id,
-          session.accessToken
+          session.accessToken,
         );
       }
 
       // Filter out cron triggers from enabled_trigger_ids for auth dialog
-      const nonCronTriggerIds = data.generate_config.enabled_trigger_ids?.filter(triggerId => {
-        const trigger = triggers.find(t => t.id === triggerId);
-        return trigger && !isCronTrigger(trigger);
-      });
+      const nonCronTriggerIds =
+        data.generate_config.enabled_trigger_ids?.filter((triggerId) => {
+          const trigger = triggers.find((t) => t.id === triggerId);
+          return trigger && !isCronTrigger(trigger);
+        });
 
       if (nonCronTriggerIds?.length) {
         setEnabledTriggerIds(nonCronTriggerIds);
@@ -395,30 +397,27 @@ export function InitialInputs({
 
   const isCronTrigger = (trigger: Trigger): boolean => {
     return (
-      trigger.id.toLowerCase().includes('cron') ||
-      trigger.provider.toLowerCase() === 'cron' ||
-      trigger.displayName.toLowerCase().includes('cron') ||
-      trigger.displayName.toLowerCase().includes('schedule')
+      trigger.id.toLowerCase().includes("cron") ||
+      trigger.provider.toLowerCase() === "cron" ||
+      trigger.displayName.toLowerCase().includes("cron") ||
+      trigger.displayName.toLowerCase().includes("schedule")
     );
   };
 
   const handleAutoCronSetup = async (
     cronSchedules: string[],
     agentId: string,
-    accessToken: string
+    accessToken: string,
   ): Promise<boolean> => {
     try {
       // Find cron trigger template
       const cronTrigger = triggers.find(isCronTrigger);
 
       if (!cronTrigger) {
-        console.warn('No cron trigger template found in available triggers');
-        toast.error('Cron triggers are not available for automatic setup');
+        console.warn("No cron trigger template found in available triggers");
+        toast.error("Cron triggers are not available for automatic setup");
         return false;
       }
-
-      console.log(`Setting up ${cronSchedules.length} cron schedule(s) for agent ${agentId}`);
-
       let successCount = 0;
 
       // Register and setup cron triggers for each schedule
@@ -429,26 +428,28 @@ export function InitialInputs({
             id: cronTrigger.id,
             payload: {
               cron_schedule: schedule,
-              display_name: `Cron Schedule: ${schedule}`
+              display_name: `Cron Schedule: ${schedule}`,
             },
             method: cronTrigger.method,
             path: cronTrigger.path,
           });
 
           if (!registerResponse?.success) {
-            console.error('Failed to register cron trigger:', registerResponse);
+            console.error("Failed to register cron trigger:", registerResponse);
             continue;
           }
 
           if (registerResponse.registered) {
             successCount++;
-            console.log(`Successfully registered cron trigger for schedule: ${schedule}`);
           } else if (registerResponse.auth_required) {
             console.warn(`Auth required for cron trigger: ${schedule}`);
             // For cron triggers, we might not need additional auth
           }
         } catch (scheduleError) {
-          console.error(`Error registering cron schedule ${schedule}:`, scheduleError);
+          console.error(
+            `Error registering cron schedule ${schedule}:`,
+            scheduleError,
+          );
         }
       }
 
@@ -456,12 +457,12 @@ export function InitialInputs({
         toast.success(`Successfully set up ${successCount} cron schedule(s)`);
         return true;
       } else {
-        toast.error('Failed to set up cron schedules');
+        toast.error("Failed to set up cron schedules");
         return false;
       }
     } catch (error) {
-      console.error('Error setting up auto cron triggers:', error);
-      toast.error('Error setting up cron schedules');
+      console.error("Error setting up auto cron triggers:", error);
+      toast.error("Error setting up cron schedules");
       return false;
     }
   };
