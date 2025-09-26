@@ -275,7 +275,7 @@ export function EditorPageContent(): React.ReactNode {
     <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Page header with title/description and actions */}
       {selectedAgent && (
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <div className="flex items-center justify-between px-1">
           <div className="min-w-0">
             <input
               value={headerTitle}

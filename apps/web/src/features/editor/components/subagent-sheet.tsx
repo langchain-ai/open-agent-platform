@@ -2,7 +2,6 @@
 
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,15 +9,12 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import type { SubAgent } from "@/types/sub-agent";
@@ -121,89 +117,106 @@ export function SubAgentSheet({
     >
       <SheetContent
         side="right"
-        className="flex h-full min-h-0 flex-col sm:max-w-xl"
+        className="flex h-full min-h-0 w-[min(95vw,980px)] flex-col p-0 sm:max-w-3xl"
       >
-        <SheetHeader className="px-4 pt-3 pb-2">
-          <SheetTitle className="text-base">
-            {editingSubAgent ? "Edit Subagent" : "Create Subagent"}
-          </SheetTitle>
-          <SheetDescription className="text-muted-foreground mt-1 text-xs leading-snug">
-            {editingSubAgent
-              ? "Edit this specialized subagent that can be called by your main agent."
-              : "Create a specialized subagent that can be called by your main agent."}
-          </SheetDescription>
+        <SheetHeader className="sr-only">
+          <SheetTitle>Subagent</SheetTitle>
         </SheetHeader>
         <Form {...form}>
           <form
             className="flex min-h-0 flex-1 flex-col"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
-            <div className="scrollbar-pretty-auto min-h-0 flex-1 space-y-4 overflow-auto p-3">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-gray-700">
-                      Agent Name
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Research Assistant"
-                        required
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription className="text-xs">
-                      A descriptive name for this subagent
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="prompt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold text-gray-700">
-                      Instructions
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="You are a helpful assistant that..."
-                        rows={10}
-                        className="max-h-[25rem] min-h-[200px] resize-y"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription className="text-xs">
-                      Instructions that define how this subagent should behave
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-700">
-                    Tools
-                  </span>
-                  <span className="text-[11px] text-gray-500">
-                    ({selectedTools.length} selected)
-                  </span>
-                </div>
-                <SubagentToolsSelection
-                  selectedTools={selectedTools}
-                  onToolsChange={handleToolsChange}
-                  interruptConfig={interruptConfig}
-                  onInterruptConfigChange={setInterruptConfig}
+            {/* Header: title + description (no border) */}
+            <div className="m-4 flex items-center justify-between bg-white px-4 py-3">
+              <div className="min-w-0">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="m-0">
+                      <FormControl>
+                        <input
+                          {...field}
+                          required
+                          placeholder="Sub-agent name..."
+                          className="w-full truncate border-none bg-transparent text-[28px] leading-snug text-gray-900 outline-none focus:outline-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem className="m-0 mt-0.5">
+                      <FormControl>
+                        <input
+                          {...field}
+                          placeholder="Short description (optional)"
+                          className="w-full truncate border-none bg-transparent text-sm text-gray-600 outline-none focus:outline-none"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {/* Actions moved to bottom */}
+            </div>
+
+            {/* Body: mimic main page layout (Tools + Instructions) */}
+            <div className="scrollbar-pretty-auto min-h-0 flex-1 overflow-auto px-4 pt-3 pb-0">
+              {/* Tools section (compact, no background) */}
+              <div className="px-1">
+                <div className="mb-1 text-xs font-semibold text-gray-700">
+                  Tools
+                  {selectedTools.length > 0 && (
+                    <span className="ml-1 text-[11px] font-normal text-gray-500">
+                      ({selectedTools.length} selected)
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm">
+                  <SubagentToolsSelection
+                    selectedTools={selectedTools}
+                    onToolsChange={handleToolsChange}
+                    interruptConfig={interruptConfig}
+                    onInterruptConfigChange={setInterruptConfig}
+                  />
+                </div>
+              </div>
+
+              {/* Bottom: Instructions full-width */}
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="border-b border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700">
+                  Instructions
+                </div>
+                <div className="p-3">
+                  <FormField
+                    control={form.control}
+                    name="prompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="You are a helpful assistant that..."
+                            rows={25}
+                            className="min-h-[560px] resize-y border-0 shadow-none focus-visible:border-0 focus-visible:ring-0"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Footer actions */}
             <div className="flex-shrink-0 border-t bg-white p-3">
               {editingSubAgent ? (
                 <div className="flex gap-2">

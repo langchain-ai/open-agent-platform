@@ -8,14 +8,8 @@ import { Search } from "@/components/ui/tool-search";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, HelpCircle, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type { HumanInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import _ from "lodash";
 
 type ToolInterruptConfig = Record<string, HumanInterruptConfig>;
@@ -34,14 +28,33 @@ export function SubagentToolsSelection({
   onInterruptConfigChange,
 }: SubagentToolsSelectionProps) {
   const { tools: allTools } = useMCPContext();
-  const { filteredTools, debouncedSetSearchTerm } = useSearchTools(allTools, {
-    preSelectedTools: selectedTools,
-  });
+  const { filteredTools, debouncedSetSearchTerm, toolSearchTerm } =
+    useSearchTools(allTools, {
+      preSelectedTools: selectedTools,
+    });
 
   const [showAll, setShowAll] = React.useState(false);
-  const [openInterrupt, setOpenInterrupt] = React.useState<Set<string>>(
-    new Set(),
-  );
+  // Inline interrupt toggle shown for selected tools; no extra state
+
+  const [showResults, setShowResults] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const onDocPointerDown = (e: MouseEvent | PointerEvent) => {
+      if (!containerRef.current) return;
+      if (containerRef.current.contains(e.target as Node)) return;
+      setShowResults(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowResults(false);
+    };
+    document.addEventListener("pointerdown", onDocPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDocPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const getInterruptConfig = (
     toolName: string,
@@ -52,29 +65,22 @@ export function SubagentToolsSelection({
   const handleAddOrRemove = (toolName: string) => {
     if (!selectedTools.includes(toolName)) {
       onToolsChange([...selectedTools, toolName]);
-      setOpenInterrupt((prev) => new Set(prev).add(toolName));
     } else {
       onToolsChange(selectedTools.filter((t) => t !== toolName));
-      setOpenInterrupt((prev) => {
-        const next = new Set(prev);
-        next.delete(toolName);
-        return next;
-      });
     }
   };
 
   const handleRemove = (toolName: string) => {
     onToolsChange(selectedTools.filter((t) => t !== toolName));
-    setOpenInterrupt((prev) => {
-      const next = new Set(prev);
-      next.delete(toolName);
-      return next;
-    });
+    // no local state to update
   };
 
   return (
     <div className="space-y-2">
-      <div className="rounded-md bg-gray-50 p-2 pr-0">
+      <div
+        className="p-0"
+        ref={containerRef}
+      >
         <div className="flex flex-wrap gap-1">
           {(() => {
             const list = selectedTools;
@@ -121,13 +127,17 @@ export function SubagentToolsSelection({
             <span className="text-xs text-gray-500">No tools selected</span>
           )}
         </div>
-        <div className="mt-2">
+        <div className="relative mt-2">
           <Search
-            onSearchChange={(term) => debouncedSetSearchTerm(term)}
+            onSearchChange={(term) => {
+              debouncedSetSearchTerm(term);
+              setShowResults(true);
+            }}
             placeholder="Search tools to add..."
+            onFocus={() => setShowResults(true)}
           />
-          <div className="mt-1">
-            <div className="max-h-64 overflow-auto">
+          {toolSearchTerm.trim() !== "" && showResults && (
+            <div className="absolute top-full right-0 left-0 z-40 mt-1 max-h-64 overflow-auto rounded-md border border-gray-200 bg-white shadow-md">
               {(() => {
                 const sorted = [...filteredTools].sort((a, b) => {
                   const aSel = selectedTools.includes(a.name) ? 1 : 0;
@@ -135,10 +145,13 @@ export function SubagentToolsSelection({
                   return bSel - aSel;
                 });
                 return sorted.slice(0, 50).map((tool) => (
-                  <div key={`add-subagent-${tool.name}`}>
-                    <div className="group flex w-full items-stretch">
+                  <div
+                    key={`add-subagent-${tool.name}`}
+                    className="relative"
+                  >
+                    <div className="group flex w-full items-center">
                       <button
-                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        className="flex-1 px-3 py-2 text-left text-sm text-gray-700 hover:bg-transparent"
                         onClick={() => handleAddOrRemove(tool.name)}
                       >
                         <div className="flex items-center gap-2 font-medium">
@@ -153,14 +166,6 @@ export function SubagentToolsSelection({
                           <span className="truncate">
                             {_.startCase(tool.name)}
                           </span>
-                          {getInterruptConfig(tool.name) === true && (
-                            <Badge
-                              variant="secondary"
-                              className="ml-1 h-4 px-1 text-[10px]"
-                            >
-                              interrupt
-                            </Badge>
-                          )}
                         </div>
                         {tool.description && (
                           <div className="line-clamp-2 pl-6 text-xs text-gray-500">
@@ -168,50 +173,14 @@ export function SubagentToolsSelection({
                           </div>
                         )}
                       </button>
-                      <button
-                        type="button"
-                        className="ml-auto px-2 text-gray-400 transition-colors hover:text-gray-600"
-                        title="Expand/collapse interrupt"
-                        onClick={() => {
-                          setOpenInterrupt((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(tool.name)) next.delete(tool.name);
-                            else next.add(tool.name);
-                            return next;
-                          });
-                        }}
-                      >
-                        <ChevronDown
-                          className={cn(
-                            "h-4 w-4 transition-transform",
-                            openInterrupt.has(tool.name) ? "rotate-180" : "",
-                          )}
-                        />
-                      </button>
-                    </div>
-                    {openInterrupt.has(tool.name) && (
-                      <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
-                            <span>Interrupt</span>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <HelpCircle className="h-3 w-3 cursor-help" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="text-xs">
-                                    Enabling interrupts will pause the agent
-                                    before this tool's action is executed,
-                                    allowing you to approve, reject, edit, or
-                                    send feedback on the proposed action.
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </div>
+                      {selectedTools.includes(tool.name) && (
+                        <div className="ml-auto flex items-center gap-2 pr-2">
+                          <span className="text-[10px] text-gray-500 uppercase">
+                            Interrupt
+                          </span>
                           <Switch
                             checked={getInterruptConfig(tool.name) === true}
+                            onClick={(e) => e.stopPropagation()}
                             onCheckedChange={(checked) => {
                               const newConfig = {
                                 ...interruptConfig,
@@ -221,8 +190,8 @@ export function SubagentToolsSelection({
                             }}
                           />
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 ));
               })()}
@@ -232,7 +201,7 @@ export function SubagentToolsSelection({
                 </div>
               )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

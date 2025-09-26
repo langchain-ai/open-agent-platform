@@ -7,12 +7,18 @@ interface SearchProps {
   onSearchChange: (term: string) => void;
   placeholder?: string;
   className?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export function Search({
   onSearchChange,
   placeholder,
   className,
+  onFocus,
+  onBlur,
+  onKeyDown,
 }: SearchProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -35,6 +41,9 @@ export function Search({
         placeholder={placeholder}
         value={searchTerm}
         onChange={handleInputChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
       />
     </div>
   );
