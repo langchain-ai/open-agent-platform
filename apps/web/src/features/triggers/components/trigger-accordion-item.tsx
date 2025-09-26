@@ -31,6 +31,8 @@ export function TriggerAccordionItem(props: {
   };
   triggers: Trigger[];
   form?: UseFormReturn<AgentTriggersFormData>;
+  selectedRegistrationIds?: string[];
+  onSelectedRegistrationChange?: (registrationIds: string[]) => void;
   reloadTriggers?: () => Promise<void>;
 }) {
   const getAllTriggerNamesUnique = () => {
@@ -50,7 +52,27 @@ export function TriggerAccordionItem(props: {
     return props.groupedRegistrations[triggerId];
   };
 
-  const selectedTriggerIds = props.form ? props.form.watch("triggerIds") : [];
+  const selectedRegistrationIds = props.form
+    ? props.form.watch("triggerIds")
+    : (props.selectedRegistrationIds ?? []);
+
+  const withUpdatedSelection = (updater: (ids: string[]) => string[]) => {
+    if (props.form) {
+      const current = props.form.getValues("triggerIds") ?? [];
+      const next = updater(current);
+      props.form.setValue("triggerIds", next, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      return;
+    }
+
+    if (props.onSelectedRegistrationChange) {
+      const current = props.selectedRegistrationIds ?? [];
+      const next = updater(current);
+      props.onSelectedRegistrationChange(next);
+    }
+  };
 
   const EnabledTriggersCountBadge = ({ count }: { count: number }) => (
     <div className="flex size-5 items-center justify-center rounded-full border-[0.5px] border-blue-500 bg-blue-50/50 text-xs font-light text-blue-700">
@@ -61,7 +83,7 @@ export function TriggerAccordionItem(props: {
   const numSelectedRegistrationsForTrigger = (triggerId: string): number => {
     const registrations = getRegistrationsFromTriggerId(triggerId);
     return registrations.filter((registration) =>
-      selectedTriggerIds.includes(registration.id),
+      selectedRegistrationIds.includes(registration.id),
     ).length;
   };
 
@@ -74,7 +96,7 @@ export function TriggerAccordionItem(props: {
         <span className="flex flex-col items-start justify-start gap-2">
           <span className="flex flex-row items-center justify-start gap-2">
             <p className="text-sm font-semibold">{props.provider}</p>{" "}
-            {props.form && (
+            {(props.form || props.onSelectedRegistrationChange) && (
               <EnabledTriggersCountBadge
                 count={props.triggers
                   .map((trigger) =>
@@ -112,12 +134,13 @@ export function TriggerAccordionItem(props: {
               </div>
 
               <div className="flex items-center gap-3">
-                {props.form &&
+                {(props.form || props.onSelectedRegistrationChange) &&
                 getRegistrationsFromTriggerId(trigger.id)?.length ? (
                   <Combobox
                     displayText={(() => {
-                      const selectedIds =
-                        props.form?.getValues("triggerIds") || [];
+                      const selectedIds = props.form
+                        ? props.form.getValues("triggerIds") || []
+                        : selectedRegistrationIds;
                       const registrations = getRegistrationsFromTriggerId(
                         trigger.id,
                       );
@@ -140,35 +163,23 @@ export function TriggerAccordionItem(props: {
                         value: r.id,
                       }),
                     )}
-                    selectedOptions={props.form?.getValues("triggerIds")}
+                    selectedOptions={
+                      props.form
+                        ? props.form.getValues("triggerIds")
+                        : selectedRegistrationIds
+                    }
                     onSelect={(value) => {
-                      if (props.form) {
-                        const currentTriggerIds =
-                          props.form.getValues("triggerIds");
-                        const isSelected = currentTriggerIds.includes(value);
+                      const isSelected =
+                        selectedRegistrationIds.includes(value);
 
-                        if (isSelected) {
-                          // Remove from selection
-                          props.form.setValue(
-                            "triggerIds",
-                            currentTriggerIds.filter((id) => id !== value),
-                            {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            },
-                          );
-                        } else {
-                          // Add to selection
-                          props.form.setValue(
-                            "triggerIds",
-                            [...currentTriggerIds, value],
-                            {
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            },
-                          );
-                        }
+                      if (isSelected) {
+                        withUpdatedSelection((current) =>
+                          current.filter((id) => id !== value),
+                        );
+                        return;
                       }
+
+                      withUpdatedSelection((current) => [...current, value]);
                     }}
                     optionRenderer={(option) => {
                       const registrations = getRegistrationsFromTriggerId(
@@ -183,9 +194,10 @@ export function TriggerAccordionItem(props: {
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                props.form
-                                  ?.getValues("triggerIds")
-                                  ?.includes(option.value)
+                                (props.form
+                                  ? props.form.getValues("triggerIds") || []
+                                  : selectedRegistrationIds
+                                ).includes(option.value)
                                   ? "opacity-100"
                                   : "opacity-0",
                               )}
@@ -201,9 +213,10 @@ export function TriggerAccordionItem(props: {
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              props.form
-                                ?.getValues("triggerIds")
-                                ?.includes(option.value)
+                              (props.form
+                                ? props.form.getValues("triggerIds") || []
+                                : selectedRegistrationIds
+                              ).includes(option.value)
                                 ? "opacity-100"
                                 : "opacity-0",
                             )}
@@ -215,6 +228,7 @@ export function TriggerAccordionItem(props: {
                   />
                 ) : null}
                 {!props.form &&
+                !props.onSelectedRegistrationChange &&
                 getRegistrationsFromTriggerId(trigger.id)?.length ? (
                   <RegistrationsHoverCard
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
