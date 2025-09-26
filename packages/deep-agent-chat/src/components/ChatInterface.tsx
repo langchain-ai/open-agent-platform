@@ -94,7 +94,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setActiveAssistant,
     todos,
     setTodos,
-    files,
     setFiles,
     view,
     onViewChange,
