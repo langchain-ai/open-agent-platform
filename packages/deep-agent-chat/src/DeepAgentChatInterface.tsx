@@ -2,20 +2,12 @@
 
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
-import { FilesPopover } from "./components/TasksFilesSidebar";
 import type { TodoItem } from "./types";
 import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./components/ui/popover";
-import { Button } from "./components/ui/button";
-import { FileIcon } from "lucide-react";
 
 function DeepAgentChatInterfaceInternal({
   assistantId,
@@ -68,41 +60,7 @@ function DeepAgentChatInterfaceInternal({
             onViewChange={onViewChange}
             hideInternalToggle={hideInternalToggle}
             empty={empty}
-            controls={
-              <>
-                {controls}
-
-                {/* <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                      >
-                        Optimize
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent></PopoverContent>
-                  </Popover> */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                    >
-                      <FileIcon />
-                      Files
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <FilesPopover
-                      files={files}
-                      setFiles={setFiles}
-                      editDisabled={false}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </>
-            }
+            controls={controls}
           />
         </div>
       </ChatProvider>
