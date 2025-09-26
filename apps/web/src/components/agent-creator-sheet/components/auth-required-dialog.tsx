@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, Info, Zap } from "lucide-react";
+import { ExternalLink, Info, Zap, ArrowRight } from "lucide-react";
 import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 import { Accordion } from "@/components/ui/accordion";
 import { TriggerAccordionItem } from "@/features/triggers/components/trigger-accordion-item";
@@ -51,62 +51,92 @@ export function AuthRequiredDialog(props: {
       open={props.open}
       onOpenChange={props.onOpenChange}
     >
-      <AlertDialogContent className="flex max-h-[85vh] max-w-2xl flex-col border-blue-300 bg-blue-50 text-blue-600 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400">
-        <AlertDialogHeader className="flex-shrink-0">
-          <AlertDialogTitle className="flex flex-row items-center">
-            <Info className="mr-2 h-4 w-4" />
-            Authentication Required
+      <AlertDialogContent className="flex max-h-[90vh] max-w-[60vw] flex-col bg-white border border-gray-200 text-gray-900 shadow-lg">
+        <AlertDialogHeader className="flex-shrink-0 pb-6">
+          <AlertDialogTitle className="flex flex-row items-center text-xl font-medium text-gray-900">
+            <Info className="mr-2 h-4 w-4 text-gray-700" />
+            Select Triggers
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            Please authenticate with the following providers, then click "Save
-            Changes".
+          <AlertDialogDescription className="text-gray-500 text-sm mt-1">
+            Triggers connect external events to your agent. When an event occurs (like receiving an email), it automatically activates your agent to take action.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+
+        {/* Workflow diagram */}
+        <div className="flex-shrink-0 pb-4">
+          <div className="flex items-center justify-center gap-6">
+            <div className="rounded-lg bg-green-100 px-6 py-3 border border-green-200">
+              <div className="flex items-center gap-3">
+                <Zap className="h-4 w-4 text-green-700" />
+                <span className="text-base text-green-700 font-medium">Triggers</span>
+                <span className="inline-flex items-center rounded-full bg-green-200 px-3 py-1 text-xs font-medium text-green-800">
+                  SUGGESTED
+                </span>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-gray-400" />
+            <div className="rounded-lg bg-gray-100 px-6 py-3">
+              <span className="text-base text-gray-700 font-medium">Your Agent</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 space-y-6 overflow-y-auto pr-2 py-6">
           {props.authUrls.map((url, index) => (
             <div
               key={`${url.provider}-${index}`}
-              className="bg-blue-25 rounded-lg border border-blue-200 p-4 dark:border-blue-800 dark:bg-blue-950/50"
+              className="rounded-lg border border-gray-200 bg-gray-50 p-6"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <h4 className="text-lg font-medium text-gray-900">
                     {getProviderDisplayName(url.provider)}
                   </h4>
                   {url.tools && url.tools.length > 0 && (
-                    <p className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                    <p className="mt-2 text-sm text-gray-600">
                       Required for: {url.tools.join(", ")}
                     </p>
                   )}
                 </div>
                 <Button
-                  size="sm"
+                  size="default"
                   variant="outline"
-                  className="ml-4 h-9 flex-shrink-0 border-blue-300 px-4 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900"
+                  className="ml-4 flex-shrink-0 border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
                   onClick={() =>
                     window.open(url.authUrl, "_blank", "noopener,noreferrer")
                   }
                 >
-                  <ExternalLink className="mr-2 h-3 w-3" />
+                  <ExternalLink className="mr-2 h-4 w-4" />
                   Authenticate
                 </Button>
               </div>
             </div>
           ))}
           {shouldShowTriggers && (
-            <div className="rounded-lg border border-blue-200 bg-white/60 p-4 text-blue-900 shadow-sm dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
-              <div className="mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
-                <Zap className="h-4 w-4" />
-                <p className="text-sm font-medium">
-                  The following triggers have been requested for your agent.
-                  Please select one for each, or add a new registration if one
-                  does not yet exist.
-                </p>
+            <div className="relative rounded-lg bg-green-50 p-8">
+              <div className="absolute top-6 left-6 flex items-center gap-1">
+                <Zap className="h-3 w-3 text-black" />
+                <span className="text-xs font-bold tracking-wide text-black uppercase">
+                  SUGGESTED TRIGGERS
+                </span>
               </div>
+
+              <div className="absolute top-6 right-6">
+                <span className="text-xs font-bold tracking-wide text-black uppercase">
+                  OPTIONAL
+                </span>
+              </div>
+
+              <div className="mb-4 pt-6"></div>
+
+              <p className="mb-6 max-w-2xl text-sm text-green-800">
+                You don't have to select anything — pick events that should
+                invoke your agent.
+              </p>
+
               {props.groupedTriggers && (
                 <Accordion
                   type="multiple"
-                  className="w-full text-blue-900 dark:text-blue-100"
+                  className="w-full text-gray-900"
                 >
                   {Object.entries(props.groupedTriggers).map(
                     ([provider, { registrations, triggers }]) => (
@@ -128,14 +158,12 @@ export function AuthRequiredDialog(props: {
             </div>
           )}
         </div>
-        <AlertDialogFooter className="flex-shrink-0">
-          {!props.hideCancel && (
-            <AlertDialogCancel asChild>
-              <Button variant="outline">Cancel</Button>
-            </AlertDialogCancel>
-          )}
-          <Button onClick={props.handleSubmit}>
-            Continue after Authentication
+        <AlertDialogFooter className="flex-shrink-0 pt-6 gap-3 justify-end">
+          <Button
+            onClick={props.handleSubmit}
+            className="bg-[#2F6868] px-8 text-white hover:bg-[#2F6868]/90"
+          >
+            Continue
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
