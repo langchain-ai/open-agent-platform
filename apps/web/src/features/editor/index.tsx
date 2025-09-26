@@ -98,7 +98,7 @@ export function EditorPageContent(): React.ReactNode {
   // Track first visit to editor page for glow effect
   const [hasVisitedEditor, setHasVisitedEditor] = useLocalStorage(
     "hasVisitedEditor",
-    false
+    false,
   );
   // Keep latest trigger functions in a ref so effect deps don't churn
   const triggerFnsRef = React.useRef({
@@ -301,9 +301,9 @@ export function EditorPageContent(): React.ReactNode {
                 }).toString();
                 router.push(`/agents/chat?${search}`);
               }}
-              className={`rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#2F6868]/90 transition-all duration-300 ${
+              className={`rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2F6868]/90 ${
                 !hasVisitedEditor
-                  ? "animate-pulse shadow-lg shadow-[#2F6868]/50 ring-2 ring-[#2F6868]/30 ring-offset-2"
+                  ? "animate-pulse shadow-lg ring-2 shadow-[#2F6868]/50 ring-[#2F6868]/30 ring-offset-2"
                   : ""
               }`}
             >
