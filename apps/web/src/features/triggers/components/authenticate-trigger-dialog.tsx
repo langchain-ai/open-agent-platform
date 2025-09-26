@@ -7,7 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { generateFormFields } from "@/lib/triggers";
-import { ExternalLink, Loader2, Plus } from "lucide-react";
+import {
+  Bot,
+  ChevronRight,
+  ExternalLink,
+  Loader2,
+  MousePointerClick,
+  Plus,
+  Zap,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Trigger } from "@/types/triggers";
 import { useAuthContext } from "@/providers/Auth";
@@ -240,17 +248,45 @@ export function AuthenticateTriggerDialog(props: {
           <Plus className="h-4 w-4" />
         </button>
       </DialogTrigger>
-      <DialogContent className="p-6 sm:max-w-[425px]">
+      <DialogContent className="p-6 sm:max-w-[720px] md:max-w-[840px]">
         <DialogHeader className="flex items-center justify-center">
           <DialogTitle>Connect '{trigger.displayName}'</DialogTitle>
           <DialogDescription>
             Sign in with {prettifyText(trigger.provider)} to continue.
           </DialogDescription>
         </DialogHeader>
+        {/* Workflow explainer */}
+        <div className="bg-muted/30 mb-4 rounded-lg border p-4">
+          <p className="text-muted-foreground mb-3 text-sm">
+            A trigger connects an external event to an agent action.
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full">
+                <MousePointerClick className="h-4 w-4" />
+              </div>
+              <span className="text-sm">Event</span>
+            </div>
+            <ChevronRight className="text-muted-foreground h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <div className="bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full">
+                <Zap className="h-4 w-4" />
+              </div>
+              <span className="text-sm">Trigger</span>
+            </div>
+            <ChevronRight className="text-muted-foreground h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <div className="bg-muted text-muted-foreground flex h-8 w-8 items-center justify-center rounded-full">
+                <Bot className="h-4 w-4" />
+              </div>
+              <span className="text-sm">Agent</span>
+            </div>
+          </div>
+        </div>
         {isAuthenticating && authUrl ? (
           <div>
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-              <p className="mb-3 text-sm text-blue-800">
+            <div className="bg-muted/30 rounded-lg border p-4">
+              <p className="mb-3 text-sm">
                 Please click the link below to authenticate with{" "}
                 {trigger.displayName}:
               </p>

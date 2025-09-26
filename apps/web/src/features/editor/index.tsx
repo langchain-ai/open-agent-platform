@@ -48,6 +48,7 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { getDeployments } from "@/lib/environment/deployments";
 import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
+import { AuthRequiredDialog } from "@/components/agent-creator-sheet/components/auth-required-dialog";
 
 export function EditorPageContent(): React.ReactNode {
   const router = useRouter();
@@ -93,6 +94,43 @@ export function EditorPageContent(): React.ReactNode {
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Auth Required Dialog state
+  const [authDialogOpen, setAuthDialogOpen] = useState(false);
+
+  // Mock data for the auth dialog with Gmail trigger
+  const mockGroupedTriggers = React.useMemo(
+    () => ({
+      gmail: {
+        registrations: {
+          registered: [],
+          unregistered: [
+            {
+              id: "gmail-email-received",
+              triggerId: "gmail-email-received",
+              displayName: "Gmail Email Received",
+              description: "Triggered when a new email is received in Gmail",
+              provider: "gmail",
+              status: "unregistered",
+            },
+          ],
+        },
+        triggers: [
+          {
+            id: "gmail-email-received",
+            displayName: "Gmail Email Received",
+            description: "Triggered when a new email is received in Gmail",
+            provider: "gmail",
+            method: "POST",
+            path: "/webhooks/gmail/email-received",
+            payloadSchema: {},
+            requireDisplayName: false,
+          },
+        ],
+      },
+    }),
+    [],
+  );
   // Keep latest trigger functions in a ref so effect deps don't churn
   const triggerFnsRef = React.useRef({
     listTriggers,
@@ -602,6 +640,26 @@ export function EditorPageContent(): React.ReactNode {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Auth Required Dialog - always visible for demo */}
+      <AuthRequiredDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+        handleSubmit={() => {
+          // For demo purposes, just close the dialog
+          setAuthDialogOpen(false);
+        }}
+        authUrls={[]}
+        hideCancel={false}
+        groupedTriggers={mockGroupedTriggers}
+        reloadTriggers={async () => {
+          // Mock reload function
+        }}
+        selectedTriggerRegistrationIds={[]}
+        onSelectedTriggerRegistrationIdsChange={() => {
+          // Mock selection change handler
+        }}
+      />
     </div>
   );
 }

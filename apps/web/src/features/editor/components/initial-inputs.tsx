@@ -231,6 +231,40 @@ export function InitialInputs({
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
 
+  // Mock data for the auth dialog with Gmail trigger - always show
+  const mockGroupedTriggers = useMemo(
+    () => ({
+      gmail: {
+        registrations: {
+          registered: [],
+          unregistered: [
+            {
+              id: "gmail-email-received",
+              triggerId: "gmail-email-received",
+              displayName: "Gmail Email Received",
+              description: "Triggered when a new email is received in Gmail",
+              provider: "gmail",
+              status: "unregistered",
+            },
+          ],
+        },
+        triggers: [
+          {
+            id: "gmail-email-received",
+            displayName: "Gmail Email Received",
+            description: "Triggered when a new email is received in Gmail",
+            provider: "gmail",
+            method: "POST",
+            path: "/webhooks/gmail/email-received",
+            payloadSchema: {},
+            requireDisplayName: false,
+          },
+        ],
+      },
+    }),
+    [],
+  );
+
   const deployments = getDeployments();
   const deploymentId =
     deployments.find((d) => d.isDefault)?.id || deployments[0]?.id;
@@ -431,12 +465,32 @@ export function InitialInputs({
 
   if (step === 1) {
     return (
-      <AgentDescription
-        description={description}
-        onDescriptionChange={setDescription}
-        onSubmit={handleDescriptionSubmit}
-        loading={stream.isLoading}
-      />
+      <>
+        <AgentDescription
+          description={description}
+          onDescriptionChange={setDescription}
+          onSubmit={handleDescriptionSubmit}
+          loading={stream.isLoading}
+        />
+        <AuthRequiredDialog
+          open={authRequiredDialogOpen}
+          onOpenChange={setAuthRequiredDialogOpen}
+          handleSubmit={() => {
+            // For demo purposes, just close the dialog
+            setAuthRequiredDialogOpen(false);
+          }}
+          authUrls={[]}
+          hideCancel={false}
+          groupedTriggers={mockGroupedTriggers}
+          reloadTriggers={async () => {
+            // Mock reload function
+          }}
+          selectedTriggerRegistrationIds={[]}
+          onSelectedTriggerRegistrationIdsChange={() => {
+            // Mock selection change handler
+          }}
+        />
+      </>
     );
   }
 
