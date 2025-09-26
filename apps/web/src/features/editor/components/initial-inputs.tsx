@@ -15,7 +15,12 @@ import { useLangChainAuth } from "@/hooks/use-langchain-auth";
 import { DeepAgentConfiguration } from "@/types/deep-agent";
 import { AuthRequiredDialog } from "@/components/agent-creator-sheet/components/auth-required-dialog";
 import { useTriggers } from "@/hooks/use-triggers";
-import { Trigger } from "@/types/triggers";
+import {
+  GroupedTriggerRegistrationsByProvider,
+  ListTriggerRegistrationsData,
+  Trigger,
+} from "@/types/triggers";
+import { groupTriggerRegistrationsByProvider } from "@/lib/triggers";
 
 interface AgentDescriptionProps {
   description: string;
@@ -186,6 +191,15 @@ function ClarifyingQuestions({
 
 const ASSISTANT_ID = "agent_generator";
 
+type AgentGeneratorState = {
+  messages: Message[];
+  assistant: Assistant;
+  tools: { name: string; default_interrupt: boolean }[];
+  triggers: { id: string; name: string; description: string }[];
+  enabled_trigger_ids?: string[];
+  cron_schedule?: string[];
+};
+
 interface InitialInputsProps {
   onAgentCreated?: (agentId: string, deploymentId: string) => Promise<void>;
 }
@@ -195,11 +209,16 @@ export function InitialInputs({
 }: InitialInputsProps): React.ReactNode {
   const { tools } = useMCPContext();
   const { session } = useAuthContext();
-  const { listTriggers } = useTriggers();
+  const { listTriggers, listUserTriggers, setupAgentTrigger } = useTriggers();
   const { refreshAgents } = useAgentsContext();
   const { verifyUserAuthScopes, authRequiredUrls } = useLangChainAuth();
 
   const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [registrations, setRegistrations] =
+    useState<ListTriggerRegistrationsData[]>();
+  const [enabledTriggerIds, setEnabledTriggerIds] = useState<string[]>([]);
+  const [selectedTriggerRegistrationIds, setSelectedTriggerRegistrationIds] =
+    useState<string[]>([]);
 
   const [step, setStep] = useState(1);
   const [description, setDescription] = useState("");
@@ -221,14 +240,61 @@ export function InitialInputs({
     return createClient(deploymentId, session.accessToken);
   }, [session, deploymentId]);
 
+  const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
+    useMemo(() => {
+      if (!registrations || !triggers || !enabledTriggerIds.length)
+        return undefined;
+      const groups = groupTriggerRegistrationsByProvider(
+        registrations,
+        triggers,
+      );
+      return Object.fromEntries(
+        Object.entries(groups)
+          .map(([provider, { registrations, triggers }]) => {
+            const matchingTriggers = triggers.filter((t) =>
+              enabledTriggerIds.includes(t.id),
+            );
+            const matchingRegistrations = Object.fromEntries(
+              Object.entries(registrations).filter(([templateId]) =>
+                enabledTriggerIds.includes(templateId),
+              ),
+            );
+            return [
+              provider,
+              {
+                triggers: matchingTriggers,
+                registrations: matchingRegistrations,
+              },
+            ];
+          })
+          .filter(([, providerData]) => {
+            const data = providerData as {
+              triggers: Trigger[];
+              registrations: { [k: string]: ListTriggerRegistrationsData[] };
+            };
+            return (
+              data.triggers.length > 0 ||
+              Object.keys(data.registrations).length > 0
+            );
+          }),
+      );
+    }, [registrations, triggers, enabledTriggerIds]);
+
+  const loadTriggers = async (accessToken: string) => {
+    const [triggersList, userTriggersList] = await Promise.all([
+      listTriggers(accessToken),
+      listUserTriggers(accessToken),
+    ]);
+    setTriggers(triggersList ?? []);
+    setRegistrations(userTriggersList ?? []);
+  };
+
   useEffect(() => {
     if (!session?.accessToken) return;
-    listTriggers(session.accessToken)
-      .then((triggers) => setTriggers(triggers ?? []))
-      .catch((error) => console.error(error));
+    loadTriggers(session.accessToken);
   }, [session]);
 
-  const stream = useStream({
+  const stream = useStream<AgentGeneratorState>({
     client: client ?? undefined,
     assistantId: ASSISTANT_ID,
     reconnectOnMount: true,
@@ -242,6 +308,12 @@ export function InitialInputs({
         return;
       }
 
+      if (data.generate_config.enabled_trigger_ids?.length) {
+        // TODO: Figure out crons
+        setEnabledTriggerIds(data.generate_config.enabled_trigger_ids);
+        setAuthRequiredDialogOpen(true);
+      }
+
       const agentConfigurable = newAgent.config?.configurable as
         | DeepAgentConfiguration
         | undefined;
@@ -253,6 +325,10 @@ export function InitialInputs({
         if (!success) {
           return;
         }
+      }
+
+      if (data.generate_config.enabled_trigger_ids?.length) {
+        return;
       }
 
       setCreatingAgent(true);
@@ -272,7 +348,6 @@ export function InitialInputs({
       toast.error("No access token found", {
         richColors: true,
       });
-      setAuthRequiredDialogOpen(false);
       return false;
     }
 
@@ -284,7 +359,6 @@ export function InitialInputs({
       setAuthRequiredDialogOpen(true);
       return false;
     }
-    setAuthRequiredDialogOpen(false);
     return true;
   };
 
@@ -307,15 +381,16 @@ export function InitialInputs({
     stream.submit({
       messages: [
         {
-          role: "user",
+          type: "human",
           content: description,
         },
       ],
       tools: tools.map((tool) => ({
         name: tool.name,
-        default_interrupt: tool.default_interrupt,
+        default_interrupt: Boolean(tool.default_interrupt),
       })),
       triggers: triggers.map((t) => ({
+        id: t.id,
         name: t.displayName,
         description: t.description ?? "",
       })),
@@ -341,7 +416,7 @@ export function InitialInputs({
       {
         messages: [
           {
-            role: "tool",
+            type: "tool",
             tool_call_id: toolCallId,
             name: "FollowupQuestions",
             content: response,
@@ -388,6 +463,32 @@ export function InitialInputs({
             // }
             setAuthRequiredDialogOpen(false);
 
+            if (!session?.accessToken) {
+              toast.error("No access token found", {
+                richColors: true,
+              });
+              return;
+            }
+            if (!newAgentId) {
+              toast.error("No agent ID found", {
+                richColors: true,
+              });
+              return;
+            }
+
+            if (selectedTriggerRegistrationIds.length) {
+              const success = await setupAgentTrigger(session.accessToken, {
+                agentId: newAgentId,
+                selectedTriggerIds: selectedTriggerRegistrationIds,
+              });
+              if (!success) {
+                toast.error("Failed to add agent triggers", {
+                  richColors: true,
+                });
+                return;
+              }
+            }
+
             await refreshAgents();
 
             if (newAgentId && onAgentCreated) {
@@ -398,6 +499,12 @@ export function InitialInputs({
 
             resetState();
           }}
+          groupedTriggers={groupedTriggers}
+          reloadTriggers={loadTriggers}
+          selectedTriggerRegistrationIds={selectedTriggerRegistrationIds}
+          onSelectedTriggerRegistrationIdsChange={
+            setSelectedTriggerRegistrationIds
+          }
         />
       </>
     );
