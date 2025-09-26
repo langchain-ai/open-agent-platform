@@ -235,7 +235,13 @@ function ThreadHistoryHalf(): React.ReactNode {
   );
 }
 
-function AgentChatItem({ thread }: { thread: Thread }) {
+function AgentChatItem({
+  thread,
+  interrupted,
+}: {
+  thread: Thread;
+  interrupted?: boolean;
+}) {
   const [_threadId, setCurrentThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
   const { agents } = useAgentsContext();
@@ -338,7 +344,7 @@ function AgentChatItem({ thread }: { thread: Thread }) {
     >
       <div className="flex items-start gap-3">
         {/* Agent Avatar */}
-        <div className="flex-shrink-0">
+        <div className="relative flex-shrink-0">
           <div
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white",
@@ -347,6 +353,9 @@ function AgentChatItem({ thread }: { thread: Thread }) {
           >
             {agent?.name?.charAt(0).toUpperCase() || "A"}
           </div>
+          {interrupted && (
+            <span className="border-sidebar absolute -right-0.5 -bottom-0.5 flex h-3 w-3 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white" />
+          )}
         </div>
 
         {/* Content */}
@@ -451,6 +460,7 @@ function AgentChatIntro(props: { deploymentId: string }) {
             <AgentChatItem
               key={thread.thread_id}
               thread={thread}
+              interrupted
             />
           ))}
         </div>
