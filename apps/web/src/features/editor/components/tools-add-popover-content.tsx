@@ -7,7 +7,7 @@ import { useSearchTools } from "@/hooks/use-search-tools";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { Check, ChevronDown, HelpCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -32,9 +32,7 @@ export function ToolsAddPopoverContent({
     preSelectedTools: selectedTools,
   });
 
-  const [openInterrupt, setOpenInterrupt] = React.useState<Set<string>>(
-    new Set(),
-  );
+  // Inline interrupt toggle shown when a tool is selected; no dropdown state
 
   const getInterruptConfig = (
     toolName: string,
@@ -53,18 +51,12 @@ export function ToolsAddPopoverContent({
       toolsForm.setValue("tools", [...current, toolName], {
         shouldDirty: true,
       });
-      setOpenInterrupt((prev) => new Set(prev).add(toolName));
     } else {
       toolsForm.setValue(
         "tools",
         current.filter((t) => t !== toolName),
         { shouldDirty: true },
       );
-      setOpenInterrupt((prev) => {
-        const next = new Set(prev);
-        next.delete(toolName);
-        return next;
-      });
     }
   };
 
@@ -87,9 +79,9 @@ export function ToolsAddPopoverContent({
             });
             return sorted.slice(0, 200).map((tool) => (
               <div key={`popover-add-${tool.name}`}>
-                <div className="group flex w-full items-stretch">
+                <div className="group flex w-full items-center">
                   <button
-                    className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex-1 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                     onClick={() => toggleSelect(tool.name)}
                   >
                     <div className="flex items-center gap-2 font-medium">
@@ -117,67 +109,45 @@ export function ToolsAddPopoverContent({
                       </div>
                     )}
                   </button>
-                  <button
-                    type="button"
-                    className="px-2 text-gray-400 transition-colors hover:text-gray-600"
-                    title="Expand/collapse interrupt"
-                    onClick={() => {
-                      onEnsureMainSelected?.();
-                      setOpenInterrupt((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(tool.name)) next.delete(tool.name);
-                        else next.add(tool.name);
-                        return next;
-                      });
-                    }}
-                  >
-                    <ChevronDown
-                      className={cn(
-                        "h-4 w-4 transition-transform",
-                        openInterrupt.has(tool.name) ? "rotate-180" : "",
-                      )}
-                    />
-                  </button>
-                </div>
-                {openInterrupt.has(tool.name) && (
-                  <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs font-medium text-gray-500 uppercase">
-                        <span>Interrupt</span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <HelpCircle className="h-3 w-3 cursor-help" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs">
-                                Enabling interrupts will pause the agent before
-                                this tool's action is executed, allowing you to
-                                approve, reject, edit, or send feedback on the
-                                proposed action.
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                      <Switch
-                        checked={getInterruptConfig(tool.name) === true}
-                        onCheckedChange={(checked) => {
-                          const allConfig =
-                            toolsForm?.getValues("interruptConfig") || {};
-                          toolsForm?.setValue(
-                            "interruptConfig",
-                            {
-                              ...allConfig,
-                              [tool.name]: checked,
-                            },
-                            { shouldDirty: true },
-                          );
-                        }}
-                      />
+                  {(selected || []).includes(tool.name) && (
+                    <div className="ml-auto flex items-center gap-2 pr-2">
+                      <span className="text-[10px] text-gray-500 uppercase">
+                        Interrupt
+                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Switch
+                                checked={getInterruptConfig(tool.name) === true}
+                                onClick={(e) => e.stopPropagation()}
+                                onCheckedChange={(checked) => {
+                                  const allConfig =
+                                    toolsForm?.getValues("interruptConfig") ||
+                                    {};
+                                  toolsForm?.setValue(
+                                    "interruptConfig",
+                                    {
+                                      ...allConfig,
+                                      [tool.name]: checked,
+                                    },
+                                    { shouldDirty: true },
+                                  );
+                                }}
+                              />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">
+                              Pause the agent before this tool runs so you can
+                              approve or edit.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ));
           })()}
