@@ -13,6 +13,11 @@ import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 import { Accordion } from "@/components/ui/accordion";
 import { TriggerAccordionItem } from "@/features/triggers/components/trigger-accordion-item";
 import { useAuthContext } from "@/providers/Auth";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 
 export function AuthRequiredDialog(props: {
@@ -66,23 +71,46 @@ export function AuthRequiredDialog(props: {
 
         {/* Workflow diagram */}
         <div className="flex-shrink-0 pb-4">
-          <div className="flex items-center justify-center gap-6">
-            <div className="rounded-lg border border-green-200 bg-green-100 px-6 py-3">
-              <div className="flex items-center gap-3">
-                <Zap className="h-4 w-4 text-green-700" />
-                <span className="text-base font-medium text-green-700">
+          <div className="flex items-center justify-center gap-4">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="cursor-help rounded-lg bg-gray-100 px-4 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">📧</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Events
+                    </span>
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="bg-gray-900 text-white"
+              >
+                <div className="text-xs">
+                  <div className="mb-1 font-medium">Examples:</div>
+                  <div>📧 Email received</div>
+                  <div>📅 Calendar event</div>
+                  <div>📱 Slack message</div>
+                  <div>🔔 Webhook notification</div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+            <ArrowRight className="h-3 w-3 text-gray-400" />
+            <div className="rounded-lg border border-green-200 bg-green-100 px-4 py-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-3 w-3 text-green-700" />
+                <span className="text-sm font-medium text-green-700">
                   Triggers
                 </span>
-                <span className="inline-flex items-center rounded-full bg-green-200 px-3 py-1 text-xs font-medium text-green-800">
+                <span className="inline-flex items-center rounded-full bg-green-200 px-2 py-0.5 text-xs font-medium text-green-800">
                   SUGGESTED
                 </span>
               </div>
             </div>
-            <ArrowRight className="h-4 w-4 text-gray-400" />
-            <div className="rounded-lg bg-gray-100 px-6 py-3">
-              <span className="text-base font-medium text-gray-700">
-                Your Agent
-              </span>
+            <ArrowRight className="h-3 w-3 text-gray-400" />
+            <div className="rounded-lg bg-gray-100 px-4 py-2">
+              <span className="text-sm font-medium text-gray-700">Agent</span>
             </div>
           </div>
         </div>
