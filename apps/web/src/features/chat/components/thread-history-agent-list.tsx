@@ -190,24 +190,16 @@ function useAgentSummaries(args: {
       // Fetch latest thread for each agent
       for (const agent of agents) {
         try {
-          const interruptedResponse = await client.threads.search({
+          const interrupted = await client.threads.count({
             status: "interrupted",
-            metadata: { assistant_id: agent.assistant_id } as Record<
-              string,
-              string
-            >,
-            limit: 1000, // Get up to 1000 interrupted threads to count them
+            metadata: { assistant_id: agent.assistant_id },
           });
-          const interrupted = interruptedResponse.length;
 
           const latest = await client.threads.search({
             limit: 1,
             sortBy: "updated_at",
             sortOrder: "desc",
-            metadata: { assistant_id: agent.assistant_id } as Record<
-              string,
-              string
-            >,
+            metadata: { assistant_id: agent.assistant_id },
           });
 
           let latestThread: ThreadItem | undefined;

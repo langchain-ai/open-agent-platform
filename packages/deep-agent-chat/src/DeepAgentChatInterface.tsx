@@ -62,6 +62,7 @@ function DeepAgentChatInterfaceInternal({
             setActiveAssistant={setActiveAssistant}
             todos={todos}
             setTodos={setTodos}
+            files={files}
             setFiles={setFiles}
             view={view}
             onViewChange={onViewChange}
