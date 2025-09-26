@@ -5,7 +5,7 @@ import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Maximize2, Minimize2, SquarePen } from "lucide-react";
+import { Maximize2, Minimize2, SquarePen, MessageCircle } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ThreadHistoryAgentList } from "@/features/chat/components/thread-history-agent-list";
+import {
+  AgentSummaryCard,
+  ThreadHistoryAgentList,
+} from "@/features/chat/components/thread-history-agent-list";
+import { useAgentSummaries } from "@/features/chat/utils";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -38,72 +42,14 @@ import {
   truncateText,
 } from "@/features/chat/utils";
 import { Thread } from "@langchain/langgraph-sdk";
-
-const getAgentColor = (name: string | undefined) => {
-  const firstChar = name?.charAt(0).toLowerCase();
-  switch (firstChar) {
-    case "a":
-      return "bg-[#2F6868]";
-    case "b":
-      return "bg-[#3D7575]";
-    case "c":
-      return "bg-[#4B8282]";
-    case "d":
-      return "bg-[#599090]";
-    case "e":
-      return "bg-[#679D9D]";
-    case "f":
-      return "bg-[#75AAAA]";
-    case "g":
-      return "bg-[#83B7B7]";
-    case "h":
-      return "bg-[#91C4C4]";
-    case "i":
-      return "bg-[#9FD1D1]";
-    case "j":
-      return "bg-[#ADDEDE]";
-    case "k":
-      return "bg-[#3D7575]";
-    case "l":
-      return "bg-[#4B8282]";
-    case "m":
-      return "bg-[#599090]";
-    case "n":
-      return "bg-[#679D9D]";
-    case "o":
-      return "bg-[#75AAAA]";
-    case "p":
-      return "bg-[#83B7B7]";
-    case "q":
-      return "bg-[#91C4C4]";
-    case "r":
-      return "bg-[#9FD1D1]";
-    case "s":
-      return "bg-[#ADDEDE]";
-    case "t":
-      return "bg-[#3D7575]";
-    case "u":
-      return "bg-[#4B8282]";
-    case "v":
-      return "bg-[#599090]";
-    case "w":
-      return "bg-[#679D9D]";
-    case "x":
-      return "bg-[#75AAAA]";
-    case "y":
-      return "bg-[#83B7B7]";
-    case "z":
-      return "bg-[#91C4C4]";
-    default:
-      return "bg-[#2F6868]";
-  }
-};
+import { getAgentColor } from "@/features/agents/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function ThreadHistoryHalf(): React.ReactNode {
-  const [_, setAgentId] = useQueryState("agentId");
+  const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [currentThreadId, setCurrentThreadId] = useQueryState("threadId");
-  const [fullChat] = useQueryState("fullChat");
+  const [fullChat, setFullChat] = useQueryState("fullChat");
   const [draft, setDraft] = useQueryState("draft");
 
   const [statusFilter, setStatusFilter] = useQueryState("status");
@@ -124,7 +70,7 @@ function ThreadHistoryHalf(): React.ReactNode {
     }
   }, [currentThreadId, setDraft]);
 
-  const isFullChat = fullChat === "1";
+  const isFullChat = fullChat === "1" || agentId == null;
   return (
     <>
       <ResizablePanelGroup
@@ -140,8 +86,28 @@ function ThreadHistoryHalf(): React.ReactNode {
             >
               <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
                 <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b p-4">
-                  <h2 className="flex-1 text-lg font-semibold whitespace-nowrap">
+                  <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
                     Chat
+                    {!fullChat && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={async () => {
+                          const next = fullChat === "1" ? null : "1";
+                          await setFullChat(next);
+                        }}
+                        className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+                        title={
+                          fullChat === "1" ? "Exit full view" : "Expand chat"
+                        }
+                      >
+                        {fullChat === "1" ? (
+                          <Minimize2 className="size-5" />
+                        ) : (
+                          <Maximize2 className="size-5" />
+                        )}
+                      </Button>
+                    )}
                   </h2>
                   <div className="flex w-full gap-2">
                     {/* Status filter */}
@@ -340,22 +306,12 @@ function AgentChatItem({
     <button
       key={thread.thread_id}
       onClick={() => handleThreadSelect(thread)}
-      className="w-full rounded-lg border p-3 text-left transition-colors duration-200 hover:bg-gray-50"
+      className="w-full p-3 text-left transition-colors duration-200 hover:bg-gray-50"
     >
       <div className="flex items-start gap-3">
-        {/* Agent Avatar */}
-        <div className="relative flex-shrink-0">
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white",
-              getAgentColor(agent?.name || "A"),
-            )}
-          >
-            {agent?.name?.charAt(0).toUpperCase() || "A"}
-          </div>
-          {interrupted && (
-            <span className="border-sidebar absolute -right-0.5 -bottom-0.5 flex h-3 w-3 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white" />
-          )}
+        {/* Chat Bubble Icon */}
+        <div className="flex-shrink-0">
+          <MessageCircle className="h-5 w-5 text-gray-400" />
         </div>
 
         {/* Content */}
@@ -365,9 +321,25 @@ function AgentChatItem({
               <h3 className="truncate text-sm font-medium text-gray-900">
                 {extractThreadTitle(thread)}
               </h3>
-              <p className="mt-1 truncate text-xs text-gray-600">
-                {extractThreadDescription(thread)}
-              </p>
+              <div className="mt-1 flex items-center gap-1.5">
+                {/* Agent Avatar in Description */}
+                {agent && (
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                      style={{ backgroundColor: getAgentColor(agent.name) }}
+                    >
+                      {agent.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    {interrupted && (
+                      <span className="absolute -right-0.5 -bottom-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-red-500" />
+                    )}
+                  </div>
+                )}
+                <p className="truncate text-xs text-gray-600">
+                  {extractThreadDescription(thread)}
+                </p>
+              </div>
             </div>
             <div className="ml-3 flex flex-col items-end">
               <span className="text-xs text-gray-500">
@@ -402,33 +374,26 @@ function AgentChatItem({
 
 function AgentChatIntro(props: { deploymentId: string }) {
   const { session } = useAuthContext();
+  const [_fullChat, setFullChat] = useQueryState("fullChat");
+  const [_agentId, setAgentId] = useQueryState("agentId");
 
   const recent = useSWR(
     { kind: "recent", deploymentId: props.deploymentId, session },
     async ({ deploymentId, session }) => {
       if (!deploymentId || !session?.accessToken) return [];
       const client = createClient(deploymentId, session.accessToken);
-      return await client.threads.search({
-        limit: 5,
-        sortBy: "updated_at",
-        sortOrder: "desc",
-      });
+      return (
+        await client.threads.search({
+          limit: 5,
+          sortBy: "updated_at",
+          sortOrder: "desc",
+        })
+      ).filter((thread) => thread.metadata?.graph_id !== "agent_generator");
     },
   );
 
-  const interrupted = useSWR(
-    { kind: "interrupted", deploymentId: props.deploymentId, session },
-    async ({ deploymentId, session }) => {
-      if (!deploymentId || !session?.accessToken) return [];
-      const client = createClient(deploymentId, session.accessToken);
-      return await client.threads.search({
-        limit: 5,
-        status: "interrupted",
-        sortBy: "updated_at",
-        sortOrder: "desc",
-      });
-    },
-  );
+  const agents = useAgentSummaries({ deploymentId: props.deploymentId });
+
   if (recent.isLoading) {
     return (
       <div className="mx-4 flex flex-col items-center justify-center py-12">
@@ -450,35 +415,38 @@ function AgentChatIntro(props: { deploymentId: string }) {
   }
 
   return (
-    <div className="mx-4 flex flex-col items-stretch gap-8">
-      <div className="flex flex-col">
-        <h2 className="mb-3 text-xs font-semibold text-gray-500 uppercase">
-          Requiring Attention
-        </h2>
-        <div className="space-y-2">
-          {interrupted.data?.map((thread) => (
-            <AgentChatItem
-              key={thread.thread_id}
-              thread={thread}
-              interrupted
+    <div className="mx-4">
+      <Tabs
+        defaultValue="agents"
+        className="w-full"
+      >
+        <TabsList className="mb-4">
+          <TabsTrigger value="agents">Agents</TabsTrigger>
+          <TabsTrigger value="recent">Recent Threads</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="agents">
+          {agents.data?.map((summary) => (
+            <AgentSummaryCard
+              key={summary.agent.assistant_id}
+              summary={summary}
+              onClick={() => {
+                setAgentId(summary.agent.assistant_id);
+                setFullChat(null);
+              }}
             />
           ))}
-        </div>
-      </div>
+        </TabsContent>
 
-      <div className="flex flex-col">
-        <h2 className="mb-3 text-xs font-semibold text-gray-500 uppercase">
-          Recent Threads
-        </h2>
-        <div className="space-y-2">
+        <TabsContent value="recent">
           {recent.data.map((thread) => (
             <AgentChatItem
               key={thread.thread_id}
               thread={thread}
             />
           ))}
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -512,11 +480,6 @@ function RightPaneChat(): React.ReactNode {
     [deployments, deploymentId],
   );
 
-  const selectedAgent = useMemo(
-    () => agents.find((a) => a.assistant_id === agentId) || null,
-    [agents, agentId],
-  );
-
   // Guard missing essentials
   if (!deploymentId || !session?.accessToken) {
     return (
@@ -531,28 +494,31 @@ function RightPaneChat(): React.ReactNode {
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid min-w-0 grid-cols-[1fr_auto] items-center border-b p-4">
-        <span className="flex flex-col gap-1 truncate text-lg font-semibold text-gray-800">
-          {selectedAgent?.name || "Agent"}
+        <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
+          {fullChat && (
+            <>
+              Chat
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={async () => {
+                  const next = fullChat === "1" ? null : "1";
+                  await setFullChat(next);
+                }}
+                className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+                title={fullChat === "1" ? "Exit full view" : "Expand chat"}
+              >
+                {fullChat === "1" ? (
+                  <Minimize2 className="size-5" />
+                ) : (
+                  <Maximize2 className="size-5" />
+                )}
+              </Button>
+            </>
+          )}
         </span>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              const next = fullChat === "1" ? null : "1";
-              await setFullChat(next);
-            }}
-            className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-            title={fullChat === "1" ? "Exit full view" : "Expand chat"}
-          >
-            {fullChat === "1" ? (
-              <Minimize2 className="size-5" />
-            ) : (
-              <Maximize2 className="size-5" />
-            )}
-          </Button>
-
           <Button
             variant="ghost"
             size="sm"
@@ -603,14 +569,38 @@ function RightPaneChat(): React.ReactNode {
                 await setDraft(null);
               }}
             >
-              <SelectTrigger>{selectedAgent?.name || "Agent"}</SelectTrigger>
+              <SelectTrigger asChild>
+                <button
+                  className="inline-flex items-center px-3 py-2 text-sm outline-none [&_[data-slot=select-value]]:flex"
+                  type="button"
+                >
+                  <SelectValue
+                    placeholder={
+                      <span className="inline-flex items-center gap-2">
+                        <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
+                        No agent selected
+                      </span>
+                    }
+                  />
+                </button>
+              </SelectTrigger>
               <SelectContent>
                 {agents.map((a) => (
                   <SelectItem
                     key={`${a.assistant_id}:${a.deploymentId}`}
                     value={`${a.assistant_id}:${a.deploymentId}`}
                   >
-                    {a.name}
+                    <span className="inline-flex items-center gap-2">
+                      <span
+                        className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
+                        style={{
+                          backgroundColor: getAgentColor(a.name),
+                        }}
+                      >
+                        {a.name.slice(0, 2).toUpperCase()}
+                      </span>
+                      {a.name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
