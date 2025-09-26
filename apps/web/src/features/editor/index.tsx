@@ -37,12 +37,6 @@ import {
   PopoverAnchor,
 } from "@/components/ui/popover";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
@@ -319,25 +313,6 @@ export function EditorPageContent(): React.ReactNode {
               {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    disabled
-                    className="cursor-not-allowed rounded-md border border-gray-300 bg-gray-300 px-3 py-2 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-300"
-                  >
-                    Train
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    Use an optimizer to automatically make improvements to your
-                    agent.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
       )}

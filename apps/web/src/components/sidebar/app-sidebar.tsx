@@ -6,7 +6,7 @@ import {
   Puzzle,
   MessageCircle,
   Plus,
-  Edit,
+  // Edit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,11 +42,11 @@ const createNavigationItems = (): NavigationItems => ({
       url: "/agents",
       icon: Puzzle,
     },
-    {
-      title: "Editor",
-      url: "/editor",
-      icon: Edit,
-    },
+    // {
+    //   title: "Editor",
+    //   url: "/editor",
+    //   icon: Edit,
+    // },
     {
       title: "Chat",
       url: "/agents/chat",
