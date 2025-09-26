@@ -34,7 +34,6 @@ export default function AgentsLibrary(): React.ReactNode {
               noContainer
             />
           </TabsContent>
-          {/** Triggers tab content temporarily removed in Agent Library */}
         </Tabs>
       </div>
     </AgentsProvider>

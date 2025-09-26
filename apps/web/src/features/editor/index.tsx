@@ -36,7 +36,6 @@ import {
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
-// Tooltip imports removed (not used directly in this file)
 import {
   Sheet,
   SheetContent,
@@ -314,7 +313,6 @@ export function EditorPageContent(): React.ReactNode {
               {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            {/* Train button removed per updated UX */}
           </div>
         </div>
       )}
