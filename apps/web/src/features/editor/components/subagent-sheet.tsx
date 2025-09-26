@@ -4,7 +4,12 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import {
   Form,
   FormControl,
@@ -114,6 +119,9 @@ export function SubAgentSheet({
         side="right"
         className="flex h-full min-h-0 w-[min(95vw,980px)] flex-col p-0 sm:max-w-3xl"
       >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Subagent</SheetTitle>
+        </SheetHeader>
         <Form {...form}>
           <form
             className="flex min-h-0 flex-1 flex-col"

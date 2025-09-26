@@ -187,9 +187,6 @@ export function SubagentToolsSelection({
                                 [tool.name]: checked,
                               };
                               onInterruptConfigChange(newConfig);
-                              setRevealedInterrupt((prev) =>
-                                new Set(prev).add(tool.name),
-                              );
                             }}
                           />
                         </div>
