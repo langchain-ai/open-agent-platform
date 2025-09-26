@@ -189,7 +189,7 @@ function ClarifyingQuestions({
   );
 }
 
-const ASSISTANT_ID = "agent_generator";
+const ASSISTANT_ID = "deep_agent";
 
 type AgentGeneratorState = {
   messages: Message[];

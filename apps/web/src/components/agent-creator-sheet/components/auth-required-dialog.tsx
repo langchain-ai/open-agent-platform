@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -9,11 +9,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, Info, Zap } from "lucide-react";
+import { ExternalLink, Info, Zap, ChevronDown, ChevronRight, Check } from "lucide-react";
 import { useOAuthProviders } from "@/hooks/use-oauth-providers";
-import { Accordion } from "@/components/ui/accordion";
-import { TriggerAccordionItem } from "@/features/triggers/components/trigger-accordion-item";
+import { Combobox } from "@/components/ui/combobox";
+import { ResourceRenderer } from "@/components/ui/resource-renderer";
+import { AuthenticateTriggerDialog } from "@/features/triggers/components/authenticate-trigger-dialog";
 import { useAuthContext } from "@/providers/Auth";
+import { cn } from "@/lib/utils";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 
 export function AuthRequiredDialog(props: {
@@ -31,6 +33,7 @@ export function AuthRequiredDialog(props: {
   const auth = useAuthContext();
 
   const shouldShowTriggers = !!props.groupedTriggers;
+  const [openProvider, setOpenProvider] = useState<string | null>(null);
 
   const handleSelectedRegistrationsChange = useCallback(
     (registrationIds: string[]) => {
@@ -45,6 +48,18 @@ export function AuthRequiredDialog(props: {
     if (!auth.session?.accessToken) return;
     await props.reloadTriggers?.(auth.session.accessToken);
   }, [props.reloadTriggers]);
+
+  const toggleProvider = (provider: string) => {
+    setOpenProvider(openProvider === provider ? null : provider);
+  };
+
+  const getRegistrationsFromTriggerId = (provider: string, triggerId: string) =>
+    props.groupedTriggers?.[provider]?.registrations?.[triggerId] || [];
+
+  const countSelectedForTrigger = (provider: string, triggerId: string) =>
+    getRegistrationsFromTriggerId(provider, triggerId).filter((r) =>
+      selectedRegistrations.includes(r.id),
+    ).length;
 
   return (
     <AlertDialog
@@ -98,32 +113,140 @@ export function AuthRequiredDialog(props: {
               <div className="mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
                 <Zap className="h-4 w-4" />
                 <p className="text-sm font-medium">
-                  The following triggers have been requested for your agent.
-                  Please select one for each, or add a new registration if one
-                  does not yet exist.
+                  Configure your suggested triggers or use the dropdown to choose your own.
+                  Triggers are automated events that activate your agent based on external
+                  actions like emails, calendar events, or webhooks.
                 </p>
               </div>
               {props.groupedTriggers && (
-                <Accordion
-                  type="multiple"
-                  className="w-full text-blue-900 dark:text-blue-100"
-                >
-                  {Object.entries(props.groupedTriggers).map(
-                    ([provider, { registrations, triggers }]) => (
-                      <TriggerAccordionItem
-                        key={provider}
-                        provider={provider}
-                        groupedRegistrations={registrations}
-                        triggers={triggers}
-                        reloadTriggers={reloadTriggers}
-                        selectedRegistrationIds={selectedRegistrations}
-                        onSelectedRegistrationChange={
-                          handleSelectedRegistrationsChange
-                        }
-                      />
-                    ),
-                  )}
-                </Accordion>
+                <div className="space-y-2">
+                  {Object.entries(props.groupedTriggers).map(([provider, data]) => {
+                    const triggersAll = data.triggers || [];
+                    const providerCount = triggersAll
+                      .map((t) => countSelectedForTrigger(provider, t.id))
+                      .reduce((a, b) => a + b, 0);
+
+                    return (
+                      <div key={provider}>
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                            "text-blue-700 hover:bg-blue-100/50 dark:text-blue-200 dark:hover:bg-blue-900/30",
+                          )}
+                          onClick={() => toggleProvider(provider)}
+                          aria-expanded={openProvider === provider}
+                        >
+                          <div className="flex items-center gap-2">
+                            {openProvider === provider ? (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            )}
+                            <span className="font-medium">{getProviderDisplayName(provider)}</span>
+                          </div>
+                          {providerCount > 0 && (
+                            <span className="text-xs text-blue-600 dark:text-blue-300">
+                              {providerCount}
+                            </span>
+                          )}
+                        </button>
+                        {openProvider === provider && (
+                          <div className="ml-3 space-y-1">
+                            {triggersAll.map((trigger) => {
+                              const registrations = getRegistrationsFromTriggerId(provider, trigger.id);
+                              const hasRegistrations = registrations.length > 0;
+                              const selectedCount = countSelectedForTrigger(provider, trigger.id);
+
+                              return (
+                                <div key={trigger.id} className="rounded-lg bg-blue-50/50 p-3 dark:bg-blue-950/20">
+                                  <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm text-blue-800 dark:text-blue-100">
+                                        {trigger.displayName}
+                                      </div>
+                                      {trigger.description && (
+                                        <div className="text-xs text-blue-600 mt-1 dark:text-blue-300">
+                                          {trigger.description}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {selectedCount > 0 && (
+                                        <span className="text-xs text-blue-600 dark:text-blue-300">
+                                          {selectedCount}
+                                        </span>
+                                      )}
+                                      {!hasRegistrations && (
+                                        <AuthenticateTriggerDialog
+                                          trigger={trigger}
+                                          reloadTriggers={reloadTriggers}
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+                                  {hasRegistrations && (
+                                    <Combobox
+                                      displayText={(() => {
+                                        const selected = registrations.filter((r) =>
+                                          selectedRegistrations.includes(r.id),
+                                        );
+                                        if (selected.length === 0) return "Select registrations";
+                                        if (selected.length === 1) {
+                                          const resource = selected[0].resource as any;
+                                          if (typeof resource === "string") return resource;
+                                          if (resource && typeof resource === "object") {
+                                            return String(Object.values(resource)[0]);
+                                          }
+                                          return "1 selected";
+                                        }
+                                        return `${selected.length} selected`;
+                                      })()}
+                                      options={registrations.map((reg) => ({
+                                        label: "",
+                                        value: reg.id,
+                                      }))}
+                                      selectedOptions={selectedRegistrations}
+                                      onSelect={(value) => {
+                                        const current = selectedRegistrations;
+                                        const isSelected = current.includes(value);
+                                        const newSelection = isSelected
+                                          ? current.filter((id) => id !== value)
+                                          : [...current, value];
+                                        handleSelectedRegistrationsChange(newSelection);
+                                      }}
+                                      optionRenderer={(option) => {
+                                        const reg = registrations.find((r) => r.id === option.value);
+                                        const isSelected = selectedRegistrations.includes(option.value);
+                                        return (
+                                          <>
+                                            <Check
+                                              className={cn(
+                                                "mr-2 h-4 w-4",
+                                                isSelected
+                                                  ? "text-blue-600 dark:text-blue-400"
+                                                  : "text-transparent",
+                                              )}
+                                            />
+                                            {reg ? (
+                                              <ResourceRenderer resource={reg.resource} />
+                                            ) : (
+                                              <span className="text-gray-500">{option.label}</span>
+                                            )}
+                                          </>
+                                        );
+                                      }}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
