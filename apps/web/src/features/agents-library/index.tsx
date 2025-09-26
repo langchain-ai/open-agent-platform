@@ -18,10 +18,16 @@ export default function AgentsLibrary(): React.ReactNode {
           </div>
         </div>
 
-        <Tabs defaultValue="agents" className="w-full">
+        <Tabs
+          defaultValue="agents"
+          className="w-full"
+        >
           {/** TabsList removed: we want content only without toggles */}
 
-          <TabsContent value="agents" className="mt-2">
+          <TabsContent
+            value="agents"
+            className="mt-2"
+          >
             <AgentsInterface
               agentIdsWithTriggers={agentIdsWithTriggers}
               hideHeader

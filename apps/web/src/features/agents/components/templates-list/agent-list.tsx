@@ -65,7 +65,7 @@ export function AgentList({ agents }: AgentListProps) {
         <div
           className={
             filteredAgents.length === 1
-              ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 md:max-w-xl"
+              ? "grid grid-cols-1 gap-4 md:max-w-xl md:grid-cols-2 lg:grid-cols-3"
               : "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
           }
         >

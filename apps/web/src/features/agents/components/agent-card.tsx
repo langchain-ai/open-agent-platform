@@ -12,12 +12,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
+import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Agent } from "@/types/agent";
 // import { AgentGraphVisualization } from "@/features/agent-graph-visualization"; // View Graph disabled
 import _ from "lodash";
