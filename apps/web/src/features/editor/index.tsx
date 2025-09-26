@@ -303,7 +303,7 @@ export function EditorPageContent(): React.ReactNode {
               }}
               className={`rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2F6868]/90 ${
                 !hasVisitedEditor
-                  ? "animate-pulse shadow-lg ring-2 shadow-[#2F6868]/50 ring-[#2F6868]/30 ring-offset-2"
+                  ? "shadow-lg ring-2 shadow-[#2F6868]/50 ring-[#2F6868]/30 ring-offset-2"
                   : ""
               }`}
             >
