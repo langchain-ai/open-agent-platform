@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -8,9 +9,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, Info } from "lucide-react";
-import _ from "lodash";
+import { ExternalLink, Info, Zap } from "lucide-react";
 import { useOAuthProviders } from "@/hooks/use-oauth-providers";
+import { Accordion } from "@/components/ui/accordion";
+import { TriggerAccordionItem } from "@/features/triggers/components/trigger-accordion-item";
+import { useAuthContext } from "@/providers/Auth";
+import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 
 export function AuthRequiredDialog(props: {
   open: boolean;
@@ -18,8 +22,46 @@ export function AuthRequiredDialog(props: {
   handleSubmit: () => void;
   authUrls: { provider: string; authUrl: string; tools: string[] }[];
   hideCancel?: boolean;
+  groupedTriggers?: GroupedTriggerRegistrationsByProvider;
+  reloadTriggers?: (accessToken: string) => Promise<void>;
+  selectedTriggerRegistrationIds?: string[];
+  onSelectedTriggerRegistrationIdsChange?: (registrationIds: string[]) => void;
 }) {
   const { getProviderDisplayName } = useOAuthProviders();
+  const auth = useAuthContext();
+
+  const [localSelectedRegistrations, setLocalSelectedRegistrations] = useState<
+    string[]
+  >(props.selectedTriggerRegistrationIds ?? []);
+
+  useEffect(() => {
+    if (props.selectedTriggerRegistrationIds) {
+      setLocalSelectedRegistrations(props.selectedTriggerRegistrationIds);
+    }
+  }, [props.selectedTriggerRegistrationIds]);
+
+  const shouldShowTriggers = !!props.groupedTriggers;
+
+  const handleSelectedRegistrationsChange = useCallback(
+    (registrationIds: string[]) => {
+      if (props.onSelectedTriggerRegistrationIdsChange) {
+        props.onSelectedTriggerRegistrationIdsChange(registrationIds);
+      } else {
+        setLocalSelectedRegistrations(registrationIds);
+      }
+    },
+    [props.onSelectedTriggerRegistrationIdsChange],
+  );
+
+  const selectedRegistrations = props.onSelectedTriggerRegistrationIdsChange
+    ? (props.selectedTriggerRegistrationIds ?? [])
+    : localSelectedRegistrations;
+
+  const reloadTriggers = useCallback(async () => {
+    if (!auth.session?.accessToken) return;
+    await props.reloadTriggers?.(auth.session.accessToken);
+  }, [props.reloadTriggers]);
+
   return (
     <AlertDialog
       open={props.open}
@@ -36,7 +78,7 @@ export function AuthRequiredDialog(props: {
             Changes".
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex-1 space-y-3 overflow-y-auto pr-2">
+        <div className="flex-1 space-y-4 overflow-y-auto pr-2">
           {props.authUrls.map((url, index) => (
             <div
               key={`${url.provider}-${index}`}
@@ -67,6 +109,40 @@ export function AuthRequiredDialog(props: {
               </div>
             </div>
           ))}
+          {shouldShowTriggers && (
+            <div className="rounded-lg border border-blue-200 bg-white/60 p-4 text-blue-900 shadow-sm dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
+              <div className="mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                <Zap className="h-4 w-4" />
+                <p className="text-sm font-medium">
+                  The following triggers have been requested for your agent.
+                  Please select one for each, or add a new registration if one
+                  does not yet exist.
+                </p>
+              </div>
+              {props.groupedTriggers && (
+                <Accordion
+                  type="multiple"
+                  className="w-full text-blue-900 dark:text-blue-100"
+                >
+                  {Object.entries(props.groupedTriggers).map(
+                    ([provider, { registrations, triggers }]) => (
+                      <TriggerAccordionItem
+                        key={provider}
+                        provider={provider}
+                        groupedRegistrations={registrations}
+                        triggers={triggers}
+                        reloadTriggers={reloadTriggers}
+                        selectedRegistrationIds={selectedRegistrations}
+                        onSelectedRegistrationChange={
+                          handleSelectedRegistrationsChange
+                        }
+                      />
+                    ),
+                  )}
+                </Accordion>
+              )}
+            </div>
+          )}
         </div>
         <AlertDialogFooter className="flex-shrink-0">
           {!props.hideCancel && (
