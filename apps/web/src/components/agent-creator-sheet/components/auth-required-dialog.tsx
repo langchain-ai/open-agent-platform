@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -30,7 +29,8 @@ export function AuthRequiredDialog(props: {
   const { getProviderDisplayName } = useOAuthProviders();
   const auth = useAuthContext();
 
-  const shouldShowTriggers = !!props.groupedTriggers;
+  const hasTriggers =
+    props.groupedTriggers && Object.keys(props.groupedTriggers).length > 0;
 
   const handleSelectedRegistrationsChange = useCallback(
     (registrationIds: string[]) => {
@@ -51,24 +51,28 @@ export function AuthRequiredDialog(props: {
       open={props.open}
       onOpenChange={props.onOpenChange}
     >
-      <AlertDialogContent className="flex max-h-[90vh] max-w-[60vw] flex-col bg-white border border-gray-200 text-gray-900 shadow-lg">
+      <AlertDialogContent className="flex max-h-[90vh] max-w-[60vw] flex-col border border-gray-200 bg-white text-gray-900 shadow-lg">
         <AlertDialogHeader className="flex-shrink-0 pb-6">
           <AlertDialogTitle className="flex flex-row items-center text-xl font-medium text-gray-900">
             <Info className="mr-2 h-4 w-4 text-gray-700" />
-            Select Triggers
+            {hasTriggers ? "Select Triggers" : "One thing to note"}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-500 text-sm mt-1">
-            Triggers connect external events to your agent. When an event occurs (like receiving an email), it automatically activates your agent to take action.
+          <AlertDialogDescription className="mt-1 text-sm text-gray-500">
+            {hasTriggers
+              ? "Triggers connect external events to your agent. When an event occurs (like receiving an email), it automatically activates your agent to take action."
+              : "Your agent is ready to go! You can always add triggers later to connect external events."}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         {/* Workflow diagram */}
         <div className="flex-shrink-0 pb-4">
           <div className="flex items-center justify-center gap-6">
-            <div className="rounded-lg bg-green-100 px-6 py-3 border border-green-200">
+            <div className="rounded-lg border border-green-200 bg-green-100 px-6 py-3">
               <div className="flex items-center gap-3">
                 <Zap className="h-4 w-4 text-green-700" />
-                <span className="text-base text-green-700 font-medium">Triggers</span>
+                <span className="text-base font-medium text-green-700">
+                  Triggers
+                </span>
                 <span className="inline-flex items-center rounded-full bg-green-200 px-3 py-1 text-xs font-medium text-green-800">
                   SUGGESTED
                 </span>
@@ -76,11 +80,13 @@ export function AuthRequiredDialog(props: {
             </div>
             <ArrowRight className="h-4 w-4 text-gray-400" />
             <div className="rounded-lg bg-gray-100 px-6 py-3">
-              <span className="text-base text-gray-700 font-medium">Your Agent</span>
+              <span className="text-base font-medium text-gray-700">
+                Your Agent
+              </span>
             </div>
           </div>
         </div>
-        <div className="flex-1 space-y-6 overflow-y-auto pr-2 py-6">
+        <div className="flex-1 space-y-6 overflow-y-auto py-6 pr-2">
           {props.authUrls.map((url, index) => (
             <div
               key={`${url.provider}-${index}`}
@@ -100,7 +106,7 @@ export function AuthRequiredDialog(props: {
                 <Button
                   size="default"
                   variant="outline"
-                  className="ml-4 flex-shrink-0 border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700"
+                  className="ml-4 flex-shrink-0 border-green-600 text-green-700 hover:border-green-700 hover:bg-green-50"
                   onClick={() =>
                     window.open(url.authUrl, "_blank", "noopener,noreferrer")
                   }
@@ -111,54 +117,62 @@ export function AuthRequiredDialog(props: {
               </div>
             </div>
           ))}
-          {shouldShowTriggers && (
-            <div className="relative rounded-lg bg-green-50 p-8">
-              <div className="absolute top-6 left-6 flex items-center gap-1">
-                <Zap className="h-3 w-3 text-black" />
-                <span className="text-xs font-bold tracking-wide text-black uppercase">
-                  SUGGESTED TRIGGERS
-                </span>
+          <div className="relative rounded-lg bg-green-50 p-8">
+            {hasTriggers ? (
+              <>
+                <div className="absolute top-6 left-6 flex items-center gap-1">
+                  <Zap className="h-3 w-3 text-black" />
+                  <span className="text-xs font-bold tracking-wide text-black uppercase">
+                    SUGGESTED TRIGGERS
+                  </span>
+                </div>
+
+                <div className="absolute top-6 right-6">
+                  <span className="text-xs font-bold tracking-wide text-black uppercase">
+                    OPTIONAL
+                  </span>
+                </div>
+
+                <div className="mb-4 pt-6"></div>
+
+                <p className="mb-6 max-w-2xl text-sm text-green-800">
+                  You don't have to select anything — pick events that should
+                  invoke your agent.
+                </p>
+
+                {props.groupedTriggers && (
+                  <Accordion
+                    type="multiple"
+                    className="w-full text-gray-900"
+                  >
+                    {Object.entries(props.groupedTriggers).map(
+                      ([provider, { registrations, triggers }]) => (
+                        <TriggerAccordionItem
+                          key={provider}
+                          provider={provider}
+                          groupedRegistrations={registrations}
+                          triggers={triggers}
+                          reloadTriggers={reloadTriggers}
+                          selectedRegistrationIds={selectedRegistrations}
+                          onSelectedRegistrationChange={
+                            handleSelectedRegistrationsChange
+                          }
+                        />
+                      ),
+                    )}
+                  </Accordion>
+                )}
+              </>
+            ) : (
+              <div className="py-12 text-center">
+                <p className="text-2xl font-medium text-green-800">
+                  Have fun building!
+                </p>
               </div>
-
-              <div className="absolute top-6 right-6">
-                <span className="text-xs font-bold tracking-wide text-black uppercase">
-                  OPTIONAL
-                </span>
-              </div>
-
-              <div className="mb-4 pt-6"></div>
-
-              <p className="mb-6 max-w-2xl text-sm text-green-800">
-                You don't have to select anything — pick events that should
-                invoke your agent.
-              </p>
-
-              {props.groupedTriggers && (
-                <Accordion
-                  type="multiple"
-                  className="w-full text-gray-900"
-                >
-                  {Object.entries(props.groupedTriggers).map(
-                    ([provider, { registrations, triggers }]) => (
-                      <TriggerAccordionItem
-                        key={provider}
-                        provider={provider}
-                        groupedRegistrations={registrations}
-                        triggers={triggers}
-                        reloadTriggers={reloadTriggers}
-                        selectedRegistrationIds={selectedRegistrations}
-                        onSelectedRegistrationChange={
-                          handleSelectedRegistrationsChange
-                        }
-                      />
-                    ),
-                  )}
-                </Accordion>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-        <AlertDialogFooter className="flex-shrink-0 pt-6 gap-3 justify-end">
+        <AlertDialogFooter className="flex-shrink-0 justify-end gap-3 pt-6">
           <Button
             onClick={props.handleSubmit}
             className="bg-[#2F6868] px-8 text-white hover:bg-[#2F6868]/90"
