@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Agent } from "@/types/agent";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Copy, Zap, Users, ArrowRight, Wrench, FileText } from "lucide-react";
+import { Zap, Users, ArrowRight, Wrench, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 import { useAuthContext } from "@/providers/Auth";
@@ -54,6 +54,11 @@ interface AgentConfigProps {
   triggersFormExternal?: UseFormReturn<AgentTriggersFormData>;
   hideTriggersTab?: boolean;
   hideToolsTab?: boolean;
+  hideTitleSection?: boolean;
+  externalTitle?: string;
+  onExternalTitleChange?: (v: string) => void;
+  saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
+  forceMainInstructionsView?: boolean;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
@@ -69,6 +74,11 @@ export function AgentConfig({
   triggersFormExternal,
   hideTriggersTab,
   hideToolsTab,
+  hideTitleSection,
+  externalTitle,
+  onExternalTitleChange,
+  saveRef,
+  forceMainInstructionsView,
 }: AgentConfigProps) {
   const { session } = useAuthContext();
   const {
@@ -100,7 +110,7 @@ export function AgentConfig({
     if (hideTriggersTab) v = v.filter((x) => x !== "triggers");
     if (hideToolsTab) v = v.filter((x) => x !== "tools");
     return v;
-  }, [isEditingSubAgent, hideTriggersTab, hideToolsTab]);
+  }, [baseViews, isEditingSubAgent, hideTriggersTab, hideToolsTab]);
 
   const [internalView, setInternalView] = useState<ViewType>("instructions");
   const currentView = externalView ?? internalView;
@@ -109,13 +119,10 @@ export function AgentConfig({
     else setInternalView(v);
   };
   const [editedTitle, setEditedTitle] = useState("");
-  const [initialTitle, setInitialTitle] = useState("");
   const [editedTools, setEditedTools] = useState<string[]>([]);
   const [editedInterruptConfig, setEditedInterruptConfig] = useState<
     Record<string, HumanInterruptConfig>
   >({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [isInstructionsDirty, setIsInstructionsDirty] = useState(false);
 
   // Create tools form to track changes
   const toolsFormInternal = useAgentToolsForm({
@@ -131,7 +138,13 @@ export function AgentConfig({
     },
   });
 
-  const editorKey = `${agent?.assistant_id}-${isEditingSubAgent ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}` : "main"}`;
+  const editorKey = forceMainInstructionsView
+    ? `${agent?.assistant_id}-main`
+    : `${agent?.assistant_id}-${
+        isEditingSubAgent
+          ? `subagent-${editTarget?.type === "subagent" ? editTarget.index : 0}`
+          : "main"
+      }`;
 
   const schema = BlockNoteSchema.create({
     blockSpecs: {
@@ -174,12 +187,17 @@ export function AgentConfig({
       return groupTriggerRegistrationsByProvider(registrations, triggers);
     }, [registrations, triggers]);
 
-  // Load triggers data
+  // Load triggers data (only when needed)
   useEffect(() => {
+    // If the triggers UI is hidden by flag, skip
     if (showTriggersTab === false || showTriggersTab === undefined) {
       setTriggersLoading(false);
       return;
     }
+    // If parent is managing the triggers form/data, avoid duplicate fetches
+    if (triggersFormExternal) return;
+    // Only fetch when the Triggers view is active for this component
+    if (currentView !== "triggers") return;
     if (!session?.accessToken || !agent) return;
 
     setTriggersLoading(true);
@@ -200,7 +218,17 @@ export function AgentConfig({
         }
       })
       .finally(() => setTriggersLoading(false));
-  }, [session?.accessToken, showTriggersTab, agent]);
+  }, [
+    session?.accessToken,
+    showTriggersTab,
+    agent,
+    currentView,
+    triggersFormExternal,
+    listTriggers,
+    listUserTriggers,
+    listAgentTriggers,
+    triggersForm,
+  ]);
 
   // Update edited values when edit target changes (not on every render)
   React.useEffect(() => {
@@ -225,7 +253,6 @@ export function AgentConfig({
         )?.interrupt_config || {};
 
     setEditedTitle(freshTitle);
-    setInitialTitle(freshTitle);
     setEditedTools([...freshTools]);
     setEditedInterruptConfig({ ...(freshInterruptConfig || {}) });
 
@@ -239,7 +266,6 @@ export function AgentConfig({
     });
 
     // Reset dirty flags when switching targets
-    setIsInstructionsDirty(false);
   }, [
     agent?.assistant_id,
     editTarget?.type,
@@ -251,10 +277,13 @@ export function AgentConfig({
 
   React.useEffect(() => {
     const updateEditorContent = async () => {
-      const currentInstructions = isEditingSubAgent
-        ? currentSubAgent?.prompt || "No instructions provided"
-        : agent?.config?.configurable?.instructions ||
-          "No instructions provided";
+      const currentInstructions = forceMainInstructionsView
+        ? agent?.config?.configurable?.instructions ||
+          "No instructions provided"
+        : isEditingSubAgent
+          ? currentSubAgent?.prompt || "No instructions provided"
+          : agent?.config?.configurable?.instructions ||
+            "No instructions provided";
 
       if (
         currentInstructions &&
@@ -302,21 +331,14 @@ export function AgentConfig({
     editTarget?.type,
     editTarget?.type === "subagent" ? editTarget.index : null,
     editor,
+    forceMainInstructionsView,
   ]);
 
   React.useEffect(() => {
     setCurrentView("instructions");
   }, [editTarget]);
 
-  const handleCopy = async () => {
-    try {
-      const markdown = await editor.blocksToMarkdownLossy(editor.document);
-      await navigator.clipboard.writeText(markdown);
-      toast.success("Instructions copied to clipboard");
-    } catch {
-      toast.error("Failed to copy instructions");
-    }
-  };
+  // Copy button removed per updated UX
 
   const reloadTriggers = async () => {
     if (!session?.accessToken) {
@@ -340,8 +362,6 @@ export function AgentConfig({
       toast.error("Unable to save: missing agent or authentication");
       return;
     }
-
-    setIsSaving(true);
 
     try {
       // Only update triggers if we're editing the main agent (not sub-agents)
@@ -455,7 +475,10 @@ export function AgentConfig({
         };
 
         await client.assistants.update(agent.assistant_id, {
-          name: editedTitle,
+          name:
+            (externalTitle?.trim?.() ?? "") !== ""
+              ? (externalTitle as string)
+              : editedTitle,
           config: {
             configurable: {
               ...agent.config?.configurable,
@@ -476,8 +499,6 @@ export function AgentConfig({
       // Update local state to reflect saved changes
       setEditedTools(currentTools);
       setEditedInterruptConfig(currentInterruptConfig || {});
-      setIsInstructionsDirty(false);
-      setInitialTitle(editedTitle);
 
       // Reset form dirtiness so Save button hides after save
       toolsForm.reset(toolsForm.getValues());
@@ -491,10 +512,17 @@ export function AgentConfig({
     } catch (error) {
       console.error("Error saving agent configuration:", error);
       toast.error("Failed to save configuration");
-    } finally {
-      setIsSaving(false);
     }
   };
+
+  // Assign saveRef to handleSaveChanges
+  useEffect(() => {
+    if (saveRef) {
+      saveRef.current = async () => {
+        await handleSaveChanges();
+      };
+    }
+  }, [saveRef, handleSaveChanges]);
 
   if (!agent) {
     return (
@@ -506,27 +534,40 @@ export function AgentConfig({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Title section */}
-      <div className="flex-shrink-0 px-6 py-2">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            {isEditingSubAgent ? "Sub-agent" : "Main Agent"}
-          </div>
-          <div className="flex-1">
-            <Input
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="border-none px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
-              placeholder={
-                isEditingSubAgent ? "Sub-agent name..." : "Agent name..."
-              }
-            />
+      {/* Title section (optional, now moved to page header) */}
+      {!hideTitleSection && (
+        <div className="flex-shrink-0 px-4 py-2">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <Input
+                value={externalTitle ?? editedTitle}
+                onChange={(e) =>
+                  onExternalTitleChange
+                    ? onExternalTitleChange(e.target.value)
+                    : setEditedTitle(e.target.value)
+                }
+                className="border-none px-0 text-[32px] leading-snug font-bold text-gray-900 shadow-none focus-visible:ring-0"
+                placeholder={
+                  isEditingSubAgent ? "Sub-agent name..." : "Agent name..."
+                }
+              />
+              <div className="mt-0.5 line-clamp-1 text-sm text-gray-600">
+                {isEditingSubAgent
+                  ? currentSubAgent?.description || ""
+                  : (agent?.metadata as any)?.description || ""}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Header with view toggle buttons */}
-      <div className="flex flex-shrink-0 flex-row items-center justify-between border-b border-gray-200 px-6 py-2">
+      <div
+        className={cn(
+          "flex flex-shrink-0 flex-row items-center justify-between px-6 py-2",
+          !hideTopTabs && "border-b border-gray-200",
+        )}
+      >
         {!hideTopTabs && (
           <div className="flex items-center gap-2">
             {availableViews.includes("triggers") && (
@@ -601,41 +642,7 @@ export function AgentConfig({
             )}
           </div>
         )}
-        <div className="flex items-center gap-2">
-          {currentView === "instructions" && (
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopy}
-                className="h-8 w-8 p-0"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-
-          {/* Save Changes Button */}
-          {(() => {
-            const isTitleDirty = editedTitle.trim() !== initialTitle.trim();
-            const hasFormDirty =
-              toolsForm.formState.isDirty ||
-              triggersForm.formState.isDirty ||
-              subAgentsForm.formState.isDirty;
-            const hasChanges =
-              isTitleDirty || isInstructionsDirty || hasFormDirty;
-            return hasChanges ? (
-              <Button
-                onClick={handleSaveChanges}
-                disabled={isSaving || !agent}
-                className="ml-2 bg-[#2F6868] text-white hover:bg-[#2F6868]/90 disabled:bg-gray-400"
-                size="sm"
-              >
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-            ) : null;
-          })()}
-        </div>
+        <div className="flex items-center gap-2" />
       </div>
 
       {/* Content based on current view */}
@@ -654,7 +661,7 @@ export function AgentConfig({
               >
                 <BlockNoteView
                   editor={editor}
-                  onChange={() => setIsInstructionsDirty(true)}
+                  onChange={() => {}}
                   className={cn("oap-blocknote min-h-full")}
                   theme="light"
                   data-color-scheme="light"
@@ -707,6 +714,7 @@ export function AgentConfig({
           </div>
         )}
       </div>
+      {/* Bottom footer removed per updated UX */}
     </div>
   );
 }

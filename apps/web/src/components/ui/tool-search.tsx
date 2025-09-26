@@ -26,12 +26,12 @@ export function Search({
     <div
       className={cn(
         className,
-        "flex items-center rounded-lg border-[1px] border-slate-200 px-2",
+        "flex w-full items-center rounded-lg border-[1px] border-slate-200 px-2",
       )}
     >
       <SearchIcon className="size-4 text-slate-400" />
       <Input
-        className="h-8 border-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
+        className="h-8 flex-1 border-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:outline-none"
         placeholder={placeholder}
         value={searchTerm}
         onChange={handleInputChange}
