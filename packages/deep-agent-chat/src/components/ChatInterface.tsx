@@ -18,6 +18,7 @@ import {
   CheckCircle,
   Clock,
   Circle,
+  FileIcon,
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import type { TodoItem, ToolCall } from "../types";
@@ -35,6 +36,8 @@ import { cn } from "../lib/utils";
 import { ThreadActionsView } from "./interrupted-actions";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { FilesPopover } from "./TasksFilesSidebar";
 
 interface ChatInterfaceProps {
   assistantId: string;
@@ -94,6 +97,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setActiveAssistant,
     todos,
     setTodos,
+    files,
     setFiles,
     view,
     onViewChange,
@@ -495,115 +499,159 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           )}
         </div>
 
+        {empty ? (
+          <div className="mx-4 mb-8 flex flex-col items-center gap-3 text-center">
+            <h1 className="text-2xl font-medium">
+              What would you like to work on?
+            </h1>
+          </div>
+        ) : null}
+
         <div
           className={cn(
             "bg-background sticky bottom-6 z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
             "transition-colors duration-200 ease-in-out",
           )}
         >
-          {(() => {
-            const totalTasks = todos.length;
-            if (totalTasks === 0) return null;
+          <div className="bg-sidebar flex flex-col border-b">
+            <div className="flex items-center justify-between gap-3">
+              {controls}
 
-            const groupedTodos = {
-              in_progress: todos.filter((t) => t.status === "in_progress"),
-              pending: todos.filter((t) => t.status === "pending"),
-              completed: todos.filter((t) => t.status === "completed"),
-            };
+              {Object.keys(files).length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="mr-1.5"
+                    >
+                      <FileIcon />
+                      Files
+                      <span className="rounded-full bg-[#2F6868] px-1.5 py-0.5 text-xs text-white">
+                        {Object.keys(files).length}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="end"
+                    className="p-1.5"
+                  >
+                    <FilesPopover
+                      files={files}
+                      setFiles={setFiles}
+                      editDisabled={false}
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
 
-            const activeTask = todos.find((t) => t.status === "in_progress");
-            const remainingTasks = totalTasks - groupedTodos.pending.length;
-            const isCompleted = totalTasks === remainingTasks;
+            {(() => {
+              const totalTasks = todos.length;
+              if (totalTasks === 0) return null;
 
-            return (
-              <div className="bg-sidebar border-b">
-                <button
-                  type="button"
-                  onClick={() => setTasksOpen((prev) => !prev)}
-                  className="grid w-full cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-3 px-4.5 py-3 text-left"
-                  aria-expanded={tasksOpen}
-                >
-                  {(() => {
-                    if (tasksOpen) {
-                      return <span className="text-sm font-medium">Tasks</span>;
-                    }
+              const groupedTodos = {
+                in_progress: todos.filter((t) => t.status === "in_progress"),
+                pending: todos.filter((t) => t.status === "pending"),
+                completed: todos.filter((t) => t.status === "completed"),
+              };
 
-                    if (isCompleted) {
+              const activeTask = todos.find((t) => t.status === "in_progress");
+              const remainingTasks = totalTasks - groupedTodos.pending.length;
+              const isCompleted = totalTasks === remainingTasks;
+
+              return (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setTasksOpen((prev) => !prev)}
+                    className="grid w-full cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-3 border-t px-4.5 py-3 text-left"
+                    aria-expanded={tasksOpen}
+                  >
+                    {(() => {
+                      if (tasksOpen) {
+                        return (
+                          <span className="text-sm font-medium">Tasks</span>
+                        );
+                      }
+
+                      if (isCompleted) {
+                        return [
+                          <CheckCircle
+                            size={16}
+                            className="text-success/80"
+                          />,
+                          <span className="ml-[1px] min-w-0 truncate text-sm">
+                            All tasks completed
+                          </span>,
+                        ];
+                      }
+
+                      if (activeTask != null) {
+                        return [
+                          getStatusIcon(activeTask.status),
+                          <span className="ml-[1px] min-w-0 truncate text-sm">
+                            Task {totalTasks - groupedTodos.pending.length} of{" "}
+                            {totalTasks}
+                          </span>,
+                          <span className="text-muted-foreground min-w-0 gap-2 truncate text-sm">
+                            {activeTask.content}
+                          </span>,
+                        ];
+                      }
+
                       return [
-                        <CheckCircle
+                        <Circle
                           size={16}
-                          className="text-success/80"
+                          className="text-tertiary/70"
                         />,
-                        <span className="min-w-0 truncate text-sm font-medium">
-                          All tasks completed
-                        </span>,
-                      ];
-                    }
-
-                    if (activeTask != null) {
-                      return [
-                        getStatusIcon(activeTask.status),
-                        <span className="min-w-0 truncate text-sm font-medium">
+                        <span className="ml-[1px] min-w-0 truncate text-sm">
                           Task {totalTasks - groupedTodos.pending.length} of{" "}
                           {totalTasks}
                         </span>,
-                        <span className="text-muted-foreground min-w-0 gap-2 truncate text-sm">
-                          {activeTask.content}
-                        </span>,
                       ];
-                    }
-
-                    return [
-                      <Circle
-                        size={16}
-                        className="text-tertiary/70"
-                      />,
-                      <span className="min-w-0 truncate text-sm font-medium">
-                        Task {totalTasks - groupedTodos.pending.length} of{" "}
-                        {totalTasks}
-                      </span>,
-                    ];
-                  })()}
-                </button>
-                {tasksOpen && (
-                  <div
-                    ref={tasksContainerRef}
-                    className="max-h-60 overflow-y-auto px-4.5"
-                  >
-                    {Object.entries(groupedTodos)
-                      .filter(([_, todos]) => todos.length > 0)
-                      .map(([status, todos]) => (
-                        <div className="mb-4">
-                          <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
-                            {
+                    })()}
+                  </button>
+                  {tasksOpen && (
+                    <div
+                      ref={tasksContainerRef}
+                      className="max-h-60 overflow-y-auto px-4.5"
+                    >
+                      {Object.entries(groupedTodos)
+                        .filter(([_, todos]) => todos.length > 0)
+                        .map(([status, todos]) => (
+                          <div className="mb-4">
+                            <h3 className="text-tertiary mb-1 text-[10px] font-semibold tracking-wider uppercase">
                               {
-                                pending: "Pending",
-                                in_progress: "In Progress",
-                                completed: "Completed",
-                              }[status]
-                            }
-                          </h3>
-                          <div className="grid grid-cols-[auto_1fr] gap-3 rounded-sm p-1 pl-0 text-sm">
-                            {todos.map((todo, index) => (
-                              <Fragment key={`${status}_${todo.id}_${index}`}>
-                                {getStatusIcon(todo.status, "mt-0.5")}
-                                <span className="break-words text-inherit">
-                                  {todo.content}
-                                </span>
-                              </Fragment>
-                            ))}
+                                {
+                                  pending: "Pending",
+                                  in_progress: "In Progress",
+                                  completed: "Completed",
+                                }[status]
+                              }
+                            </h3>
+                            <div className="grid grid-cols-[auto_1fr] gap-3 rounded-sm p-1 pl-0 text-sm">
+                              {todos.map((todo, index) => (
+                                <Fragment key={`${status}_${todo.id}_${index}`}>
+                                  {getStatusIcon(todo.status, "mt-0.5")}
+                                  <span className="break-words text-inherit">
+                                    {todo.content}
+                                  </span>
+                                </Fragment>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
+                        ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col gap-3"
+            className="flex flex-col"
           >
             <textarea
               value={input}
@@ -614,11 +662,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   ? "Running..."
                   : "Write your message..."
               }
-              className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 text-sm leading-6 outline-none"
+              className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
               rows={1}
             />
             <div className="flex justify-between gap-2 p-3">
-              <div className="flex items-center gap-2">{controls}</div>
+              <div className="flex items-center gap-2">{}</div>
 
               <div className="flex justify-end gap-4">
                 <div className="flex items-center gap-2">
