@@ -23,7 +23,6 @@ export function AgentDropdown({
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [_threadId, setThreadId] = useQueryState("threadId");
-  const [_draft, setDraft] = useQueryState("draft");
   const [selectOpen, setSelectOpen] = useState(false);
   // get the current pathname
   const pathname = usePathname();
@@ -62,7 +61,6 @@ export function AgentDropdown({
     await setDeploymentId(deploymentIdFromValue);
     // Clear any previously selected thread when switching agents
     await setThreadId(null);
-    await setDraft(null);
   };
 
   const selectedAgent =

@@ -27,7 +27,6 @@ export function useChat(
   files: Record<string, string>,
   onFilesUpdate: (files: Record<string, string>) => void,
   activeAssistant: Assistant | null,
-  assistantId: string | null,
 ) {
   const { client } = useClients();
 
@@ -46,7 +45,7 @@ export function useChat(
   );
 
   const stream = useStream<StateType>({
-    assistantId: activeAssistant?.assistant_id || assistantId || "",
+    assistantId: activeAssistant?.assistant_id || "",
     client: client ?? undefined,
     reconnectOnMount: true,
     threadId: threadId ?? null,

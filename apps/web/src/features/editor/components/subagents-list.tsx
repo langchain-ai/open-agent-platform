@@ -15,7 +15,9 @@ export function SubagentsList({
   onSelect?: (index: number) => void;
 }) {
   return (
-    <div className="rounded-md bg-gray-50 p-2">
+    <div
+      className={`rounded-md p-2 ${subAgents.length > 0 ? "bg-gray-50" : ""}`}
+    >
       <div className="flex flex-wrap gap-1">
         {subAgents.length === 0 && (
           <span className="text-xs text-gray-500">No subagents configured</span>

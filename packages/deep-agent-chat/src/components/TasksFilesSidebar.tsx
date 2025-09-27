@@ -60,27 +60,25 @@ export function FilesPopover(props: {
           <p className="text-muted-foreground text-xs">No files created yet</p>
         </div>
       ) : (
-        <div className="space-y-1 p-1">
-          {Object.keys(props.files).map((file) => (
-            <div key={file}>
-              <div
-                className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
-                onClick={() => {
-                  setSelectedFile({ path: file, content: props.files[file] });
-                  setOpen(true);
-                }}
-              >
-                <FileText
-                  size={12}
-                  className="text-muted-foreground flex-shrink-0"
-                />
-                <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
-                  {file}
-                </span>
-              </div>
+        Object.keys(props.files).map((file) => (
+          <div key={file}>
+            <div
+              className="hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5"
+              onClick={() => {
+                setSelectedFile({ path: file, content: props.files[file] });
+                setOpen(true);
+              }}
+            >
+              <FileText
+                size={16}
+                className="text-muted-foreground flex-shrink-0"
+              />
+              <span className="text-muted-foreground flex-1 text-sm leading-relaxed break-words">
+                {file}
+              </span>
             </div>
-          ))}
-        </div>
+          </div>
+        ))
       )}
 
       {open && (
