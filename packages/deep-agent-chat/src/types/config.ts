@@ -1,5 +1,7 @@
+import { Assistant } from "@langchain/langgraph-sdk";
+
 export interface DeepAgentChatConfig {
-  assistantId: string;
+  assistant: Assistant | null;
   deploymentUrl: string;
   accessToken?: string;
   optimizerDeploymentUrl?: string;

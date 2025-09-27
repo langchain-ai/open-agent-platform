@@ -27,7 +27,7 @@ import {
   AgentSummaryCard,
   ThreadHistoryAgentList,
 } from "@/features/chat/components/thread-history-agent-list";
-import { useAgentSummaries } from "@/features/chat/utils";
+import { getThreadColor, useAgentSummaries } from "@/features/chat/utils";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -45,169 +45,130 @@ import { Thread } from "@langchain/langgraph-sdk";
 import { getAgentColor } from "@/features/agents/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function ThreadHistoryHalf(): React.ReactNode {
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
-  const [currentThreadId, setCurrentThreadId] = useQueryState("threadId");
-  const [fullChat, setFullChat] = useQueryState("fullChat");
-  const [draft, setDraft] = useQueryState("draft");
-
+function ThreadSidebar() {
+  const [_agentId, setAgentId] = useQueryState("agentId");
+  const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
+  const [sidebar, setSidebar] = useQueryState("sidebar");
   const [statusFilter, setStatusFilter] = useQueryState("status");
 
-  // Default to first deployment so the thread list can load when nothing is selected
-  useEffect(() => {
-    if (!deploymentId) {
-      const deployments = getDeployments();
-      if (deployments.length > 0) {
-        void setDeploymentId(deployments[0].id);
-      }
-    }
-  }, [deploymentId, setDeploymentId]);
-
-  useEffect(() => {
-    if (currentThreadId) {
-      void setDraft(null);
-    }
-  }, [currentThreadId, setDraft]);
-
-  const isFullChat = fullChat === "1" || agentId == null;
   return (
-    <>
-      <ResizablePanelGroup
-        direction="horizontal"
-        autoSaveId="chat"
-      >
-        {!isFullChat && (
-          <>
-            <ResizablePanel
-              id="thread-history"
-              order={1}
-              className="relative"
+    <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b p-4">
+        <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
+          Chat
+          {sidebar && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                const next = sidebar ? null : "1";
+                await setSidebar(next);
+              }}
+              className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+              title={sidebar ? "Exit full view" : "Expand chat"}
             >
-              <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-                <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b p-4">
-                  <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-                    Chat
-                    {!fullChat && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={async () => {
-                          const next = fullChat === "1" ? null : "1";
-                          await setFullChat(next);
-                        }}
-                        className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-                        title={
-                          fullChat === "1" ? "Exit full view" : "Expand chat"
-                        }
-                      >
-                        {fullChat === "1" ? (
-                          <Minimize2 className="size-5" />
-                        ) : (
-                          <Maximize2 className="size-5" />
-                        )}
-                      </Button>
-                    )}
-                  </h2>
-                  <div className="flex w-full gap-2">
-                    {/* Status filter */}
-                    <Select
-                      value={(statusFilter as string) || "all"}
-                      onValueChange={(v) =>
-                        setStatusFilter(v === "all" ? null : v)
-                      }
-                    >
-                      <SelectTrigger
-                        className="self-end"
-                        size="sm"
-                      >
-                        <SelectValue placeholder="Filter status" />
-                      </SelectTrigger>
-                      <SelectContent align="end">
-                        <SelectItem value="all">All statuses</SelectItem>
-                        <SelectSeparator />
-                        <SelectGroup>
-                          <SelectLabel>Active</SelectLabel>
-                          <SelectItem value="idle">
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-block size-2 rounded-full bg-green-500" />
-                              Idle
-                            </span>
-                          </SelectItem>
-                          <SelectItem value="busy">
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-block size-2 rounded-full bg-yellow-400" />
-                              Busy
-                            </span>
-                          </SelectItem>
-                        </SelectGroup>
-                        <SelectSeparator />
-                        <SelectGroup>
-                          <SelectLabel>Attention</SelectLabel>
-                          <SelectItem value="interrupted">
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-block size-2 rounded-full bg-red-500" />
-                              Interrupted
-                            </span>
-                          </SelectItem>
-                          <SelectItem value="error">
-                            <span className="inline-flex items-center gap-2">
-                              <span className="inline-block size-2 rounded-full bg-red-600" />
-                              Error
-                            </span>
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="overflow-hidden border-gray-200 transition-all duration-300 ease-in-out">
-                  <ThreadHistoryAgentList
-                    deploymentId={deploymentId}
-                    currentThreadId={currentThreadId}
-                    showDraft={draft === "1"}
-                    onThreadSelect={async (id, assistantId) => {
-                      // In "All agents" view, ensure we set the agent so sending works
-                      if (assistantId) {
-                        await setAgentId(assistantId);
-                      }
-                      await setCurrentThreadId(id);
-                      await setDraft(null);
-                    }}
-                    statusFilter={
-                      ((statusFilter as string) || "all") as
-                        | "all"
-                        | "idle"
-                        | "busy"
-                        | "interrupted"
-                        | "error"
-                    }
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle />
-          </>
-        )}
-        <ResizablePanel
-          id="chat"
-          className="relative"
-          order={2}
-        >
-          <RightPaneChat />
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </>
+              {!sidebar ? (
+                <Minimize2 className="size-5" />
+              ) : (
+                <Maximize2 className="size-5" />
+              )}
+            </Button>
+          )}
+        </h2>
+        <div className="flex w-full gap-2">
+          {/* Status filter */}
+          <Select
+            value={(statusFilter as string) || "all"}
+            onValueChange={(v) => setStatusFilter(v === "all" ? null : v)}
+          >
+            <SelectTrigger
+              className="self-end"
+              size="sm"
+            >
+              <SelectValue placeholder="Filter status" />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>Active</SelectLabel>
+                <SelectItem value="idle">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-block size-2 rounded-full",
+                        getThreadColor({ status: "idle" }),
+                      )}
+                    />
+                    Idle
+                  </span>
+                </SelectItem>
+                <SelectItem value="busy">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-block size-2 rounded-full",
+                        getThreadColor({ status: "busy" }),
+                      )}
+                    />
+                    Busy
+                  </span>
+                </SelectItem>
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>Attention</SelectLabel>
+                <SelectItem value="interrupted">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-block size-2 rounded-full",
+                        getThreadColor({ status: "interrupted" }),
+                      )}
+                    />
+                    Interrupted
+                  </span>
+                </SelectItem>
+                <SelectItem value="error">
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-block size-2 rounded-full",
+                        getThreadColor({ status: "error" }),
+                      )}
+                    />
+                    Error
+                  </span>
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="overflow-hidden border-gray-200 transition-all duration-300 ease-in-out">
+        <ThreadHistoryAgentList
+          onThreadSelect={async (id, assistantId) => {
+            // In "All agents" view, ensure we set the agent so sending works
+            if (assistantId) {
+              await setAgentId(assistantId);
+            }
+            await setCurrentThreadId(id);
+          }}
+          statusFilter={
+            ((statusFilter as string) || "all") as
+              | "all"
+              | "idle"
+              | "busy"
+              | "interrupted"
+              | "error"
+          }
+        />
+      </div>
+    </div>
   );
 }
 
-function AgentChatItem({
-  thread,
-  interrupted,
-}: {
-  thread: Thread;
-  interrupted?: boolean;
-}) {
+function AgentChatIntroRecentThread({ thread }: { thread: Thread }) {
   const [_threadId, setCurrentThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
   const { agents } = useAgentsContext();
@@ -324,16 +285,11 @@ function AgentChatItem({
               <div className="mt-1 flex items-center gap-1.5">
                 {/* Agent Avatar in Description */}
                 {agent && (
-                  <div className="relative flex-shrink-0">
-                    <div
-                      className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold text-white"
-                      style={{ backgroundColor: getAgentColor(agent.name) }}
-                    >
-                      {agent.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    {interrupted && (
-                      <span className="absolute -right-0.5 -bottom-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-red-500" />
-                    )}
+                  <div
+                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
+                    style={{ backgroundColor: getAgentColor(agent.name) }}
+                  >
+                    {agent.name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
                 <p className="truncate text-xs text-gray-600">
@@ -347,18 +303,7 @@ function AgentChatItem({
               </span>
               <div className="mt-1 flex items-center gap-1">
                 <div
-                  className={cn(
-                    "h-2 w-2 rounded-full",
-                    thread.status === "idle"
-                      ? "bg-green-500"
-                      : thread.status === "busy"
-                        ? "bg-yellow-400"
-                        : thread.status === "interrupted"
-                          ? "bg-red-500"
-                          : thread.status === "error"
-                            ? "bg-red-600"
-                            : "bg-gray-400",
-                  )}
+                  className={cn("h-2 w-2 rounded-full", getThreadColor(thread))}
                 />
                 <span className="text-xs text-gray-500 capitalize">
                   {thread.status}
@@ -374,7 +319,7 @@ function AgentChatItem({
 
 function AgentChatIntro(props: { deploymentId: string }) {
   const { session } = useAuthContext();
-  const [_fullChat, setFullChat] = useQueryState("fullChat");
+  const [_sidebar, setSidebar] = useQueryState("sidebar");
   const [_agentId, setAgentId] = useQueryState("agentId");
 
   const recent = useSWR(
@@ -392,7 +337,7 @@ function AgentChatIntro(props: { deploymentId: string }) {
     },
   );
 
-  const agents = useAgentSummaries({ deploymentId: props.deploymentId });
+  const agents = useAgentSummaries();
 
   if (recent.isLoading) {
     return (
@@ -432,7 +377,7 @@ function AgentChatIntro(props: { deploymentId: string }) {
               summary={summary}
               onClick={() => {
                 setAgentId(summary.agent.assistant_id);
-                setFullChat(null);
+                setSidebar("1");
               }}
             />
           ))}
@@ -440,7 +385,7 @@ function AgentChatIntro(props: { deploymentId: string }) {
 
         <TabsContent value="recent">
           {recent.data.map((thread) => (
-            <AgentChatItem
+            <AgentChatIntroRecentThread
               key={thread.thread_id}
               thread={thread}
             />
@@ -450,29 +395,15 @@ function AgentChatIntro(props: { deploymentId: string }) {
     </div>
   );
 }
-export default function AgentsChatHalf(): React.ReactNode {
-  return (
-    <React.Suspense fallback={<div>Loading…</div>}>
-      <div className="flex h-screen flex-col">
-        <AgentsProvider>
-          <MCPProvider>
-            <ThreadHistoryHalf />
-          </MCPProvider>
-        </AgentsProvider>
-      </div>
-    </React.Suspense>
-  );
-}
 
-function RightPaneChat(): React.ReactNode {
+function AgentChat(): React.ReactNode {
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
-  const [_draft, setDraft] = useQueryState("draft");
-  const [fullChat, setFullChat] = useQueryState("fullChat");
+  const [sidebar, setSidebar] = useQueryState("sidebar");
 
   const deployments = getDeployments();
   const selectedDeployment = useMemo(
@@ -495,20 +426,19 @@ function RightPaneChat(): React.ReactNode {
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid min-w-0 grid-cols-[1fr_auto] items-center border-b p-4">
         <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
-          {fullChat && (
+          {!sidebar && (
             <>
               Chat
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={async () => {
-                  const next = fullChat === "1" ? null : "1";
-                  await setFullChat(next);
+                  await setSidebar(sidebar ? null : "1");
                 }}
                 className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-                title={fullChat === "1" ? "Exit full view" : "Expand chat"}
+                title={!sidebar ? "Exit full view" : "Expand chat"}
               >
-                {fullChat === "1" ? (
+                {!sidebar ? (
                   <Minimize2 className="size-5" />
                 ) : (
                   <Maximize2 className="size-5" />
@@ -528,7 +458,6 @@ function RightPaneChat(): React.ReactNode {
                 return;
               }
               await setCurrentThreadId(null);
-              await setDraft("1");
             }}
             className="shadow-icon-button rounded-md border border-[#2F6868] bg-[#2F6868] p-3 text-white hover:bg-[#2F6868] hover:text-gray-50"
             disabled={!agentId}
@@ -542,7 +471,11 @@ function RightPaneChat(): React.ReactNode {
       <div className="mx-auto flex min-h-0 w-full max-w-[1024px] flex-1 flex-col">
         <DeepAgentChatInterface
           key={`chat-${deploymentId}`}
-          assistantId={agentId || ""}
+          assistant={
+            agentId
+              ? (agents.find((a) => a.assistant_id === agentId) ?? null)
+              : null
+          }
           deploymentUrl={selectedDeployment?.deploymentUrl || ""}
           accessToken={session.accessToken || ""}
           optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
@@ -566,12 +499,11 @@ function RightPaneChat(): React.ReactNode {
                 await setDeploymentId(did || null);
                 // Clear any previously selected thread when switching agents
                 await setCurrentThreadId(null);
-                await setDraft(null);
               }}
             >
               <SelectTrigger asChild>
                 <button
-                  className="inline-flex items-center px-3 py-2 text-sm outline-none [&_[data-slot=select-value]]:flex"
+                  className="inline-flex items-center px-1 text-sm outline-none [&_[data-slot=select-value]]:flex"
                   type="button"
                 >
                   <SelectValue
@@ -593,9 +525,7 @@ function RightPaneChat(): React.ReactNode {
                     <span className="inline-flex items-center gap-2">
                       <span
                         className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
-                        style={{
-                          backgroundColor: getAgentColor(a.name),
-                        }}
+                        style={{ backgroundColor: getAgentColor(a.name) }}
                       >
                         {a.name.slice(0, 2).toUpperCase()}
                       </span>
@@ -609,5 +539,95 @@ function RightPaneChat(): React.ReactNode {
         />
       </div>
     </div>
+  );
+}
+
+function PageLayout() {
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [sidebar] = useQueryState("sidebar");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const { agents } = useAgentsContext();
+
+  useEffect(() => {
+    if (agentId && deploymentId) {
+      window.localStorage.setItem(
+        "oap:lastAgentId",
+        [agentId, deploymentId].join(":"),
+      );
+    }
+  }, [agentId, deploymentId]);
+
+  // Default to first agent if no agent is selected
+  useEffect(() => {
+    // TODO: make sure that user is not stuck when invalid agent ID or deployment ID is stored
+    const [lastAgentId, lastDeploymentId] = (
+      window.localStorage.getItem("oap:lastAgentId") ?? ""
+    ).split(":");
+
+    let targetDeploymentId = deploymentId;
+    if (!targetDeploymentId) {
+      const deployments = getDeployments();
+      targetDeploymentId = deployments.at(0)?.id ?? null;
+    }
+
+    let targetAgentId = agentId;
+    if (!targetAgentId) {
+      if (lastDeploymentId === targetDeploymentId) {
+        targetAgentId = lastAgentId;
+      } else {
+        targetAgentId = agents.at(0)?.assistant_id ?? null;
+      }
+    }
+
+    if (agentId == null && targetAgentId != null) {
+      setAgentId(targetAgentId);
+    }
+
+    if (deploymentId == null && targetDeploymentId != null) {
+      setDeploymentId(targetDeploymentId);
+    }
+  }, [agents, deploymentId, agentId, setAgentId, setDeploymentId]);
+
+  const isFullChat = !sidebar || agentId == null;
+
+  return (
+    <ResizablePanelGroup
+      direction="horizontal"
+      autoSaveId="chat"
+    >
+      {!isFullChat && (
+        <ResizablePanel
+          id="thread-history"
+          order={1}
+          className="relative"
+        >
+          <ThreadSidebar />
+        </ResizablePanel>
+      )}
+
+      {!isFullChat && <ResizableHandle />}
+
+      <ResizablePanel
+        id="chat"
+        className="relative"
+        order={2}
+      >
+        <AgentChat />
+      </ResizablePanel>
+    </ResizablePanelGroup>
+  );
+}
+
+export default function Page(): React.ReactNode {
+  return (
+    <React.Suspense fallback={<div>Loading…</div>}>
+      <div className="flex h-screen flex-col">
+        <AgentsProvider>
+          <MCPProvider>
+            <PageLayout />
+          </MCPProvider>
+        </AgentsProvider>
+      </div>
+    </React.Suspense>
   );
 }

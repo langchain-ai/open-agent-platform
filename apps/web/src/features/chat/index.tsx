@@ -101,7 +101,7 @@ export default function DeepAgentChatPageContent({
 
   return (
     <DeepAgentChatInterface
-      assistantId={agentId}
+      assistant={agents.find((a) => a.assistant_id === agentId) ?? null}
       deploymentUrl={selectedDeployment?.deploymentUrl || ""}
       accessToken={session.accessToken || ""}
       optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}

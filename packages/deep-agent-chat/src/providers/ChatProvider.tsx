@@ -12,7 +12,6 @@ interface ChatProviderProps {
   files: Record<string, string>;
   setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
-  assistantId: string | null;
 }
 
 export function ChatProvider({
@@ -21,7 +20,6 @@ export function ChatProvider({
   files,
   setFiles,
   activeAssistant,
-  assistantId,
 }: ChatProviderProps) {
   const [threadId, setThreadId] = useQueryState("threadId");
 
@@ -32,7 +30,6 @@ export function ChatProvider({
     files,
     setFiles,
     activeAssistant,
-    assistantId,
   );
 
   return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;

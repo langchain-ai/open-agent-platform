@@ -595,7 +595,9 @@ export function EditorPageContent(): React.ReactNode {
             <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col">
               <DeepAgentChatInterface
                 key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-                assistantId={agentId}
+                assistant={
+                  agents.find((a) => a.assistant_id === agentId) ?? null
+                }
                 deploymentUrl={selectedDeployment?.deploymentUrl || ""}
                 accessToken={session.accessToken || ""}
                 optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
