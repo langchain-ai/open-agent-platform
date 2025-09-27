@@ -135,12 +135,7 @@ export function MainAgentToolsDropdown({
                   <Wrench className="size-3.5 text-[#2F6868]" />
                   <span className="truncate">{_.startCase(t)}</span>
                 </span>
-                {getInterruptConfig(t) === true && (
-                  <span
-                    title="Interrupts enabled"
-                    className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-[#2F6868]"
-                  />
-                )}
+                {/* Interrupt indicator dot hidden for now */}
                 <button
                   onClick={() => handleRemove(t)}
                   className="ml-1 opacity-60 hover:opacity-100"
