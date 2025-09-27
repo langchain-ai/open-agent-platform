@@ -381,7 +381,7 @@ export function EditorPageContent(): React.ReactNode {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="p-3 overflow-auto flex-1 min-h-0">
+            <div className="pt-3 px-3 pb-6 overflow-auto flex-1 min-h-0">
               <SelectedTriggersStrip
                 groupedTriggers={groupedTriggers}
                 form={triggersForm}
@@ -416,7 +416,7 @@ export function EditorPageContent(): React.ReactNode {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="p-3 overflow-auto flex-1 min-h-0">
+          <div className="pt-3 px-3 pb-6 overflow-auto flex-1 min-h-0">
             <MainAgentToolsDropdown
               toolsForm={toolsForm}
               hideHeader
@@ -446,7 +446,7 @@ export function EditorPageContent(): React.ReactNode {
                 <Plus className="h-3.5 w-3.5" />
               </TooltipIconButton>
             </div>
-            <div className="overflow-auto p-3 flex-1 min-h-0">
+            <div className="overflow-auto pt-3 px-3 pb-6 flex-1 min-h-0">
               <SubagentsList
                 subAgents={
                   (selectedAgent.config?.configurable
