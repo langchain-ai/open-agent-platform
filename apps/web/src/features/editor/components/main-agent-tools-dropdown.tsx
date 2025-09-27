@@ -9,7 +9,7 @@ import { Search } from "@/components/ui/tool-search";
 import { useMCPContext } from "@/providers/MCP";
 import { useSearchTools } from "@/hooks/use-search-tools";
 import { cn } from "@/lib/utils";
-import { Check, X } from "lucide-react";
+import { Check, X, Plus } from "lucide-react";
 import type { UseFormReturn } from "react-hook-form";
 import { useWatch } from "react-hook-form";
 import type { AgentToolsFormValues } from "@/components/agent-creator-sheet/components/agent-tools-form";
@@ -113,10 +113,10 @@ export function MainAgentToolsDropdown({
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-gray-600 hover:bg-gray-100"
+            className="h-7 w-7 text-gray-600 hover:bg-gray-100"
             onClick={toggleAdd}
           >
-            {effectiveShowAdd ? "Close" : "Add"}
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
       )}
