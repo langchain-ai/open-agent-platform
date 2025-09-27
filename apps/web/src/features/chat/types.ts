@@ -18,6 +18,10 @@ export type ThreadItem = {
 
 export type AgentSummary = {
   agent: Agent;
-  latestThread?: ThreadItem;
+  latestThread?: {
+    id: string;
+    updatedAt: Date;
+    status: Thread["status"] | "draft";
+  };
   interrupted?: string;
 };

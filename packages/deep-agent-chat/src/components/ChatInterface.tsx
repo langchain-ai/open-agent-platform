@@ -28,7 +28,6 @@ import {
   isPreparingToCallTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
 import { useClients } from "../providers/ClientProvider";
 import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
@@ -36,17 +35,12 @@ import { cn } from "../lib/utils";
 import { ThreadActionsView } from "./interrupted-actions";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { FilesPopover } from "./TasksFilesSidebar";
 
 interface ChatInterfaceProps {
-  assistantId: string;
-  activeAssistant?: Assistant | null;
+  assistant: Assistant | null;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
-  assistantError: string | null;
-  setAssistantError: (error: string | null) => void;
-  setActiveAssistant: (assistant: Assistant | null) => void;
   setTodos: (todos: TodoItem[]) => void;
   files: Record<string, string>;
   setFiles: (files: Record<string, string>) => void;
@@ -88,13 +82,9 @@ const getStatusIcon = (status: TodoItem["status"], className?: string) => {
 
 export const ChatInterface = React.memo<ChatInterfaceProps>(
   ({
-    assistantId,
-    activeAssistant: _activeAssistant,
+    assistant,
     debugMode,
     setDebugMode,
-    assistantError,
-    setAssistantError,
-    setActiveAssistant,
     todos,
     setTodos,
     files,
@@ -106,7 +96,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     empty,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
-    const [tasksOpen, setTasksOpen] = useState(false);
+    const [metaOpen, setMetaOpen] = useState<"tasks" | "files" | null>(null);
     const tasksContainerRef = useRef<HTMLDivElement | null>(null);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
@@ -131,35 +121,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const { scrollRef, contentRef } = useStickToBottom();
 
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
-
-    const refreshActiveAssistant = useCallback(async () => {
-      if (!assistantId || !client) {
-        setActiveAssistant(null);
-        setAssistantError(null);
-        return;
-      }
-      setAssistantError(null);
-      try {
-        const assistant = await client.assistants.get(assistantId);
-        setActiveAssistant(assistant);
-        setAssistantError(null);
-        toast.dismiss();
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        setActiveAssistant(null);
-        setAssistantError(errorMessage);
-        toast.dismiss();
-        toast.error("Failed to load assistant", {
-          description: `Could not connect to assistant: ${errorMessage}`,
-          duration: 50000,
-        });
-      }
-    }, [client, assistantId, setActiveAssistant, setAssistantError]);
-
-    useEffect(() => {
-      refreshActiveAssistant();
-    }, [refreshActiveAssistant]);
 
     // When the threadId changes, grab the thread state from the graph server
     useEffect(() => {
@@ -200,7 +161,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       stopStream,
     } = useChatContext();
 
-    const submitDisabled = isLoading || !!interrupt || !!assistantError;
+    const submitDisabled = isLoading || !!interrupt || !assistant;
 
     const handleSubmit = useCallback(
       (e?: FormEvent) => {
@@ -459,6 +420,15 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       );
     }
 
+    const groupedTodos = {
+      in_progress: todos.filter((t) => t.status === "in_progress"),
+      pending: todos.filter((t) => t.status === "pending"),
+      completed: todos.filter((t) => t.status === "completed"),
+    };
+
+    const hasTasks = todos.length > 0;
+    const hasFiles = Object.keys(files).length > 0;
+
     return (
       <div
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
@@ -509,116 +479,155 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
         <div
           className={cn(
-            "bg-background sticky bottom-6 z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
+            "bg-background sticky z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
             "transition-colors duration-200 ease-in-out",
+            empty ? "top-6" : "bottom-6",
           )}
         >
-          <div className="bg-sidebar flex flex-col border-b">
-            <div className="flex items-center justify-between gap-3">
-              {controls}
-
-              {Object.keys(files).length > 0 && (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mr-1.5"
-                    >
-                      <FileIcon />
-                      Files
-                      <span className="rounded-full bg-[#2F6868] px-1.5 py-0.5 text-xs text-white">
-                        {Object.keys(files).length}
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="end"
-                    className="p-1.5"
-                  >
-                    <FilesPopover
-                      files={files}
-                      setFiles={setFiles}
-                      editDisabled={false}
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-            </div>
-
-            {(() => {
-              const totalTasks = todos.length;
-              if (totalTasks === 0) return null;
-
-              const groupedTodos = {
-                in_progress: todos.filter((t) => t.status === "in_progress"),
-                pending: todos.filter((t) => t.status === "pending"),
-                completed: todos.filter((t) => t.status === "completed"),
-              };
-
-              const activeTask = todos.find((t) => t.status === "in_progress");
-              const remainingTasks = totalTasks - groupedTodos.pending.length;
-              const isCompleted = totalTasks === remainingTasks;
-
-              return (
+          {(hasTasks || hasFiles) && (
+            <div className="bg-sidebar flex flex-col border-b empty:hidden">
+              {!metaOpen && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setTasksOpen((prev) => !prev)}
-                    className="grid w-full cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-3 border-t px-4.5 py-3 text-left"
-                    aria-expanded={tasksOpen}
+                  {(() => {
+                    const activeTask = todos.find(
+                      (t) => t.status === "in_progress",
+                    );
+
+                    const totalTasks = todos.length;
+                    const remainingTasks =
+                      totalTasks - groupedTodos.pending.length;
+                    const isCompleted = totalTasks === remainingTasks;
+
+                    const tasksTrigger = (() => {
+                      if (!hasTasks) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMetaOpen((prev) =>
+                              prev === "tasks" ? null : "tasks",
+                            )
+                          }
+                          className="grid w-full cursor-pointer grid-cols-[auto_auto_1fr] items-center gap-3 px-4.5 py-3 text-left"
+                          aria-expanded={metaOpen === "tasks"}
+                        >
+                          {(() => {
+                            if (isCompleted) {
+                              return [
+                                <CheckCircle
+                                  size={16}
+                                  className="text-success/80"
+                                />,
+                                <span className="ml-[1px] min-w-0 truncate text-sm">
+                                  All tasks completed
+                                </span>,
+                              ];
+                            }
+
+                            if (activeTask != null) {
+                              return [
+                                getStatusIcon(activeTask.status),
+                                <span className="ml-[1px] min-w-0 truncate text-sm">
+                                  Task{" "}
+                                  {totalTasks - groupedTodos.pending.length} of{" "}
+                                  {totalTasks}
+                                </span>,
+                                <span className="text-muted-foreground min-w-0 gap-2 truncate text-sm">
+                                  {activeTask.content}
+                                </span>,
+                              ];
+                            }
+
+                            return [
+                              <Circle
+                                size={16}
+                                className="text-tertiary/70"
+                              />,
+                              <span className="ml-[1px] min-w-0 truncate text-sm">
+                                Task {totalTasks - groupedTodos.pending.length}{" "}
+                                of {totalTasks}
+                              </span>,
+                            ];
+                          })()}
+                        </button>
+                      );
+                    })();
+
+                    const filesTrigger = (() => {
+                      if (!hasFiles) return null;
+                      return (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setMetaOpen((prev) =>
+                              prev === "files" ? null : "files",
+                            )
+                          }
+                          className="flex flex-shrink-0 cursor-pointer items-center gap-2 px-4.5 py-3 text-left text-sm"
+                          aria-expanded={metaOpen === "files"}
+                        >
+                          <FileIcon size={16} />
+                          Files
+                          <span className="h-4 min-w-4 rounded-full bg-[#2F6868] px-0.5 text-center text-[10px] leading-[16px] text-white">
+                            {Object.keys(files).length}
+                          </span>
+                        </button>
+                      );
+                    })();
+
+                    return (
+                      <div className="grid grid-cols-[1fr_auto] items-center">
+                        {tasksTrigger}
+                        {filesTrigger}
+                      </div>
+                    );
+                  })()}
+                </>
+              )}
+
+              {metaOpen && (
+                <>
+                  <div className="flex items-stretch text-sm">
+                    {hasTasks && (
+                      <button
+                        type="button"
+                        className="py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
+                        onClick={() =>
+                          setMetaOpen((prev) =>
+                            prev === "tasks" ? null : "tasks",
+                          )
+                        }
+                        aria-expanded={metaOpen === "tasks"}
+                      >
+                        Tasks
+                      </button>
+                    )}
+                    {hasFiles && (
+                      <button
+                        type="button"
+                        className="py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
+                        onClick={() =>
+                          setMetaOpen((prev) =>
+                            prev === "files" ? null : "files",
+                          )
+                        }
+                        aria-expanded={metaOpen === "files"}
+                      >
+                        Files
+                      </button>
+                    )}
+                    <button
+                      aria-label="Close"
+                      className="flex-1"
+                      onClick={() => setMetaOpen(null)}
+                    />
+                  </div>
+                  <div
+                    ref={tasksContainerRef}
+                    className="max-h-60 overflow-y-auto px-4.5"
                   >
-                    {(() => {
-                      if (tasksOpen) {
-                        return (
-                          <span className="text-sm font-medium">Tasks</span>
-                        );
-                      }
-
-                      if (isCompleted) {
-                        return [
-                          <CheckCircle
-                            size={16}
-                            className="text-success/80"
-                          />,
-                          <span className="ml-[1px] min-w-0 truncate text-sm">
-                            All tasks completed
-                          </span>,
-                        ];
-                      }
-
-                      if (activeTask != null) {
-                        return [
-                          getStatusIcon(activeTask.status),
-                          <span className="ml-[1px] min-w-0 truncate text-sm">
-                            Task {totalTasks - groupedTodos.pending.length} of{" "}
-                            {totalTasks}
-                          </span>,
-                          <span className="text-muted-foreground min-w-0 gap-2 truncate text-sm">
-                            {activeTask.content}
-                          </span>,
-                        ];
-                      }
-
-                      return [
-                        <Circle
-                          size={16}
-                          className="text-tertiary/70"
-                        />,
-                        <span className="ml-[1px] min-w-0 truncate text-sm">
-                          Task {totalTasks - groupedTodos.pending.length} of{" "}
-                          {totalTasks}
-                        </span>,
-                      ];
-                    })()}
-                  </button>
-                  {tasksOpen && (
-                    <div
-                      ref={tasksContainerRef}
-                      className="max-h-60 overflow-y-auto px-4.5"
-                    >
-                      {Object.entries(groupedTodos)
+                    {metaOpen === "tasks" &&
+                      Object.entries(groupedTodos)
                         .filter(([_, todos]) => todos.length > 0)
                         .map(([status, todos]) => (
                           <div className="mb-4">
@@ -643,12 +652,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                             </div>
                           </div>
                         ))}
-                    </div>
-                  )}
+
+                    {metaOpen === "files" && (
+                      <div className="-mx-2 mb-4">
+                        <FilesPopover
+                          files={files}
+                          setFiles={setFiles}
+                          editDisabled={
+                            isLoading === true || interrupt !== undefined
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
                 </>
-              );
-            })()}
-          </div>
+              )}
+            </div>
+          )}
           <form
             onSubmit={handleSubmit}
             className="flex flex-col"
@@ -666,7 +686,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               rows={1}
             />
             <div className="flex justify-between gap-2 p-3">
-              <div className="flex items-center gap-2">{}</div>
+              <div className="flex items-center gap-2">{controls}</div>
 
               <div className="flex justify-end gap-4">
                 <div className="flex items-center gap-2">
