@@ -330,10 +330,10 @@ export function EditorPageContent(): React.ReactNode {
         </div>
       )}
       {/* Top process sections */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {/* Triggers (Main Agent) */}
         {showTriggersTab !== false && (
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
               <div className="text-sm font-semibold text-gray-700">
                 Triggers
@@ -381,7 +381,7 @@ export function EditorPageContent(): React.ReactNode {
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="p-3">
+            <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
               <SelectedTriggersStrip
                 groupedTriggers={groupedTriggers}
                 form={triggersForm}
@@ -391,7 +391,7 @@ export function EditorPageContent(): React.ReactNode {
         )}
 
         {/* Tools (Current target; default main) */}
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
             <div className="text-sm font-semibold text-gray-700">Tools</div>
             <Popover>
@@ -416,7 +416,7 @@ export function EditorPageContent(): React.ReactNode {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="p-3">
+          <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
             <MainAgentToolsDropdown
               toolsForm={toolsForm}
               hideHeader
@@ -427,7 +427,7 @@ export function EditorPageContent(): React.ReactNode {
 
         {/* Subagents (list with tools) */}
         {selectedAgent && (
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
               <div className="text-sm font-semibold text-gray-700">
                 Subagents
@@ -446,7 +446,7 @@ export function EditorPageContent(): React.ReactNode {
                 <Plus className="h-3.5 w-3.5" />
               </TooltipIconButton>
             </div>
-            <div className="max-h-[32rem] overflow-auto p-3">
+            <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
               <SubagentsList
                 subAgents={
                   (selectedAgent.config?.configurable
