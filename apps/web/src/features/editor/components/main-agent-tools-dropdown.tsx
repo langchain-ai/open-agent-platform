@@ -116,11 +116,7 @@ export function MainAgentToolsDropdown({
             className="h-7 w-7 text-gray-600 hover:bg-gray-100"
             onClick={toggleAdd}
           >
-            {effectiveShowAdd ? (
-              <X className="h-3.5 w-3.5" />
-            ) : (
-              <Plus className="h-3.5 w-3.5" />
-            )}
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
       )}
