@@ -18,8 +18,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import type { SubAgent } from "@/types/sub-agent";
-import { SubagentToolsSelection } from "./subagent-tools-selection";
 import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/components/create-agent-tools-selection";
+import { useAgentToolsForm } from "@/components/agent-creator-sheet/components/agent-tools-form";
+import { MainAgentToolsDropdown } from "./main-agent-tools-dropdown";
 
 type SubAgentFormValues = {
   name: string;
@@ -52,6 +53,10 @@ export function SubAgentSheet({
   const [interruptConfig, setInterruptConfig] =
     React.useState<ToolInterruptConfig>({});
   const selectedTools = form.watch("tools") || [];
+  const toolsForm = useAgentToolsForm({
+    tools: selectedTools,
+    interruptConfig: interruptConfig as Record<string, boolean>,
+  });
 
   // Reset form when editingSubAgent changes
   useEffect(() => {
@@ -65,6 +70,11 @@ export function SubAgentSheet({
       setInterruptConfig(
         (editingSubAgent.subAgent as any).interrupt_config || {},
       );
+      toolsForm.reset({
+        tools: editingSubAgent.subAgent.tools || [],
+        interruptConfig: ((editingSubAgent.subAgent as any).interrupt_config ||
+          {}) as Record<string, boolean>,
+      });
     } else {
       form.reset({
         name: "",
@@ -73,12 +83,21 @@ export function SubAgentSheet({
         tools: [],
       });
       setInterruptConfig({});
+      toolsForm.reset({ tools: [], interruptConfig: {} });
     }
-  }, [editingSubAgent, form]);
+  }, [editingSubAgent, form, toolsForm]);
 
-  const handleToolsChange = (tools: string[]) => {
-    form.setValue("tools", tools);
-  };
+  useEffect(() => {
+    const subscription = toolsForm.watch((value, info) => {
+      if (info.name === "tools" || info.name === "interruptConfig") {
+        form.setValue("tools", value.tools || [], { shouldDirty: true });
+        setInterruptConfig(
+          (value.interruptConfig || {}) as ToolInterruptConfig,
+        );
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [toolsForm, form]);
 
   const handleSubmit = (values: SubAgentFormValues) => {
     const subAgent: SubAgent = {
@@ -173,22 +192,10 @@ export function SubAgentSheet({
             <div className="scrollbar-pretty-auto min-h-0 flex-1 overflow-auto px-4 pt-3 pb-0">
               {/* Tools section (compact, no background) */}
               <div className="px-1">
-                <div className="mb-1 text-xs font-semibold text-gray-700">
-                  Tools
-                  {selectedTools.length > 0 && (
-                    <span className="ml-1 text-[11px] font-normal text-gray-500">
-                      ({selectedTools.length} selected)
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm">
-                  <SubagentToolsSelection
-                    selectedTools={selectedTools}
-                    onToolsChange={handleToolsChange}
-                    interruptConfig={interruptConfig}
-                    onInterruptConfigChange={setInterruptConfig}
-                  />
-                </div>
+                <MainAgentToolsDropdown
+                  toolsForm={toolsForm}
+                  onEnsureMainSelected={() => {}}
+                />
               </div>
 
               {/* Bottom: Instructions full-width */}
