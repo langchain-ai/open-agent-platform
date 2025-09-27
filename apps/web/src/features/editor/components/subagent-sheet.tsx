@@ -90,7 +90,13 @@ export function SubAgentSheet({
   useEffect(() => {
     const subscription = toolsForm.watch((value, info) => {
       if (info.name === "tools" || info.name === "interruptConfig") {
-        form.setValue("tools", value.tools || [], { shouldDirty: true });
+        form.setValue(
+          "tools",
+          (value.tools || []).filter(
+            (tool): tool is string => tool !== undefined,
+          ),
+          { shouldDirty: true },
+        );
         setInterruptConfig(
           (value.interruptConfig || {}) as ToolInterruptConfig,
         );
