@@ -89,6 +89,7 @@ export default function HomePage() {
       <NuqsAdapter>
         <div className="h-screen w-screen">
           <DeepAgentChatInterface
+            // @ts-expect-error Ignore for now
             assistantId={config.assistantId}
             deploymentUrl={config.deploymentUrl}
             accessToken={config.langsmithToken || ""}

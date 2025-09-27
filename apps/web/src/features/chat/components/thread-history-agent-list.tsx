@@ -8,43 +8,39 @@ import type { Thread } from "@langchain/langgraph-sdk";
 import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
-import { useThreads, useAgentSummaries } from "../utils";
+import { useThreads, useAgentSummaries, getThreadColor } from "../utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 
 export function ThreadHistoryAgentList({
-  deploymentId,
-  currentThreadId,
   onThreadSelect,
   showDraft = false,
   className,
   statusFilter = "all",
 }: {
-  deploymentId: string | null;
-  currentThreadId: string | null;
   onThreadSelect: (id: string, assistantId?: string) => void;
   showDraft?: boolean;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
+  const [currentThreadId] = useQueryState("threadId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
   const [_, setCurrentThreadId] = useQueryState("threadId");
   const { agents } = useAgentsContext();
 
-  // Filter agents for current deployment
-  const deploymentAgents = useMemo(
-    () => agents.filter((a) => a.deploymentId === deploymentId),
-    [agents, deploymentId],
-  );
-
+  // TODO: remove once the draft thread is handled differently
   const agent = useMemo(
     () =>
-      deploymentAgents.find((a) => a.assistant_id === selectedAgentId) || null,
-    [deploymentAgents, selectedAgentId],
+      agents.find(
+        (a) =>
+          a.deploymentId === deploymentId && a.assistant_id === selectedAgentId,
+      ),
+    [agents, deploymentId, selectedAgentId],
   );
 
-  const threads = useThreads({ deploymentId, agent });
-  const agentSummaries = useAgentSummaries({ deploymentId });
+  const threads = useThreads();
+  const agentSummaries = useAgentSummaries();
 
   const displayItems = useMemo(() => {
     if (showDraft && !currentThreadId && agent) {
@@ -113,7 +109,7 @@ export function ThreadHistoryAgentList({
                       {agent.name?.slice(0, 2).toUpperCase()}
 
                       {interrupted ? (
-                        <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border-[2px] bg-red-500 text-xs text-white">
+                        <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-full border-[2px] bg-red-500 px-1 text-xs text-white">
                           {interrupted}
                         </span>
                       ) : null}
@@ -247,18 +243,7 @@ function Row({
           {/* Status indicator */}
           <div className="ml-2 flex-shrink-0">
             <div
-              className={cn(
-                "h-2 w-2 rounded-full",
-                status === "idle"
-                  ? "bg-green-500"
-                  : status === "busy"
-                    ? "bg-yellow-400"
-                    : status === "interrupted"
-                      ? "bg-red-500"
-                      : status === "error"
-                        ? "bg-red-600"
-                        : "bg-gray-400",
-              )}
+              className={cn("h-2 w-2 rounded-full", getThreadColor({ status }))}
             />
           </div>
         </div>
@@ -361,15 +346,7 @@ export function AgentSummaryCard({
               <div
                 className={cn(
                   "h-2 w-2 rounded-full",
-                  latestThread.status === "idle"
-                    ? "bg-green-500"
-                    : latestThread.status === "busy"
-                      ? "bg-yellow-400"
-                      : latestThread.status === "interrupted"
-                        ? "bg-red-500"
-                        : latestThread.status === "error"
-                          ? "bg-red-600"
-                          : "bg-gray-400",
+                  getThreadColor(latestThread),
                 )}
               />
             </div>

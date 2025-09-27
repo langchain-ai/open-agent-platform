@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import type { TodoItem } from "./types";
-import { Assistant } from "@langchain/langgraph-sdk";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 function DeepAgentChatInterfaceInternal({
-  assistantId,
+  assistant,
   deploymentUrl,
   accessToken,
   optimizerDeploymentUrl,
@@ -23,10 +22,6 @@ function DeepAgentChatInterfaceInternal({
 }: DeepAgentChatConfig) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [files, setFiles] = useState<Record<string, string>>({});
-  const [activeAssistant, setActiveAssistant] = useState<Assistant | null>(
-    null,
-  );
-  const [assistantError, setAssistantError] = useState<string | null>(null);
   const [debugMode, setDebugMode] = useState(false);
 
   return (
@@ -40,18 +35,13 @@ function DeepAgentChatInterfaceInternal({
         setTodos={setTodos}
         files={files}
         setFiles={setFiles}
-        activeAssistant={activeAssistant}
-        assistantId={assistantId}
+        activeAssistant={assistant}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
           <ChatInterface
-            assistantId={assistantId}
-            activeAssistant={activeAssistant}
+            assistant={assistant}
             debugMode={debugMode}
             setDebugMode={setDebugMode}
-            assistantError={assistantError}
-            setAssistantError={setAssistantError}
-            setActiveAssistant={setActiveAssistant}
             todos={todos}
             setTodos={setTodos}
             files={files}
