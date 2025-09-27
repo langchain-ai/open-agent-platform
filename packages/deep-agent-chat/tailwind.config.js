@@ -1,12 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: [
-    "./index.html",
-    "./src/**/*.{ts,tsx,js,jsx}",
-    "./agent/**/*.{ts,tsx,js,jsx}",
-    "../../packages/deep-agent-chat/src/**/*.{ts,tsx,js,jsx}",
-  ],
+  content: ["./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
     extend: {
       animation: {

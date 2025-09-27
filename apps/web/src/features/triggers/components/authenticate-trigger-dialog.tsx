@@ -244,7 +244,7 @@ export function AuthenticateTriggerDialog(props: {
         <DialogHeader className="flex items-center justify-center">
           <DialogTitle>Connect '{trigger.displayName}'</DialogTitle>
           <DialogDescription>
-            Sign in with {prettifyText(trigger.provider)} to continue.
+            Register the {prettifyText(trigger.provider)} trigger to continue.
           </DialogDescription>
         </DialogHeader>
         {isAuthenticating && authUrl ? (

@@ -1,10 +1,29 @@
 import { useAuthContext } from "@/providers/Auth";
 import { createClient } from "@/lib/client";
 import type { Agent } from "@/types/agent";
-import type { Message } from "@langchain/langgraph-sdk";
+import type { Message, Thread } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
-import { AgentSummary, ThreadItem } from "./types";
+import { AgentSummary } from "./types";
+import { useQueryState } from "nuqs";
+
+export function getThreadColor(thread: {
+  status: Thread["status"] | "draft";
+}): string {
+  switch (thread.status) {
+    case "idle":
+      return "bg-green-500";
+    case "busy":
+      return "bg-yellow-400";
+    case "interrupted":
+      return "bg-red-500";
+    case "error":
+      return "bg-red-600";
+    case "draft":
+    default:
+      return "bg-gray-400";
+  }
+}
 
 export function extractStringFromMessageContent(message: Message): string {
   return typeof message.content === "string"
@@ -35,126 +54,80 @@ export function truncateText(str: string, maxLength: number = 80): string {
   return str.length > maxLength ? `${str.slice(0, maxLength)}...` : str;
 }
 
-export function useThreads(args: {
-  deploymentId: string | null;
-  agent: Agent | null;
-}) {
+const isMessages = (values: unknown): values is { messages: Message[] } => {
+  return (
+    typeof values === "object" &&
+    values !== null &&
+    "messages" in values &&
+    Array.isArray(values.messages)
+  );
+};
+
+export function useThreads() {
+  const [selectedAgentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
   return useSWR(
-    { ...args, agents, session },
-    async ({ deploymentId, agent, agents, session }) => {
-      if (!deploymentId || !session?.accessToken) return [];
+    {
+      selectedAgentId,
+      agents,
+      accessToken: session?.accessToken,
+      deploymentId,
+    },
+    async ({ deploymentId, selectedAgentId, agents, accessToken }) => {
+      if (!deploymentId || !selectedAgentId || !accessToken) return [];
+      const client = createClient(deploymentId, accessToken);
 
       // Build a quick lookup for agents in the current deployment
-      const agentsByAssistantId = new Map<string, Agent>(
+      const agentMap = new Map<string, Agent>(
         agents
-          .filter((a) => a.deploymentId === args.deploymentId)
+          .filter((a) => a.deploymentId === deploymentId)
           .map((a) => [a.assistant_id, a]),
       );
+      const agent = agentMap.get(selectedAgentId);
+      if (!agent) return [];
 
-      const client = createClient(deploymentId, session.accessToken);
-      const params: Parameters<typeof client.threads.search>[0] = {
+      const response = await client.threads.search({
         // TODO: use useSWRInfinite to fetch multiple pages
         limit: 50,
         sortBy: "created_at",
         sortOrder: "desc",
-      };
-      if (agent?.assistant_id) {
-        params.metadata = { assistant_id: agent.assistant_id } as Record<
-          string,
-          string
-        >;
-      } else {
-        params.metadata = {
-          graph_id: "deep_agent",
-        };
-      }
+        metadata: agent?.assistant_id
+          ? { assistant_id: agent.assistant_id }
+          : { graph_id: "deep_agent" },
+      });
 
-      const response = await client.threads.search(params);
       const defaultTitle = agent?.name || "Agent";
       const defaultDesc =
         (agent?.metadata?.description as string | undefined) ||
         "No description";
 
       return response.map((t) => {
-        // If a specific agent is selected, use it for title/desc
-        if (agent?.assistant_id) {
-          // Try to derive a snippet from the last message in the thread
-          let snippet = "";
-          let title = "";
-
-          const isMessages = (
-            values: unknown,
-          ): values is { messages: Message[] } => {
-            return (
-              typeof values === "object" &&
-              values !== null &&
-              "messages" in values &&
-              Array.isArray(values.messages)
-            );
-          };
-
-          try {
-            if (isMessages(t.values)) {
-              const lastMessage = t.values.messages.at(-1);
-              const lastHuman = t.values.messages
-                .filter((t) => t.type === "human")
-                .at(-1);
-
-              if (lastMessage != null) {
-                snippet = truncateText(
-                  extractStringFromMessageContent(lastMessage),
-                  80,
-                );
-              }
-
-              if (lastHuman != null) {
-                title = truncateText(
-                  extractStringFromMessageContent(lastHuman),
-                  80,
-                );
-              }
-            }
-          } catch (err) {
-            console.warn(
-              `Failed to get last message for thread ${t.thread_id}:`,
-              err,
-            );
-          }
-
-          return {
-            id: t.thread_id,
-            updatedAt: new Date(t.updated_at || t.created_at),
-            status: t.status,
-            title: title || defaultTitle,
-            description: snippet || defaultDesc,
-            assistantId: agent.assistant_id,
-          };
-        }
-
-        // Otherwise, try to derive the agent from thread metadata
-        const meta = (t as unknown as { metadata?: Record<string, unknown> })
-          .metadata;
-        const assistantId =
-          (meta?.["assistant_id"] as string | undefined) || undefined;
-        const matched = assistantId
-          ? agentsByAssistantId.get(assistantId)
-          : undefined;
-
         // Try to derive a snippet from the last message in the thread
         let snippet = "";
+        let title = "";
+
         try {
-          if (
-            t.values &&
-            typeof t.values === "object" &&
-            "messages" in t.values
-          ) {
-            const messages = (t.values as { messages?: unknown[] }).messages;
-            if (Array.isArray(messages) && messages.length > 0) {
-              const last = messages[messages.length - 1] as Message;
-              snippet = truncateText(extractStringFromMessageContent(last), 80);
+          if (isMessages(t.values)) {
+            const lastMessage = t.values.messages.at(-1);
+            const lastHuman = t.values.messages
+              .filter((t) => t.type === "human")
+              .at(-1);
+
+            if (lastMessage != null) {
+              snippet = truncateText(
+                extractStringFromMessageContent(lastMessage),
+                80,
+              );
+            }
+
+            if (lastHuman != null) {
+              title = truncateText(
+                extractStringFromMessageContent(lastHuman),
+                80,
+              );
             }
           }
         } catch (err) {
@@ -168,119 +141,102 @@ export function useThreads(args: {
           id: t.thread_id,
           updatedAt: new Date(t.updated_at || t.created_at),
           status: t.status,
-          title: matched?.name || defaultTitle,
-          description:
-            snippet ||
-            (matched?.metadata?.description as string | undefined) ||
-            defaultDesc,
-          assistantId,
+          title: title || defaultTitle,
+          description: snippet || defaultDesc,
+          assistantId: agent?.assistant_id,
         };
       });
     },
   );
 }
 
-export function useAgentSummaries(args: { deploymentId: string | null }) {
+export function useAgentSummaries() {
   const { agents } = useAgentsContext();
   const { session } = useAuthContext();
+  const [deploymentId] = useQueryState("deploymentId");
 
-  return useSWR(
-    { ...args, agents, session },
-    async ({ deploymentId, agents, session }) => {
-      if (!deploymentId || !session?.accessToken) return [];
+  return useSWR<
+    AgentSummary[],
+    any,
+    { deploymentId: string; agents: Agent[]; accessToken: string } | null
+  >(
+    deploymentId != null && session?.accessToken != null
+      ? { deploymentId, agents, accessToken: session?.accessToken }
+      : null,
+    {
+      fallbackData: agents.map((agent) => ({
+        agent,
+        latestThread: undefined,
+        interrupted: undefined,
+      })),
+      fetcher: async ({ deploymentId, agents, accessToken }) => {
+        const client = createClient(deploymentId, accessToken);
 
-      const client = createClient(deploymentId, session.accessToken);
-      const summaries: AgentSummary[] = [];
-
-      // Fetch latest thread for each agent
-      for (const agent of agents) {
-        if (agent.deploymentId !== args.deploymentId) continue;
-        try {
-          const interrupted = await client.threads.count({
-            status: "interrupted",
-            metadata: { assistant_id: agent.assistant_id },
-          });
-
-          const latest = await client.threads.search({
-            limit: 1,
-            sortBy: "updated_at",
-            sortOrder: "desc",
-            metadata: { assistant_id: agent.assistant_id },
-          });
-
-          let latestThread: ThreadItem | undefined;
-          if (latest.length > 0) {
-            const t = latest[0];
-            let snippet = "";
-            try {
-              if (
-                t.values &&
-                typeof t.values === "object" &&
-                "messages" in t.values
-              ) {
-                const messages = (t.values as { messages?: unknown[] })
-                  .messages;
-                if (Array.isArray(messages) && messages.length > 0) {
-                  const last = messages[messages.length - 1] as Message;
-                  snippet = truncateText(
-                    extractStringFromMessageContent(last),
-                    60,
-                  );
-                }
-              }
-            } catch (err) {
-              console.warn(
-                `Failed to get last message for thread ${t.thread_id}:`,
-                err,
-              );
-            }
-
-            latestThread = {
-              id: t.thread_id,
-              updatedAt: new Date(t.updated_at || t.created_at),
-              status: t.status,
-              title: agent.name || "Agent",
-              description:
-                snippet ||
-                (agent.metadata?.description as string) ||
-                "No description",
-              assistantId: agent.assistant_id,
-            };
-          }
-
-          summaries.push({
-            agent,
-            latestThread,
-            interrupted:
-              interrupted > 99
-                ? "99+"
-                : interrupted > 0
-                  ? interrupted.toString()
-                  : undefined,
-          });
-        } catch (error) {
-          console.warn(
-            `Failed to fetch threads for agent ${agent.name}:`,
-            error,
-          );
-          summaries.push({
-            agent,
-            latestThread: undefined,
-            interrupted: undefined,
-          });
-        }
-      }
-
-      // Sort by latest thread update time
-      return summaries.sort((a, b) => {
-        if (!a.latestThread && !b.latestThread) return 0;
-        if (!a.latestThread) return 1;
-        if (!b.latestThread) return -1;
         return (
-          b.latestThread.updatedAt.getTime() -
-          a.latestThread.updatedAt.getTime()
-        );
-      });
+          await Promise.all(
+            agents.map(async (agent): Promise<AgentSummary | undefined> => {
+              if (agent.deploymentId !== deploymentId) return undefined;
+
+              let latestThread: AgentSummary["latestThread"] | undefined;
+              let interrupted: string | undefined;
+
+              try {
+                const [interruptedData, [latestThreadData]] = await Promise.all(
+                  [
+                    client.threads.count({
+                      status: "interrupted",
+                      metadata: { assistant_id: agent.assistant_id },
+                    }),
+                    client.threads.search({
+                      limit: 1,
+                      sortBy: "updated_at",
+                      sortOrder: "desc",
+                      select: ["updated_at", "created_at", "status"],
+                      metadata: { assistant_id: agent.assistant_id },
+                    }),
+                  ],
+                );
+
+                if (latestThreadData != null) {
+                  const date =
+                    latestThreadData.updated_at || latestThreadData.created_at;
+
+                  latestThread = {
+                    id: latestThreadData.thread_id,
+                    updatedAt: new Date(date),
+                    status: latestThreadData.status,
+                  };
+                }
+
+                if (interruptedData > 99) {
+                  interrupted = "99+";
+                } else if (interruptedData > 0) {
+                  interrupted = interruptedData.toString();
+                } else {
+                  interrupted = undefined;
+                }
+              } catch (error) {
+                console.warn(
+                  `Failed to fetch threads for agent ${agent.name}:`,
+                  error,
+                );
+              }
+
+              return { agent, latestThread, interrupted };
+            }),
+          )
+        )
+          .filter((s): s is AgentSummary => s !== undefined)
+          .sort((a, b) => {
+            if (!a.latestThread && !b.latestThread) return 0;
+            if (!a.latestThread) return 1;
+            if (!b.latestThread) return -1;
+            return (
+              b.latestThread.updatedAt.getTime() -
+              a.latestThread.updatedAt.getTime()
+            );
+          });
+      },
     },
   );
 }
