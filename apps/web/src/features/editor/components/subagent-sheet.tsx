@@ -23,7 +23,7 @@ import type { ToolInterruptConfig } from "@/components/agent-creator-sheet/compo
 
 type SubAgentFormValues = {
   name: string;
-  description?: string;
+  description: string;
   prompt?: string;
   tools: string[];
 };
@@ -150,12 +150,14 @@ export function SubAgentSheet({
                 <FormField
                   control={form.control}
                   name="description"
+                  rules={{ required: "Description is required" }}
                   render={({ field }) => (
                     <FormItem className="m-0 mt-0.5">
                       <FormControl>
                         <input
                           {...field}
-                          placeholder="Short description (optional)"
+                          required
+                          placeholder="Short description"
                           className="w-full truncate border-none bg-transparent text-sm text-gray-600 outline-none focus:outline-none"
                         />
                       </FormControl>
