@@ -17,7 +17,7 @@ import { CreateAgentToolsSelection } from "../create-agent-tools-selection";
 
 export const subAgentFormSchema = z.object({
   name: z.string(),
-  description: z.string().optional(),
+  description: z.string(),
   prompt: z.string(),
   tools: z.array(z.string()),
   // Not shown as an input, but preserved/filled on submit
@@ -70,10 +70,11 @@ export function SubAgentForm(props: {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description (optional)</FormLabel>
+              <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Call this agent to preform research on LinkedIn to..."
+                  required
                   id="sub-agent-description"
                   {...field}
                 />
