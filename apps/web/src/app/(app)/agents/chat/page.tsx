@@ -47,7 +47,7 @@ function ThreadSidebar() {
 
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-      <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b p-4">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
         <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
           Chat
           {sidebar && (
@@ -184,6 +184,9 @@ function AgentChatIntro(props: { deploymentId: string }) {
 
   const agents = useAgentSummaries();
 
+  // Hide for now
+  return <span />;
+
   if (recent.isLoading) {
     return (
       <div className="mx-4 flex flex-col items-center justify-center py-12">
@@ -257,7 +260,7 @@ function AgentChat(): React.ReactNode {
 
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-      <div className="grid min-w-0 grid-cols-[1fr_auto] items-center border-b p-4">
+      <div className="grid min-h-[64px] min-w-0 grid-cols-[1fr_auto] items-center p-4 px-[18px]">
         <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
           {!sidebar && (
             <>

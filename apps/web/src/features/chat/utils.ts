@@ -6,6 +6,7 @@ import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
 import { AgentSummary } from "./types";
 import { useQueryState } from "nuqs";
+import { format } from "date-fns";
 
 export function getThreadColor(thread: {
   status: Thread["status"] | "draft";
@@ -24,6 +25,44 @@ export function getThreadColor(thread: {
       return "bg-gray-400";
   }
 }
+
+export const formatTime = (date: Date) => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) {
+    return format(date, "HH:mm");
+  } else if (days === 1) {
+    return "Yesterday";
+  } else if (days < 7) {
+    return format(date, "EEEE");
+  } else {
+    return format(date, "MM/dd");
+  }
+};
+
+export const formatTimeElapsed = (date: Date) => {
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (minutes < 1) {
+    return "Just now";
+  } else if (minutes < 60) {
+    return `${minutes}m ago`;
+  } else if (hours < 24) {
+    return `${hours}h ago`;
+  } else if (days === 1) {
+    return "1 day ago";
+  } else if (days < 7) {
+    return `${days} days ago`;
+  } else {
+    return format(date, "MMM dd");
+  }
+};
 
 export function extractStringFromMessageContent(message: Message): string {
   return typeof message.content === "string"

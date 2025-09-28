@@ -8,7 +8,12 @@ import type { Thread } from "@langchain/langgraph-sdk";
 import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
-import { useThreads, getThreadColor } from "../utils";
+import {
+  useThreads,
+  getThreadColor,
+  formatTime,
+  formatTimeElapsed,
+} from "../utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 
@@ -221,44 +226,6 @@ export function AgentSummaryCard({
   onClick: () => void;
 }) {
   const { agent, latestThread, interrupted } = summary;
-
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return format(date, "HH:mm");
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return format(date, "EEEE");
-    } else {
-      return format(date, "MM/dd");
-    }
-  };
-
-  const formatTimeElapsed = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 1) {
-      return "Just now";
-    } else if (minutes < 60) {
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else if (days === 1) {
-      return "1 day ago";
-    } else if (days < 7) {
-      return `${days} days ago`;
-    } else {
-      return format(date, "MMM dd");
-    }
-  };
 
   return (
     <button
