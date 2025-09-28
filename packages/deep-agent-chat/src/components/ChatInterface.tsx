@@ -96,14 +96,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     empty,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
+    const [agentId] = useQueryState("agentId");
     const [metaOpen, setMetaOpen] = useState<"tasks" | "files" | null>(null);
     const tasksContainerRef = useRef<HTMLDivElement | null>(null);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const isControlledView = typeof view !== "undefined";
     const workflowView = isControlledView
       ? view === "workflow"
       : isWorkflowView;
+
+    useEffect(() => {
+      const timeout = setTimeout(() => {
+        textareaRef.current?.focus();
+      });
+      return () => clearTimeout(timeout);
+    }, [threadId, agentId]);
 
     const setView = useCallback(
       (view: "chat" | "workflow") => {
@@ -436,7 +445,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         ref={scrollRef}
       >
         <div
-          className="mx-auto max-w-[1024px] flex-grow px-6 pt-4 pb-10"
+          className="mx-auto w-full max-w-[1024px] flex-grow px-6 pt-4 pb-10"
           ref={contentRef}
         >
           {processedMessages.map((data, index) => (
@@ -678,6 +687,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             className="flex flex-col"
           >
             <textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}

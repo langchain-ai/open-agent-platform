@@ -40,7 +40,7 @@ export function AgentSidebar() {
                     onClick={() => {
                       setSelectedAgentId(agent.assistant_id);
                       setCurrentThreadId(null);
-                      setSidebar("1");
+                      setSidebar(latestThread != null ? "1" : null);
                     }}
                     className={cn(
                       "hover:bg-sidebar-accent relative flex h-10 w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-all duration-200",
