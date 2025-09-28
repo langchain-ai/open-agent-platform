@@ -10,7 +10,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export function AgentSidebar() {
   const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
-  const [_, setCurrentThreadId] = useQueryState("threadId");
+  const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
+  const [_sidebar, setSidebar] = useQueryState("sidebar");
   const agentSummaries = useAgentSummaries();
 
   const sidebar = useSidebar();
@@ -39,6 +40,7 @@ export function AgentSidebar() {
                     onClick={() => {
                       setSelectedAgentId(agent.assistant_id);
                       setCurrentThreadId(null);
+                      setSidebar("1");
                     }}
                     className={cn(
                       "hover:bg-sidebar-accent relative flex h-10 w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-all duration-200",

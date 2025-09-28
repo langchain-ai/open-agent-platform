@@ -306,7 +306,7 @@ function AgentChat(): React.ReactNode {
         )}
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1024px] flex-1 flex-col">
+      <div className="mx-auto flex min-h-0 w-full flex-1 flex-col">
         <DeepAgentChatInterface
           key={`chat-${deploymentId}`}
           assistant={
