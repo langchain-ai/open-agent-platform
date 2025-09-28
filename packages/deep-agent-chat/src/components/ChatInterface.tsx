@@ -432,11 +432,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const isEmpty = empty != null && processedMessages.length === 0;
     return (
       <div
-        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
+        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
         ref={scrollRef}
       >
         <div
-          className="flex-grow px-6 pt-4 pb-10"
+          className="mx-auto max-w-[1024px] flex-grow px-6 pt-4 pb-10"
           ref={contentRef}
         >
           {processedMessages.map((data, index) => (
@@ -481,7 +481,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         <div
           className={cn(
             "bg-background sticky z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
-            "transition-colors duration-200 ease-in-out",
+            "mx-auto w-[calc(100%-32px)] max-w-[1024px] transition-colors duration-200 ease-in-out",
             isEmpty ? "top-6" : "bottom-6",
           )}
         >
