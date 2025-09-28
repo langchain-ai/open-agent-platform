@@ -30,7 +30,11 @@ function ChatNavItem({
         )}
       >
         <SidebarMenuButton tooltip={item.title}>
-          {item.icon && <item.icon />}
+          {item.icon && (
+            <span className="flex size-6 flex-shrink-0 items-center justify-center">
+              <item.icon className="size-4" />
+            </span>
+          )}
           <span className={cn(pathname === item.url && "font-semibold")}>
             {item.title}
           </span>

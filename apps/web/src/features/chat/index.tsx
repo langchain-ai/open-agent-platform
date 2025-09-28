@@ -53,7 +53,7 @@ export default function DeepAgentChatPageContent({
 
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
-    [deploymentId],
+    [deployments, deploymentId],
   );
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID

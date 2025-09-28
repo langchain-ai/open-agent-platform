@@ -12,6 +12,7 @@ import {
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { AgentSidebar } from "./agent-sidebar";
 import {
   Sidebar,
   SidebarContent,
@@ -71,6 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SiteHeader />
       <SidebarContent>
         <NavMain items={navItems.mainNav} />
+        <AgentSidebar />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
