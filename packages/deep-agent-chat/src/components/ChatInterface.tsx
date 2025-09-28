@@ -429,6 +429,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const hasTasks = todos.length > 0;
     const hasFiles = Object.keys(files).length > 0;
 
+    const isEmpty = empty != null && processedMessages.length === 0;
     return (
       <div
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
@@ -469,23 +470,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           )}
         </div>
 
-        {empty ? (
+        {isEmpty && (
           <div className="mx-4 mb-8 flex flex-col items-center gap-3 text-center">
             <h1 className="text-2xl font-medium">
               What would you like to work on?
             </h1>
           </div>
-        ) : null}
+        )}
 
         <div
           className={cn(
             "bg-background sticky z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
             "transition-colors duration-200 ease-in-out",
-            empty ? "top-6" : "bottom-6",
+            isEmpty ? "top-6" : "bottom-6",
           )}
         >
           {(hasTasks || hasFiles) && (
-            <div className="bg-sidebar flex flex-col border-b empty:hidden">
+            <div className="bg-sidebar flex max-h-72 flex-col overflow-y-auto border-b empty:hidden">
               {!metaOpen && (
                 <>
                   {(() => {
@@ -587,7 +588,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
               {metaOpen && (
                 <>
-                  <div className="flex items-stretch text-sm">
+                  <div className="bg-sidebar sticky top-0 flex items-stretch text-sm">
                     {hasTasks && (
                       <button
                         type="button"
@@ -605,7 +606,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     {hasFiles && (
                       <button
                         type="button"
-                        className="py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
+                        className="inline-flex items-center gap-2 py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
                         onClick={() =>
                           setMetaOpen((prev) =>
                             prev === "files" ? null : "files",
@@ -614,6 +615,9 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                         aria-expanded={metaOpen === "files"}
                       >
                         Files
+                        <span className="h-4 min-w-4 rounded-full bg-[#2F6868] px-0.5 text-center text-[10px] leading-[16px] text-white">
+                          {Object.keys(files).length}
+                        </span>
                       </button>
                     )}
                     <button
@@ -624,7 +628,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   </div>
                   <div
                     ref={tasksContainerRef}
-                    className="max-h-60 overflow-y-auto px-4.5"
+                    className="px-4.5"
                   >
                     {metaOpen === "tasks" &&
                       Object.entries(groupedTodos)
@@ -654,7 +658,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                         ))}
 
                     {metaOpen === "files" && (
-                      <div className="-mx-2 mb-4">
+                      <div className="mb-6">
                         <FilesPopover
                           files={files}
                           setFiles={setFiles}
@@ -725,7 +729,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           </form>
         </div>
 
-        {empty != null && <div className="flex-grow">{empty}</div>}
+        {isEmpty && <div className="flex-grow-3">{empty}</div>}
       </div>
     );
   },
