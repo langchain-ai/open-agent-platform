@@ -407,14 +407,7 @@ export function InitialInputs({
     setCreatingAgent(false);
     setCreatingAgentLoadingText("");
   };
-  function isCronTrigger(trigger: Trigger): boolean {
-    return (
-      trigger.id.toLowerCase().includes("cron") ||
-      trigger.provider.toLowerCase() === "cron" ||
-      trigger.displayName.toLowerCase().includes("cron") ||
-      trigger.displayName.toLowerCase().includes("schedule")
-    );
-  }
+
   const handleAutoCronSetup = async (
     cronSchedules: string[],
     agentId: string,
