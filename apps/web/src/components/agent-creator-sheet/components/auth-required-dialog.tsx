@@ -34,16 +34,15 @@ export function AuthRequiredDialog(props: {
   const { getProviderDisplayName } = useOAuthProviders();
   const auth = useAuthContext();
 
-  const hasTriggers =
-    props.groupedTriggers && Object.keys(props.groupedTriggers).length > 0;
+  const hasTriggers = useMemo(() => {
+    if (!props.groupedTriggers) return false;
+    return Object.values(props.groupedTriggers).some(
+      (group) => (group.triggers?.length ?? 0) > 0,
+    );
+  }, [props.groupedTriggers]);
 
-  const initialStep = useMemo(() => {
-    if (hasTriggers) return 1;
-    if (props.authUrls?.length) return 2;
-    return 3;
-  }, [hasTriggers, props.authUrls]);
-
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  // Always show the full flow: Triggers -> Tools -> Auth
+  const [currentStep, setCurrentStep] = useState(1);
 
   const handleSelectedRegistrationsChange = useCallback(
     (registrationIds: string[]) => {
@@ -106,15 +105,15 @@ export function AuthRequiredDialog(props: {
   }, [hasTriggers, toolsByProvider.length, props.authUrls?.length]);
 
   const StepIndicator = () => {
-    const visibleSteps = [
-      { step: 1, visible: hasTriggers, label: "Triggers", icon: Zap },
-      { step: 2, visible: toolsByProvider.length > 0, label: "Tools", icon: Wrench },
-      { step: 3, visible: props.authUrls?.length, label: "Auth", icon: KeyRound }
-    ].filter(s => s.visible);
+    const steps = [
+      { step: 1, label: "Triggers", icon: Zap },
+      { step: 2, label: "Tools", icon: Wrench },
+      { step: 3, label: "Auth", icon: KeyRound },
+    ];
 
     return (
       <div className="flex items-center justify-center mb-6">
-        {visibleSteps.map(({ step, label, icon: Icon }, index) => {
+        {steps.map(({ step, label, icon: Icon }, index) => {
           const isActive = currentStep === step;
           const isCompleted = currentStep > step;
 
@@ -142,7 +141,7 @@ export function AuthRequiredDialog(props: {
                   {label}
                 </span>
               </div>
-              {index < visibleSteps.length - 1 && (
+              {index < steps.length - 1 && (
                 <div className={`w-8 h-px mx-3 ${
                   currentStep > step ? "bg-[#2F6868]" : "bg-gray-200"
                 }`} />
@@ -367,7 +366,7 @@ export function AuthRequiredDialog(props: {
               ) : (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
                   <Zap className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600">No event triggers are available for this agent configuration.</p>
+                  <p className="text-gray-600">No triggers are needed for this agent configuration.</p>
                 </div>
               )}
             </div>
@@ -496,15 +495,7 @@ export function AuthRequiredDialog(props: {
               <Button
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50"
-                onClick={() => {
-                  if (currentStep === 3 && toolsByProvider.length === 0) {
-                    setCurrentStep(hasTriggers ? 1 : 2);
-                  } else if (currentStep === 2 && !hasTriggers) {
-                    setCurrentStep(3);
-                  } else {
-                    setCurrentStep(currentStep - 1);
-                  }
-                }}
+                onClick={() => setCurrentStep(currentStep - 1)}
               >
                 <ChevronLeft className="mr-1.5 h-4 w-4" />
                 Back
@@ -523,32 +514,15 @@ export function AuthRequiredDialog(props: {
             )}
             <Button
               onClick={() => {
-                const isLastStep =
-                  (currentStep === 1 && !toolsByProvider.length && !props.authUrls?.length) ||
-                  (currentStep === 2 && !props.authUrls?.length) ||
-                  currentStep === 3;
-
-                if (isLastStep) {
+                if (currentStep === 3) {
                   props.handleSubmit();
                 } else {
-                  const nextStep =
-                    currentStep === 1 && toolsByProvider.length > 0 ? 2 :
-                    currentStep === 1 && props.authUrls?.length ? 3 :
-                    currentStep === 2 && props.authUrls?.length ? 3 :
-                    currentStep + 1;
-                  setCurrentStep(nextStep);
+                  setCurrentStep(currentStep + 1);
                 }
               }}
               className="bg-[#2F6868] hover:bg-[#2F6868]/90 text-white px-6"
             >
-              {(() => {
-                const isLastStep =
-                  (currentStep === 1 && !toolsByProvider.length && !props.authUrls?.length) ||
-                  (currentStep === 2 && !props.authUrls?.length) ||
-                  currentStep === 3;
-
-                return isLastStep ? "Complete Setup" : "Continue";
-              })()}
+              {currentStep === 3 ? "Complete Setup" : "Continue"}
               {currentStep < 3 && <ArrowRight className="ml-1.5 h-4 w-4" />}
             </Button>
           </div>

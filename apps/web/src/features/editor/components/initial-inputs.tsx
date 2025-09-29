@@ -304,6 +304,8 @@ export function InitialInputs({
     loadTriggers(session.accessToken);
   }, [session]);
 
+  // (Dialog opens after agent generation or when auth is required.)
+
   const stream = useStream<AgentGeneratorState>({
     client: client ?? undefined,
     assistantId: ASSISTANT_ID,
@@ -395,14 +397,14 @@ export function InitialInputs({
     setCreatingAgentLoadingText("");
   };
 
-  const isCronTrigger = (trigger: Trigger): boolean => {
+  function isCronTrigger(trigger: Trigger): boolean {
     return (
       trigger.id.toLowerCase().includes("cron") ||
       trigger.provider.toLowerCase() === "cron" ||
       trigger.displayName.toLowerCase().includes("cron") ||
       trigger.displayName.toLowerCase().includes("schedule")
     );
-  };
+  }
 
   const handleAutoCronSetup = async (
     cronSchedules: string[],
