@@ -165,12 +165,67 @@ export function AuthRequiredDialog(props: {
               {stepInfo.title}
             </AlertDialogTitle>
           </div>
+
+          {/* Flow diagram - moved to header */}
+          {currentStep === 1 && (
+            <div className="mt-3 mb-1">
+              <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md">
+                  <Mail className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Event</span>
+                </div>
+
+                <ArrowRight className="h-4 w-4 text-gray-400" />
+
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#2F6868] rounded-md">
+                  <Zap className="h-4 w-4 text-white" />
+                  <span className="text-sm font-medium text-white">Trigger</span>
+                </div>
+
+                <ArrowRight className="h-4 w-4 text-gray-400" />
+
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md">
+                  <Bot className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Agent</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tools diagram */}
+          {currentStep === 2 && (
+            <div className="mt-3 mb-1">
+              <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-md">
+                  <Bot className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">Agent</span>
+                </div>
+
+                <ArrowRight className="h-4 w-4 text-gray-400" />
+
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#2F6868] rounded-md">
+                  <Wrench className="h-4 w-4 text-white" />
+                  <span className="text-sm font-medium text-white">Tool</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Auth description */}
+          {currentStep === 3 && (
+            <div className="mt-3 mb-1">
+              <p className="text-gray-700">
+                Connect your accounts so your agent can use the tools securely.
+              </p>
+            </div>
+          )}
         </AlertDialogHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {/* Step 1: Triggers */}
           {currentStep === 1 && (
             <div className="max-w-2xl">
+
               <div className="mb-6">
                 <p className="text-gray-700 mb-4">
                   Choose what events should automatically activate your agent. For example, when you receive an email or get a calendar reminder.
@@ -180,8 +235,7 @@ export function AuthRequiredDialog(props: {
               {hasTriggers ? (
                 <div className="bg-green-50/50 border border-green-200/50 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-lg font-semibold text-gray-900">Suggested triggers</h3>
-                    <span className="text-sm text-green-600 font-medium">Optional</span>
+                    <h3 className="text-lg font-semibold text-gray-900">Suggested</h3>
                   </div>
 
                   {props.groupedTriggers && (
@@ -389,9 +443,6 @@ export function AuthRequiredDialog(props: {
           {currentStep === 3 && (
             <div className="max-w-2xl">
               <div className="mb-6">
-                <p className="text-gray-700 mb-4">
-                  Connect your accounts so your agent can use the tools securely.
-                </p>
                 <div className="bg-teal-50 border-l-4 border-[#2F6868] p-3 rounded-r">
                   <p className="text-sm text-[#1F4A4A]">
                     <strong>Secure:</strong> We use OAuth - your passwords are never stored or visible to us.
@@ -401,7 +452,6 @@ export function AuthRequiredDialog(props: {
 
               {(props.authUrls ?? []).length > 0 ? (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-5">Connect accounts</h3>
                   <div className="space-y-3">
                     {(props.authUrls ?? []).map((url, index) => (
                       <div
