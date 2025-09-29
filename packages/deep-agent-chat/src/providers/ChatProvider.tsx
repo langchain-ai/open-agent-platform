@@ -2,36 +2,23 @@
 
 import { ReactNode, createContext, useContext } from "react";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { useQueryState } from "nuqs";
-import { useChat } from "../hooks/useChat";
-import type { TodoItem } from "../types";
+import { type StateType, useChat } from "../hooks/useChat";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
 
 interface ChatProviderProps {
   children: ReactNode;
-  setTodos: (todos: TodoItem[]) => void;
-  files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
   activeAssistant: Assistant | null;
+  onHistoryRevalidate?: () => void;
+  thread?: UseStreamThread<StateType>;
 }
 
 export function ChatProvider({
   children,
-  setTodos,
-  files,
-  setFiles,
   activeAssistant,
+  onHistoryRevalidate,
+  thread,
 }: ChatProviderProps) {
-  const [threadId, setThreadId] = useQueryState("threadId");
-
-  const chat = useChat(
-    threadId,
-    setThreadId,
-    setTodos,
-    files,
-    setFiles,
-    activeAssistant,
-  );
-
+  const chat = useChat({ activeAssistant, onHistoryRevalidate, thread });
   return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
 }
 

@@ -35,13 +35,17 @@ import {
   AgentSummaryCard,
   ThreadHistoryAgentList,
 } from "@/features/chat/components/thread-history-agent-list";
-import { getThreadColor, useAgentSummaries } from "@/features/chat/utils";
+import {
+  getThreadColor,
+  useAgentSummaries,
+  useThread,
+} from "@/features/chat/utils";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { getAgentColor } from "@/features/agents/utils";
@@ -258,6 +262,7 @@ function AgentChat(): React.ReactNode {
   const [sidebar, setSidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
 
+  const thread = useThread(threadId);
   const deployments = getDeployments();
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
@@ -324,6 +329,7 @@ function AgentChat(): React.ReactNode {
       <div className="mx-auto flex min-h-0 w-full flex-1 flex-col">
         <DeepAgentChatInterface
           key={`chat-${deploymentId}`}
+          thread={thread}
           assistant={
             agentId
               ? (agents.find((a) => a.assistant_id === agentId) ?? null)
@@ -340,6 +346,12 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          onHistoryRevalidate={() => {
+            mutate((key) => {
+              if (typeof key !== "object" || key == null) return false;
+              return "kind" in key && key.kind === "threads";
+            });
+          }}
           onInput={(input) => {
             if (agentId && threadId == null && input.length > 0) {
               setDraft(input);

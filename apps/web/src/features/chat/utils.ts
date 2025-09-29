@@ -110,6 +110,7 @@ export function useThreads() {
 
   return useSWR(
     {
+      kind: "threads",
       selectedAgentId,
       agents,
       accessToken: session?.accessToken,
@@ -197,10 +198,20 @@ export function useAgentSummaries() {
   return useSWR<
     AgentSummary[],
     any,
-    { deploymentId: string; agents: Agent[]; accessToken: string } | null
+    {
+      kind: "agents";
+      deploymentId: string;
+      agents: Agent[];
+      accessToken: string;
+    } | null
   >(
     deploymentId != null && session?.accessToken != null
-      ? { deploymentId, agents, accessToken: session?.accessToken }
+      ? {
+          kind: "agents",
+          deploymentId,
+          agents,
+          accessToken: session?.accessToken,
+        }
       : null,
     {
       fallbackData: agents.map((agent) => ({
@@ -278,4 +289,38 @@ export function useAgentSummaries() {
       },
     },
   );
+}
+
+export function useThread(threadId: string | null) {
+  const { session } = useAuthContext();
+  const [deploymentId] = useQueryState("deploymentId");
+  const accessToken = session?.accessToken;
+  const threadState = useSWR(
+    threadId != null
+      ? { kind: "thread", threadId, deploymentId, accessToken }
+      : null,
+    async ({ threadId, deploymentId, accessToken }) => {
+      if (!deploymentId || !accessToken) return null;
+      const client = createClient(deploymentId, accessToken);
+      return [
+        await client.threads.getState<{
+          messages: Message[];
+          todos: {
+            id: string;
+            content: string;
+            status: "pending" | "in_progress" | "completed";
+            updatedAt?: Date;
+          }[];
+          files: Record<string, string>;
+        }>(threadId),
+      ];
+    },
+  );
+
+  return {
+    data: threadState.data,
+    isLoading: threadState.isLoading,
+    error: threadState.error,
+    mutate: () => threadState.mutate(),
+  };
 }
