@@ -64,5 +64,3 @@ export function AgentChatSelect(): React.ReactNode {
     </Select>
   );
 }
-
-
