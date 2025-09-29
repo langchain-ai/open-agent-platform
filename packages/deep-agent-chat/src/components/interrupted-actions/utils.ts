@@ -5,6 +5,7 @@ import { HumanInterrupt, HumanResponseWithEdits, SubmitType } from "./types";
 import { validate } from "uuid";
 import { getDeployments } from "../../lib/environment/deployments";
 import { toast } from "sonner";
+import { Interrupt } from "@langchain/langgraph-sdk";
 
 export function prettifyText(action: string) {
   return startCase(action.replace(/_/g, " "));
@@ -334,4 +335,14 @@ export function extractProjectId(inboxId: string): string | null {
     }
   }
   return null;
+}
+
+export function getInterruptTitle(interrupt: Interrupt): string {
+  try {
+    const interruptValue = (interrupt.value as any)?.[0] as HumanInterrupt;
+    return interruptValue?.action_request.action ?? "Unknown interrupt";
+  } catch (error) {
+    console.error("Error getting interrupt title:", error);
+    return "Unknown interrupt";
+  }
 }

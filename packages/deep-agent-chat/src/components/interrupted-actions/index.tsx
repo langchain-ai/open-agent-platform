@@ -1,4 +1,3 @@
-import { Button } from "../ui/button";
 import { AlertCircle } from "lucide-react";
 import useInterruptedActions from "./hooks/use-interrupted-actions";
 import { ThreadIdCopyable } from "./components/thread-id";
@@ -6,6 +5,7 @@ import { InboxItemInput } from "./components/inbox-item-input";
 import { useChatContext } from "../../providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
 import { HumanInterrupt } from "./types";
+import { getInterruptTitle } from "./utils";
 
 interface ThreadActionsViewProps {
   interrupt: Interrupt;
@@ -25,12 +25,11 @@ export function ThreadActionsView({
   const interruptValue = (interrupt.value as any)?.[0] as HumanInterrupt;
 
   const acceptAllowed = interruptValue?.config?.allow_accept ?? false;
-  const threadTitle =
-    interruptValue?.action_request.action ?? "Unknown interrupt";
+  const threadTitle = getInterruptTitle(interrupt);
 
   // Handle Valid Interrupted Threads
   return (
-    <div className="flex w-full flex-col gap-9 p-12">
+    <div className="flex w-full flex-col gap-4">
       {/* Header */}
       <div className="flex w-full flex-wrap items-center justify-start gap-3">
         <div className="flex items-center gap-2">
@@ -38,18 +37,6 @@ export function ThreadActionsView({
           <p className="text-2xl tracking-tighter text-pretty">{threadTitle}</p>
         </div>
         {threadId && <ThreadIdCopyable threadId={threadId} />}
-      </div>
-
-      {/* Interrupted thread actions */}
-      <div className="flex w-full flex-row items-center justify-start gap-2">
-        <Button
-          variant="outline"
-          className="border-gray-500 bg-white font-normal text-gray-800"
-          onClick={actions.handleResolve}
-          disabled={isLoading}
-        >
-          Mark as Resolved
-        </Button>
       </div>
 
       {/* Actions */}
