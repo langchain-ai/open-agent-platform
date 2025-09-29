@@ -208,7 +208,15 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         }
         setInput("");
       },
-      [input, isLoading, sendMessage, debugMode, runSingleStep, submitDisabled],
+      [
+        input,
+        isLoading,
+        sendMessage,
+        debugMode,
+        setInput,
+        runSingleStep,
+        submitDisabled,
+      ],
     );
 
     const handleKeyDown = useCallback(

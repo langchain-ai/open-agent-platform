@@ -1,12 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Settings,
-  Puzzle,
-  MessageCircle,
-  type LucideIcon,
-} from "lucide-react";
+import { Settings, Puzzle, MessageCircle, type LucideIcon } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
