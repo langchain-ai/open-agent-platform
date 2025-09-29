@@ -290,3 +290,37 @@ export function useAgentSummaries() {
     },
   );
 }
+
+export function useThread(threadId: string | null) {
+  const { session } = useAuthContext();
+  const [deploymentId] = useQueryState("deploymentId");
+  const accessToken = session?.accessToken;
+  const threadState = useSWR(
+    threadId != null
+      ? { kind: "thread", threadId, deploymentId, accessToken }
+      : null,
+    async ({ threadId, deploymentId, accessToken }) => {
+      if (!deploymentId || !accessToken) return null;
+      const client = createClient(deploymentId, accessToken);
+      return [
+        await client.threads.getState<{
+          messages: Message[];
+          todos: {
+            id: string;
+            content: string;
+            status: "pending" | "in_progress" | "completed";
+            updatedAt?: Date;
+          }[];
+          files: Record<string, string>;
+        }>(threadId),
+      ];
+    },
+  );
+
+  return {
+    data: threadState.data,
+    isLoading: threadState.isLoading,
+    error: threadState.error,
+    mutate: () => threadState.mutate(),
+  };
+}

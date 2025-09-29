@@ -8,12 +8,13 @@ import {
   type Checkpoint,
 } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
 import type { TodoItem } from "../types";
 import { useClients } from "../providers/ClientProvider";
 import { HumanResponse } from "../types/inbox";
 import { useQueryState } from "nuqs";
 
-type StateType = {
+export type StateType = {
   messages: Message[];
   todos: TodoItem[];
   files: Record<string, string>;
@@ -21,10 +22,12 @@ type StateType = {
 
 export function useChat({
   activeAssistant,
-  onThreadRevalidate,
+  onHistoryRevalidate,
+  thread,
 }: {
   activeAssistant: Assistant | null;
-  onThreadRevalidate?: () => void;
+  onHistoryRevalidate?: () => void;
+  thread?: UseStreamThread<StateType>;
 }) {
   const [threadId, setThreadId] = useQueryState("threadId");
   const { client } = useClients();
@@ -36,9 +39,10 @@ export function useChat({
     threadId: threadId ?? null,
     onThreadId: setThreadId,
     defaultHeaders: { "x-auth-scheme": "langsmith" },
-    onFinish: onThreadRevalidate,
-    onError: onThreadRevalidate,
-    onCreated: onThreadRevalidate,
+    onFinish: onHistoryRevalidate,
+    onError: onHistoryRevalidate,
+    onCreated: onHistoryRevalidate,
+    experimental_thread: thread,
   });
 
   const sendMessage = useCallback(

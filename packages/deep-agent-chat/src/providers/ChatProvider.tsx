@@ -2,21 +2,23 @@
 
 import { ReactNode, createContext, useContext } from "react";
 import { Assistant } from "@langchain/langgraph-sdk";
-import { useChat } from "../hooks/useChat";
+import { type StateType, useChat } from "../hooks/useChat";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
 
 interface ChatProviderProps {
   children: ReactNode;
   activeAssistant: Assistant | null;
-  onThreadRevalidate?: () => void;
+  onHistoryRevalidate?: () => void;
+  thread?: UseStreamThread<StateType>;
 }
 
 export function ChatProvider({
   children,
   activeAssistant,
-  onThreadRevalidate,
+  onHistoryRevalidate,
+  thread,
 }: ChatProviderProps) {
-  const chat = useChat({ activeAssistant, onThreadRevalidate });
-
+  const chat = useChat({ activeAssistant, onHistoryRevalidate, thread });
   return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
 }
 

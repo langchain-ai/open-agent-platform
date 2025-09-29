@@ -1,4 +1,6 @@
 import { Assistant } from "@langchain/langgraph-sdk";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
+import type { StateType } from "../hooks/useChat";
 
 export interface DeepAgentChatConfig {
   assistant: Assistant | null;
@@ -20,5 +22,6 @@ export interface DeepAgentChatConfig {
   // Controls the controls that are shown in the chat interface
   controls?: React.ReactNode;
   empty?: React.ReactNode;
-  onThreadRevalidate?: () => void;
+  thread?: UseStreamThread<StateType>;
+  onHistoryRevalidate?: () => void;
 }

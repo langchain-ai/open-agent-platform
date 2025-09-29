@@ -13,12 +13,13 @@ function DeepAgentChatInterfaceInternal({
   accessToken,
   optimizerDeploymentUrl,
   optimizerAccessToken,
-  onThreadRevalidate,
+  onHistoryRevalidate,
   view,
   onInput,
   onViewChange,
   hideInternalToggle,
   controls,
+  thread,
   empty,
 }: DeepAgentChatConfig) {
   const [debugMode, setDebugMode] = useState(false);
@@ -32,7 +33,8 @@ function DeepAgentChatInterfaceInternal({
     >
       <ChatProvider
         activeAssistant={assistant}
-        onThreadRevalidate={onThreadRevalidate}
+        onHistoryRevalidate={onHistoryRevalidate}
+        thread={thread}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
           <ChatInterface
