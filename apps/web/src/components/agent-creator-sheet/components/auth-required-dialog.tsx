@@ -403,26 +403,9 @@ export function AuthRequiredDialog(props: {
                                       // Only show if user has actually selected something for this trigger
                                       if (!hasSelectedRegistration) return null;
 
-                                      // For demo purposes, let's add sample registrations if none exist
-                                      let sampleRegistrations =
-                                        triggerRegistrations;
-                                      if (sampleRegistrations.length === 0) {
-                                        sampleRegistrations = [
-                                          {
-                                            id: `${triggerId}-reg1`,
-                                            triggerId: triggerId,
-                                            name: "#general channel",
-                                            description:
-                                              "Messages posted to the general channel",
-                                          },
-                                          {
-                                            id: `${triggerId}-reg2`,
-                                            triggerId: triggerId,
-                                            name: "#engineering channel",
-                                            description:
-                                              "Messages posted to the engineering channel",
-                                          },
-                                        ];
+                                      // Only render concrete registrations if available
+                                      if (triggerRegistrations.length === 0) {
+                                        return null;
                                       }
 
                                       return (
@@ -430,7 +413,7 @@ export function AuthRequiredDialog(props: {
                                           <p className="mb-2 text-xs text-gray-600">
                                             Choose specific locations:
                                           </p>
-                                          {sampleRegistrations.map(
+                                          {triggerRegistrations.map(
                                             (registration, index) => (
                                               <div
                                                 key={
@@ -450,9 +433,7 @@ export function AuthRequiredDialog(props: {
                                                   }`}
                                                   onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const regId =
-                                                      registration.id ||
-                                                      `sample-${index}`;
+                                                    const regId = registration.id || `sample-${index}`;
                                                     const isSelected =
                                                       selectedRegistrations.includes(
                                                         regId,
@@ -473,10 +454,7 @@ export function AuthRequiredDialog(props: {
                                                     }
                                                   }}
                                                 >
-                                                  {selectedRegistrations.includes(
-                                                    registration.id ||
-                                                      `sample-${index}`,
-                                                  ) && (
+                                                  {selectedRegistrations.includes(registration.id || `sample-${index}`) && (
                                                     <Check className="h-2.5 w-2.5" />
                                                   )}
                                                 </button>
@@ -495,7 +473,6 @@ export function AuthRequiredDialog(props: {
                                           )}
                                         </div>
                                       );
-                                      return null;
                                     })()}
                                   </div>
                                 ),
