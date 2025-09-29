@@ -232,7 +232,8 @@ export function InitialInputs({
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
   const displayToolsByProvider = useMemo(() => {
-    if (!_enabledToolNames?.length || !tools?.length) return [] as { provider: string; tools: string[] }[];
+    if (!_enabledToolNames?.length || !tools?.length)
+      return [] as { provider: string; tools: string[] }[];
     const byProvider = new Map<string, string[]>();
     for (const name of _enabledToolNames) {
       const tool = tools.find((t) => t.name === name);
@@ -242,7 +243,10 @@ export function InitialInputs({
       if (!list.includes(name)) list.push(name);
       byProvider.set(provider, list);
     }
-    return Array.from(byProvider.entries()).map(([provider, tools]) => ({ provider, tools }));
+    return Array.from(byProvider.entries()).map(([provider, tools]) => ({
+      provider,
+      tools,
+    }));
   }, [_enabledToolNames, tools]);
 
   const deployments = getDeployments();
