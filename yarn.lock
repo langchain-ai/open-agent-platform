@@ -1835,29 +1835,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@langchain/langgraph-sdk@npm:^0.0.109":
-  version: 0.0.109
-  resolution: "@langchain/langgraph-sdk@npm:0.0.109"
-  dependencies:
-    "@types/json-schema": ^7.0.15
-    p-queue: ^6.6.2
-    p-retry: 4
-    uuid: ^9.0.0
-  peerDependencies:
-    "@langchain/core": ">=0.2.31 <0.4.0"
-    react: ^18 || ^19
-    react-dom: ^18 || ^19
-  peerDependenciesMeta:
-    "@langchain/core":
-      optional: true
-    react:
-      optional: true
-    react-dom:
-      optional: true
-  checksum: 1cbba4b42c6498b28c2ded6afdc7ffc638b48e6c7aa034451c2c88640a4f9e1389e3cf81bc97971902857a09c465f9d4307d2e1851f23b877668e84e5f648194
-  languageName: node
-  linkType: hard
-
 "@langchain/langgraph-sdk@npm:^0.1.7, @langchain/langgraph-sdk@npm:~0.1.0":
   version: 0.1.7
   resolution: "@langchain/langgraph-sdk@npm:0.1.7"
@@ -2383,7 +2360,7 @@ __metadata:
   resolution: "@open-agent-platform/deep-agent-chat@workspace:packages/deep-agent-chat"
   dependencies:
     "@eslint/js": ^9
-    "@langchain/langgraph-sdk": ^0.0.109
+    "@langchain/langgraph-sdk": ^0.1.7
     "@radix-ui/react-dialog": ^1.1.15
     "@radix-ui/react-scroll-area": ^1.2.10
     "@radix-ui/react-slot": ^1.2.3
@@ -2440,7 +2417,7 @@ __metadata:
   dependencies:
     "@eslint/js": ^9.19.0
     "@langchain/core": ^0.3.44
-    "@langchain/langgraph-sdk": ^0.0.109
+    "@langchain/langgraph-sdk": ^0.1.7
     "@modelcontextprotocol/sdk": ^1.11.4
     "@open-agent-platform/deep-agent-chat": "*"
     "@radix-ui/react-alert-dialog": ^1.1.11

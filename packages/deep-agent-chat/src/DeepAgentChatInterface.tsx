@@ -15,6 +15,7 @@ function DeepAgentChatInterfaceInternal({
   optimizerDeploymentUrl,
   optimizerAccessToken,
   view,
+  onInput,
   onViewChange,
   hideInternalToggle,
   controls,
@@ -48,6 +49,7 @@ function DeepAgentChatInterfaceInternal({
             setFiles={setFiles}
             view={view}
             onViewChange={onViewChange}
+            onInput={onInput}
             hideInternalToggle={hideInternalToggle}
             empty={empty}
             controls={controls}

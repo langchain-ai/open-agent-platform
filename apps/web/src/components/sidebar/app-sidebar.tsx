@@ -1,14 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Settings,
-  Puzzle,
-  MessageCircle,
-  Plus,
-  // Edit,
-  type LucideIcon,
-} from "lucide-react";
+import { Settings, Puzzle, MessageCircle, type LucideIcon } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
@@ -32,12 +25,6 @@ interface NavigationItems {
 
 const createNavigationItems = (): NavigationItems => ({
   mainNav: [
-    {
-      title: "New Agent",
-      url: "/editor?new=true",
-      icon: Plus,
-      isAgentCreator: true,
-    },
     {
       title: "Agent Library",
       url: "/agents",

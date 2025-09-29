@@ -19,12 +19,12 @@ import { useQueryState } from "nuqs";
 
 export function ThreadHistoryAgentList({
   onThreadSelect,
-  showDraft = false,
+  showDraft,
   className,
   statusFilter = "all",
 }: {
   onThreadSelect: (id: string, assistantId?: string) => void;
-  showDraft?: boolean;
+  showDraft?: string;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
@@ -46,15 +46,13 @@ export function ThreadHistoryAgentList({
   const threads = useThreads();
 
   const displayItems = useMemo(() => {
-    if (showDraft && !currentThreadId && agent) {
+    if (showDraft != null && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
         updatedAt: new Date(),
         status: "draft",
-        title: agent.name || "Agent",
-        description:
-          (agent.metadata?.description as string | undefined) ||
-          "No description",
+        title: showDraft,
+        description: "Draft thread",
       };
       return [draft, ...(threads.data ?? [])];
     }

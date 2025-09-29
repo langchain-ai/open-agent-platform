@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
@@ -39,11 +47,16 @@ import { cn } from "@/lib/utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+const DraftContext = createContext<
+  [string | null, Dispatch<SetStateAction<string | null>>]
+>([null, (state) => state]);
+
 function ThreadSidebar() {
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
   const [statusFilter, setStatusFilter] = useQueryState("status");
+  const [draft] = useContext(DraftContext);
 
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
@@ -148,6 +161,7 @@ function ThreadSidebar() {
             }
             await setCurrentThreadId(id);
           }}
+          showDraft={draft ?? undefined}
           statusFilter={
             ((statusFilter as string) || "all") as
               | "all"
@@ -242,6 +256,7 @@ function AgentChat(): React.ReactNode {
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [_, setDraft] = useContext(DraftContext);
 
   const deployments = getDeployments();
   const selectedDeployment = useMemo(
@@ -325,6 +340,13 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          onInput={(input) => {
+            if (agentId && threadId == null && input.length > 0) {
+              setDraft(input);
+            } else {
+              setDraft(null);
+            }
+          }}
           view="chat"
           controls={
             <Select
@@ -384,6 +406,7 @@ function PageLayout() {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [sidebar] = useQueryState("sidebar");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const draftState = useState<string | null>(null);
   const { agents } = useAgentsContext();
 
   useEffect(() => {
@@ -433,25 +456,27 @@ function PageLayout() {
       direction="horizontal"
       autoSaveId="chat"
     >
-      {!isFullChat && (
+      <DraftContext.Provider value={draftState}>
+        {!isFullChat && (
+          <ResizablePanel
+            id="thread-history"
+            order={1}
+            className="relative"
+          >
+            <ThreadSidebar />
+          </ResizablePanel>
+        )}
+
+        {!isFullChat && <ResizableHandle />}
+
         <ResizablePanel
-          id="thread-history"
-          order={1}
+          id="chat"
           className="relative"
+          order={2}
         >
-          <ThreadSidebar />
+          <AgentChat />
         </ResizablePanel>
-      )}
-
-      {!isFullChat && <ResizableHandle />}
-
-      <ResizablePanel
-        id="chat"
-        className="relative"
-        order={2}
-      >
-        <AgentChat />
-      </ResizablePanel>
+      </DraftContext.Provider>
     </ResizablePanelGroup>
   );
 }
