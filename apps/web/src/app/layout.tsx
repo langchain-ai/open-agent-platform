@@ -12,13 +12,16 @@ export default function Layout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
   return (
     <html lang="en">
       <head>
-        <script
-          crossOrigin="anonymous"
-          src="//unpkg.com/react-scan/dist/auto.global.js"
-        />
+        {process.env.NODE_ENV !== "production" && isDebugMode && (
+          <script
+            crossOrigin="anonymous"
+            src="//unpkg.com/react-scan/dist/auto.global.js"
+          />
+        )}
       </head>
       <body>
         <main>{children}</main>
