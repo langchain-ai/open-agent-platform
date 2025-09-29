@@ -237,6 +237,27 @@ export function EditorPageContent(): React.ReactNode {
         );
         if (cancelled) return;
         setTriggerIds(ids);
+
+        // Fallback recheck: some backends update linkage asynchronously.
+        // Re-fetch after a short delay and reconcile if different.
+        setTimeout(async () => {
+          if (cancelled) return;
+          try {
+            const retryIds = await triggerFnsRef.current.listAgentTriggers(
+              session.accessToken!,
+              selectedAgent.assistant_id,
+            );
+            if (cancelled) return;
+            const current = (triggersForm.getValues("triggerIds") ||
+              []) as string[];
+            const same =
+              current.length === retryIds.length &&
+              current.every((x, i) => x === retryIds[i]);
+            if (!same) setTriggerIds(retryIds);
+          } catch {
+            // noop
+          }
+        }, 1200);
       } finally {
         // noop
       }

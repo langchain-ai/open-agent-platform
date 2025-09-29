@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,7 +15,6 @@ import {
   Wrench,
   KeyRound,
   ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Bot,
 } from "lucide-react";
@@ -61,6 +60,35 @@ export function AuthRequiredDialog(props: {
   );
 
   const selectedRegistrations = props.selectedTriggerRegistrationIds ?? [];
+
+  // Auto-select a registration for any trigger that has registrations but none selected yet
+  useEffect(() => {
+    if (!props.groupedTriggers) return;
+
+    const next = new Set(selectedRegistrations);
+
+    for (const [, { registrations }] of Object.entries(props.groupedTriggers)) {
+      for (const [_templateId, regs] of Object.entries(
+        registrations as Record<string, any[]>,
+      )) {
+        if (!Array.isArray(regs) || regs.length === 0) continue;
+        const hasAnySelected = regs.some((r: any) => next.has(r.id));
+        if (!hasAnySelected) {
+          // Pick most recent by created_at if available, else first
+          const pick = [...regs].sort(
+            (a: any, b: any) =>
+              new Date(b.created_at ?? 0).getTime() -
+              new Date(a.created_at ?? 0).getTime(),
+          )[0];
+          if (pick?.id) next.add(pick.id);
+        }
+      }
+    }
+
+    if (next.size !== selectedRegistrations.length) {
+      onSelectedTriggerRegistrationIdsChange?.(Array.from(next));
+    }
+  }, [props.groupedTriggers]);
 
   const reloadTriggersNoArg = useCallback(async () => {
     if (!auth.session?.accessToken) return;
@@ -130,14 +158,17 @@ export function AuthRequiredDialog(props: {
     return registration?.template_id || registration?.id || "Registration";
   }, []);
 
-  const formatRegistrationSecondary = useCallback((registration: any): string | undefined => {
-    const res = registration?.resource as Record<string, any> | undefined;
-    if (res && typeof res === "object") {
-      const pairs = Object.entries(res).map(([k, v]) => `${k}: ${String(v)}`);
-      if (pairs.length) return pairs.join(", ");
-    }
-    return undefined;
-  }, []);
+  const formatRegistrationSecondary = useCallback(
+    (registration: any): string | undefined => {
+      const res = registration?.resource as Record<string, any> | undefined;
+      if (res && typeof res === "object") {
+        const pairs = Object.entries(res).map(([k, v]) => `${k}: ${String(v)}`);
+        if (pairs.length) return pairs.join(", ");
+      }
+      return undefined;
+    },
+    [],
+  );
 
   // Always a three-step flow
   // Triggers -> Tools -> Auth
@@ -201,7 +232,6 @@ export function AuthRequiredDialog(props: {
       </div>
     );
   };
-  console.log(props.groupedTriggers);
   return (
     <AlertDialog
       open={props.open}
@@ -307,143 +337,230 @@ export function AuthRequiredDialog(props: {
                                     triggers as unknown as Record<string, any>,
                                   ) as any[])
                               ).map((trigger) => (
+                                <div
+                                  key={trigger.id}
+                                  className="group"
+                                >
                                   <div
-                                    key={trigger.id}
-                                    className="group"
+                                    className="-mx-3 flex cursor-pointer items-start justify-between rounded-md px-3 py-3 transition-colors hover:bg-white/60"
+                                    onClick={() => {
+                                      setExpandedTriggerIds((prev) =>
+                                        prev.includes(trigger.id)
+                                          ? prev.filter(
+                                              (id) => id !== trigger.id,
+                                            )
+                                          : [...prev, trigger.id],
+                                      );
+                                    }}
                                   >
-                                    <div
-                                      className="-mx-3 flex cursor-pointer items-start justify-between rounded-md px-3 py-3 transition-colors hover:bg-white/60"
-                                      onClick={() => {
-                                        setExpandedTriggerIds((prev) =>
-                                          prev.includes(trigger.id)
-                                            ? prev.filter((id) => id !== trigger.id)
-                                            : [...prev, trigger.id],
-                                        );
-                                      }}
-                                    >
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-3">
-                                          <div
-                                            className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${(() => {
-                                              const regs = (registrations as Record<string, any[]>)[trigger.id] || [];
-                                              const isSelected = regs.some((reg) => selectedRegistrations.includes(reg.id));
-                                              return isSelected
-                                                ? "border-[#2F6868] bg-[#2F6868] text-white"
-                                                : "border-gray-300 hover:border-gray-400";
-                                            })()}`}
-                                          >
-                                            {(() => {
-                                              const regs = (registrations as Record<string, any[]>)[trigger.id] || [];
-                                              const isSelected = regs.some((reg) => selectedRegistrations.includes(reg.id));
-                                              return isSelected ? <Check className="h-3 w-3" /> : null;
-                                            })()}
-                                          </div>
-                                          <div>
-                                            <p className="text-sm leading-5 font-medium text-gray-900">
-                                              {trigger.displayName || trigger.name}
-                                            </p>
-                                            {trigger.description && (
-                                              <p className="mt-0.5 text-sm leading-5 text-gray-500">
-                                                {trigger.description}
-                                              </p>
-                                            )}
-                                          </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-3">
+                                        <div
+                                          className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${(() => {
+                                            const regs =
+                                              (
+                                                registrations as Record<
+                                                  string,
+                                                  any[]
+                                                >
+                                              )[trigger.id] || [];
+                                            const isSelected = regs.some(
+                                              (reg) =>
+                                                selectedRegistrations.includes(
+                                                  reg.id,
+                                                ),
+                                            );
+                                            return isSelected
+                                              ? "border-[#2F6868] bg-[#2F6868] text-white"
+                                              : "border-gray-300 hover:border-gray-400";
+                                          })()}`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            const regs =
+                                              (
+                                                registrations as Record<
+                                                  string,
+                                                  any[]
+                                                >
+                                              )[trigger.id] || [];
+                                            if (!regs.length) {
+                                              // No registrations yet; expand to let user add one
+                                              setExpandedTriggerIds((prev) =>
+                                                prev.includes(trigger.id)
+                                                  ? prev
+                                                  : [...prev, trigger.id],
+                                              );
+                                              return;
+                                            }
+                                            const anySelected = regs.some((r) =>
+                                              selectedRegistrations.includes(
+                                                r.id,
+                                              ),
+                                            );
+                                            if (anySelected) {
+                                              const ids = regs.map((r) => r.id);
+                                              handleSelectedRegistrationsChange(
+                                                selectedRegistrations.filter(
+                                                  (id) => !ids.includes(id),
+                                                ),
+                                              );
+                                            } else {
+                                              handleSelectedRegistrationsChange(
+                                                Array.from(
+                                                  new Set([
+                                                    ...selectedRegistrations,
+                                                    ...regs.map((r) => r.id),
+                                                  ]),
+                                                ),
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {(() => {
+                                            const regs =
+                                              (
+                                                registrations as Record<
+                                                  string,
+                                                  any[]
+                                                >
+                                              )[trigger.id] || [];
+                                            const isSelected = regs.some(
+                                              (reg) =>
+                                                selectedRegistrations.includes(
+                                                  reg.id,
+                                                ),
+                                            );
+                                            return isSelected ? (
+                                              <Check className="h-3 w-3" />
+                                            ) : null;
+                                          })()}
                                         </div>
-                                      </div>
-                                      <div className="ml-3 flex items-center">
-                                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                                        <div>
+                                          <p className="text-sm leading-5 font-medium text-gray-900">
+                                            {trigger.displayName ||
+                                              trigger.name}
+                                          </p>
+                                          {trigger.description && (
+                                            <p className="mt-0.5 text-sm leading-5 text-gray-500">
+                                              {trigger.description}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-
-                                    {/* Registration options - only show when trigger is actually selected */}
-                                    {(() => {
-                                      const triggerRegistrations = (
-                                        registrations as Record<string, any[]>
-                                      )[trigger.id] || [];
-                                      const isExpanded = expandedTriggerIds.includes(trigger.id);
-                                      if (!isExpanded) return null;
-
-                                      return (
-                                        <div className="mt-3 ml-8 space-y-2">
-                                          {triggerRegistrations.length > 0 ? (
-                                            <div className="mb-2 flex items-center justify-between">
-                                              <p className="text-xs font-medium text-gray-700">Registrations</p>
-                                              <AuthenticateTriggerDialog
-                                                trigger={trigger}
-                                                reloadTriggers={reloadTriggersNoArg}
-                                                onCancel={() => undefined}
-                                              />
-                                            </div>
-                                          ) : (
-                                            <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
-                                              <span>No registrations yet.</span>
-                                              <AuthenticateTriggerDialog
-                                                trigger={trigger}
-                                                reloadTriggers={reloadTriggersNoArg}
-                                                onCancel={() => undefined}
-                                              />
-                                            </div>
-                                          )}
-                                          {triggerRegistrations.map((registration) => (
-                                              <div
-                                                key={registration.id}
-                                                className="flex items-center gap-2"
-                                              >
-                                                <button
-                                                  className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
-                                                    selectedRegistrations.includes(registration.id)
-                                                      ? "border-[#2F6868] bg-[#2F6868] text-white"
-                                                      : "border-gray-300 hover:border-gray-400"
-                                                  }`}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const regId = registration.id;
-                                                    const isSelected =
-                                                      selectedRegistrations.includes(
-                                                        regId,
-                                                      );
-                                                    if (isSelected) {
-                                                      handleSelectedRegistrationsChange(
-                                                        selectedRegistrations.filter(
-                                                          (id) => id !== regId,
-                                                        ),
-                                                      );
-                                                    } else {
-                                                      handleSelectedRegistrationsChange(
-                                                        [
-                                                          ...selectedRegistrations,
-                                                          regId,
-                                                        ],
-                                                      );
-                                                    }
-                                                  }}
-                                                >
-                                                  {selectedRegistrations.includes(registration.id) && (
-                                                    <Check className="h-2.5 w-2.5" />
-                                                  )}
-                                                </button>
-                                                <div>
-                                              <p className="text-sm text-gray-900">
-                                                    {formatRegistrationPrimary(registration)}
-                                                  </p>
-                                                  {formatRegistrationSecondary(registration) && (
-                                                    <p className="text-xs text-gray-500">
-                                                      {formatRegistrationSecondary(registration)}
-                                                    </p>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            ),
-                                          )}
-                                        </div>
-                                      );
-                                    })()}
+                                    <div className="ml-3 flex items-center">
+                                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                                    </div>
                                   </div>
-                                ),
-                              )}
+
+                                  {/* Registration options - only show when trigger is actually selected */}
+                                  {(() => {
+                                    const triggerRegistrations =
+                                      (registrations as Record<string, any[]>)[
+                                        trigger.id
+                                      ] || [];
+                                    const isExpanded =
+                                      expandedTriggerIds.includes(trigger.id);
+                                    if (!isExpanded) return null;
+
+                                    return (
+                                      <div className="mt-3 ml-8 space-y-2">
+                                        {triggerRegistrations.length > 0 ? (
+                                          <div className="mb-2 flex items-center justify-between">
+                                            <p className="text-xs font-medium text-gray-700">
+                                              Registrations
+                                            </p>
+                                            <AuthenticateTriggerDialog
+                                              trigger={trigger}
+                                              reloadTriggers={
+                                                reloadTriggersNoArg
+                                              }
+                                              onCancel={() => undefined}
+                                            />
+                                          </div>
+                                        ) : (
+                                          <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
+                                            <span>No registrations yet.</span>
+                                            <AuthenticateTriggerDialog
+                                              trigger={trigger}
+                                              reloadTriggers={
+                                                reloadTriggersNoArg
+                                              }
+                                              onCancel={() => undefined}
+                                            />
+                                          </div>
+                                        )}
+                                        {triggerRegistrations.map(
+                                          (registration) => (
+                                            <div
+                                              key={registration.id}
+                                              className="flex items-center gap-2"
+                                            >
+                                              <button
+                                                className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
+                                                  selectedRegistrations.includes(
+                                                    registration.id,
+                                                  )
+                                                    ? "border-[#2F6868] bg-[#2F6868] text-white"
+                                                    : "border-gray-300 hover:border-gray-400"
+                                                }`}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const regId = registration.id;
+                                                  const isSelected =
+                                                    selectedRegistrations.includes(
+                                                      regId,
+                                                    );
+                                                  if (isSelected) {
+                                                    handleSelectedRegistrationsChange(
+                                                      selectedRegistrations.filter(
+                                                        (id) => id !== regId,
+                                                      ),
+                                                    );
+                                                  } else {
+                                                    handleSelectedRegistrationsChange(
+                                                      [
+                                                        ...selectedRegistrations,
+                                                        regId,
+                                                      ],
+                                                    );
+                                                  }
+                                                }}
+                                              >
+                                                {selectedRegistrations.includes(
+                                                  registration.id,
+                                                ) && (
+                                                  <Check className="h-2.5 w-2.5" />
+                                                )}
+                                              </button>
+                                              <div>
+                                                <p className="text-sm text-gray-900">
+                                                  {formatRegistrationPrimary(
+                                                    registration,
+                                                  )}
+                                                </p>
+                                                {formatRegistrationSecondary(
+                                                  registration,
+                                                ) && (
+                                                  <p className="text-xs text-gray-500">
+                                                    {formatRegistrationSecondary(
+                                                      registration,
+                                                    )}
+                                                  </p>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
+                        ),
+                      )}
                     </div>
                   )}
                 </div>

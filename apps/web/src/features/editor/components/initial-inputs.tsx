@@ -585,10 +585,33 @@ export function InitialInputs({
               return;
             }
 
-            if (selectedTriggerRegistrationIds.length) {
+            // Ensure we have registration IDs to link; if none explicitly selected,
+            // pick the most recent registration for each enabled trigger template.
+            let toLink = selectedTriggerRegistrationIds;
+            if ((!toLink || toLink.length === 0) && groupedTriggers) {
+              const picked: string[] = [];
+              for (const [, { registrations }] of Object.entries(
+                groupedTriggers,
+              )) {
+                for (const [, regs] of Object.entries(
+                  registrations as Record<string, any[]>,
+                )) {
+                  if (!Array.isArray(regs) || regs.length === 0) continue;
+                  const pick = [...regs].sort(
+                    (a: any, b: any) =>
+                      new Date(b.created_at ?? 0).getTime() -
+                      new Date(a.created_at ?? 0).getTime(),
+                  )[0];
+                  if (pick?.id) picked.push(pick.id);
+                }
+              }
+              toLink = Array.from(new Set(picked));
+            }
+
+            if (toLink && toLink.length) {
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
-                selectedTriggerIds: selectedTriggerRegistrationIds,
+                selectedTriggerIds: toLink,
               });
               if (!success) {
                 toast.error("Failed to add agent triggers", {
