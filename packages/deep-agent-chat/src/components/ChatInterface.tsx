@@ -28,7 +28,6 @@ import {
   isPreparingToCallTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
-import { useClients } from "../providers/ClientProvider";
 import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
 import { cn } from "../lib/utils";
@@ -36,22 +35,22 @@ import { ThreadActionsView } from "./interrupted-actions";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { FilesPopover } from "./TasksFilesSidebar";
+import useInterruptedActions from "./interrupted-actions/hooks/use-interrupted-actions";
+import { HumanResponseWithEdits } from "../types/inbox";
 
 interface ChatInterfaceProps {
   assistant: Assistant | null;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
-  setTodos: (todos: TodoItem[]) => void;
-  files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
   // Optional controlled view props from host app
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
   hideInternalToggle?: boolean;
   InterruptActionsRenderer?: React.ComponentType;
+  onInput?: (input: string) => void;
+
   controls: React.ReactNode;
   empty: React.ReactNode;
-  todos: TodoItem[];
 }
 
 const getStatusIcon = (status: TodoItem["status"], className?: string) => {
@@ -85,25 +84,29 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     assistant,
     debugMode,
     setDebugMode,
-    todos,
-    setTodos,
-    files,
-    setFiles,
     view,
     onViewChange,
+    onInput,
     controls,
     hideInternalToggle,
     empty,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
+    const [agentId] = useQueryState("agentId");
     const [metaOpen, setMetaOpen] = useState<"tasks" | "files" | null>(null);
     const tasksContainerRef = useRef<HTMLDivElement | null>(null);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const isControlledView = typeof view !== "undefined";
     const workflowView = isControlledView
       ? view === "workflow"
       : isWorkflowView;
+
+    useEffect(() => {
+      const timeout = setTimeout(() => void textareaRef.current?.focus());
+      return () => clearTimeout(timeout);
+    }, [threadId, agentId]);
 
     const setView = useCallback(
       (view: "chat" | "workflow") => {
@@ -115,42 +118,27 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       [onViewChange, isControlledView],
     );
 
-    const { client } = useClients();
-
-    const [input, setInput] = useState("");
+    const [input, _setInput] = useState("");
     const { scrollRef, contentRef } = useStickToBottom();
+
+    const inputCallbackRef = useRef(onInput);
+    inputCallbackRef.current = onInput;
+
+    const setInput = useCallback(
+      (value: string) => {
+        _setInput(value);
+        inputCallbackRef.current?.(value);
+      },
+      [inputCallbackRef],
+    );
 
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
 
-    // When the threadId changes, grab the thread state from the graph server
-    useEffect(() => {
-      const fetchThreadState = async () => {
-        if (!threadId || !client) {
-          setTodos([]);
-          setFiles({});
-          return;
-        }
-        try {
-          const state = await client.threads.getState(threadId);
-          if (state.values) {
-            const currentState = state.values as {
-              todos?: TodoItem[];
-              files?: Record<string, string>;
-            };
-            setTodos(currentState.todos || []);
-            setFiles(currentState.files || {});
-          }
-        } catch (error) {
-          console.error("Failed to fetch thread state:", error);
-          setTodos([]);
-          setFiles({});
-        }
-      };
-      fetchThreadState();
-    }, [threadId, client, setTodos, setFiles]);
-
     const {
       messages,
+      todos,
+      files,
+      setFiles,
       isLoading,
       isThreadLoading,
       interrupt,
@@ -161,7 +149,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       stopStream,
     } = useChatContext();
 
-    const submitDisabled = isLoading || !!interrupt || !assistant;
+    const actions = useInterruptedActions({
+      interrupt,
+    });
+
+    const submitDisabled = isLoading || !assistant;
 
     const handleSubmit = useCallback(
       (e?: FormEvent) => {
@@ -169,6 +161,13 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           e.preventDefault();
         }
         if (submitDisabled) return;
+
+        if (interrupt) {
+          actions.handleSubmit(e);
+          actions.resetState();
+          setInput("");
+          return;
+        }
 
         const messageText = input.trim();
         if (!messageText || isLoading) return;
@@ -185,7 +184,17 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         }
         setInput("");
       },
-      [input, isLoading, sendMessage, debugMode, runSingleStep, submitDisabled],
+      [
+        input,
+        isLoading,
+        sendMessage,
+        debugMode,
+        setInput,
+        runSingleStep,
+        submitDisabled,
+        actions,
+        interrupt,
+      ],
     );
 
     const handleKeyDown = useCallback(
@@ -310,7 +319,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 id: toolCall.id || `tool-${Math.random()}`,
                 name,
                 args,
-                status: "pending" as const,
+                status: interrupt ? "interrupted" : ("pending" as const),
               } as ToolCall;
             },
           );
@@ -353,7 +362,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           showAvatar: data.message.type !== prevMessage?.type,
         };
       });
-    }, [messages]);
+    }, [messages, interrupt]);
 
     const toggle = !hideInternalToggle && (
       <div className="flex w-full justify-center">
@@ -429,13 +438,49 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const hasTasks = todos.length > 0;
     const hasFiles = Object.keys(files).length > 0;
 
+    const isEmpty = empty != null && processedMessages.length === 0;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInput(e.target.value);
+
+      if (interrupt) {
+        actions.setSelectedSubmitType("response");
+        actions.setHasAddedResponse(true);
+
+        actions.setHumanResponse((prev) => {
+          const newResponse: HumanResponseWithEdits = {
+            type: "response",
+            args: e.target.value,
+          };
+
+          if (prev.find((p) => p.type === newResponse.type)) {
+            return prev.map((p) => {
+              if (p.type === newResponse.type) {
+                if (p.acceptAllowed) {
+                  return {
+                    ...newResponse,
+                    acceptAllowed: true,
+                    editsMade: !!e.target.value,
+                  };
+                }
+                return newResponse;
+              }
+              return p;
+            });
+          } else {
+            throw new Error("No human response found for string response");
+          }
+        });
+      }
+    };
+
     return (
       <div
-        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
+        className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
         ref={scrollRef}
       >
         <div
-          className="flex-grow px-6 pt-4 pb-10"
+          className="mx-auto w-full max-w-[1024px] flex-grow px-6 pt-4 pb-10"
           ref={contentRef}
         >
           {processedMessages.map((data, index) => (
@@ -448,6 +493,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               debugMode={debugMode}
               isLoading={isLoading}
               isLastMessage={index === processedMessages.length - 1}
+              interrupt={interrupt}
             />
           ))}
           {interrupt && (
@@ -469,23 +515,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           )}
         </div>
 
-        {empty ? (
+        {isEmpty && (
           <div className="mx-4 mb-8 flex flex-col items-center gap-3 text-center">
             <h1 className="text-2xl font-medium">
               What would you like to work on?
             </h1>
           </div>
-        ) : null}
+        )}
 
         <div
           className={cn(
             "bg-background sticky z-10 mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
-            "transition-colors duration-200 ease-in-out",
-            empty ? "top-6" : "bottom-6",
+            "mx-auto w-[calc(100%-32px)] max-w-[1024px] transition-colors duration-200 ease-in-out",
+            isEmpty ? "top-6" : "bottom-6",
           )}
         >
           {(hasTasks || hasFiles) && (
-            <div className="bg-sidebar flex flex-col border-b empty:hidden">
+            <div className="bg-sidebar flex max-h-72 flex-col overflow-y-auto border-b empty:hidden">
               {!metaOpen && (
                 <>
                   {(() => {
@@ -587,7 +633,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
               {metaOpen && (
                 <>
-                  <div className="flex items-stretch text-sm">
+                  <div className="bg-sidebar sticky top-0 flex items-stretch text-sm">
                     {hasTasks && (
                       <button
                         type="button"
@@ -605,7 +651,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                     {hasFiles && (
                       <button
                         type="button"
-                        className="py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
+                        className="inline-flex items-center gap-2 py-3 pr-4 first:pl-4.5 aria-expanded:font-semibold"
                         onClick={() =>
                           setMetaOpen((prev) =>
                             prev === "files" ? null : "files",
@@ -614,6 +660,9 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                         aria-expanded={metaOpen === "files"}
                       >
                         Files
+                        <span className="h-4 min-w-4 rounded-full bg-[#2F6868] px-0.5 text-center text-[10px] leading-[16px] text-white">
+                          {Object.keys(files).length}
+                        </span>
                       </button>
                     )}
                     <button
@@ -624,7 +673,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   </div>
                   <div
                     ref={tasksContainerRef}
-                    className="max-h-60 overflow-y-auto px-4.5"
+                    className="px-4.5"
                   >
                     {metaOpen === "tasks" &&
                       Object.entries(groupedTodos)
@@ -654,7 +703,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                         ))}
 
                     {metaOpen === "files" && (
-                      <div className="-mx-2 mb-4">
+                      <div className="mb-6">
                         <FilesPopover
                           files={files}
                           setFiles={setFiles}
@@ -674,13 +723,16 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             className="flex flex-col"
           >
             <textarea
+              ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={
-                isLoading || !!interrupt
+                isLoading
                   ? "Running..."
-                  : "Write your message..."
+                  : interrupt
+                    ? "Respond to the interrupt..."
+                    : "Write your message..."
               }
               className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
               rows={1}
@@ -716,7 +768,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   ) : (
                     <>
                       <ArrowUp size={18} />
-                      <span>Send</span>
+                      <span>{interrupt ? "Resume" : "Send"}</span>
                     </>
                   )}
                 </Button>
@@ -725,7 +777,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           </form>
         </div>
 
-        {empty != null && <div className="flex-grow">{empty}</div>}
+        {isEmpty && <div className="flex-grow-3">{empty}</div>}
       </div>
     );
   },

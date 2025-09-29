@@ -1,4 +1,6 @@
 import { Assistant } from "@langchain/langgraph-sdk";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
+import type { StateType } from "../hooks/useChat";
 
 export interface DeepAgentChatConfig {
   assistant: Assistant | null;
@@ -12,6 +14,7 @@ export interface DeepAgentChatConfig {
   // Controls Chat vs Workflow view from the host app
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
+  onInput?: (input: string) => void;
   // When controlled by the host, hide the internal toggle UI
   hideInternalToggle?: boolean;
   // Hide the sidebar with agent tasks, file system, and agent optimizer
@@ -19,4 +22,6 @@ export interface DeepAgentChatConfig {
   // Controls the controls that are shown in the chat interface
   controls?: React.ReactNode;
   empty?: React.ReactNode;
+  thread?: UseStreamThread<StateType>;
+  onHistoryRevalidate?: () => void;
 }

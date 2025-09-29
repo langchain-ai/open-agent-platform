@@ -8,75 +8,57 @@ import {
   type Checkpoint,
 } from "@langchain/langgraph-sdk";
 import { v4 as uuidv4 } from "uuid";
+import type { UseStreamThread } from "@langchain/langgraph-sdk/react";
 import type { TodoItem } from "../types";
 import { useClients } from "../providers/ClientProvider";
 import { HumanResponse } from "../types/inbox";
+import { useQueryState } from "nuqs";
 
-type StateType = {
+export type StateType = {
   messages: Message[];
   todos: TodoItem[];
   files: Record<string, string>;
 };
 
-export function useChat(
-  threadId: string | null,
-  setThreadId: (
-    value: string | ((old: string | null) => string | null) | null,
-  ) => void,
-  onTodosUpdate: (todos: TodoItem[]) => void,
-  files: Record<string, string>,
-  onFilesUpdate: (files: Record<string, string>) => void,
-  activeAssistant: Assistant | null,
-) {
+export function useChat({
+  activeAssistant,
+  onHistoryRevalidate,
+  thread,
+}: {
+  activeAssistant: Assistant | null;
+  onHistoryRevalidate?: () => void;
+  thread?: UseStreamThread<StateType>;
+}) {
+  const [threadId, setThreadId] = useQueryState("threadId");
   const { client } = useClients();
-
-  const handleUpdateEvent = useCallback(
-    (data: { [node: string]: Partial<StateType> }) => {
-      Object.values(data).forEach((nodeData) => {
-        if (nodeData?.todos !== undefined) {
-          onTodosUpdate(nodeData.todos);
-        }
-        if (nodeData?.files !== undefined) {
-          onFilesUpdate(nodeData.files);
-        }
-      });
-    },
-    [onTodosUpdate, onFilesUpdate],
-  );
 
   const stream = useStream<StateType>({
     assistantId: activeAssistant?.assistant_id || "",
     client: client ?? undefined,
     reconnectOnMount: true,
     threadId: threadId ?? null,
-    onUpdateEvent: handleUpdateEvent,
     onThreadId: setThreadId,
-    defaultHeaders: {
-      "x-auth-scheme": "langsmith",
-    },
+    defaultHeaders: { "x-auth-scheme": "langsmith" },
+    onFinish: onHistoryRevalidate,
+    onError: onHistoryRevalidate,
+    onCreated: onHistoryRevalidate,
+    experimental_thread: thread,
   });
 
   const sendMessage = useCallback(
-    (message: string) => {
-      const humanMessage: Message = {
-        id: uuidv4(),
-        type: "human",
-        content: message,
-      };
+    (content: string) => {
+      const newMessage: Message = { id: uuidv4(), type: "human", content };
       stream.submit(
-        { messages: [humanMessage], files },
+        { messages: [newMessage] },
         {
-          optimisticValues: {
-            messages: [...(stream.messages ?? []), humanMessage],
-          },
-          config: {
-            ...(activeAssistant?.config || {}),
-            recursion_limit: 100,
-          },
+          optimisticValues: (prev) => ({
+            messages: [...(prev.messages ?? []), newMessage],
+          }),
+          config: { ...(activeAssistant?.config ?? {}), recursion_limit: 100 },
         },
       );
     },
-    [stream, activeAssistant?.config, files],
+    [stream, activeAssistant?.config],
   );
 
   const runSingleStep = useCallback(
@@ -91,9 +73,7 @@ export function useChat(
           ...(optimisticMessages
             ? { optimisticValues: { messages: optimisticMessages } }
             : {}),
-          config: {
-            ...(activeAssistant?.config || {}),
-          },
+          config: activeAssistant?.config,
           checkpoint: checkpoint,
           ...(isRerunningSubagent
             ? { interruptAfter: ["tools"] }
@@ -101,17 +81,22 @@ export function useChat(
         });
       } else {
         stream.submit(
-          { messages, files },
-          {
-            config: {
-              ...(activeAssistant?.config || {}),
-            },
-            interruptBefore: ["tools"],
-          },
+          { messages },
+          { config: activeAssistant?.config, interruptBefore: ["tools"] },
         );
       }
     },
-    [stream, activeAssistant?.config, files],
+    [stream, activeAssistant?.config],
+  );
+
+  const setFiles = useCallback(
+    async (files: Record<string, string>) => {
+      if (!threadId) return;
+      // TODO: missing a way how to revalidate the internal state
+      // I think we do want to have the ability to externally manage the state
+      await client.threads.updateState(threadId, { values: { files } });
+    },
+    [client, threadId],
   );
 
   const continueStream = useCallback(
@@ -130,20 +115,11 @@ export function useChat(
   );
 
   const sendHumanResponse = (response: HumanResponse[]): void => {
-    stream.submit(null, {
-      command: {
-        resume: response,
-      },
-    });
+    stream.submit(null, { command: { resume: response } });
   };
 
   const markCurrentThreadAsResolved = (): void => {
-    stream.submit(null, {
-      command: {
-        goto: "__end__",
-        update: null,
-      },
-    });
+    stream.submit(null, { command: { goto: "__end__", update: null } });
   };
 
   const stopStream = useCallback(() => {
@@ -151,6 +127,9 @@ export function useChat(
   }, [stream]);
 
   return {
+    todos: stream.values.todos ?? [],
+    files: stream.values.files ?? {},
+    setFiles,
     messages: stream.messages,
     isLoading: stream.isLoading,
     isThreadLoading: stream.isThreadLoading,

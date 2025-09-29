@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Loader2,
   CircleCheckBigIcon,
+  Pause,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { ToolCall } from "../types";
@@ -58,6 +59,13 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
           <Loader2
             size={14}
             className="animate-spin"
+          />
+        );
+      case "interrupted":
+        return (
+          <Pause
+            size={14}
+            className="text-orange-500"
           />
         );
       default:

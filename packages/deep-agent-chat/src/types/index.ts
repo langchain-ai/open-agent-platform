@@ -3,7 +3,7 @@ export interface ToolCall {
   name: string;
   args: Record<string, unknown>;
   result?: string;
-  status: "pending" | "completed" | "error";
+  status: "pending" | "completed" | "error" | "interrupted";
 }
 
 export interface SubAgent {

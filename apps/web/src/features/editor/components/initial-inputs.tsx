@@ -258,6 +258,15 @@ export function InitialInputs({
     return createClient(deploymentId, session.accessToken);
   }, [session, deploymentId]);
 
+  const isCronTrigger = (trigger: Trigger): boolean => {
+    return (
+      trigger.id.toLowerCase().includes("cron") ||
+      trigger.provider.toLowerCase() === "cron" ||
+      trigger.displayName.toLowerCase().includes("cron") ||
+      trigger.displayName.toLowerCase().includes("schedule")
+    );
+  };
+
   const groupedTriggers: GroupedTriggerRegistrationsByProvider | undefined =
     useMemo(() => {
       if (!registrations || !triggers || !enabledTriggerIds.length)
@@ -305,7 +314,7 @@ export function InitialInputs({
             );
           }),
       );
-    }, [registrations, triggers, enabledTriggerIds]);
+    }, [registrations, triggers, enabledTriggerIds, isCronTrigger]);
 
   const loadTriggers = async (accessToken: string) => {
     const [triggersList, userTriggersList] = await Promise.all([
@@ -398,7 +407,6 @@ export function InitialInputs({
     setCreatingAgent(false);
     setCreatingAgentLoadingText("");
   };
-
   function isCronTrigger(trigger: Trigger): boolean {
     return (
       trigger.id.toLowerCase().includes("cron") ||
@@ -407,7 +415,6 @@ export function InitialInputs({
       trigger.displayName.toLowerCase().includes("schedule")
     );
   }
-
   const handleAutoCronSetup = async (
     cronSchedules: string[],
     agentId: string,

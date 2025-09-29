@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@langchain/core": "^0.3.44",
-    "@langchain/langgraph-sdk": "^0.0.109",
+    "@langchain/langgraph-sdk": "^0.1.8",
     "@modelcontextprotocol/sdk": "^1.11.4",
     "@open-agent-platform/deep-agent-chat": "*",
     "@radix-ui/react-alert-dialog": "^1.1.11",

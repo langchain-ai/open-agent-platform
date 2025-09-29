@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import React, { useMemo } from "react";
 
-function SupportedConfigBadge({
+export function SupportedConfigBadge({
   type,
 }: {
   type: "tools" | "triggers" | "subagents";

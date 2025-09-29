@@ -19,7 +19,7 @@
     "clean": "rm -rf .turbo || true"
   },
   "dependencies": {
-    "@langchain/langgraph-sdk": "^0.0.109",
+    "@langchain/langgraph-sdk": "^0.1.8",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",

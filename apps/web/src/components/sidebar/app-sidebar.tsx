@@ -1,17 +1,11 @@
 "use client";
 
 import * as React from "react";
-import {
-  Settings,
-  Puzzle,
-  MessageCircle,
-  Plus,
-  // Edit,
-  type LucideIcon,
-} from "lucide-react";
+import { Settings, Puzzle, MessageCircle, type LucideIcon } from "lucide-react";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
+import { AgentSidebar } from "./agent-sidebar";
 import {
   Sidebar,
   SidebarContent,
@@ -31,12 +25,6 @@ interface NavigationItems {
 
 const createNavigationItems = (): NavigationItems => ({
   mainNav: [
-    {
-      title: "New Agent",
-      url: "/editor?new=true",
-      icon: Plus,
-      isAgentCreator: true,
-    },
     {
       title: "Agent Library",
       url: "/agents",
@@ -71,6 +59,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SiteHeader />
       <SidebarContent>
         <NavMain items={navItems.mainNav} />
+        <AgentSidebar />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

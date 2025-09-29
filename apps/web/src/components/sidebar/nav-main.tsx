@@ -1,44 +1,14 @@
 "use client";
 
 import { type LucideIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
 
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import NextLink from "next/link";
-import { cn } from "@/lib/utils";
 import { AgentDropdown } from "./agent-dropdown";
-
-function ChatNavItem({
-  item,
-}: {
-  item: { title: string; url: string; icon?: LucideIcon };
-}) {
-  const pathname = usePathname();
-
-  return (
-    <NextLink href={item.url}>
-      <SidebarMenuItem
-        className={cn(
-          pathname === item.url &&
-            "bg-sidebar-accent text-sidebar-accent-foreground",
-        )}
-      >
-        <SidebarMenuButton tooltip={item.title}>
-          {item.icon && <item.icon />}
-          <span className={cn(pathname === item.url && "font-semibold")}>
-            {item.title}
-          </span>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </NextLink>
-  );
-}
+import { ChatNavItem } from "./chat-nav-item";
 
 export function NavMain({
   items,

@@ -8,25 +8,29 @@ import type { Thread } from "@langchain/langgraph-sdk";
 import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
 import { useAgentsContext } from "@/providers/Agents";
-import { useThreads, useAgentSummaries, getThreadColor } from "../utils";
+import {
+  useThreads,
+  getThreadColor,
+  formatTime,
+  formatTimeElapsed,
+} from "../utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 
 export function ThreadHistoryAgentList({
   onThreadSelect,
-  showDraft = false,
+  showDraft,
   className,
   statusFilter = "all",
 }: {
   onThreadSelect: (id: string, assistantId?: string) => void;
-  showDraft?: boolean;
+  showDraft?: string;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
   const [currentThreadId] = useQueryState("threadId");
   const [deploymentId] = useQueryState("deploymentId");
-  const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
-  const [_, setCurrentThreadId] = useQueryState("threadId");
+  const [selectedAgentId] = useQueryState("agentId");
   const { agents } = useAgentsContext();
 
   // TODO: remove once the draft thread is handled differently
@@ -40,18 +44,15 @@ export function ThreadHistoryAgentList({
   );
 
   const threads = useThreads();
-  const agentSummaries = useAgentSummaries();
 
   const displayItems = useMemo(() => {
-    if (showDraft && !currentThreadId && agent) {
+    if (showDraft != null && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
         updatedAt: new Date(),
         status: "draft",
-        title: agent.name || "Agent",
-        description:
-          (agent.metadata?.description as string | undefined) ||
-          "No description",
+        title: showDraft,
+        description: "Draft thread",
       };
       return [draft, ...(threads.data ?? [])];
     }
@@ -84,43 +85,6 @@ export function ThreadHistoryAgentList({
   return (
     <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
       <div className="relative flex h-full">
-        {/* Agent Sidebar - Only show when agent is selected */}
-        {selectedAgentId != null && (
-          <div className="bg-sidebar w-16 border-r transition-all duration-300 ease-in-out">
-            <ScrollArea className="h-full w-full">
-              <div className="flex flex-col items-center gap-2 p-2">
-                {agentSummaries.data?.map(({ agent, interrupted }) => {
-                  const isSelected = selectedAgentId === agent.assistant_id;
-
-                  return (
-                    <button
-                      key={agent.assistant_id}
-                      onClick={() => {
-                        setSelectedAgentId(agent.assistant_id);
-                        setCurrentThreadId(null);
-                      }}
-                      className={cn(
-                        "relative flex h-12 w-12 items-center justify-center rounded-full font-semibold text-white transition-all duration-200 hover:scale-105",
-                        isSelected ? "ring-2 ring-[#2F6868] ring-offset-2" : "",
-                      )}
-                      style={{ backgroundColor: getAgentColor(agent.name) }}
-                      title={agent.name}
-                    >
-                      {agent.name?.slice(0, 2).toUpperCase()}
-
-                      {interrupted ? (
-                        <span className="border-sidebar absolute -right-1 -bottom-1 flex h-5 min-w-5 items-center justify-center rounded-full border-[2px] bg-red-500 px-1 text-xs text-white">
-                          {interrupted}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
-
         {/* Main Content Area */}
         <ScrollArea className="h-full w-full">
           {threads.isLoading ? (
@@ -260,44 +224,6 @@ export function AgentSummaryCard({
   onClick: () => void;
 }) {
   const { agent, latestThread, interrupted } = summary;
-
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return format(date, "HH:mm");
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return format(date, "EEEE");
-    } else {
-      return format(date, "MM/dd");
-    }
-  };
-
-  const formatTimeElapsed = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 1) {
-      return "Just now";
-    } else if (minutes < 60) {
-      return `${minutes}m ago`;
-    } else if (hours < 24) {
-      return `${hours}h ago`;
-    } else if (days === 1) {
-      return "1 day ago";
-    } else if (days < 7) {
-      return `${days} days ago`;
-    } else {
-      return format(date, "MMM dd");
-    }
-  };
 
   return (
     <button

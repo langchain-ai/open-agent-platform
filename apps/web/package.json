@@ -22,7 +22,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@langchain/auth": "^0.0.0",
     "@langchain/core": "^0.3.44",
-    "@langchain/langgraph-sdk": "^0.1.7",
+    "@langchain/langgraph-sdk": "^0.1.8",
     "@modelcontextprotocol/sdk": "^1.11.4",
     "@open-agent-platform/deep-agent-chat": "*",
     "@radix-ui/react-accordion": "^1.2.12",

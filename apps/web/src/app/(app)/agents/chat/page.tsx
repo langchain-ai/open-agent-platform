@@ -1,15 +1,25 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Maximize2, Minimize2, SquarePen, MessageCircle } from "lucide-react";
+import { Check, Edit, Maximize2, Minimize2, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import NextLink from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
@@ -27,33 +37,50 @@ import {
   AgentSummaryCard,
   ThreadHistoryAgentList,
 } from "@/features/chat/components/thread-history-agent-list";
-import { getThreadColor, useAgentSummaries } from "@/features/chat/utils";
+import {
+  getThreadColor,
+  useAgentSummaries,
+  useThread,
+} from "@/features/chat/utils";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import {
-  extractStringFromMessageContent,
-  truncateText,
-} from "@/features/chat/utils";
-import { Thread } from "@langchain/langgraph-sdk";
 import { getAgentColor } from "@/features/agents/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Agent } from "@/types/agent";
+import { SupportedConfigBadge } from "@/features/agents/components/agent-card";
+
+const DraftContext = createContext<
+  [string | null, Dispatch<SetStateAction<string | null>>]
+>([null, (state) => state]);
 
 function ThreadSidebar() {
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
   const [statusFilter, setStatusFilter] = useQueryState("status");
+  const [draft] = useContext(DraftContext);
 
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-      <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b p-4">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
         <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
           Chat
           {sidebar && (
@@ -154,6 +181,7 @@ function ThreadSidebar() {
             }
             await setCurrentThreadId(id);
           }}
+          showDraft={draft ?? undefined}
           statusFilter={
             ((statusFilter as string) || "all") as
               | "all"
@@ -165,155 +193,6 @@ function ThreadSidebar() {
         />
       </div>
     </div>
-  );
-}
-
-function AgentChatIntroRecentThread({ thread }: { thread: Thread }) {
-  const [_threadId, setCurrentThreadId] = useQueryState("threadId");
-  const [_agentId, setAgentId] = useQueryState("agentId");
-  const { agents } = useAgentsContext();
-
-  const formatTime = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return format(date, "HH:mm");
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return format(date, "EEEE");
-    } else {
-      return format(date, "MM/dd");
-    }
-  };
-
-  const extractThreadTitle = (thread: any) => {
-    try {
-      if (
-        thread.values &&
-        typeof thread.values === "object" &&
-        "messages" in thread.values
-      ) {
-        const messages = (thread.values as { messages?: unknown[] }).messages;
-        if (Array.isArray(messages) && messages.length > 0) {
-          const lastHuman = messages
-            .filter((m: any) => m.type === "human")
-            .at(-1);
-          if (lastHuman) {
-            const content = extractStringFromMessageContent(lastHuman as any);
-            return truncateText(content, 60);
-          }
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to get title for thread ${thread.thread_id}:`, err);
-    }
-    return `Thread ${thread.thread_id.slice(0, 8)}`;
-  };
-
-  const extractThreadDescription = (thread: any) => {
-    try {
-      if (
-        thread.values &&
-        typeof thread.values === "object" &&
-        "messages" in thread.values
-      ) {
-        const messages = (thread.values as { messages?: unknown[] }).messages;
-        if (Array.isArray(messages) && messages.length > 0) {
-          const lastMessage = messages[messages.length - 1];
-          const content = extractStringFromMessageContent(lastMessage as any);
-          return truncateText(content, 80);
-        }
-      }
-    } catch (err) {
-      console.warn(
-        `Failed to get description for thread ${thread.thread_id}:`,
-        err,
-      );
-    }
-    return "No messages";
-  };
-
-  const getAgentForThread = (thread: Thread) => {
-    const meta = (thread as unknown as { metadata?: Record<string, unknown> })
-      .metadata;
-    const assistantId =
-      (meta?.["assistant_id"] as string | undefined) || undefined;
-
-    if (assistantId) {
-      return agents.find((agent) => agent.assistant_id === assistantId);
-    }
-    return null;
-  };
-
-  const handleThreadSelect = async (thread: Thread) => {
-    // Extract assistant_id from thread metadata if available
-    const meta = (thread as unknown as { metadata?: Record<string, unknown> })
-      .metadata;
-    const assistantId =
-      (meta?.["assistant_id"] as string | undefined) || undefined;
-
-    if (assistantId) {
-      await setAgentId(assistantId);
-    }
-    await setCurrentThreadId(thread.thread_id);
-  };
-
-  const agent = getAgentForThread(thread);
-
-  return (
-    <button
-      key={thread.thread_id}
-      onClick={() => handleThreadSelect(thread)}
-      className="w-full p-3 text-left transition-colors duration-200 hover:bg-gray-50"
-    >
-      <div className="flex items-start gap-3">
-        {/* Chat Bubble Icon */}
-        <div className="flex-shrink-0">
-          <MessageCircle className="h-5 w-5 text-gray-400" />
-        </div>
-
-        {/* Content */}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-medium text-gray-900">
-                {extractThreadTitle(thread)}
-              </h3>
-              <div className="mt-1 flex items-center gap-1.5">
-                {/* Agent Avatar in Description */}
-                {agent && (
-                  <div
-                    className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white"
-                    style={{ backgroundColor: getAgentColor(agent.name) }}
-                  >
-                    {agent.name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-                <p className="truncate text-xs text-gray-600">
-                  {extractThreadDescription(thread)}
-                </p>
-              </div>
-            </div>
-            <div className="ml-3 flex flex-col items-end">
-              <span className="text-xs text-gray-500">
-                {formatTime(new Date(thread.updated_at || thread.created_at))}
-              </span>
-              <div className="mt-1 flex items-center gap-1">
-                <div
-                  className={cn("h-2 w-2 rounded-full", getThreadColor(thread))}
-                />
-                <span className="text-xs text-gray-500 capitalize">
-                  {thread.status}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </button>
   );
 }
 
@@ -338,6 +217,9 @@ function AgentChatIntro(props: { deploymentId: string }) {
   );
 
   const agents = useAgentSummaries();
+
+  // Hide for now
+  return <span />;
 
   if (recent.isLoading) {
     return (
@@ -367,7 +249,6 @@ function AgentChatIntro(props: { deploymentId: string }) {
       >
         <TabsList className="mb-4">
           <TabsTrigger value="agents">Agents</TabsTrigger>
-          <TabsTrigger value="recent">Recent Threads</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents">
@@ -382,17 +263,207 @@ function AgentChatIntro(props: { deploymentId: string }) {
             />
           ))}
         </TabsContent>
-
-        <TabsContent value="recent">
-          {recent.data.map((thread) => (
-            <AgentChatIntroRecentThread
-              key={thread.thread_id}
-              thread={thread}
-            />
-          ))}
-        </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function AgentChatSelectItem(props: {
+  agent: Agent;
+  checked?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "grid grid-cols-[auto_1fr_auto] items-center gap-2",
+        props.className,
+      )}
+    >
+      <span
+        className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
+        style={{ backgroundColor: getAgentColor(props.agent.name) }}
+      >
+        {props.agent.name.slice(0, 2).toUpperCase()}
+      </span>
+      {props.agent.name}
+      {props.checked && <Check className="ml-3 size-4" />}
+    </span>
+  );
+}
+
+function AgentChatSelect() {
+  const { agents } = useAgentsContext();
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
+  const [open, setOpen] = useState(false);
+
+  const [hoverAgentId, setHoverAgentId] = useState<string | null>(agentId);
+  const [input, setInput] = useState("");
+
+  const filteredAgents = agents.filter((agent) =>
+    agent.name.toLowerCase().includes(input.toLowerCase()),
+  );
+
+  const prevOpen = useRef(open);
+
+  if (prevOpen.current !== open) {
+    prevOpen.current = open;
+
+    if (open) {
+      setHoverAgentId(agentId);
+      setInput("");
+    }
+  }
+
+  const selectedAgent =
+    agentId && deploymentId
+      ? agents.find(
+          (agent) =>
+            agent.assistant_id === agentId &&
+            agent.deploymentId === deploymentId,
+        )
+      : null;
+
+  const hoverAgent = hoverAgentId
+    ? agents.find((agent) => agent.assistant_id === hoverAgentId)
+    : null;
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+    >
+      <PopoverTrigger asChild>
+        <button
+          className="inline-flex items-center px-1 text-sm outline-none [&_[data-slot=select-value]]:flex"
+          type="button"
+        >
+          {selectedAgent ? (
+            <AgentChatSelectItem agent={selectedAgent} />
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
+              No agent selected
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-0"
+        align="start"
+      >
+        <div className="grid grid-cols-[auto_1fr]">
+          <Command
+            shouldFilter={false}
+            value={hoverAgentId ?? ""}
+            onValueChange={setHoverAgentId}
+          >
+            <CommandInput
+              placeholder="Search agents..."
+              value={input}
+              onValueChange={setInput}
+            />
+            <CommandList>
+              <CommandEmpty>No agents found.</CommandEmpty>
+              {filteredAgents.map((agent) => (
+                <CommandItem
+                  key={agent.assistant_id}
+                  className="rounded-none"
+                  value={agent.assistant_id}
+                  onSelect={() => {
+                    setAgentId(agent.assistant_id);
+                    setDeploymentId(agent.deploymentId);
+                    setCurrentThreadId(null);
+                    setOpen(false);
+                  }}
+                >
+                  <AgentChatSelectItem
+                    className="w-full"
+                    agent={agent}
+                    checked={agent.assistant_id === agentId}
+                  />
+                </CommandItem>
+              ))}
+            </CommandList>
+          </Command>
+          {hoverAgent && (
+            <div className="flex max-h-[300px] w-80 flex-col overflow-x-hidden overflow-y-auto border-l">
+              <div className="bg-background sticky top-0 grid grid-cols-[auto_1fr] items-center gap-2 px-3 pt-3 pr-8 pb-1.5">
+                <div
+                  className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
+                  style={{ backgroundColor: getAgentColor(hoverAgent?.name) }}
+                >
+                  {hoverAgent?.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="truncate text-sm">{hoverAgent?.name}</div>
+              </div>
+
+              <div className="space-y-2 px-3 py-1.5">
+                {typeof hoverAgent.metadata?.description === "string" && (
+                  <div className="text-muted-foreground text-sm">
+                    {hoverAgent.metadata?.description}
+                  </div>
+                )}
+
+                {!!hoverAgent.supportedConfigs?.length && (
+                  <div className="flex flex-wrap gap-2">
+                    {hoverAgent.supportedConfigs?.map((config) => (
+                      <SupportedConfigBadge
+                        key={config}
+                        type={config}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1" />
+
+              <div className="bg-background sticky bottom-0 px-3 pt-1.5 pb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  asChild
+                >
+                  <NextLink
+                    href={`/editor?agentId=${hoverAgent.assistant_id}&deploymentId=${hoverAgent.deploymentId}`}
+                  >
+                    <Edit className="mr-2 h-3.5 w-3.5" />
+                    Edit
+                  </NextLink>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  return (
+    <Select
+      value={agentId && deploymentId ? `${agentId}:${deploymentId}` : ""}
+      onValueChange={async (v) => {
+        const [aid, did] = v.split(":");
+        await setAgentId(aid || null);
+        await setDeploymentId(did || null);
+        // Clear any previously selected thread when switching agents
+        await setCurrentThreadId(null);
+      }}
+    >
+      <SelectTrigger asChild></SelectTrigger>
+      <SelectContent>
+        {agents.map((a) => (
+          <SelectItem
+            key={`${a.assistant_id}:${a.deploymentId}`}
+            value={`${a.assistant_id}:${a.deploymentId}`}
+          ></SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
@@ -400,11 +471,13 @@ function AgentChat(): React.ReactNode {
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [_, setDraft] = useContext(DraftContext);
 
+  const thread = useThread(threadId);
   const deployments = getDeployments();
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
@@ -420,11 +493,9 @@ function AgentChat(): React.ReactNode {
     );
   }
 
-  const isEmpty = !threadId;
-
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-      <div className="grid min-w-0 grid-cols-[1fr_auto] items-center border-b p-4">
+      <div className="grid min-h-[64px] min-w-0 grid-cols-[1fr_auto] items-center p-4 px-[18px]">
         <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
           {!sidebar && (
             <>
@@ -448,29 +519,32 @@ function AgentChat(): React.ReactNode {
           )}
         </span>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              if (!agentId) {
-                toast.info("Please select an agent", { richColors: true });
-                return;
-              }
-              await setCurrentThreadId(null);
-            }}
-            className="shadow-icon-button rounded-md border border-[#2F6868] bg-[#2F6868] p-3 text-white hover:bg-[#2F6868] hover:text-gray-50"
-            disabled={!agentId}
-          >
-            <SquarePen className="size-5" />
-            <span>New Conversation</span>
-          </Button>
-        </div>
+        {threadId && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                if (!agentId) {
+                  toast.info("Please select an agent", { richColors: true });
+                  return;
+                }
+                await setCurrentThreadId(null);
+              }}
+              className="shadow-icon-button rounded-md border border-[#2F6868] bg-[#2F6868] p-3 text-white hover:bg-[#2F6868] hover:text-gray-50"
+              disabled={!agentId}
+            >
+              <SquarePen className="size-5" />
+              <span>New Conversation</span>
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="mx-auto flex min-h-0 w-full max-w-[1024px] flex-1 flex-col">
+      <div className="mx-auto flex min-h-0 w-full flex-1 flex-col">
         <DeepAgentChatInterface
           key={`chat-${deploymentId}`}
+          thread={thread}
           assistant={
             agentId
               ? (agents.find((a) => a.assistant_id === agentId) ?? null)
@@ -485,57 +559,23 @@ function AgentChat(): React.ReactNode {
           DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
           hideInternalToggle={true}
           empty={
-            isEmpty ? <AgentChatIntro deploymentId={deploymentId} /> : null
+            !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          onHistoryRevalidate={() => {
+            mutate((key) => {
+              if (typeof key !== "object" || key == null) return false;
+              return "kind" in key && key.kind === "threads";
+            });
+          }}
+          onInput={(input) => {
+            if (agentId && threadId == null && input.length > 0) {
+              setDraft(input);
+            } else {
+              setDraft(null);
+            }
+          }}
           view="chat"
-          controls={
-            <Select
-              value={
-                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
-              }
-              onValueChange={async (v) => {
-                const [aid, did] = v.split(":");
-                await setAgentId(aid || null);
-                await setDeploymentId(did || null);
-                // Clear any previously selected thread when switching agents
-                await setCurrentThreadId(null);
-              }}
-            >
-              <SelectTrigger asChild>
-                <button
-                  className="inline-flex items-center px-1 text-sm outline-none [&_[data-slot=select-value]]:flex"
-                  type="button"
-                >
-                  <SelectValue
-                    placeholder={
-                      <span className="inline-flex items-center gap-2">
-                        <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
-                        No agent selected
-                      </span>
-                    }
-                  />
-                </button>
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((a) => (
-                  <SelectItem
-                    key={`${a.assistant_id}:${a.deploymentId}`}
-                    value={`${a.assistant_id}:${a.deploymentId}`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
-                        style={{ backgroundColor: getAgentColor(a.name) }}
-                      >
-                        {a.name.slice(0, 2).toUpperCase()}
-                      </span>
-                      {a.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          }
+          controls={<AgentChatSelect />}
         />
       </div>
     </div>
@@ -546,6 +586,7 @@ function PageLayout() {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [sidebar] = useQueryState("sidebar");
   const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const draftState = useState<string | null>(null);
   const { agents } = useAgentsContext();
 
   useEffect(() => {
@@ -595,25 +636,28 @@ function PageLayout() {
       direction="horizontal"
       autoSaveId="chat"
     >
-      {!isFullChat && (
+      <DraftContext.Provider value={draftState}>
+        {!isFullChat && (
+          <ResizablePanel
+            id="thread-history"
+            order={1}
+            defaultSize={30}
+            className="relative"
+          >
+            <ThreadSidebar />
+          </ResizablePanel>
+        )}
+
+        {!isFullChat && <ResizableHandle />}
+
         <ResizablePanel
-          id="thread-history"
-          order={1}
+          id="chat"
           className="relative"
+          order={2}
         >
-          <ThreadSidebar />
+          <AgentChat />
         </ResizablePanel>
-      )}
-
-      {!isFullChat && <ResizableHandle />}
-
-      <ResizablePanel
-        id="chat"
-        className="relative"
-        order={2}
-      >
-        <AgentChat />
-      </ResizablePanel>
+      </DraftContext.Provider>
     </ResizablePanelGroup>
   );
 }
