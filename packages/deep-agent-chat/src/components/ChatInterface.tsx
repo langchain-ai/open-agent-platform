@@ -192,6 +192,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         setInput,
         runSingleStep,
         submitDisabled,
+        actions,
+        interrupt,
       ],
     );
 
