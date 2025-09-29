@@ -110,6 +110,7 @@ export function useThreads() {
 
   return useSWR(
     {
+      kind: "threads",
       selectedAgentId,
       agents,
       accessToken: session?.accessToken,
@@ -197,10 +198,20 @@ export function useAgentSummaries() {
   return useSWR<
     AgentSummary[],
     any,
-    { deploymentId: string; agents: Agent[]; accessToken: string } | null
+    {
+      kind: "agents";
+      deploymentId: string;
+      agents: Agent[];
+      accessToken: string;
+    } | null
   >(
     deploymentId != null && session?.accessToken != null
-      ? { deploymentId, agents, accessToken: session?.accessToken }
+      ? {
+          kind: "agents",
+          deploymentId,
+          agents,
+          accessToken: session?.accessToken,
+        }
       : null,
     {
       fallbackData: agents.map((agent) => ({

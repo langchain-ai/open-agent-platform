@@ -28,7 +28,6 @@ import {
   isPreparingToCallTaskTool,
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
-import { useClients } from "../providers/ClientProvider";
 import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
 import { cn } from "../lib/utils";
@@ -41,9 +40,6 @@ interface ChatInterfaceProps {
   assistant: Assistant | null;
   debugMode: boolean;
   setDebugMode: (debugMode: boolean) => void;
-  setTodos: (todos: TodoItem[]) => void;
-  files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
   // Optional controlled view props from host app
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
@@ -53,7 +49,6 @@ interface ChatInterfaceProps {
 
   controls: React.ReactNode;
   empty: React.ReactNode;
-  todos: TodoItem[];
 }
 
 const getStatusIcon = (status: TodoItem["status"], className?: string) => {
@@ -87,10 +82,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     assistant,
     debugMode,
     setDebugMode,
-    todos,
-    setTodos,
-    files,
-    setFiles,
     view,
     onViewChange,
     onInput,
@@ -111,9 +102,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       : isWorkflowView;
 
     useEffect(() => {
-      const timeout = setTimeout(() => {
-        textareaRef.current?.focus();
-      });
+      const timeout = setTimeout(() => void textareaRef.current?.focus());
       return () => clearTimeout(timeout);
     }, [threadId, agentId]);
 
@@ -126,8 +115,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       },
       [onViewChange, isControlledView],
     );
-
-    const { client } = useClients();
 
     const [input, _setInput] = useState("");
     const { scrollRef, contentRef } = useStickToBottom();
@@ -145,35 +132,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
 
-    // When the threadId changes, grab the thread state from the graph server
-    useEffect(() => {
-      const fetchThreadState = async () => {
-        if (!threadId || !client) {
-          setTodos([]);
-          setFiles({});
-          return;
-        }
-        try {
-          const state = await client.threads.getState(threadId);
-          if (state.values) {
-            const currentState = state.values as {
-              todos?: TodoItem[];
-              files?: Record<string, string>;
-            };
-            setTodos(currentState.todos || []);
-            setFiles(currentState.files || {});
-          }
-        } catch (error) {
-          console.error("Failed to fetch thread state:", error);
-          setTodos([]);
-          setFiles({});
-        }
-      };
-      fetchThreadState();
-    }, [threadId, client, setTodos, setFiles]);
-
     const {
       messages,
+      todos,
+      files,
+      setFiles,
       isLoading,
       isThreadLoading,
       interrupt,

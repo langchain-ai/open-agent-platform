@@ -22,50 +22,39 @@ import { FileViewDialog } from "./FileViewDialog";
 import { OptimizationSidebar } from "./OptimizationSidebar";
 import type { Assistant } from "@langchain/langgraph-sdk";
 
-interface TasksFilesSidebarProps {
-  todos: TodoItem[];
+export function FilesPopover({
+  files,
+  setFiles,
+  editDisabled,
+}: {
   files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
-  activeAssistant: Assistant | null;
-  setActiveAssistant: (assistant: Assistant | null) => void;
-  setAssistantError: (error: string | null) => void;
-  assistantError: string | null;
-}
-
-export function FilesPopover(props: {
-  files: Record<string, string>;
-  setFiles: (files: Record<string, string>) => void;
+  setFiles: (files: Record<string, string>) => Promise<void>;
   editDisabled: boolean;
 }) {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
 
   const handleSaveFile = useCallback(
-    (fileName: string, content: string) => {
-      const newFiles = {
-        ...props.files,
-        [fileName]: content,
-      };
-      props.setFiles(newFiles);
+    async (fileName: string, content: string) => {
+      await setFiles({ ...files, [fileName]: content });
       setSelectedFile({ path: fileName, content: content });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.files, props.setFiles],
+    [files, setFiles],
   );
 
   return (
     <>
-      {Object.keys(props.files).length === 0 ? (
+      {Object.keys(files).length === 0 ? (
         <div className="flex h-full items-center justify-center p-4 text-center">
           <p className="text-muted-foreground text-xs">No files created yet</p>
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-2">
-          {Object.keys(props.files).map((file) => (
+          {Object.keys(files).map((file) => (
             <button
               key={file}
               type="button"
               onClick={() =>
-                setSelectedFile({ path: file, content: props.files[file] })
+                setSelectedFile({ path: file, content: files[file] })
               }
               className="hover:bg-muted/40 bg-background cursor-pointer space-y-1 truncate rounded-md border px-2 py-3"
             >
@@ -86,14 +75,22 @@ export function FilesPopover(props: {
           file={selectedFile}
           onSaveFile={handleSaveFile}
           onClose={() => setSelectedFile(null)}
-          editDisabled={props.editDisabled}
+          editDisabled={editDisabled}
         />
       )}
     </>
   );
 }
 
-export const TasksFilesSidebar = React.memo<TasksFilesSidebarProps>(
+export const TasksFilesSidebar = React.memo<{
+  todos: TodoItem[];
+  files: Record<string, string>;
+  setFiles: (files: Record<string, string>) => Promise<void>;
+  activeAssistant: Assistant | null;
+  setActiveAssistant: (assistant: Assistant | null) => void;
+  setAssistantError: (error: string | null) => void;
+  assistantError: string | null;
+}>(
   ({
     todos,
     files,

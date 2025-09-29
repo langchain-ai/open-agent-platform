@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
-import type { TodoItem } from "./types";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
 import { ClientProvider } from "./providers/ClientProvider";
@@ -14,6 +13,7 @@ function DeepAgentChatInterfaceInternal({
   accessToken,
   optimizerDeploymentUrl,
   optimizerAccessToken,
+  onThreadRevalidate,
   view,
   onInput,
   onViewChange,
@@ -21,8 +21,6 @@ function DeepAgentChatInterfaceInternal({
   controls,
   empty,
 }: DeepAgentChatConfig) {
-  const [todos, setTodos] = useState<TodoItem[]>([]);
-  const [files, setFiles] = useState<Record<string, string>>({});
   const [debugMode, setDebugMode] = useState(false);
 
   return (
@@ -33,20 +31,14 @@ function DeepAgentChatInterfaceInternal({
       optimizerAccessToken={optimizerAccessToken}
     >
       <ChatProvider
-        setTodos={setTodos}
-        files={files}
-        setFiles={setFiles}
         activeAssistant={assistant}
+        onThreadRevalidate={onThreadRevalidate}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
           <ChatInterface
             assistant={assistant}
             debugMode={debugMode}
             setDebugMode={setDebugMode}
-            todos={todos}
-            setTodos={setTodos}
-            files={files}
-            setFiles={setFiles}
             view={view}
             onViewChange={onViewChange}
             onInput={onInput}

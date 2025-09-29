@@ -41,7 +41,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { getAgentColor } from "@/features/agents/utils";
@@ -340,6 +340,12 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          onThreadRevalidate={() => {
+            mutate((key) => {
+              if (typeof key !== "object" || key == null) return false;
+              return "kind" in key && key.kind === "threads";
+            });
+          }}
           onInput={(input) => {
             if (agentId && threadId == null && input.length > 0) {
               setDraft(input);
