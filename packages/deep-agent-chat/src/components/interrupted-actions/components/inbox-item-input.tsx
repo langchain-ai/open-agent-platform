@@ -189,7 +189,7 @@ function EditAndOrAcceptComponent({
   };
 
   return (
-    <div className="flex w-full flex-col items-start gap-4">
+    <div className="flex w-full flex-col items-start gap-4 rounded-xl border-[1px] border-[#E5E7EB] p-4">
       <div className="flex w-full items-center justify-between">
         <p className="text-base font-semibold text-black">{header}</p>
         <ResetButton handleReset={handleReset} />

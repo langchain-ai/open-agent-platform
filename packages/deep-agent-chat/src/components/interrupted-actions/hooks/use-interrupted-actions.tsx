@@ -159,6 +159,8 @@ export default function useInterruptedActions({
       toast.error("Failed to submit response.", {
         duration: 5000,
       });
+    } finally {
+      resetState();
     }
   };
 
@@ -178,6 +180,7 @@ export default function useInterruptedActions({
     toast.success("Thread marked as resolved.", {
       richColors: true,
     });
+    resetState();
   };
 
   const resetState = () => {
