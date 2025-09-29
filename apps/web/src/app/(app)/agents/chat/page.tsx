@@ -7,17 +7,19 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Maximize2, Minimize2, SquarePen } from "lucide-react";
+import { Check, Edit, Maximize2, Minimize2, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import NextLink from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
@@ -50,6 +52,20 @@ import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Agent } from "@/types/agent";
+import { SupportedConfigBadge } from "@/features/agents/components/agent-card";
 
 const DraftContext = createContext<
   [string | null, Dispatch<SetStateAction<string | null>>]
@@ -252,12 +268,211 @@ function AgentChatIntro(props: { deploymentId: string }) {
   );
 }
 
+function AgentChatSelectItem(props: {
+  agent: Agent;
+  checked?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "grid grid-cols-[auto_1fr_auto] items-center gap-2",
+        props.className,
+      )}
+    >
+      <span
+        className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
+        style={{ backgroundColor: getAgentColor(props.agent.name) }}
+      >
+        {props.agent.name.slice(0, 2).toUpperCase()}
+      </span>
+      {props.agent.name}
+      {props.checked && <Check className="ml-3 size-4" />}
+    </span>
+  );
+}
+
+function AgentChatSelect() {
+  const { agents } = useAgentsContext();
+  const [agentId, setAgentId] = useQueryState("agentId");
+  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
+  const [open, setOpen] = useState(false);
+
+  const [hoverAgentId, setHoverAgentId] = useState<string | null>(agentId);
+  const [input, setInput] = useState("");
+
+  const filteredAgents = agents.filter((agent) =>
+    agent.name.toLowerCase().includes(input.toLowerCase()),
+  );
+
+  const prevOpen = useRef(open);
+
+  if (prevOpen.current !== open) {
+    prevOpen.current = open;
+
+    if (open) {
+      setHoverAgentId(agentId);
+      setInput("");
+    }
+  }
+
+  const selectedAgent =
+    agentId && deploymentId
+      ? agents.find(
+          (agent) =>
+            agent.assistant_id === agentId &&
+            agent.deploymentId === deploymentId,
+        )
+      : null;
+
+  const hoverAgent = hoverAgentId
+    ? agents.find((agent) => agent.assistant_id === hoverAgentId)
+    : null;
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={setOpen}
+    >
+      <PopoverTrigger asChild>
+        <button
+          className="inline-flex items-center px-1 text-sm outline-none [&_[data-slot=select-value]]:flex"
+          type="button"
+        >
+          {selectedAgent ? (
+            <AgentChatSelectItem agent={selectedAgent} />
+          ) : (
+            <span className="inline-flex items-center gap-2">
+              <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
+              No agent selected
+            </span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-0"
+        align="start"
+      >
+        <div className="grid grid-cols-[auto_1fr]">
+          <Command
+            shouldFilter={false}
+            value={hoverAgentId ?? ""}
+            onValueChange={setHoverAgentId}
+          >
+            <CommandInput
+              placeholder="Search agents..."
+              value={input}
+              onValueChange={setInput}
+            />
+            <CommandList>
+              <CommandEmpty>No agents found.</CommandEmpty>
+              {filteredAgents.map((agent) => (
+                <CommandItem
+                  key={agent.assistant_id}
+                  className="rounded-none"
+                  value={agent.assistant_id}
+                  onSelect={() => {
+                    setAgentId(agent.assistant_id);
+                    setDeploymentId(agent.deploymentId);
+                    setCurrentThreadId(null);
+                    setOpen(false);
+                  }}
+                >
+                  <AgentChatSelectItem
+                    className="w-full"
+                    agent={agent}
+                    checked={agent.assistant_id === agentId}
+                  />
+                </CommandItem>
+              ))}
+            </CommandList>
+          </Command>
+          {hoverAgent && (
+            <div className="flex max-h-[300px] w-80 flex-col overflow-x-hidden overflow-y-auto border-l">
+              <div className="bg-background sticky top-0 grid grid-cols-[auto_1fr] items-center gap-2 px-3 pt-3 pr-8 pb-1.5">
+                <div
+                  className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
+                  style={{ backgroundColor: getAgentColor(hoverAgent?.name) }}
+                >
+                  {hoverAgent?.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="truncate text-sm">{hoverAgent?.name}</div>
+              </div>
+
+              <div className="space-y-2 px-3 py-1.5">
+                {typeof hoverAgent.metadata?.description === "string" && (
+                  <div className="text-muted-foreground text-sm">
+                    {hoverAgent.metadata?.description}
+                  </div>
+                )}
+
+                {!!hoverAgent.supportedConfigs?.length && (
+                  <div className="flex flex-wrap gap-2">
+                    {hoverAgent.supportedConfigs?.map((config) => (
+                      <SupportedConfigBadge
+                        key={config}
+                        type={config}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1" />
+
+              <div className="bg-background sticky bottom-0 px-3 pt-1.5 pb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  asChild
+                >
+                  <NextLink
+                    href={`/editor?agentId=${hoverAgent.assistant_id}&deploymentId=${hoverAgent.deploymentId}`}
+                  >
+                    <Edit className="mr-2 h-3.5 w-3.5" />
+                    Edit
+                  </NextLink>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
+  return (
+    <Select
+      value={agentId && deploymentId ? `${agentId}:${deploymentId}` : ""}
+      onValueChange={async (v) => {
+        const [aid, did] = v.split(":");
+        await setAgentId(aid || null);
+        await setDeploymentId(did || null);
+        // Clear any previously selected thread when switching agents
+        await setCurrentThreadId(null);
+      }}
+    >
+      <SelectTrigger asChild></SelectTrigger>
+      <SelectContent>
+        {agents.map((a) => (
+          <SelectItem
+            key={`${a.assistant_id}:${a.deploymentId}`}
+            value={`${a.assistant_id}:${a.deploymentId}`}
+          ></SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function AgentChat(): React.ReactNode {
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
-  const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [agentId] = useQueryState("agentId");
+  const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
@@ -360,54 +575,7 @@ function AgentChat(): React.ReactNode {
             }
           }}
           view="chat"
-          controls={
-            <Select
-              value={
-                agentId && deploymentId ? `${agentId}:${deploymentId}` : ""
-              }
-              onValueChange={async (v) => {
-                const [aid, did] = v.split(":");
-                await setAgentId(aid || null);
-                await setDeploymentId(did || null);
-                // Clear any previously selected thread when switching agents
-                await setCurrentThreadId(null);
-              }}
-            >
-              <SelectTrigger asChild>
-                <button
-                  className="inline-flex items-center px-1 text-sm outline-none [&_[data-slot=select-value]]:flex"
-                  type="button"
-                >
-                  <SelectValue
-                    placeholder={
-                      <span className="inline-flex items-center gap-2">
-                        <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
-                        No agent selected
-                      </span>
-                    }
-                  />
-                </button>
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((a) => (
-                  <SelectItem
-                    key={`${a.assistant_id}:${a.deploymentId}`}
-                    value={`${a.assistant_id}:${a.deploymentId}`}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="size-[28px] flex-shrink-0 rounded-full text-center text-xs leading-[28px] font-semibold text-white"
-                        style={{ backgroundColor: getAgentColor(a.name) }}
-                      >
-                        {a.name.slice(0, 2).toUpperCase()}
-                      </span>
-                      {a.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          }
+          controls={<AgentChatSelect />}
         />
       </div>
     </div>
@@ -473,6 +641,7 @@ function PageLayout() {
           <ResizablePanel
             id="thread-history"
             order={1}
+            defaultSize={30}
             className="relative"
           >
             <ThreadSidebar />

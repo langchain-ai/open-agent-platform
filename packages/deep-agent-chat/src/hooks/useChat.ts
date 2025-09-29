@@ -52,9 +52,9 @@ export function useChat({
         { messages: [newMessage] },
         {
           optimisticValues: (prev) => ({
-            messages: [...prev.messages, newMessage],
+            messages: [...(prev.messages ?? []), newMessage],
           }),
-          config: { ...activeAssistant?.config, recursion_limit: 100 },
+          config: { ...(activeAssistant?.config ?? {}), recursion_limit: 100 },
         },
       );
     },
