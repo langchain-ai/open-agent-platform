@@ -641,6 +641,7 @@ function PageLayout() {
           <ResizablePanel
             id="thread-history"
             order={1}
+            defaultSize={30}
             className="relative"
           >
             <ThreadSidebar />
