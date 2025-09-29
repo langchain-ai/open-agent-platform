@@ -49,6 +49,8 @@ interface ChatInterfaceProps {
   onViewChange?: (view: "chat" | "workflow") => void;
   hideInternalToggle?: boolean;
   InterruptActionsRenderer?: React.ComponentType;
+  onInput?: (input: string) => void;
+
   controls: React.ReactNode;
   empty: React.ReactNode;
   todos: TodoItem[];
@@ -91,6 +93,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     setFiles,
     view,
     onViewChange,
+    onInput,
     controls,
     hideInternalToggle,
     empty,
@@ -126,8 +129,19 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
     const { client } = useClients();
 
-    const [input, setInput] = useState("");
+    const [input, _setInput] = useState("");
     const { scrollRef, contentRef } = useStickToBottom();
+
+    const inputCallbackRef = useRef(onInput);
+    inputCallbackRef.current = onInput;
+
+    const setInput = useCallback(
+      (value: string) => {
+        _setInput(value);
+        inputCallbackRef.current?.(value);
+      },
+      [inputCallbackRef],
+    );
 
     const [isThreadHistoryOpen, setIsThreadHistoryOpen] = useState(false);
 

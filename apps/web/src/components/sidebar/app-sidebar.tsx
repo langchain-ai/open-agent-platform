@@ -5,8 +5,6 @@ import {
   Settings,
   Puzzle,
   MessageCircle,
-  Plus,
-  // Edit,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,12 +30,6 @@ interface NavigationItems {
 
 const createNavigationItems = (): NavigationItems => ({
   mainNav: [
-    {
-      title: "New Agent",
-      url: "/editor?new=true",
-      icon: Plus,
-      isAgentCreator: true,
-    },
     {
       title: "Agent Library",
       url: "/agents",

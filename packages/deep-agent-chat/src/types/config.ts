@@ -12,6 +12,7 @@ export interface DeepAgentChatConfig {
   // Controls Chat vs Workflow view from the host app
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
+  onInput?: (input: string) => void;
   // When controlled by the host, hide the internal toggle UI
   hideInternalToggle?: boolean;
   // Hide the sidebar with agent tasks, file system, and agent optimizer

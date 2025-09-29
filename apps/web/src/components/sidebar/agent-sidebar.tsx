@@ -7,6 +7,8 @@ import { formatTimeElapsed, useAgentSummaries } from "@/features/chat/utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ChatNavItem } from "./chat-nav-item";
+import { Plus } from "lucide-react";
 
 export function AgentSidebar() {
   const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
@@ -90,6 +92,10 @@ export function AgentSidebar() {
               </Tooltip>
             );
           })}
+          <ChatNavItem
+            item={{ title: "New Agent", url: "/editor?new=true", icon: Plus }}
+            size="md"
+          />
         </div>
       </div>
     </div>
