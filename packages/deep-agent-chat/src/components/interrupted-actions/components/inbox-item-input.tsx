@@ -1,4 +1,3 @@
-import { cn } from "../../../lib/utils";
 import {
   ActionRequest,
   HumanInterrupt,
@@ -81,78 +80,6 @@ interface InboxItemInputProps {
   ) => void;
 }
 
-function ResponseComponent({
-  humanResponse,
-  isLoading,
-  showArgsInResponse,
-  interruptValue,
-  onResponseChange,
-  handleSubmit,
-}: {
-  humanResponse: HumanResponseWithEdits[];
-  isLoading: boolean;
-  showArgsInResponse: boolean;
-  interruptValue: HumanInterrupt;
-  onResponseChange: (value: string, _response: HumanResponseWithEdits) => void;
-  handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
-  ) => void;
-}) {
-  const res = humanResponse.find((r) => r.type === "response");
-  if (!res || typeof res.args !== "string") {
-    return null;
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
-  return (
-    <div className="flex w-full flex-col items-start gap-4 rounded-xl border-[1px] border-gray-300 p-6">
-      <div className="flex w-full items-center justify-between">
-        <p className="text-base font-semibold text-black">
-          Respond to assistant
-        </p>
-        <ResetButton
-          handleReset={() => {
-            onResponseChange("", res);
-          }}
-        />
-      </div>
-
-      {showArgsInResponse && interruptValue?.action_request?.args && (
-        <ArgsRenderer args={interruptValue.action_request.args} />
-      )}
-
-      <div className="flex w-full flex-col items-start gap-[6px]">
-        <p className="min-w-fit text-sm font-medium">Response</p>
-        <Textarea
-          disabled={isLoading}
-          value={res.args}
-          onChange={(e) => onResponseChange(e.target.value, res)}
-          onKeyDown={handleKeyDown}
-          rows={4}
-          placeholder="Your response here..."
-        />
-      </div>
-
-      <div className="flex w-full items-center justify-end gap-2">
-        <Button
-          variant="brand"
-          disabled={isLoading}
-          onClick={handleSubmit}
-        >
-          Send Response
-        </Button>
-      </div>
-    </div>
-  );
-}
-const Response = React.memo(ResponseComponent);
-
 function AcceptComponent({
   isLoading,
   actionRequestArgs,
@@ -165,7 +92,7 @@ function AcceptComponent({
   ) => void;
 }) {
   return (
-    <div className="flex w-full flex-col items-start gap-4 rounded-lg border-[1px] border-gray-300 p-6">
+    <div className="flex w-full flex-col items-start gap-4">
       {actionRequestArgs && Object.keys(actionRequestArgs).length > 0 && (
         <ArgsRenderer args={actionRequestArgs} />
       )}
@@ -262,7 +189,7 @@ function EditAndOrAcceptComponent({
   };
 
   return (
-    <div className="flex w-full flex-col items-start gap-4 rounded-lg border-[1px] border-gray-300 p-6">
+    <div className="flex w-full flex-col items-start gap-4">
       <div className="flex w-full items-center justify-between">
         <p className="text-base font-semibold text-black">{header}</p>
         <ResetButton handleReset={handleReset} />
@@ -322,16 +249,13 @@ const EditAndOrAccept = React.memo(EditAndOrAcceptComponent);
 export function InboxItemInput({
   interruptValue,
   humanResponse,
-  supportsMultipleMethods,
   acceptAllowed,
-  hasEdited,
   hasAddedResponse,
   initialValues,
   isLoading,
   setHumanResponse,
   setSelectedSubmitType,
   setHasEdited,
-  setHasAddedResponse,
   handleSubmit,
 }: InboxItemInputProps) {
   const isEditAllowed = interruptValue?.config?.allow_edit ?? false;
@@ -446,86 +370,19 @@ export function InboxItemInput({
     });
   };
 
-  const onResponseChange = (
-    change: string,
-    response: HumanResponseWithEdits,
-  ) => {
-    if (!change) {
-      setHasAddedResponse(false);
-      if (hasEdited) {
-        // The user has deleted their response, so we should set the submit type to
-        // `edit` if they've edited, or `accept` if it's allowed and they have not edited.
-        setSelectedSubmitType("edit");
-      } else if (acceptAllowed) {
-        setSelectedSubmitType("accept");
-      }
-    } else {
-      setSelectedSubmitType("response");
-      setHasAddedResponse(true);
-    }
-
-    setHumanResponse((prev) => {
-      const newResponse: HumanResponseWithEdits = {
-        type: response.type,
-        args: change,
-      };
-
-      if (prev.find((p) => p.type === response.type)) {
-        return prev.map((p) => {
-          if (p.type === response.type) {
-            if (p.acceptAllowed) {
-              return {
-                ...newResponse,
-                acceptAllowed: true,
-                editsMade: !!change,
-              };
-            }
-            return newResponse;
-          }
-          return p;
-        });
-      } else {
-        throw new Error("No human response found for string response");
-      }
-    });
-  };
-
   return (
-    <div
-      className={cn(
-        "flex w-full flex-col items-start justify-start gap-2 shadow-sm",
-        "",
-      )}
-    >
+    <div className="flex w-full flex-col items-start justify-start gap-2">
       {showArgsOutsideActionCards && interruptValue?.action_request?.args && (
         <ArgsRenderer args={interruptValue.action_request.args} />
       )}
-
-      <div className="flex w-full flex-col items-start gap-2">
-        <EditAndOrAccept
-          humanResponse={humanResponse}
-          initialValues={initialValues}
-          interruptValue={interruptValue}
-          onEditChange={onEditChange}
-          handleSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
-        {supportsMultipleMethods ? (
-          <div className="mt-4 mb-2 flex w-full items-center justify-center">
-            <p className="text-xs text-gray-400">or</p>
-          </div>
-        ) : null}
-        {isResponseAllowed && (
-          <Response
-            humanResponse={humanResponse}
-            showArgsInResponse={showArgsInResponse}
-            interruptValue={interruptValue}
-            onResponseChange={onResponseChange}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-          />
-        )}
-      </div>
+      <EditAndOrAccept
+        humanResponse={humanResponse}
+        initialValues={initialValues}
+        interruptValue={interruptValue}
+        onEditChange={onEditChange}
+        handleSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

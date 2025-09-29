@@ -4,7 +4,7 @@ import {
   SubmitType,
 } from "../../../types/inbox";
 import { toast } from "sonner";
-import React from "react";
+import React, { FormEvent } from "react";
 import { createDefaultHumanResponse } from "../utils";
 
 import { useQueryState } from "nuqs";
@@ -12,13 +12,16 @@ import { useChatContext } from "../../../providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
 
 interface UseInterruptedActionsInput {
-  interrupt: Interrupt;
+  interrupt: Interrupt | undefined;
 }
 
 interface UseInterruptedActionsValue {
   // Actions
   handleSubmit: (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    e?:
+      | React.MouseEvent<HTMLButtonElement, MouseEvent>
+      | React.KeyboardEvent
+      | FormEvent,
   ) => void;
   handleResolve: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 
@@ -44,6 +47,9 @@ interface UseInterruptedActionsValue {
   initialHumanInterruptEditValue: React.MutableRefObject<
     Record<string, string>
   >;
+
+  // Utils
+  resetState: () => void;
 }
 
 export default function useInterruptedActions({
@@ -70,6 +76,7 @@ export default function useInterruptedActions({
 
   React.useEffect(() => {
     try {
+      if (!interrupt) return;
       const interruptValue = (interrupt.value as any)?.[0];
       const { responses, defaultSubmitType, hasAccept } =
         createDefaultHumanResponse(
@@ -90,9 +97,12 @@ export default function useInterruptedActions({
   }, [interrupt]);
 
   const handleSubmit = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent,
+    e?:
+      | React.MouseEvent<HTMLButtonElement, MouseEvent>
+      | React.KeyboardEvent
+      | FormEvent,
   ) => {
-    e.preventDefault();
+    e?.preventDefault();
     if (!agentId || !deploymentId) {
       toast.error("No agent ID or deployment ID found");
       return;
@@ -170,9 +180,17 @@ export default function useInterruptedActions({
     });
   };
 
+  const resetState = () => {
+    setHumanResponse([]);
+    setSelectedSubmitType(undefined);
+    setHasAddedResponse(false);
+    setHasEdited(false);
+  };
+
   return {
     handleSubmit,
     handleResolve,
+    resetState,
     supportsMultipleMethods:
       humanResponse.filter(
         (r) =>

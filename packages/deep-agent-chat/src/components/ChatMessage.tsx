@@ -6,12 +6,13 @@ import { SubAgentIndicator } from "./SubAgentIndicator";
 import { ToolCallBox } from "./ToolCallBox";
 import { MarkdownContent } from "./MarkdownContent";
 import type { SubAgent, ToolCall } from "../types";
-import { Message } from "@langchain/langgraph-sdk";
+import { Interrupt, Message } from "@langchain/langgraph-sdk";
 import {
   extractStringFromMessageContent,
   extractSubAgentContent,
 } from "../utils";
 import { cn } from "../lib/utils";
+import { getInterruptTitle } from "./interrupted-actions/utils";
 
 interface ChatMessageProps {
   message: Message;
@@ -21,6 +22,7 @@ interface ChatMessageProps {
   debugMode?: boolean;
   isLastMessage?: boolean;
   isLoading?: boolean;
+  interrupt?: Interrupt;
 }
 
 export const ChatMessage = React.memo<ChatMessageProps>(
@@ -32,6 +34,7 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     debugMode,
     isLastMessage,
     isLoading,
+    interrupt,
   }) => {
     const isUser = message.type === "human";
     const isAIMessage = message.type === "ai";
@@ -73,6 +76,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
         [id]: prev[id] === undefined ? false : !prev[id],
       }));
     }, []);
+
+    const interruptTitle = interrupt ? getInterruptTitle(interrupt) : "";
 
     return (
       <div
@@ -119,8 +124,15 @@ export const ChatMessage = React.memo<ChatMessageProps>(
           )}
           {hasToolCalls && (
             <div className="mt-4 flex w-fit max-w-full flex-col">
-              {toolCalls.map((toolCall: ToolCall) => {
+              {toolCalls.map((toolCall: ToolCall, idx, arr) => {
                 if (toolCall.name === "task") return null;
+                // Don't show tool call if it's the interrupted tool call.
+                if (
+                  idx === arr.length - 1 &&
+                  toolCall.name === interruptTitle
+                ) {
+                  return null;
+                }
                 return (
                   <ToolCallBox
                     key={toolCall.id}

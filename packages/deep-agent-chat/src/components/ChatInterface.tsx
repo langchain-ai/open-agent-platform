@@ -35,6 +35,8 @@ import { ThreadActionsView } from "./interrupted-actions";
 import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { FilesPopover } from "./TasksFilesSidebar";
+import useInterruptedActions from "./interrupted-actions/hooks/use-interrupted-actions";
+import { HumanResponseWithEdits } from "../types/inbox";
 
 interface ChatInterfaceProps {
   assistant: Assistant | null;
@@ -147,7 +149,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       stopStream,
     } = useChatContext();
 
-    const submitDisabled = isLoading || !!interrupt || !assistant;
+    const actions = useInterruptedActions({
+      interrupt,
+    });
+
+    const submitDisabled = isLoading || !assistant;
 
     const handleSubmit = useCallback(
       (e?: FormEvent) => {
@@ -155,6 +161,13 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           e.preventDefault();
         }
         if (submitDisabled) return;
+
+        if (interrupt) {
+          actions.handleSubmit(e);
+          actions.resetState();
+          setInput("");
+          return;
+        }
 
         const messageText = input.trim();
         if (!messageText || isLoading) return;
@@ -304,7 +317,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 id: toolCall.id || `tool-${Math.random()}`,
                 name,
                 args,
-                status: "pending" as const,
+                status: interrupt ? "interrupted" : ("pending" as const),
               } as ToolCall;
             },
           );
@@ -347,7 +360,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           showAvatar: data.message.type !== prevMessage?.type,
         };
       });
-    }, [messages]);
+    }, [messages, interrupt]);
 
     const toggle = !hideInternalToggle && (
       <div className="flex w-full justify-center">
@@ -424,6 +437,41 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const hasFiles = Object.keys(files).length > 0;
 
     const isEmpty = empty != null && processedMessages.length === 0;
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setInput(e.target.value);
+
+      if (interrupt) {
+        actions.setSelectedSubmitType("response");
+        actions.setHasAddedResponse(true);
+
+        actions.setHumanResponse((prev) => {
+          const newResponse: HumanResponseWithEdits = {
+            type: "response",
+            args: e.target.value,
+          };
+
+          if (prev.find((p) => p.type === newResponse.type)) {
+            return prev.map((p) => {
+              if (p.type === newResponse.type) {
+                if (p.acceptAllowed) {
+                  return {
+                    ...newResponse,
+                    acceptAllowed: true,
+                    editsMade: !!e.target.value,
+                  };
+                }
+                return newResponse;
+              }
+              return p;
+            });
+          } else {
+            throw new Error("No human response found for string response");
+          }
+        });
+      }
+    };
+
     return (
       <div
         className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
@@ -443,6 +491,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               debugMode={debugMode}
               isLoading={isLoading}
               isLastMessage={index === processedMessages.length - 1}
+              interrupt={interrupt}
             />
           ))}
           {interrupt && (
@@ -674,12 +723,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             <textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={
-                isLoading || !!interrupt
+                isLoading
                   ? "Running..."
-                  : "Write your message..."
+                  : interrupt
+                    ? "Respond to the interrupt..."
+                    : "Write your message..."
               }
               className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
               rows={1}
@@ -715,7 +766,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   ) : (
                     <>
                       <ArrowUp size={18} />
-                      <span>Send</span>
+                      <span>{interrupt ? "Resume" : "Send"}</span>
                     </>
                   )}
                 </Button>
