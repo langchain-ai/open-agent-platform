@@ -231,6 +231,19 @@ export function InitialInputs({
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
+  const displayToolsByProvider = useMemo(() => {
+    if (!_enabledToolNames?.length || !tools?.length) return [] as { provider: string; tools: string[] }[];
+    const byProvider = new Map<string, string[]>();
+    for (const name of _enabledToolNames) {
+      const tool = tools.find((t) => t.name === name);
+      if (!tool) continue;
+      const provider = tool.auth_provider || "core";
+      const list = byProvider.get(provider) ?? [];
+      if (!list.includes(name)) list.push(name);
+      byProvider.set(provider, list);
+    }
+    return Array.from(byProvider.entries()).map(([provider, tools]) => ({ provider, tools }));
+  }, [_enabledToolNames, tools]);
 
   const deployments = getDeployments();
   const deploymentId =
@@ -336,11 +349,6 @@ export function InitialInputs({
           return trigger && !isCronTrigger(trigger);
         });
 
-      if (nonCronTriggerIds?.length) {
-        setEnabledTriggerIds(nonCronTriggerIds);
-        setAuthRequiredDialogOpen(true);
-      }
-
       const agentConfigurable = newAgent.config?.configurable as
         | DeepAgentConfiguration
         | undefined;
@@ -348,25 +356,15 @@ export function InitialInputs({
       if (enabledToolNames?.length) {
         setEnabledToolNames(enabledToolNames);
         setNewAgentId(newAgent.assistant_id);
-        const success = await validateAuth(enabledToolNames);
-        if (!success) {
-          return;
-        }
+        // Populate authRequiredUrls if needed, but regardless show the modal
+        await validateAuth(enabledToolNames);
       }
-
       if (nonCronTriggerIds?.length) {
-        return;
+        setEnabledTriggerIds(nonCronTriggerIds);
       }
-
-      setCreatingAgent(true);
-      await refreshAgents();
-
-      // Call the parent callback to handle navigation
-      if (onAgentCreated) {
-        await onAgentCreated(newAgent.assistant_id, deploymentId);
-      }
-
-      resetState();
+      // Always present the modal after generation to review triggers/tools/auth
+      setAuthRequiredDialogOpen(true);
+      return;
     },
   });
 
@@ -554,6 +552,7 @@ export function InitialInputs({
           open={authRequiredDialogOpen}
           onOpenChange={setAuthRequiredDialogOpen}
           authUrls={authRequiredUrls}
+          displayToolsByProvider={displayToolsByProvider}
           handleSubmit={async () => {
             // TODO: Eventually, we should require auth before proceeding. For now, skip until we figure out that flow.
             // const success = await validateAuth(enabledToolNames);

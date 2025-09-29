@@ -30,6 +30,8 @@ export function AuthRequiredDialog(props: {
   reloadTriggers?: (accessToken: string) => Promise<void>;
   selectedTriggerRegistrationIds?: string[];
   onSelectedTriggerRegistrationIdsChange?: (registrationIds: string[]) => void;
+  // Optional: full list of enabled tools grouped by provider for display
+  displayToolsByProvider?: { provider: string; tools: string[] }[];
 }) {
   const { getProviderDisplayName } = useOAuthProviders();
   const auth = useAuthContext();
@@ -59,13 +61,16 @@ export function AuthRequiredDialog(props: {
   }, [props.reloadTriggers]);
 
   const toolsByProvider = useMemo(() => {
+    if (props.displayToolsByProvider && props.displayToolsByProvider.length) {
+      return props.displayToolsByProvider;
+    }
     const map = new Map<string, string[]>();
     for (const entry of props.authUrls ?? []) {
       const existing = map.get(entry.provider) ?? [];
       map.set(entry.provider, Array.from(new Set([...existing, ...entry.tools])));
     }
     return Array.from(map.entries()).map(([provider, tools]) => ({ provider, tools }));
-  }, [props.authUrls]);
+  }, [props.displayToolsByProvider, props.authUrls]);
 
   const stepInfo = useMemo(() => {
     switch (currentStep) {
@@ -96,13 +101,8 @@ export function AuthRequiredDialog(props: {
     }
   }, [currentStep]);
 
-  const totalSteps = useMemo(() => {
-    let steps = 0;
-    if (hasTriggers) steps++;
-    if (toolsByProvider.length > 0) steps++;
-    if (props.authUrls?.length) steps++;
-    return Math.max(1, steps);
-  }, [hasTriggers, toolsByProvider.length, props.authUrls?.length]);
+  // Always a three-step flow
+  // Triggers -> Tools -> Auth
 
   const StepIndicator = () => {
     const steps = [
