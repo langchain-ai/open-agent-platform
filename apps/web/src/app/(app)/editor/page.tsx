@@ -1,6 +1,7 @@
 "use client";
 
 import { EditorPageContent } from "@/features/editor";
+import { AuthRequiredDialogDemo } from "@/features/editor/components/auth-required-dialog-demo";
 import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import React from "react";
@@ -15,6 +16,8 @@ export default function EditorPage(): React.ReactNode {
       <AgentsProvider>
         <MCPProvider>
           <EditorPageContent />
+          {/* Always show the AuthRequired dialog demo for UI iteration */}
+          <AuthRequiredDialogDemo />
         </MCPProvider>
       </AgentsProvider>
     </React.Suspense>
