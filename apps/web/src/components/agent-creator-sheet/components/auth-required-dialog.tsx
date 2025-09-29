@@ -15,9 +15,13 @@ import {
   Wrench,
   KeyRound,
   ChevronLeft,
+  ChevronRight,
+  ChevronDown,
   Bot,
 } from "lucide-react";
 import { useOAuthProviders } from "@/hooks/use-oauth-providers";
+import { useAuthContext } from "@/providers/Auth";
+import { AuthenticateTriggerDialog } from "@/features/triggers/components/authenticate-trigger-dialog";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
 
 export function AuthRequiredDialog(props: {
@@ -34,6 +38,7 @@ export function AuthRequiredDialog(props: {
   displayToolsByProvider?: { provider: string; tools: string[] }[];
 }) {
   const { getProviderDisplayName } = useOAuthProviders();
+  const auth = useAuthContext();
   const { onSelectedTriggerRegistrationIdsChange } = props;
 
   const hasTriggers = useMemo(() => {
@@ -45,6 +50,8 @@ export function AuthRequiredDialog(props: {
 
   // Always show the full flow: Triggers -> Tools -> Auth
   const [currentStep, setCurrentStep] = useState(1);
+  // Track which trigger rows are expanded to show registrations
+  const [expandedTriggerIds, setExpandedTriggerIds] = useState<string[]>([]);
 
   const handleSelectedRegistrationsChange = useCallback(
     (registrationIds: string[]) => {
@@ -54,6 +61,11 @@ export function AuthRequiredDialog(props: {
   );
 
   const selectedRegistrations = props.selectedTriggerRegistrationIds ?? [];
+
+  const reloadTriggersNoArg = useCallback(async () => {
+    if (!auth.session?.accessToken) return;
+    await props.reloadTriggers?.(auth.session.accessToken);
+  }, [auth.session?.accessToken, props.reloadTriggers]);
 
   const toolsByProvider = useMemo(() => {
     if (props.displayToolsByProvider && props.displayToolsByProvider.length) {
@@ -104,6 +116,28 @@ export function AuthRequiredDialog(props: {
         };
     }
   }, [currentStep]);
+
+  // Helpers to format registration display from resource payloads
+  const formatRegistrationPrimary = useCallback((registration: any): string => {
+    const res = registration?.resource as Record<string, any> | undefined;
+    if (res && typeof res === "object") {
+      if (res.email) return String(res.email);
+      if (res.channel) return String(res.channel);
+      if (res.calendar_id) return String(res.calendar_id);
+      const firstKey = Object.keys(res)[0];
+      if (firstKey) return String(res[firstKey]);
+    }
+    return registration?.template_id || registration?.id || "Registration";
+  }, []);
+
+  const formatRegistrationSecondary = useCallback((registration: any): string | undefined => {
+    const res = registration?.resource as Record<string, any> | undefined;
+    if (res && typeof res === "object") {
+      const pairs = Object.entries(res).map(([k, v]) => `${k}: ${String(v)}`);
+      if (pairs.length) return pairs.join(", ");
+    }
+    return undefined;
+  }, []);
 
   // Always a three-step flow
   // Triggers -> Tools -> Auth
@@ -167,7 +201,7 @@ export function AuthRequiredDialog(props: {
       </div>
     );
   };
-
+  console.log(props.groupedTriggers);
   return (
     <AlertDialog
       open={props.open}
@@ -258,11 +292,8 @@ export function AuthRequiredDialog(props: {
 
                   {props.groupedTriggers && (
                     <div className="space-y-4">
-                      {Object.entries(props.groupedTriggers)
-                        .filter(
-                          ([provider]) => provider.toLowerCase() === "slack",
-                        )
-                        .map(([provider, { registrations, triggers }]) => (
+                      {Object.entries(props.groupedTriggers).map(
+                        ([provider, { registrations, triggers }]) => (
                           <div key={provider}>
                             <div className="mb-3">
                               <h4 className="mb-3 text-sm font-medium text-gray-700">
@@ -270,109 +301,46 @@ export function AuthRequiredDialog(props: {
                               </h4>
                             </div>
                             <div className="space-y-2">
-                              {Object.entries(triggers).map(
-                                ([triggerId, trigger]) => (
+                              {(Array.isArray(triggers)
+                                ? (triggers as any[])
+                                : (Object.values(
+                                    triggers as unknown as Record<string, any>,
+                                  ) as any[])
+                              ).map((trigger) => (
                                   <div
-                                    key={triggerId}
+                                    key={trigger.id}
                                     className="group"
                                   >
                                     <div
                                       className="-mx-3 flex cursor-pointer items-start justify-between rounded-md px-3 py-3 transition-colors hover:bg-white/60"
                                       onClick={() => {
-                                        // Find all registrations for this trigger
-                                        const triggerRegistrations =
-                                          Object.values(registrations)
-                                            .flat()
-                                            .filter(
-                                              (reg) =>
-                                                reg.triggerId === triggerId,
-                                            );
-
-                                        if (triggerRegistrations.length > 0) {
-                                          // Check if any registration for this trigger is already selected
-                                          const isSelected =
-                                            triggerRegistrations.some((reg) =>
-                                              selectedRegistrations.includes(
-                                                reg.id,
-                                              ),
-                                            );
-
-                                          if (!isSelected) {
-                                            // Select the first available registration to show the options
-                                            const newSelection = [
-                                              ...selectedRegistrations,
-                                              triggerRegistrations[0]?.id ||
-                                                `${triggerId}-reg1`,
-                                            ];
-                                            handleSelectedRegistrationsChange(
-                                              newSelection,
-                                            );
-                                          } else {
-                                            // Remove all registrations for this trigger
-                                            const registrationIds =
-                                              triggerRegistrations.map(
-                                                (reg) => reg.id,
-                                              );
-                                            const newSelection =
-                                              selectedRegistrations.filter(
-                                                (id) =>
-                                                  !registrationIds.includes(id),
-                                              );
-                                            handleSelectedRegistrationsChange(
-                                              newSelection,
-                                            );
-                                          }
-                                        }
+                                        setExpandedTriggerIds((prev) =>
+                                          prev.includes(trigger.id)
+                                            ? prev.filter((id) => id !== trigger.id)
+                                            : [...prev, trigger.id],
+                                        );
                                       }}
                                     >
                                       <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-3">
                                           <div
                                             className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${(() => {
-                                              const triggerRegistrations =
-                                                Object.values(registrations)
-                                                  .flat()
-                                                  .filter(
-                                                    (reg) =>
-                                                      reg.triggerId ===
-                                                      triggerId,
-                                                  );
-                                              const isSelected =
-                                                triggerRegistrations.some(
-                                                  (reg) =>
-                                                    selectedRegistrations.includes(
-                                                      reg.id,
-                                                    ),
-                                                );
+                                              const regs = (registrations as Record<string, any[]>)[trigger.id] || [];
+                                              const isSelected = regs.some((reg) => selectedRegistrations.includes(reg.id));
                                               return isSelected
                                                 ? "border-[#2F6868] bg-[#2F6868] text-white"
                                                 : "border-gray-300 hover:border-gray-400";
                                             })()}`}
                                           >
                                             {(() => {
-                                              const triggerRegistrations =
-                                                Object.values(registrations)
-                                                  .flat()
-                                                  .filter(
-                                                    (reg) =>
-                                                      reg.triggerId ===
-                                                      triggerId,
-                                                  );
-                                              const isSelected =
-                                                triggerRegistrations.some(
-                                                  (reg) =>
-                                                    selectedRegistrations.includes(
-                                                      reg.id,
-                                                    ),
-                                                );
-                                              return isSelected ? (
-                                                <Check className="h-3 w-3" />
-                                              ) : null;
+                                              const regs = (registrations as Record<string, any[]>)[trigger.id] || [];
+                                              const isSelected = regs.some((reg) => selectedRegistrations.includes(reg.id));
+                                              return isSelected ? <Check className="h-3 w-3" /> : null;
                                             })()}
                                           </div>
                                           <div>
                                             <p className="text-sm leading-5 font-medium text-gray-900">
-                                              {trigger.name}
+                                              {trigger.displayName || trigger.name}
                                             </p>
                                             {trigger.description && (
                                               <p className="mt-0.5 text-sm leading-5 text-gray-500">
@@ -382,58 +350,54 @@ export function AuthRequiredDialog(props: {
                                           </div>
                                         </div>
                                       </div>
+                                      <div className="ml-3 flex items-center">
+                                        <ChevronDown className="h-4 w-4 text-gray-400" />
+                                      </div>
                                     </div>
 
                                     {/* Registration options - only show when trigger is actually selected */}
                                     {(() => {
-                                      const triggerRegistrations =
-                                        Object.values(registrations)
-                                          .flat()
-                                          .filter(
-                                            (reg) =>
-                                              reg.triggerId === triggerId,
-                                          );
-                                      const hasSelectedRegistration =
-                                        triggerRegistrations.some((reg) =>
-                                          selectedRegistrations.includes(
-                                            reg.id,
-                                          ),
-                                        );
-
-                                      // Only show if user has actually selected something for this trigger
-                                      if (!hasSelectedRegistration) return null;
-
-                                      // Only render concrete registrations if available
-                                      if (triggerRegistrations.length === 0) {
-                                        return null;
-                                      }
+                                      const triggerRegistrations = (
+                                        registrations as Record<string, any[]>
+                                      )[trigger.id] || [];
+                                      const isExpanded = expandedTriggerIds.includes(trigger.id);
+                                      if (!isExpanded) return null;
 
                                       return (
                                         <div className="mt-3 ml-8 space-y-2">
-                                          <p className="mb-2 text-xs text-gray-600">
-                                            Choose specific locations:
-                                          </p>
-                                          {triggerRegistrations.map(
-                                            (registration, index) => (
+                                          {triggerRegistrations.length > 0 ? (
+                                            <div className="mb-2 flex items-center justify-between">
+                                              <p className="text-xs font-medium text-gray-700">Registrations</p>
+                                              <AuthenticateTriggerDialog
+                                                trigger={trigger}
+                                                reloadTriggers={reloadTriggersNoArg}
+                                                onCancel={() => undefined}
+                                              />
+                                            </div>
+                                          ) : (
+                                            <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
+                                              <span>No registrations yet.</span>
+                                              <AuthenticateTriggerDialog
+                                                trigger={trigger}
+                                                reloadTriggers={reloadTriggersNoArg}
+                                                onCancel={() => undefined}
+                                              />
+                                            </div>
+                                          )}
+                                          {triggerRegistrations.map((registration) => (
                                               <div
-                                                key={
-                                                  registration.id ||
-                                                  `sample-${index}`
-                                                }
+                                                key={registration.id}
                                                 className="flex items-center gap-2"
                                               >
                                                 <button
                                                   className={`flex h-4 w-4 items-center justify-center rounded border transition-all ${
-                                                    selectedRegistrations.includes(
-                                                      registration.id ||
-                                                        `sample-${index}`,
-                                                    )
+                                                    selectedRegistrations.includes(registration.id)
                                                       ? "border-[#2F6868] bg-[#2F6868] text-white"
                                                       : "border-gray-300 hover:border-gray-400"
                                                   }`}
                                                   onClick={(e) => {
                                                     e.stopPropagation();
-                                                    const regId = registration.id || `sample-${index}`;
+                                                    const regId = registration.id;
                                                     const isSelected =
                                                       selectedRegistrations.includes(
                                                         regId,
@@ -454,17 +418,17 @@ export function AuthRequiredDialog(props: {
                                                     }
                                                   }}
                                                 >
-                                                  {selectedRegistrations.includes(registration.id || `sample-${index}`) && (
+                                                  {selectedRegistrations.includes(registration.id) && (
                                                     <Check className="h-2.5 w-2.5" />
                                                   )}
                                                 </button>
                                                 <div>
-                                                  <p className="text-sm text-gray-900">
-                                                    {registration.name}
+                                              <p className="text-sm text-gray-900">
+                                                    {formatRegistrationPrimary(registration)}
                                                   </p>
-                                                  {registration.description && (
+                                                  {formatRegistrationSecondary(registration) && (
                                                     <p className="text-xs text-gray-500">
-                                                      {registration.description}
+                                                      {formatRegistrationSecondary(registration)}
                                                     </p>
                                                   )}
                                                 </div>
