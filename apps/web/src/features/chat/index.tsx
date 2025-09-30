@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
+import { DeepAgentChatInterface } from "@/features/agent-chat";
 import { useAuthContext } from "@/providers/Auth";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { useAgentsContext } from "@/providers/Agents";
