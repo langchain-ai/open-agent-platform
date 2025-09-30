@@ -28,8 +28,8 @@ export function getThreadColor(thread: {
   }
 }
 
-export const formatTime = (date: Date) => {
-  const now = new Date();
+export const formatTime = (input: Date | string, now = new Date()) => {
+  const date = typeof input === "string" ? new Date(input) : input;
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 

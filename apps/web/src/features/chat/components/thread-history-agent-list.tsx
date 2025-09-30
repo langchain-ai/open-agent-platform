@@ -19,6 +19,11 @@ import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 import { useDeployment } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const GROUP_LABELS = {
   interrupted: "Requiring Attention",
@@ -248,23 +253,6 @@ function ThreadRow({
   active: boolean;
   onClick: () => void;
 }) {
-  const formatTime = (timeStr: string) => {
-    const date = new Date(timeStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return format(date, "HH:mm");
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return format(date, "EEEE");
-    } else {
-      return format(date, "MM/dd");
-    }
-  };
-
   return (
     <button
       onClick={onClick}
@@ -282,9 +270,14 @@ function ThreadRow({
           <h3 className="truncate text-sm font-semibold text-gray-900">
             {title}
           </h3>
-          <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
-            {formatTime(time)}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
+                {formatTime(time)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{time.toString()}</TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center justify-between">
           <p className="flex-1 truncate text-sm text-gray-600">{description}</p>
