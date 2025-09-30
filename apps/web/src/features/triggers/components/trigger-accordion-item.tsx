@@ -34,6 +34,7 @@ export function TriggerAccordionItem(props: {
   selectedRegistrationIds?: string[];
   onSelectedRegistrationChange?: (registrationIds: string[]) => void;
   reloadTriggers?: () => Promise<void>;
+  showConnect?: boolean;
 }) {
   const getAllTriggerNamesUnique = () => {
     const names = new Set<string>();
@@ -102,7 +103,7 @@ export function TriggerAccordionItem(props: {
                   .map((trigger) =>
                     numSelectedRegistrationsForTrigger(trigger.id),
                   )
-                  .reduce((a, b) => a + b)}
+                  .reduce((a, b) => a + b, 0)}
               />
             )}
           </span>
@@ -234,10 +235,12 @@ export function TriggerAccordionItem(props: {
                     registrations={getRegistrationsFromTriggerId(trigger.id)}
                   />
                 ) : null}
-                <AuthenticateTriggerDialog
-                  reloadTriggers={props.reloadTriggers}
-                  trigger={trigger}
-                />
+                {props.showConnect !== false && (
+                  <AuthenticateTriggerDialog
+                    reloadTriggers={props.reloadTriggers}
+                    trigger={trigger}
+                  />
+                )}
               </div>
             </div>
             {index < arr.length - 1 && <hr />}

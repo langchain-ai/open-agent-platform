@@ -231,6 +231,23 @@ export function InitialInputs({
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
   const [newAgentId, setNewAgentId] = useState<string | null>(null);
+  const displayToolsByProvider = useMemo(() => {
+    if (!_enabledToolNames?.length || !tools?.length)
+      return [] as { provider: string; tools: string[] }[];
+    const byProvider = new Map<string, string[]>();
+    for (const name of _enabledToolNames) {
+      const tool = tools.find((t) => t.name === name);
+      if (!tool) continue;
+      const provider = tool.auth_provider || "core";
+      const list = byProvider.get(provider) ?? [];
+      if (!list.includes(name)) list.push(name);
+      byProvider.set(provider, list);
+    }
+    return Array.from(byProvider.entries()).map(([provider, tools]) => ({
+      provider,
+      tools,
+    }));
+  }, [_enabledToolNames, tools]);
 
   const deployments = getDeployments();
   const deploymentId =
@@ -313,6 +330,8 @@ export function InitialInputs({
     loadTriggers(session.accessToken);
   }, [session]);
 
+  // (Dialog opens after agent generation or when auth is required.)
+
   const stream = useStream<AgentGeneratorState>({
     client: client ?? undefined,
     assistantId: ASSISTANT_ID,
@@ -343,11 +362,6 @@ export function InitialInputs({
           return trigger && !isCronTrigger(trigger);
         });
 
-      if (nonCronTriggerIds?.length) {
-        setEnabledTriggerIds(nonCronTriggerIds);
-        setAuthRequiredDialogOpen(true);
-      }
-
       const agentConfigurable = newAgent.config?.configurable as
         | DeepAgentConfiguration
         | undefined;
@@ -355,25 +369,15 @@ export function InitialInputs({
       if (enabledToolNames?.length) {
         setEnabledToolNames(enabledToolNames);
         setNewAgentId(newAgent.assistant_id);
-        const success = await validateAuth(enabledToolNames);
-        if (!success) {
-          return;
-        }
+        // Populate authRequiredUrls if needed, but regardless show the modal
+        await validateAuth(enabledToolNames);
       }
-
       if (nonCronTriggerIds?.length) {
-        return;
+        setEnabledTriggerIds(nonCronTriggerIds);
       }
-
-      setCreatingAgent(true);
-      await refreshAgents();
-
-      // Call the parent callback to handle navigation
-      if (onAgentCreated) {
-        await onAgentCreated(newAgent.assistant_id, deploymentId);
-      }
-
-      resetState();
+      // Always present the modal after generation to review triggers/tools/auth
+      setAuthRequiredDialogOpen(true);
+      return;
     },
   });
 
@@ -552,6 +556,7 @@ export function InitialInputs({
           open={authRequiredDialogOpen}
           onOpenChange={setAuthRequiredDialogOpen}
           authUrls={authRequiredUrls}
+          displayToolsByProvider={displayToolsByProvider}
           handleSubmit={async () => {
             // TODO: Eventually, we should require auth before proceeding. For now, skip until we figure out that flow.
             // const success = await validateAuth(enabledToolNames);
@@ -573,10 +578,33 @@ export function InitialInputs({
               return;
             }
 
-            if (selectedTriggerRegistrationIds.length) {
+            // Ensure we have registration IDs to link; if none explicitly selected,
+            // pick the most recent registration for each enabled trigger template.
+            let toLink = selectedTriggerRegistrationIds;
+            if ((!toLink || toLink.length === 0) && groupedTriggers) {
+              const picked: string[] = [];
+              for (const [, { registrations }] of Object.entries(
+                groupedTriggers,
+              )) {
+                for (const [, regs] of Object.entries(
+                  registrations as Record<string, any[]>,
+                )) {
+                  if (!Array.isArray(regs) || regs.length === 0) continue;
+                  const pick = [...regs].sort(
+                    (a: any, b: any) =>
+                      new Date(b.created_at ?? 0).getTime() -
+                      new Date(a.created_at ?? 0).getTime(),
+                  )[0];
+                  if (pick?.id) picked.push(pick.id);
+                }
+              }
+              toLink = Array.from(new Set(picked));
+            }
+
+            if (toLink && toLink.length) {
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
-                selectedTriggerIds: selectedTriggerRegistrationIds,
+                selectedTriggerIds: toLink,
               });
               if (!success) {
                 toast.error("Failed to add agent triggers", {
