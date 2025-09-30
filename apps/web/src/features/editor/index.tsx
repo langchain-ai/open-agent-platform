@@ -43,7 +43,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
+import { DeepAgentChatInterface } from "@/features/agent-chat";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";

@@ -16,7 +16,7 @@ import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
 import { Check, Edit, MessagesSquareIcon, SquarePen } from "lucide-react";
-import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
+import { DeepAgentChatInterface } from "@/features/agent-chat";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
