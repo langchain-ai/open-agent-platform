@@ -19,6 +19,14 @@ import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 import { useDeployment } from "@/lib/environment/deployments";
 
+const GROUP_LABELS = {
+  interrupted: "Requiring Attention",
+  today: "Today",
+  yesterday: "Yesterday",
+  week: "This Week",
+  older: "Older",
+} as const;
+
 export function ThreadHistoryAgentList({
   onThreadSelect,
   showDraft,
@@ -45,9 +53,13 @@ export function ThreadHistoryAgentList({
     [agents, deploymentId, selectedAgentId],
   );
 
-  const threads = useThreads();
+  const threads = useThreads({
+    status: statusFilter === "all" ? undefined : statusFilter,
+  });
 
-  const displayItems = useMemo(() => {
+  const interrupted = useThreads({ status: "interrupted", limit: 5 });
+
+  const displayThreads = useMemo(() => {
     if (showDraft != null && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
@@ -62,18 +74,25 @@ export function ThreadHistoryAgentList({
   }, [showDraft, currentThreadId, agent, threads.data]);
 
   const grouped = useMemo(() => {
-    const groups: Record<string, ThreadItem[]> = {
+    const groups: Record<keyof typeof GROUP_LABELS, ThreadItem[]> = {
+      interrupted: [],
       today: [],
       yesterday: [],
       week: [],
       older: [],
     };
+
     const now = new Date();
-    const base =
-      statusFilter === "all"
-        ? displayItems
-        : displayItems.filter((t) => t.status === statusFilter);
-    base.forEach((t) => {
+    let ignoreSet: Set<string> | undefined;
+
+    if (statusFilter == null || statusFilter === "all") {
+      groups.interrupted = interrupted.data ?? [];
+      ignoreSet = new Set([...(interrupted.data ?? []).map((t) => t.id)]);
+    }
+
+    displayThreads.forEach((t) => {
+      if (ignoreSet?.has(t.id)) return;
+
       const diff = now.getTime() - t.updatedAt.getTime();
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       if (days === 0) groups.today.push(t);
@@ -81,8 +100,9 @@ export function ThreadHistoryAgentList({
       else if (days < 7) groups.week.push(t);
       else groups.older.push(t);
     });
+
     return groups;
-  }, [displayItems, statusFilter]);
+  }, [displayThreads, statusFilter, interrupted.data]);
 
   return (
     <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
@@ -91,22 +111,27 @@ export function ThreadHistoryAgentList({
         <ScrollArea className="h-full w-full">
           {threads.isLoading ? (
             <LoadingThreadsSkeleton />
-          ) : !displayItems?.length ? (
+          ) : !displayThreads?.length ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
               <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
               <p>No conversations yet</p>
             </div>
           ) : (
             <div className="box-border w-full max-w-full overflow-hidden p-2">
-              {Object.entries(grouped)
+              {(
+                Object.entries(grouped) as [
+                  keyof typeof grouped,
+                  ThreadItem[],
+                ][]
+              )
                 .filter(([_, threads]) => threads.length > 0)
                 .map(([key, threads]) => (
                   <Group
                     key={key}
-                    label={key}
+                    label={GROUP_LABELS[key]}
                   >
                     {threads.map((t) => (
-                      <Row
+                      <ThreadRow
                         key={t.id}
                         {...t}
                         time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
@@ -176,8 +201,7 @@ function Group({
   );
 }
 
-function Row({
-  id,
+function ThreadRow({
   title,
   description,
   status,
@@ -185,7 +209,6 @@ function Row({
   active,
   onClick,
 }: {
-  id: string;
   title: string;
   description: string;
   status: Thread["status"] | "draft";

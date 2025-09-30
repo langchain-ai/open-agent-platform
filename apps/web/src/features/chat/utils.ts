@@ -103,7 +103,10 @@ const isMessages = (values: unknown): values is { messages: Message[] } => {
   );
 };
 
-export function useThreads() {
+export function useThreads(props?: {
+  status?: Thread["status"];
+  limit?: number;
+}) {
   const [selectedAgentId] = useQueryState("agentId");
   const [deploymentId] = useDeployment();
   const { session } = useAuthContext();
@@ -116,25 +119,31 @@ export function useThreads() {
       agents,
       accessToken: session?.accessToken,
       deploymentId,
+      ...props,
     },
-    async ({ deploymentId, selectedAgentId, agents, accessToken }) => {
+    async ({
+      deploymentId,
+      selectedAgentId,
+      agents,
+      accessToken,
+      status,
+      limit,
+    }) => {
       if (!deploymentId || !selectedAgentId || !accessToken) return [];
       const client = createClient(deploymentId, accessToken);
 
-      // Build a quick lookup for agents in the current deployment
-      const agentMap = new Map<string, Agent>(
-        agents
-          .filter((a) => a.deploymentId === deploymentId)
-          .map((a) => [a.assistant_id, a]),
+      const agent = agents.find(
+        (a) =>
+          a.deploymentId === deploymentId && a.assistant_id === selectedAgentId,
       );
-      const agent = agentMap.get(selectedAgentId);
       if (!agent) return [];
 
       const response = await client.threads.search({
         // TODO: use useSWRInfinite to fetch multiple pages
-        limit: 50,
+        limit: limit ?? 50,
         sortBy: "created_at",
         sortOrder: "desc",
+        status,
         metadata: agent?.assistant_id
           ? { assistant_id: agent.assistant_id }
           : { graph_id: "deep_agent" },
