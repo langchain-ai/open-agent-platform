@@ -51,6 +51,14 @@ export function SelectedTriggersStrip({
     return map;
   }, [groupedTriggers]);
 
+  // Only show selected items once registration metadata is available
+  const visibleIds = React.useMemo(() => {
+    if (!groupedTriggers) return [] as string[];
+    return ids.filter((id) => Boolean(idToLabel[id]));
+  }, [groupedTriggers, ids, idToLabel]);
+
+  const isLoadingSelected = ids.length > 0 && !groupedTriggers;
+
   const remove = (id: string) => {
     const current = (form.getValues("triggerIds") || []) as string[];
     form.setValue(
@@ -61,7 +69,7 @@ export function SelectedTriggersStrip({
   };
 
   const containerCls =
-    ids.length > 0
+    (visibleIds.length > 0 || isLoadingSelected)
       ? "rounded-md bg-gray-50 px-2 py-1 min-h-10 flex items-center"
       : "px-2 py-1 min-h-10 flex items-center";
   return (
@@ -70,7 +78,10 @@ export function SelectedTriggersStrip({
         {ids.length === 0 && (
           <span className="text-xs text-gray-500">No triggers selected</span>
         )}
-        {ids.map((id) => (
+        {isLoadingSelected && (
+          <span className="text-xs text-gray-500">Loading selected triggers…</span>
+        )}
+        {visibleIds.map((id) => (
           <Badge
             key={`trig-${id}`}
             variant="outline"
