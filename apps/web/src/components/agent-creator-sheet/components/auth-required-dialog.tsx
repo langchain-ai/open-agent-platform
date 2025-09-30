@@ -61,15 +61,13 @@ export function AuthRequiredDialog(props: {
     const next = new Set(selectedRegistrations);
 
     for (const [, { registrations }] of Object.entries(props.groupedTriggers)) {
-      for (const [_templateId, regs] of Object.entries(
-        registrations as Record<string, any[]>,
-      )) {
+      for (const [_templateId, regs] of Object.entries(registrations)) {
         if (!Array.isArray(regs) || regs.length === 0) continue;
-        const hasAnySelected = regs.some((r: any) => next.has(r.id));
+        const hasAnySelected = regs.some((r) => next.has(r.id));
         if (!hasAnySelected) {
           // Pick most recent by created_at if available, else first
           const pick = [...regs].sort(
-            (a: any, b: any) =>
+            (a, b) =>
               new Date(b.created_at ?? 0).getTime() -
               new Date(a.created_at ?? 0).getTime(),
           )[0];
@@ -312,12 +310,7 @@ export function AuthRequiredDialog(props: {
                               </h4>
                             </div>
                             <div className="space-y-2">
-                              {(Array.isArray(triggers)
-                                ? (triggers as any[])
-                                : (Object.values(
-                                    triggers as unknown as Record<string, any>,
-                                  ) as any[])
-                              ).map((trigger) => {
+                              {triggers.map((trigger) => {
                                 const isSelected = selectedTriggerIds.includes(
                                   trigger.id,
                                 );
@@ -483,11 +476,7 @@ export function AuthRequiredDialog(props: {
                   <div className="space-y-4">
                     {Object.entries(props.groupedTriggers).map(
                       ([provider, { registrations, triggers }]) => {
-                        const providerTriggers = (
-                          Array.isArray(triggers)
-                            ? triggers
-                            : Object.values(triggers)
-                        ) as any[];
+                        const providerTriggers = triggers;
 
                         // Only show triggers that are selected
                         const selectedProviderTriggers =
@@ -507,9 +496,7 @@ export function AuthRequiredDialog(props: {
                             <div className="space-y-3">
                               {selectedProviderTriggers.map((trigger) => {
                                 const triggerRegistrations =
-                                  (registrations as Record<string, any[]>)[
-                                    trigger.id
-                                  ] || [];
+                                  registrations[trigger.id] || [];
 
                                 return (
                                   <div
