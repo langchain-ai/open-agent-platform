@@ -481,7 +481,7 @@ function AgentChat(): React.ReactNode {
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
-  const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [sidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
 
   const thread = useThread(threadId);
