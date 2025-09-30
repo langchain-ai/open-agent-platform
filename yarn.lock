@@ -1876,6 +1876,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@langchain/openai@npm:^0.6.14":
+  version: 0.6.14
+  resolution: "@langchain/openai@npm:0.6.14"
+  dependencies:
+    js-tiktoken: ^1.0.12
+    openai: 5.12.2
+    zod: ^3.25.32
+  peerDependencies:
+    "@langchain/core": ">=0.3.68 <0.4.0"
+  checksum: deb0de1336e5a8160669673e7627673040482bd8e590890e29297c728067cf2751c795cc2c31b1a21d1bea7b42c8f343945c3d9b465732f7413ff624d6d7b11a
+  languageName: node
+  linkType: hard
+
 "@leichtgewicht/ip-codec@npm:^2.0.1":
   version: 2.0.5
   resolution: "@leichtgewicht/ip-codec@npm:2.0.5"
@@ -2509,6 +2522,7 @@ __metadata:
     "@langchain/auth": ^0.0.0
     "@langchain/core": ^0.3.44
     "@langchain/langgraph-sdk": ^0.1.8
+    "@langchain/openai": ^0.6.14
     "@modelcontextprotocol/sdk": ^1.11.4
     "@open-agent-platform/deep-agent-chat": "*"
     "@radix-ui/react-accordion": ^1.2.12
@@ -13735,6 +13749,23 @@ __metadata:
     is-docker: ^2.1.1
     is-wsl: ^2.2.0
   checksum: 6388bfff21b40cb9bd8f913f9130d107f2ed4724ea81a8fd29798ee322b361ca31fa2cdfb491a5c31e43a3996cfe9566741238c7a741ada8d7af1cb78d85cf26
+  languageName: node
+  linkType: hard
+
+"openai@npm:5.12.2":
+  version: 5.12.2
+  resolution: "openai@npm:5.12.2"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.23.8
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: b48116979c0666b1438d68a71df2c57833bca8c20c5d43e0c17e4d8594ca72294a1b62f40c7e3b8e5d5be644c2de5ba27fe97b8136f1de36e0490fd49c552a70
   languageName: node
   linkType: hard
 
