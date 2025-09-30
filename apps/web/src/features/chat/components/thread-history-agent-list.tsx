@@ -126,7 +126,7 @@ export function ThreadHistoryAgentList({
               )
                 .filter(([_, threads]) => threads.length > 0)
                 .map(([key, threads]) => (
-                  <Group
+                  <ThreadGroup
                     key={key}
                     label={GROUP_LABELS[key]}
                   >
@@ -145,7 +145,7 @@ export function ThreadHistoryAgentList({
                         }}
                       />
                     ))}
-                  </Group>
+                  </ThreadGroup>
                 ))}
             </div>
           )}
@@ -184,19 +184,13 @@ function LoadingThreadsSkeleton() {
   );
 }
 
-function Group({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function ThreadGroup(props: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-4 flex flex-col gap-1">
       <h4 className="text-muted-foreground m-0 px-3 py-2 text-xs font-semibold tracking-wide uppercase">
-        {label}
+        {props.label}
       </h4>
-      {children}
+      {props.children}
     </div>
   );
 }
