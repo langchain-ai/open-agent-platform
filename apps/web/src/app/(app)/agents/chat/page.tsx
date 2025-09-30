@@ -23,6 +23,7 @@ import NextLink from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -545,6 +546,7 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          skeleton={<ChatThreadSkeleton />}
           onHistoryRevalidate={() => {
             mutate((key) => {
               if (typeof key !== "object" || key == null) return false;
@@ -647,5 +649,61 @@ export default function Page(): React.ReactNode {
         </AgentsProvider>
       </div>
     </React.Suspense>
+  );
+}
+
+function ChatThreadSkeleton() {
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="flex-1 space-y-6 overflow-y-auto py-4">
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[60%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[35%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[80%] rounded-2xl" />
+            <Skeleton className="h-4 w-[65%] rounded-2xl" />
+            <Skeleton className="h-4 w-[45%] rounded-2xl" />
+          </div>
+        </div>
+
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[45%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[20%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[32%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[70%] rounded-2xl" />
+            <Skeleton className="h-4 w-[50%] rounded-2xl" />
+            <Skeleton className="h-4 w-[30%] rounded-2xl" />
+            <Skeleton className="h-4 w-[90%] rounded-2xl" />
+            <Skeleton className="h-4 w-[85%] rounded-2xl" />
+            <Skeleton className="h-4 w-[40%] rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
