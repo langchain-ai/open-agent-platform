@@ -59,6 +59,19 @@ interface AgentConfigProps {
   onExternalTitleChange?: (v: string) => void;
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   forceMainInstructionsView?: boolean;
+  // Expose instructions get/set for external tools (e.g., prompt wand)
+  instructionsApiRef?: React.MutableRefObject<
+    | {
+        getMarkdown: () => Promise<string>;
+        setMarkdown: (markdown: string) => Promise<void>;
+      }
+    | null
+  >;
+  // Open the prompt-wand rewrite bar via keyboard shortcut
+  onRewriteShortcut?: (
+    selectedText?: string,
+    anchor?: { x: number; y: number },
+  ) => void;
 }
 
 type ViewType = "instructions" | "tools" | "triggers" | "subagents";
@@ -79,6 +92,8 @@ export function AgentConfig({
   onExternalTitleChange,
   saveRef,
   forceMainInstructionsView,
+  instructionsApiRef,
+  onRewriteShortcut,
 }: AgentConfigProps) {
   const { session } = useAuthContext();
   const {
@@ -524,6 +539,38 @@ export function AgentConfig({
     }
   }, [saveRef, handleSaveChanges]);
 
+  // Expose instructions get/set API via ref (for external prompt editing tools)
+  useEffect(() => {
+    if (!instructionsApiRef) return;
+    instructionsApiRef.current = {
+      getMarkdown: async () => {
+        try {
+          const md = await editor.blocksToMarkdownLossy(editor.document);
+          return md ?? "";
+        } catch (err) {
+          console.error("Failed to serialize editor markdown:", err);
+          return "";
+        }
+      },
+      setMarkdown: async (markdown: string) => {
+        try {
+          const processed = (markdown || "").replace(
+            /^#{1,6}\s+(.+)$/gm,
+            "**$1**",
+          );
+          const blocks = await editor.tryParseMarkdownToBlocks(processed);
+          editor.replaceBlocks(editor.document, blocks);
+        } catch (err) {
+          console.error("Failed to set editor markdown:", err);
+        }
+      },
+    };
+    // Cleanup on unmount
+    return () => {
+      if (instructionsApiRef) instructionsApiRef.current = null;
+    };
+  }, [instructionsApiRef, editor]);
+
   if (!agent) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -652,10 +699,28 @@ export function AgentConfig({
             <div className="p-6">
               <div
                 key={editorKey}
-                onKeyDown={(e) => {
-                  // Prevent keyboard shortcuts from bubbling up to parent components
-                  if (e.ctrlKey || e.metaKey) {
+                onKeyDownCapture={(e) => {
+                  // Capture phase so we intercept before BlockNote handles it (disables native link editor)
+                  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+                    e.preventDefault();
                     e.stopPropagation();
+                    let selectedText = "";
+                    let anchor: { x: number; y: number } | undefined = undefined;
+                    try {
+                      const sel = window.getSelection();
+                      selectedText = sel?.toString() ?? "";
+                      if (sel && sel.rangeCount > 0) {
+                        const rect = sel.getRangeAt(0).getBoundingClientRect();
+                        if (rect) {
+                          anchor = {
+                            x: rect.left + rect.width / 2,
+                            y: rect.top, // viewport top
+                          };
+                        }
+                      }
+                    } catch {}
+                    onRewriteShortcut?.(selectedText, anchor);
+                    return;
                   }
                 }}
               >
@@ -666,6 +731,7 @@ export function AgentConfig({
                   theme="light"
                   data-color-scheme="light"
                 />
+                {/* Formatting toolbar temporarily removed due to version export mismatch */}
               </div>
             </div>
           </div>
