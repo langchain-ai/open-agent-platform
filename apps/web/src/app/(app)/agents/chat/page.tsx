@@ -14,7 +14,7 @@ import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Check, Edit, Maximize2, Minimize2, SquarePen } from "lucide-react";
+import { Check, Edit, MessagesSquareIcon, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { getDeployments } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
@@ -71,10 +71,35 @@ const DraftContext = createContext<
   [string | null, Dispatch<SetStateAction<string | null>>]
 >([null, (state) => state]);
 
+function AgentChatThreadButton() {
+  const [sidebar, setSidebar] = useQueryState("sidebar");
+
+  return (
+    <>
+      <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
+        Chat
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={async () => {
+            const next = sidebar ? null : "1";
+            await setSidebar(next);
+          }}
+          className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+          title={sidebar ? "Exit full view" : "Expand chat"}
+        >
+          <MessagesSquareIcon />
+          Threads
+        </Button>
+      </h2>
+    </>
+  );
+}
+
 function ThreadSidebar() {
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
-  const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [sidebar] = useQueryState("sidebar");
   const [statusFilter, setStatusFilter] = useQueryState("status");
   const [draft] = useContext(DraftContext);
 
@@ -82,25 +107,7 @@ function ThreadSidebar() {
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
         <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-          Chat
-          {sidebar && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={async () => {
-                const next = sidebar ? null : "1";
-                await setSidebar(next);
-              }}
-              className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-              title={sidebar ? "Exit full view" : "Expand chat"}
-            >
-              {!sidebar ? (
-                <Minimize2 className="size-5" />
-              ) : (
-                <Maximize2 className="size-5" />
-              )}
-            </Button>
-          )}
+          {sidebar && <AgentChatThreadButton />}
         </h2>
         <div className="flex w-full gap-2">
           {/* Status filter */}
@@ -474,7 +481,7 @@ function AgentChat(): React.ReactNode {
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useQueryState("deploymentId");
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
-  const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [sidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
 
   const thread = useThread(threadId);
@@ -497,26 +504,7 @@ function AgentChat(): React.ReactNode {
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid min-h-[64px] min-w-0 grid-cols-[1fr_auto] items-center p-4 px-[18px]">
         <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
-          {!sidebar && (
-            <>
-              Chat
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={async () => {
-                  await setSidebar(sidebar ? null : "1");
-                }}
-                className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-                title={!sidebar ? "Exit full view" : "Expand chat"}
-              >
-                {!sidebar ? (
-                  <Minimize2 className="size-5" />
-                ) : (
-                  <Maximize2 className="size-5" />
-                )}
-              </Button>
-            </>
-          )}
+          {!sidebar && <AgentChatThreadButton />}
         </span>
 
         {threadId && (
