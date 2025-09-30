@@ -16,6 +16,7 @@ import {
 } from "../utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
+import { useDeployment } from "@/lib/environment/deployments";
 
 export function ThreadHistoryAgentList({
   onThreadSelect,
@@ -29,7 +30,7 @@ export function ThreadHistoryAgentList({
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
   const [currentThreadId] = useQueryState("threadId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [selectedAgentId] = useQueryState("agentId");
   const { agents } = useAgentsContext();
 

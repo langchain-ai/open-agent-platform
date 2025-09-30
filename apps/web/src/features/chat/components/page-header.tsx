@@ -28,6 +28,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Agent } from "@/types/agent";
 import { AgentCreatorSheet } from "@/components/agent-creator-sheet";
 import { isUserSpecifiedDefaultAgent } from "@/lib/agent-utils";
+import { useDeployment } from "@/lib/environment/deployments";
 
 interface PageHeaderProps {
   view: "chat" | "workflow";
@@ -49,7 +50,7 @@ export function PageHeader({
   const [isAgentSelectorOpen, setIsAgentSelectorOpen] = useState(false);
   const [threadId, setThreadId] = useQueryState("threadId");
   const [_agentId, setAgentId] = useQueryState("agentId");
-  const [_deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [_deploymentId, setDeploymentId] = useDeployment();
   const { agents, loading } = useAgentsContext();
 
   const handleViewChange = (newView: "chat" | "workflow") => {

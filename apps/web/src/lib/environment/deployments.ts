@@ -1,4 +1,6 @@
 import { Deployment } from "@/types/deployment";
+import { useQueryState } from "nuqs";
+import { useCallback } from "react";
 
 /**
  * Loads the provided deployments from the environment variable.
@@ -24,4 +26,22 @@ export function getDeployments(): Deployment[] {
     throw new Error("No default deployment found");
   }
   return deployments;
+}
+
+export function useDeployment() {
+  const [query, setQuery] = useQueryState("deploymentId");
+  const deployments = getDeployments();
+  const defaultDeployment = deployments.find((d) => d.isDefault);
+
+  const defaultDeploymentId = defaultDeployment?.id;
+  const setDeploymentId = useCallback(
+    (id: string | null) => setQuery(id === defaultDeploymentId ? null : id),
+    [defaultDeploymentId, setQuery],
+  );
+
+  if (!defaultDeploymentId) throw new Error("No deployment ID found");
+  return [query ?? defaultDeploymentId, setDeploymentId] as [
+    string,
+    typeof setDeploymentId,
+  ];
 }

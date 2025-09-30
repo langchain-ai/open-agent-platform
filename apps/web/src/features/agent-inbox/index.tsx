@@ -20,6 +20,7 @@ import { useScrollPosition } from "@/hooks/use-scroll-position";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logger } from "./utils/logger";
 import { useAgentsContext } from "@/providers/Agents";
+import { useDeployment } from "@/lib/environment/deployments";
 
 // Wrap the actual implementation in the provider
 function AgentInboxWithProvider<
@@ -42,7 +43,7 @@ function AgentInboxWithProvider<
   });
 
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const { saveScrollPosition, restoreScrollPosition } = useScrollPosition();
   const containerRef = React.useRef<HTMLDivElement>(null);
   const processedAgentIdRef = React.useRef<string | null>(null);
@@ -199,7 +200,7 @@ export function AgentInbox<
 >() {
   const { agents } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
 
   useEffect(() => {
     if (!agents.length || agentId) return;

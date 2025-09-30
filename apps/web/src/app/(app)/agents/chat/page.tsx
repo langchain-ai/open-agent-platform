@@ -16,7 +16,7 @@ import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
 import { Check, Edit, MessagesSquareIcon, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
-import { getDeployments } from "@/lib/environment/deployments";
+import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NextLink from "next/link";
@@ -302,7 +302,7 @@ function AgentChatSelectItem(props: {
 function AgentChatSelect() {
   const { agents } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [open, setOpen] = useState(false);
 
@@ -479,7 +479,7 @@ function AgentChat(): React.ReactNode {
   const { agents } = useAgentsContext();
 
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
@@ -573,7 +573,7 @@ function AgentChat(): React.ReactNode {
 function PageLayout() {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [sidebar] = useQueryState("sidebar");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const draftState = useState<string | null>(null);
   const { agents } = useAgentsContext();
 
@@ -593,15 +593,9 @@ function PageLayout() {
       window.localStorage.getItem("oap:lastAgentId") ?? ""
     ).split(":");
 
-    let targetDeploymentId = deploymentId;
-    if (!targetDeploymentId) {
-      const deployments = getDeployments();
-      targetDeploymentId = deployments.at(0)?.id ?? null;
-    }
-
     let targetAgentId = agentId;
     if (!targetAgentId) {
-      if (lastDeploymentId === targetDeploymentId) {
+      if (lastDeploymentId === deploymentId) {
         targetAgentId = lastAgentId;
       } else {
         targetAgentId = agents.at(0)?.assistant_id ?? null;
@@ -610,10 +604,6 @@ function PageLayout() {
 
     if (agentId == null && targetAgentId != null) {
       setAgentId(targetAgentId);
-    }
-
-    if (deploymentId == null && targetDeploymentId != null) {
-      setDeploymentId(targetDeploymentId);
     }
   }, [agents, deploymentId, agentId, setAgentId, setDeploymentId]);
 

@@ -18,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useDeployment } from "@/lib/environment/deployments";
 
 const fetchThreadsData = async (
   client: ReturnType<typeof createClient>,
@@ -91,7 +92,7 @@ export const ThreadHistorySidebar = React.memo<ThreadHistorySidebarProps>(
     const [threads, setThreads] = useState<ChatHistoryItem[]>([]);
     const [isLoadingThreadHistory, setIsLoadingThreadHistory] = useState(true);
     const [agentId] = useQueryState("agentId");
-    const [deploymentId] = useQueryState("deploymentId");
+    const [deploymentId] = useDeployment();
 
     const client = useMemo(() => {
       if (!deploymentId || !session?.accessToken) return null;

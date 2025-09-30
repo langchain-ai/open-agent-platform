@@ -7,6 +7,7 @@ import useSWR from "swr";
 import { AgentSummary } from "./types";
 import { useQueryState } from "nuqs";
 import { format } from "date-fns";
+import { useDeployment } from "@/lib/environment/deployments";
 
 export function getThreadColor(thread: {
   status: Thread["status"] | "draft";
@@ -104,7 +105,7 @@ const isMessages = (values: unknown): values is { messages: Message[] } => {
 
 export function useThreads() {
   const [selectedAgentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
@@ -193,7 +194,7 @@ export function useThreads() {
 export function useAgentSummaries() {
   const { agents } = useAgentsContext();
   const { session } = useAuthContext();
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
 
   return useSWR<
     AgentSummary[],
@@ -293,7 +294,7 @@ export function useAgentSummaries() {
 
 export function useThread(threadId: string | null) {
   const { session } = useAuthContext();
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const accessToken = session?.accessToken;
   const threadState = useSWR(
     threadId != null

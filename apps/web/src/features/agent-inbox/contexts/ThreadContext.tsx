@@ -15,6 +15,7 @@ import {
 import { logger } from "../utils/logger";
 import { useAuthContext } from "@/providers/Auth";
 import { Session } from "@/lib/auth/types";
+import { useDeployment } from "@/lib/environment/deployments";
 
 type ThreadContentType<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -60,7 +61,7 @@ function ThreadsProviderInternal<
 >({ children }: { children: React.ReactNode }): React.ReactElement {
   const { session, isLoading } = useAuthContext();
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [isPending] = useTransition();
 
   // Get thread filter query params using the custom hook
