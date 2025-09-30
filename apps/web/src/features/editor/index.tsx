@@ -49,6 +49,7 @@ import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
+import { cn } from "@/lib/utils";
 
 export function EditorPageContent(): React.ReactNode {
   const router = useRouter();
@@ -325,11 +326,12 @@ export function EditorPageContent(): React.ReactNode {
                 }).toString();
                 router.push(`/agents/chat?${search}`);
               }}
-              className={`rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2F6868]/90 ${
+              className={cn(
+                "rounded-md bg-[#2F6868] px-3 py-2 text-sm font-medium text-white shadow-sm transition-all duration-300 hover:bg-[#2F6868]/90",
                 !hasVisitedEditor
                   ? "shadow-lg ring-2 shadow-[#2F6868]/50 ring-[#2F6868]/30 ring-offset-2"
-                  : ""
-              }`}
+                  : "",
+              )}
             >
               Use agent
             </button>

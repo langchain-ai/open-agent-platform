@@ -63,7 +63,12 @@ export function AuthRequiredDialog(props: {
 
     const next = new Set(selectedRegistrations);
 
-    for (const [, { registrations }] of Object.entries(props.groupedTriggers)) {
+    for (const [, { triggers, registrations }] of Object.entries(
+      props.groupedTriggers,
+    )) {
+      const triggerIds = triggers.map((t) => t.id);
+      setSelectedTriggerIds((prev) => [...prev, ...triggerIds]);
+
       for (const [_templateId, regs] of Object.entries(registrations)) {
         if (!Array.isArray(regs) || regs.length === 0) continue;
         const hasAnySelected = regs.some((r) => next.has(r.id));
@@ -159,13 +164,14 @@ export function AuthRequiredDialog(props: {
             >
               <div className="flex flex-col items-center">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full transition-all",
                     isCompleted
                       ? "bg-[#2F6868] text-white"
                       : isActive
                         ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-400"
-                  }`}
+                        : "bg-gray-100 text-gray-400",
+                  )}
                 >
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
@@ -174,22 +180,24 @@ export function AuthRequiredDialog(props: {
                   )}
                 </div>
                 <span
-                  className={`mt-2 text-xs font-medium ${
+                  className={cn(
+                    "mt-2 text-xs font-medium",
                     isActive
                       ? "text-gray-900"
                       : isCompleted
                         ? "text-[#2F6868]"
-                        : "text-gray-400"
-                  }`}
+                        : "text-gray-400",
+                  )}
                 >
                   {label}
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`mx-3 h-px w-8 ${
-                    currentStep > step ? "bg-[#2F6868]" : "bg-gray-200"
-                  }`}
+                  className={cn(
+                    "mx-3 h-px w-8",
+                    currentStep > step ? "bg-[#2F6868]" : "bg-gray-200",
+                  )}
                 />
               )}
             </div>
@@ -305,7 +313,7 @@ export function AuthRequiredDialog(props: {
                   {props.groupedTriggers && (
                     <div className="space-y-4">
                       {Object.entries(props.groupedTriggers).map(
-                        ([provider, { registrations, triggers }]) => (
+                        ([provider, { triggers }]) => (
                           <div key={provider}>
                             <div className="mb-3">
                               <h4 className="mb-3 text-sm font-medium text-gray-700">
@@ -338,11 +346,12 @@ export function AuthRequiredDialog(props: {
                                       <div className="min-w-0 flex-1">
                                         <div className="flex items-center gap-3">
                                           <div
-                                            className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                                            className={cn(
+                                              "flex h-5 w-5 items-center justify-center rounded border-2 transition-all",
                                               isSelected
                                                 ? "border-[#2F6868] bg-[#2F6868] text-white"
-                                                : "border-gray-300 hover:border-gray-400"
-                                            }`}
+                                                : "border-gray-300 hover:border-gray-400",
+                                            )}
                                           >
                                             {isSelected && (
                                               <Check className="h-3 w-3" />
