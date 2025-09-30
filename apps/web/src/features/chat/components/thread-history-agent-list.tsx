@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { RefObject, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import type { Thread } from "@langchain/langgraph-sdk";
 import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
@@ -18,14 +18,32 @@ import {
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 import { useDeployment } from "@/lib/environment/deployments";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const GROUP_LABELS = {
+  interrupted: "Requiring Attention",
+  today: "Today",
+  yesterday: "Yesterday",
+  week: "This Week",
+  older: "Older",
+} as const;
+
+const DEFAULT_PAGE_SIZE = 20;
 
 export function ThreadHistoryAgentList({
   onThreadSelect,
   showDraft,
   className,
   statusFilter = "all",
+  mutateThreadsRef,
 }: {
   onThreadSelect: (id: string, assistantId?: string) => void;
+  mutateThreadsRef: RefObject<() => void>;
   showDraft?: string;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
@@ -45,9 +63,28 @@ export function ThreadHistoryAgentList({
     [agents, deploymentId, selectedAgentId],
   );
 
-  const threads = useThreads();
+  const threads = useThreads({
+    status: statusFilter === "all" ? undefined : statusFilter,
+    limit: DEFAULT_PAGE_SIZE,
+  });
 
-  const displayItems = useMemo(() => {
+  const flattened = useMemo(() => {
+    return threads.data?.flat() ?? [];
+  }, [threads.data]);
+
+  const interrupted = useThreads({ status: "interrupted", limit: 5 });
+
+  mutateThreadsRef.current = () =>
+    Promise.allSettled([threads.mutate(), interrupted.mutate()]);
+
+  const isLoadingMore =
+    threads.size > 0 && threads.data?.[threads.size - 1] == null;
+
+  const isEmpty = threads.data?.at(0)?.length === 0;
+  const isReachingEnd =
+    isEmpty || (threads.data?.at(-1)?.length ?? 0) < DEFAULT_PAGE_SIZE;
+
+  const displayThreads = useMemo(() => {
     if (showDraft != null && !currentThreadId && agent) {
       const draft: ThreadItem = {
         id: "__draft__",
@@ -56,24 +93,31 @@ export function ThreadHistoryAgentList({
         title: showDraft,
         description: "Draft thread",
       };
-      return [draft, ...(threads.data ?? [])];
+      return [draft, ...(flattened ?? [])];
     }
-    return threads.data ?? [];
-  }, [showDraft, currentThreadId, agent, threads.data]);
+    return flattened ?? [];
+  }, [showDraft, currentThreadId, agent, flattened]);
 
   const grouped = useMemo(() => {
-    const groups: Record<string, ThreadItem[]> = {
+    const groups: Record<keyof typeof GROUP_LABELS, ThreadItem[]> = {
+      interrupted: [],
       today: [],
       yesterday: [],
       week: [],
       older: [],
     };
+
     const now = new Date();
-    const base =
-      statusFilter === "all"
-        ? displayItems
-        : displayItems.filter((t) => t.status === statusFilter);
-    base.forEach((t) => {
+    let ignoreSet: Set<string> | undefined;
+
+    if (statusFilter == null || statusFilter === "all") {
+      groups.interrupted = interrupted.data?.flat() ?? [];
+      ignoreSet = new Set(groups.interrupted.map((t) => t.id));
+    }
+
+    displayThreads.forEach((t) => {
+      if (ignoreSet?.has(t.id)) return;
+
       const diff = now.getTime() - t.updatedAt.getTime();
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       if (days === 0) groups.today.push(t);
@@ -81,8 +125,9 @@ export function ThreadHistoryAgentList({
       else if (days < 7) groups.week.push(t);
       else groups.older.push(t);
     });
+
     return groups;
-  }, [displayItems, statusFilter]);
+  }, [displayThreads, statusFilter, interrupted.data]);
 
   return (
     <div className={cn("flex h-full w-full flex-shrink-0 flex-col", className)}>
@@ -91,22 +136,27 @@ export function ThreadHistoryAgentList({
         <ScrollArea className="h-full w-full">
           {threads.isLoading ? (
             <LoadingThreadsSkeleton />
-          ) : !displayItems?.length ? (
+          ) : !displayThreads?.length ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
               <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
               <p>No conversations yet</p>
             </div>
           ) : (
             <div className="box-border w-full max-w-full overflow-hidden p-2">
-              {Object.entries(grouped)
+              {(
+                Object.entries(grouped) as [
+                  keyof typeof grouped,
+                  ThreadItem[],
+                ][]
+              )
                 .filter(([_, threads]) => threads.length > 0)
                 .map(([key, threads]) => (
-                  <Group
+                  <ThreadGroup
                     key={key}
-                    label={key}
+                    label={GROUP_LABELS[key]}
                   >
                     {threads.map((t) => (
-                      <Row
+                      <ThreadRow
                         key={t.id}
                         {...t}
                         time={format(t.updatedAt, "MM/dd/yyyy hh:mm a")}
@@ -120,8 +170,26 @@ export function ThreadHistoryAgentList({
                         }}
                       />
                     ))}
-                  </Group>
+                  </ThreadGroup>
                 ))}
+
+              {!isReachingEnd && (
+                <Button
+                  onClick={() => threads.setSize(threads.size + 1)}
+                  disabled={isLoadingMore}
+                  variant="outline"
+                  className="mx-2 mb-2 w-[calc(100%-16px)] self-stretch"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </ScrollArea>
@@ -159,25 +227,18 @@ function LoadingThreadsSkeleton() {
   );
 }
 
-function Group({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function ThreadGroup(props: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-4 flex flex-col gap-1">
       <h4 className="text-muted-foreground m-0 px-3 py-2 text-xs font-semibold tracking-wide uppercase">
-        {label}
+        {props.label}
       </h4>
-      {children}
+      {props.children}
     </div>
   );
 }
 
-function Row({
-  id,
+function ThreadRow({
   title,
   description,
   status,
@@ -185,7 +246,6 @@ function Row({
   active,
   onClick,
 }: {
-  id: string;
   title: string;
   description: string;
   status: Thread["status"] | "draft";
@@ -193,23 +253,6 @@ function Row({
   active: boolean;
   onClick: () => void;
 }) {
-  const formatTime = (timeStr: string) => {
-    const date = new Date(timeStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return format(date, "HH:mm");
-    } else if (days === 1) {
-      return "Yesterday";
-    } else if (days < 7) {
-      return format(date, "EEEE");
-    } else {
-      return format(date, "MM/dd");
-    }
-  };
-
   return (
     <button
       onClick={onClick}
@@ -227,9 +270,14 @@ function Row({
           <h3 className="truncate text-sm font-semibold text-gray-900">
             {title}
           </h3>
-          <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
-            {formatTime(time)}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="ml-2 flex-shrink-0 text-xs text-gray-500">
+                {formatTime(time)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{time.toString()}</TooltipContent>
+          </Tooltip>
         </div>
         <div className="flex items-center justify-between">
           <p className="flex-1 truncate text-sm text-gray-600">{description}</p>

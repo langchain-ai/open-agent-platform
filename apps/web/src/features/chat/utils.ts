@@ -4,6 +4,7 @@ import type { Agent } from "@/types/agent";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { AgentSummary } from "./types";
 import { useQueryState } from "nuqs";
 import { format } from "date-fns";
@@ -27,8 +28,8 @@ export function getThreadColor(thread: {
   }
 }
 
-export const formatTime = (date: Date) => {
-  const now = new Date();
+export const formatTime = (input: Date | string, now = new Date()) => {
+  const date = typeof input === "string" ? new Date(input) : input;
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
@@ -103,38 +104,83 @@ const isMessages = (values: unknown): values is { messages: Message[] } => {
   );
 };
 
-export function useThreads() {
+export function useThreads(props: {
+  status?: Thread["status"];
+  limit: number;
+}) {
   const [selectedAgentId] = useQueryState("agentId");
   const [deploymentId] = useDeployment();
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
-  return useSWR(
-    {
-      kind: "threads",
+  const pageSize = props.limit;
+
+  return useSWRInfinite(
+    (pageIndex, previousPageData: unknown[] | null) => {
+      if (!deploymentId || !selectedAgentId || !session?.accessToken) {
+        return null;
+      }
+      // If the previous page returned no items, we've reached the end
+      if (
+        previousPageData &&
+        Array.isArray(previousPageData) &&
+        previousPageData.length === 0
+      ) {
+        return null;
+      }
+      return {
+        kind: "threads",
+        pageIndex,
+        pageSize,
+        selectedAgentId,
+        agents,
+        accessToken: session.accessToken,
+        deploymentId,
+        status: props?.status,
+      } as const;
+    },
+    async ({
+      deploymentId,
       selectedAgentId,
       agents,
-      accessToken: session?.accessToken,
-      deploymentId,
-    },
-    async ({ deploymentId, selectedAgentId, agents, accessToken }) => {
-      if (!deploymentId || !selectedAgentId || !accessToken) return [];
+      accessToken,
+      status,
+      pageIndex,
+      pageSize,
+    }: {
+      kind: "threads";
+      pageIndex: number;
+      pageSize: number;
+      selectedAgentId: string | null;
+      agents: Agent[];
+      accessToken: string;
+      deploymentId: string | null;
+      status?: Thread["status"];
+    }) => {
+      if (!deploymentId || !selectedAgentId || !accessToken)
+        return [] as Array<{
+          id: string;
+          updatedAt: Date;
+          status: Thread["status"] | "draft";
+          title: string;
+          description: string;
+          assistantId?: string;
+        }>;
+
       const client = createClient(deploymentId, accessToken);
 
-      // Build a quick lookup for agents in the current deployment
-      const agentMap = new Map<string, Agent>(
-        agents
-          .filter((a) => a.deploymentId === deploymentId)
-          .map((a) => [a.assistant_id, a]),
+      const agent = agents.find(
+        (a) =>
+          a.deploymentId === deploymentId && a.assistant_id === selectedAgentId,
       );
-      const agent = agentMap.get(selectedAgentId);
       if (!agent) return [];
 
       const response = await client.threads.search({
-        // TODO: use useSWRInfinite to fetch multiple pages
-        limit: 50,
+        limit: pageSize,
+        offset: pageIndex * pageSize,
         sortBy: "created_at",
         sortOrder: "desc",
+        status,
         metadata: agent?.assistant_id
           ? { assistant_id: agent.assistant_id }
           : { graph_id: "deep_agent" },
@@ -146,7 +192,6 @@ export function useThreads() {
         "No description";
 
       return response.map((t) => {
-        // Try to derive a snippet from the last message in the thread
         let snippet = "";
         let title = "";
 
