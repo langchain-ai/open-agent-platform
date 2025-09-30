@@ -69,7 +69,7 @@ export function SelectedTriggersStrip({
   };
 
   const containerCls =
-    (visibleIds.length > 0 || isLoadingSelected)
+    visibleIds.length > 0 || isLoadingSelected
       ? "rounded-md bg-gray-50 px-2 py-1 min-h-10 flex items-center"
       : "px-2 py-1 min-h-10 flex items-center";
   return (
@@ -79,7 +79,9 @@ export function SelectedTriggersStrip({
           <span className="text-xs text-gray-500">No triggers selected</span>
         )}
         {isLoadingSelected && (
-          <span className="text-xs text-gray-500">Loading selected triggers…</span>
+          <span className="text-xs text-gray-500">
+            Loading selected triggers…
+          </span>
         )}
         {visibleIds.map((id) => (
           <Badge
