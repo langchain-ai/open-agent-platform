@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -214,21 +215,28 @@ export function AuthRequiredDialog(props: {
           {currentStep === 1 && (
             <div className="mt-3 mb-1">
               <div className="flex items-center justify-center gap-3">
-                <div className="flex items-center gap-2 rounded-md bg-[#2F6868] px-3 py-2">
-                  <Zap className="h-4 w-4 text-white" />
-                  <span className="text-sm font-medium text-white">
-                    Trigger
-                  </span>
-                </div>
+                <Badge
+                  variant="brand"
+                  className="gap-2 border-transparent px-3.5 py-2 text-sm"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span>Trigger</span>
+                </Badge>
 
-                <ArrowRight className="h-4 w-4 text-gray-400" />
+                <ArrowRight
+                  className="h-5 w-5 text-[#2F6868]"
+                  style={{
+                    animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                  }}
+                />
 
-                <div className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-2">
-                  <Bot className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Agent
-                  </span>
-                </div>
+                <Badge
+                  variant="outline"
+                  className="gap-2 border-transparent px-3.5 py-2 text-sm"
+                >
+                  <Bot className="h-4 w-4" />
+                  <span>Agent</span>
+                </Badge>
               </div>
             </div>
           )}
@@ -237,19 +245,28 @@ export function AuthRequiredDialog(props: {
           {currentStep === 2 && (
             <div className="mt-3 mb-1">
               <div className="flex items-center justify-center gap-3">
-                <div className="flex items-center gap-2 rounded-md bg-gray-100 px-3 py-2">
-                  <Bot className="h-4 w-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    Agent
-                  </span>
-                </div>
+                <Badge
+                  variant="outline"
+                  className="gap-2 border-transparent px-3.5 py-2 text-sm"
+                >
+                  <Bot className="h-4 w-4" />
+                  <span>Agent</span>
+                </Badge>
 
-                <ArrowRight className="h-4 w-4 text-gray-400" />
+                <ArrowRight
+                  className="h-5 w-5 text-[#2F6868]"
+                  style={{
+                    animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                  }}
+                />
 
-                <div className="flex items-center gap-2 rounded-md bg-[#2F6868] px-3 py-2">
-                  <Wrench className="h-4 w-4 text-white" />
-                  <span className="text-sm font-medium text-white">Tool</span>
-                </div>
+                <Badge
+                  variant="brand"
+                  className="gap-2 border-transparent px-3.5 py-2 text-sm"
+                >
+                  <Wrench className="h-4 w-4" />
+                  <span>Tool</span>
+                </Badge>
               </div>
             </div>
           )}
@@ -383,13 +400,10 @@ export function AuthRequiredDialog(props: {
 
               {toolsByProvider.length > 0 ? (
                 <div className="rounded-lg border border-green-200/50 bg-green-50/50 p-5">
-                  <div className="mb-5 flex items-center justify-between">
+                  <div className="mb-5">
                     <h3 className="text-lg font-semibold text-gray-900">
                       Tools your agent will use
                     </h3>
-                    <span className="text-sm font-medium text-green-600">
-                      Optional
-                    </span>
                   </div>
                   <div className="space-y-4">
                     {toolsByProvider.map(({ provider, tools }) => (
