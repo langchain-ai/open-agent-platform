@@ -96,21 +96,15 @@ export function EditorPageContent(): React.ReactNode {
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   // Ref to read/write instructions markdown in AgentConfig
-  const instructionsApiRef = React.useRef<
-    | {
-        getMarkdown: () => Promise<string>;
-        setMarkdown: (markdown: string) => Promise<void>;
-      }
-    | null
-  >(null);
+  const instructionsApiRef = React.useRef<{
+    getMarkdown: () => Promise<string>;
+    setMarkdown: (markdown: string) => Promise<void>;
+  } | null>(null);
   // Ref to imperatively open/close the prompt wand
-  const promptWandApiRef = React.useRef<
-    | {
-        open: (prefill?: string, anchor?: { x: number; y: number }) => void;
-        close: () => void;
-      }
-    | null
-  >(null);
+  const promptWandApiRef = React.useRef<{
+    open: (prefill?: string, anchor?: { x: number; y: number }) => void;
+    close: () => void;
+  } | null>(null);
 
   // Track first visit to editor page for glow effect
   const [hasVisitedEditor, setHasVisitedEditor] = useLocalStorage(
@@ -292,7 +286,10 @@ export function EditorPageContent(): React.ReactNode {
   return (
     <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Floating prompt wand for instruction rewrites */}
-      <PromptWand instructionsApiRef={instructionsApiRef} apiRef={promptWandApiRef} />
+      <PromptWand
+        instructionsApiRef={instructionsApiRef}
+        apiRef={promptWandApiRef}
+      />
       {/* Page header with title/description and actions */}
       {selectedAgent && (
         <div className="flex items-center justify-between px-1">

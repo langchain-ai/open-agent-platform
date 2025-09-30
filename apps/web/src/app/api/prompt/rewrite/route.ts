@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { ChatOpenAI } from "@langchain/openai";
 
 const BodySchema = z.object({
   instructions: z.string().min(1),
@@ -19,20 +20,6 @@ export async function POST(req: NextRequest) {
         {
           error:
             "OPENAI_API_KEY not set. Install @langchain/openai and set OPENAI_API_KEY to enable rewrites.",
-        },
-        { status: 501 },
-      );
-    }
-
-    let ChatOpenAI: any;
-    try {
-      // Dynamically import to avoid hard dependency if not installed yet
-      ({ ChatOpenAI } = await import("@langchain/openai"));
-    } catch (e) {
-      return NextResponse.json(
-        {
-          error:
-            "@langchain/openai is not installed. Please add it to dependencies to enable rewrites.",
         },
         { status: 501 },
       );
@@ -83,4 +70,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }
-

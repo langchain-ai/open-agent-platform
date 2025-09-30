@@ -24,7 +24,11 @@ interface PromptWandProps {
   apiRef?: React.MutableRefObject<PromptWandApi | null>;
 }
 
-export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWandProps) {
+export function PromptWand({
+  instructionsApiRef,
+  className,
+  apiRef,
+}: PromptWandProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -34,7 +38,9 @@ export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWand
   const targetWidth = 400; // px
 
   // Positioning: either docked near wand (bottom-right) or anchored near selection
-  const [anchor, setAnchor] = React.useState<{ x: number; y: number } | null>(null);
+  const [_anchor, setAnchor] = React.useState<{ x: number; y: number } | null>(
+    null,
+  );
   // Preview of selected text when opened via Cmd/Ctrl+K
   const [selectionPreview, setSelectionPreview] = React.useState<string | null>(
     null,
@@ -108,7 +114,7 @@ export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWand
           setOpen((v) => !v);
         }}
         className={cn(
-          "fixed bottom-6 right-6 z-40 rounded-full bg-[#2F6868] p-3 text-white shadow-lg transition hover:bg-[#2F6868]/90",
+          "fixed right-6 bottom-6 z-40 rounded-full bg-[#2F6868] p-3 text-white shadow-lg transition hover:bg-[#2F6868]/90",
           className,
         )}
       >
@@ -128,10 +134,12 @@ export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWand
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
-            className="fixed bottom-20 right-20 z-40 max-w-[60vw] truncate rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow"
+            className="fixed right-20 bottom-20 z-40 max-w-[60vw] truncate rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow"
             title={selectionPreview}
           >
-            {selectionPreview}
+            {selectionPreview.length > 100
+              ? `${selectionPreview.slice(0, 100)}...`
+              : selectionPreview}
           </motion.div>
         )}
       </AnimatePresence>
@@ -146,7 +154,7 @@ export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWand
             exit={{ scaleX: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
             className={cn(
-              "fixed bottom-6 right-20 z-40 overflow-hidden rounded-full border border-gray-200 bg-white shadow-xl origin-right",
+              "fixed right-20 bottom-6 z-40 origin-right overflow-hidden rounded-full border border-gray-200 bg-white shadow-xl",
             )}
             style={{ width: targetWidth, transformOrigin: "right" }}
             onAnimationComplete={() => {
@@ -154,7 +162,10 @@ export function PromptWand({ instructionsApiRef, className, apiRef }: PromptWand
               if (open) inputRef.current?.focus();
             }}
           >
-            <form onSubmit={onSubmit} className="flex items-center gap-2 px-3 py-2">
+            <form
+              onSubmit={onSubmit}
+              className="flex items-center gap-2 px-3 py-2"
+            >
               <Wand2 className="h-4 w-4 shrink-0 text-gray-500" />
               <Input
                 ref={inputRef}

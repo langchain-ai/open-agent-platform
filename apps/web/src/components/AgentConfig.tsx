@@ -60,13 +60,10 @@ interface AgentConfigProps {
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   forceMainInstructionsView?: boolean;
   // Expose instructions get/set for external tools (e.g., prompt wand)
-  instructionsApiRef?: React.MutableRefObject<
-    | {
-        getMarkdown: () => Promise<string>;
-        setMarkdown: (markdown: string) => Promise<void>;
-      }
-    | null
-  >;
+  instructionsApiRef?: React.MutableRefObject<{
+    getMarkdown: () => Promise<string>;
+    setMarkdown: (markdown: string) => Promise<void>;
+  } | null>;
   // Open the prompt-wand rewrite bar via keyboard shortcut
   onRewriteShortcut?: (
     selectedText?: string,
@@ -705,7 +702,8 @@ export function AgentConfig({
                     e.preventDefault();
                     e.stopPropagation();
                     let selectedText = "";
-                    let anchor: { x: number; y: number } | undefined = undefined;
+                    let anchor: { x: number; y: number } | undefined =
+                      undefined;
                     try {
                       const sel = window.getSelection();
                       selectedText = sel?.toString() ?? "";
@@ -718,7 +716,9 @@ export function AgentConfig({
                           };
                         }
                       }
-                    } catch {}
+                    } catch {
+                      console.error("Failed to get selection");
+                    }
                     onRewriteShortcut?.(selectedText, anchor);
                     return;
                   }
