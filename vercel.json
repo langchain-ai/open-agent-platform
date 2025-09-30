@@ -1,8 +1,7 @@
 {
   "git": {
     "deploymentEnabled": {
-      "brace/v2": false,
-      "dqbd/thread-skeleton-ui": false
+      "brace/v2": false
     }
   }
 }
