@@ -347,8 +347,7 @@ export function AuthRequiredDialog(props: {
                                           </div>
                                           <div>
                                             <p className="text-sm leading-5 font-medium text-gray-900">
-                                              {trigger.displayName ||
-                                                trigger.name}
+                                              {trigger.displayName}
                                             </p>
                                             {trigger.description && (
                                               <p className="mt-0.5 text-sm leading-5 text-gray-500">
@@ -505,7 +504,7 @@ export function AuthRequiredDialog(props: {
                                   >
                                     <div>
                                       <p className="text-sm font-medium text-gray-900">
-                                        {trigger.displayName || trigger.name}
+                                        {trigger.displayName}
                                       </p>
                                       <p className="mt-0.5 text-xs text-gray-500">
                                         {triggerRegistrations.length > 0
