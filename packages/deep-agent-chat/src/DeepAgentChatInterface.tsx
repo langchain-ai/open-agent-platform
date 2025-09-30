@@ -21,6 +21,7 @@ function DeepAgentChatInterfaceInternal({
   controls,
   thread,
   empty,
+  skeleton,
 }: DeepAgentChatConfig) {
   const [debugMode, setDebugMode] = useState(false);
 
@@ -46,6 +47,7 @@ function DeepAgentChatInterfaceInternal({
             onInput={onInput}
             hideInternalToggle={hideInternalToggle}
             empty={empty}
+            skeleton={skeleton}
             controls={controls}
           />
         </div>

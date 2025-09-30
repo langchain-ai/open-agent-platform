@@ -23,6 +23,7 @@ import NextLink from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -75,24 +76,22 @@ function AgentChatThreadButton() {
   const [sidebar, setSidebar] = useQueryState("sidebar");
 
   return (
-    <>
-      <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-        Chat
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={async () => {
-            const next = sidebar ? null : "1";
-            await setSidebar(next);
-          }}
-          className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-          title={sidebar ? "Exit full view" : "Expand chat"}
-        >
-          <MessagesSquareIcon />
-          Threads
-        </Button>
-      </h2>
-    </>
+    <span className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
+      Chat
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={async () => {
+          const next = sidebar ? null : "1";
+          await setSidebar(next);
+        }}
+        className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+        title={sidebar ? "Exit full view" : "Expand chat"}
+      >
+        <MessagesSquareIcon />
+        Threads
+      </Button>
+    </span>
   );
 }
 
@@ -106,9 +105,7 @@ function ThreadSidebar() {
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
-        <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-          {sidebar && <AgentChatThreadButton />}
-        </h2>
+        <h2>{sidebar && <AgentChatThreadButton />}</h2>
         <div className="flex w-full gap-2">
           {/* Status filter */}
           <Select
@@ -549,6 +546,7 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          skeleton={<ChatThreadSkeleton />}
           onHistoryRevalidate={() => {
             mutate((key) => {
               if (typeof key !== "object" || key == null) return false;
@@ -651,5 +649,61 @@ export default function Page(): React.ReactNode {
         </AgentsProvider>
       </div>
     </React.Suspense>
+  );
+}
+
+function ChatThreadSkeleton() {
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="flex-1 space-y-6 overflow-y-auto py-4">
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[60%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[35%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[80%] rounded-2xl" />
+            <Skeleton className="h-4 w-[65%] rounded-2xl" />
+            <Skeleton className="h-4 w-[45%] rounded-2xl" />
+          </div>
+        </div>
+
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[45%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[20%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[32%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[70%] rounded-2xl" />
+            <Skeleton className="h-4 w-[50%] rounded-2xl" />
+            <Skeleton className="h-4 w-[30%] rounded-2xl" />
+            <Skeleton className="h-4 w-[90%] rounded-2xl" />
+            <Skeleton className="h-4 w-[85%] rounded-2xl" />
+            <Skeleton className="h-4 w-[40%] rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
