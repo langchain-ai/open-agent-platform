@@ -283,7 +283,7 @@ export function AgentCreatorSheet(props: {
       if (triggerIds.length) {
         const success = await setupAgentTrigger(auth.session.accessToken, {
           agentId: newAgent.assistant_id,
-          selectedTriggerIds: triggerIds,
+          selectedRegistrationIds: triggerIds,
         });
         if (!success) {
           toast.error("Failed to add agent triggers", {

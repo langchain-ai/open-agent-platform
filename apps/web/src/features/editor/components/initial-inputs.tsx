@@ -290,7 +290,7 @@ export function InitialInputs({
       // Filter out cron triggers from the enabled trigger IDs for auth dialog
       const nonCronTriggerIds = enabledTriggerIds.filter((triggerId) => {
         const trigger = triggers.find((t) => t.id === triggerId);
-        return trigger && !isCronTrigger(trigger);
+        return trigger;
       });
 
       if (!nonCronTriggerIds.length) return undefined;
@@ -365,17 +365,13 @@ export function InitialInputs({
       if (data.generate_config.cron_schedule?.length && session?.accessToken) {
         await handleAutoCronSetup(
           data.generate_config.cron_schedule,
-          newAgent.assistant_id,
           session.accessToken,
         );
       }
 
-      // Filter out cron triggers from enabled_trigger_ids for auth dialog
-      const nonCronTriggerIds =
-        data.generate_config.enabled_trigger_ids?.filter((triggerId) => {
-          const trigger = triggers.find((t) => t.id === triggerId);
-          return trigger && !isCronTrigger(trigger);
-        });
+      if (data.generate_config.enabled_trigger_ids?.length) {
+        setEnabledTriggerIds(data.generate_config.enabled_trigger_ids);
+      }
 
       const agentConfigurable = newAgent.config?.configurable as
         | DeepAgentConfiguration
@@ -386,9 +382,6 @@ export function InitialInputs({
         setNewAgentId(newAgent.assistant_id);
         // Populate authRequiredUrls if needed, but regardless show the modal
         await validateAuth(enabledToolNames);
-      }
-      if (nonCronTriggerIds?.length) {
-        setEnabledTriggerIds(nonCronTriggerIds);
       }
       // Always present the modal after generation to review triggers/tools/auth
       setAuthRequiredDialogOpen(true);
@@ -425,7 +418,6 @@ export function InitialInputs({
 
   const handleAutoCronSetup = async (
     cronSchedules: string[],
-    agentId: string,
     accessToken: string,
   ): Promise<boolean> => {
     try {
@@ -442,11 +434,25 @@ export function InitialInputs({
       // Register and setup cron triggers for each schedule
       for (const schedule of cronSchedules) {
         try {
+          // First see if we already have a registration for this schedule
+          const existingRegistration = registrations?.find(
+            (reg) =>
+              reg.template_id === cronTrigger.id &&
+              typeof reg.resource === "object" &&
+              reg.resource &&
+              "crontab" in reg.resource &&
+              reg.resource.crontab === schedule,
+          );
+          if (existingRegistration) {
+            successCount++;
+            continue;
+          }
+
           // Register the cron trigger with the specific schedule
           const registerResponse = await registerTrigger(accessToken, {
             id: cronTrigger.id,
             payload: {
-              cron_schedule: schedule,
+              crontab: schedule,
               display_name: `Cron Schedule: ${schedule}`,
             },
             method: cronTrigger.method,
@@ -659,7 +665,7 @@ export function InitialInputs({
             if (toLink && toLink.length) {
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
-                selectedTriggerIds: toLink,
+                selectedRegistrationIds: toLink,
               });
               if (!success) {
                 toast.error("Failed to add agent triggers", {

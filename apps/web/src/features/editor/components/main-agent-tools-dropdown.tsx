@@ -121,7 +121,10 @@ export function MainAgentToolsDropdown({
         </div>
       )}
       <div
-        className={`rounded-md p-2 pr-0 ${selectedTools.length > 0 ? "bg-gray-50" : ""}`}
+        className={cn(
+          "rounded-md p-2 pr-0",
+          selectedTools.length > 0 ? "bg-gray-50" : "",
+        )}
       >
         <div className="flex flex-wrap gap-1">
           {(() => {
