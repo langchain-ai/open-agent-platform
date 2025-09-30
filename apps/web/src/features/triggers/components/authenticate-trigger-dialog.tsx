@@ -1,7 +1,7 @@
 "use client";
 
 import type * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +44,15 @@ export function AuthenticateTriggerDialog(props: {
   const payloadFields = trigger.payloadSchema
     ? generateFormFields(trigger.payloadSchema, trigger.requireDisplayName)
     : [];
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setFormData({});
+      setAuthUrl(null);
+      setIsAuthenticating(false);
+    }
+  }, [open]);
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({
