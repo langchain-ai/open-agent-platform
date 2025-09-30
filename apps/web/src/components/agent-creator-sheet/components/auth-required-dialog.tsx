@@ -22,6 +22,9 @@ import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 import { useAuthContext } from "@/providers/Auth";
 import { AuthenticateTriggerDialog } from "@/features/triggers/components/authenticate-trigger-dialog";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
+import { Combobox } from "@/components/ui/combobox";
+import { ResourceRenderer } from "@/components/ui/resource-renderer";
+import { cn } from "@/lib/utils";
 
 export function AuthRequiredDialog(props: {
   open: boolean;
@@ -496,27 +499,131 @@ export function AuthRequiredDialog(props: {
                               {selectedProviderTriggers.map((trigger) => {
                                 const triggerRegistrations =
                                   registrations[trigger.id] || [];
+                                const selectedIds =
+                                  props.selectedTriggerRegistrationIds || [];
+                                const selectedRegistrations =
+                                  triggerRegistrations.filter((r) =>
+                                    selectedIds.includes(r.id),
+                                  );
 
                                 return (
                                   <div
                                     key={trigger.id}
-                                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
+                                    className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
                                   >
-                                    <div>
+                                    <div className="flex-1">
                                       <p className="text-sm font-medium text-gray-900">
                                         {trigger.displayName}
                                       </p>
-                                      <p className="mt-0.5 text-xs text-gray-500">
-                                        {triggerRegistrations.length > 0
-                                          ? `${triggerRegistrations.length} registration${triggerRegistrations.length > 1 ? "s" : ""}`
-                                          : "No registrations yet"}
-                                      </p>
                                     </div>
-                                    <AuthenticateTriggerDialog
-                                      trigger={trigger}
-                                      reloadTriggers={reloadTriggersNoArg}
-                                      onCancel={() => undefined}
-                                    />
+                                    <div className="flex items-center gap-2">
+                                      {triggerRegistrations.length > 0 ? (
+                                        <Combobox
+                                          displayText={(() => {
+                                            if (
+                                              selectedRegistrations.length === 0
+                                            ) {
+                                              return "Select";
+                                            } else if (
+                                              selectedRegistrations.length === 1
+                                            ) {
+                                              const resource =
+                                                selectedRegistrations[0]
+                                                  .resource;
+                                              if (typeof resource === "string")
+                                                return resource;
+                                              if (
+                                                typeof resource === "object" &&
+                                                resource !== null
+                                              )
+                                                return Object.values(
+                                                  resource,
+                                                )[0];
+                                              return "Selected";
+                                            } else {
+                                              return `${selectedRegistrations.length} selected`;
+                                            }
+                                          })()}
+                                          options={triggerRegistrations.map(
+                                            (r) => ({
+                                              label:
+                                                typeof r.resource === "string"
+                                                  ? r.resource
+                                                  : typeof r.resource ===
+                                                        "object" &&
+                                                      r.resource !== null
+                                                    ? Object.values(
+                                                        r.resource,
+                                                      )[0]
+                                                    : r.id,
+                                              value: r.id,
+                                            }),
+                                          )}
+                                          selectedOptions={selectedIds}
+                                          onSelect={(value) => {
+                                            const isSelected =
+                                              selectedIds.includes(value);
+                                            const newIds = isSelected
+                                              ? selectedIds.filter(
+                                                  (id) => id !== value,
+                                                )
+                                              : [...selectedIds, value];
+                                            props.onSelectedTriggerRegistrationIdsChange?.(
+                                              newIds,
+                                            );
+                                          }}
+                                          optionRenderer={(option) => {
+                                            const registration =
+                                              triggerRegistrations.find(
+                                                (r) => r.id === option.value,
+                                              );
+                                            if (!registration) {
+                                              return (
+                                                <>
+                                                  <Check
+                                                    className={cn(
+                                                      "mr-2 h-4 w-4",
+                                                      selectedIds.includes(
+                                                        option.value,
+                                                      )
+                                                        ? "opacity-100"
+                                                        : "opacity-0",
+                                                    )}
+                                                  />
+                                                  <span className="text-gray-500">
+                                                    {option.label}
+                                                  </span>
+                                                </>
+                                              );
+                                            }
+                                            return (
+                                              <>
+                                                <Check
+                                                  className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    selectedIds.includes(
+                                                      option.value,
+                                                    )
+                                                      ? "opacity-100"
+                                                      : "opacity-0",
+                                                  )}
+                                                />
+                                                <ResourceRenderer
+                                                  resource={
+                                                    registration.resource
+                                                  }
+                                                />
+                                              </>
+                                            );
+                                          }}
+                                        />
+                                      ) : null}
+                                      <AuthenticateTriggerDialog
+                                        trigger={trigger}
+                                        reloadTriggers={reloadTriggersNoArg}
+                                        onCancel={() => undefined}
+                                      />
+                                    </div>
                                   </div>
                                 );
                               })}
