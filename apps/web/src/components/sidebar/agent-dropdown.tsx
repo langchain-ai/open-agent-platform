@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
 import { usePathname } from "next/navigation";
+import { useDeployment } from "@/lib/environment/deployments";
 
 export function AgentDropdown({
   item,
@@ -21,7 +22,7 @@ export function AgentDropdown({
 }) {
   const { agents, loading } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const [_threadId, setThreadId] = useQueryState("threadId");
   const [selectOpen, setSelectOpen] = useState(false);
   // get the current pathname
