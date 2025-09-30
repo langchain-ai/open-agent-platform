@@ -14,6 +14,7 @@ import { INBOX_PARAM, VIEW_STATE_THREAD_QUERY_PARAM } from "../constants";
 import { useQueryState, parseAsString } from "nuqs";
 import { logger } from "../utils/logger";
 import { useAuthContext } from "@/providers/Auth";
+import { useDeployment } from "@/lib/environment/deployments";
 
 interface UseInterruptedActionsInput<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -77,7 +78,7 @@ export default function useInterruptedActions<
     parseAsString.withDefault("interrupted"),
   );
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [, setSelectedThreadId] = useQueryState(
     VIEW_STATE_THREAD_QUERY_PARAM,
     parseAsString,

@@ -51,6 +51,7 @@ interface ChatInterfaceProps {
 
   controls: React.ReactNode;
   empty: React.ReactNode;
+  skeleton: React.ReactNode;
 }
 
 const getStatusIcon = (status: TodoItem["status"], className?: string) => {
@@ -90,6 +91,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     controls,
     hideInternalToggle,
     empty,
+    skeleton,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [agentId] = useQueryState("agentId");
@@ -483,35 +485,41 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           className="mx-auto w-full max-w-[1024px] flex-grow px-6 pt-4 pb-10"
           ref={contentRef}
         >
-          {processedMessages.map((data, index) => (
-            <ChatMessage
-              key={data.message.id}
-              message={data.message}
-              toolCalls={data.toolCalls}
-              onRestartFromAIMessage={handleRestartFromAIMessage}
-              onRestartFromSubTask={handleRestartFromSubTask}
-              debugMode={debugMode}
-              isLoading={isLoading}
-              isLastMessage={index === processedMessages.length - 1}
-              interrupt={interrupt}
-            />
-          ))}
-          {interrupt && (
-            <ThreadActionsView
-              interrupt={interrupt}
-              threadId={threadId}
-            />
-          )}
-          {interrupt && debugMode && (
-            <div className="mt-4">
-              <Button
-                onClick={handleContinue}
-                variant="outline"
-                className="rounded-full px-3 py-1 text-xs"
-              >
-                Continue
-              </Button>
-            </div>
+          {isThreadLoading ? (
+            skeleton
+          ) : (
+            <>
+              {processedMessages.map((data, index) => (
+                <ChatMessage
+                  key={data.message.id}
+                  message={data.message}
+                  toolCalls={data.toolCalls}
+                  onRestartFromAIMessage={handleRestartFromAIMessage}
+                  onRestartFromSubTask={handleRestartFromSubTask}
+                  debugMode={debugMode}
+                  isLoading={isLoading}
+                  isLastMessage={index === processedMessages.length - 1}
+                  interrupt={interrupt}
+                />
+              ))}
+              {interrupt && (
+                <ThreadActionsView
+                  interrupt={interrupt}
+                  threadId={threadId}
+                />
+              )}
+              {interrupt && debugMode && (
+                <div className="mt-4">
+                  <Button
+                    onClick={handleContinue}
+                    variant="outline"
+                    className="rounded-full px-3 py-1 text-xs"
+                  >
+                    Continue
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
 

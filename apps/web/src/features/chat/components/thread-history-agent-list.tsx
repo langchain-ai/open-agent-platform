@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import type { Thread } from "@langchain/langgraph-sdk";
@@ -16,6 +17,7 @@ import {
 } from "../utils";
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
+import { useDeployment } from "@/lib/environment/deployments";
 
 export function ThreadHistoryAgentList({
   onThreadSelect,
@@ -29,7 +31,7 @@ export function ThreadHistoryAgentList({
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
   const [currentThreadId] = useQueryState("threadId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [selectedAgentId] = useQueryState("agentId");
   const { agents } = useAgentsContext();
 
@@ -88,9 +90,7 @@ export function ThreadHistoryAgentList({
         {/* Main Content Area */}
         <ScrollArea className="h-full w-full">
           {threads.isLoading ? (
-            <div className="text-muted-foreground flex items-center justify-center p-12">
-              Loading threads...
-            </div>
+            <LoadingThreadsSkeleton />
           ) : !displayItems?.length ? (
             <div className="text-muted-foreground flex flex-col items-center justify-center p-12 text-center">
               <MessageSquare className="mb-2 h-8 w-8 opacity-50" />
@@ -125,6 +125,35 @@ export function ThreadHistoryAgentList({
             </div>
           )}
         </ScrollArea>
+      </div>
+    </div>
+  );
+}
+
+function LoadingThreadsSkeleton() {
+  return (
+    <div className="box-border w-full max-w-full overflow-hidden p-2">
+      <div className="mb-4 flex flex-col gap-1">
+        <div className="px-3 py-2">
+          <Skeleton className="h-3 w-16" />
+        </div>
+        {Array.from({ length: 6 }).map((_, idx) => (
+          <div
+            key={idx}
+            className="grid w-full items-center gap-3 rounded-lg px-3 py-3"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <Skeleton className="h-4 w-3/5" />
+                <Skeleton className="h-3 w-10" />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <Skeleton className="h-3 w-4/5" />
+                <Skeleton className="h-2 w-2 rounded-full" />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

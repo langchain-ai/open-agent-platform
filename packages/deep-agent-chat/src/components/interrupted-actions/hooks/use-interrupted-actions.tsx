@@ -56,7 +56,6 @@ export default function useInterruptedActions({
   interrupt,
 }: UseInterruptedActionsInput): UseInterruptedActionsValue {
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
 
   const { sendHumanResponse, markCurrentThreadAsResolved } = useChatContext();
 
@@ -103,8 +102,8 @@ export default function useInterruptedActions({
       | FormEvent,
   ) => {
     e?.preventDefault();
-    if (!agentId || !deploymentId) {
-      toast.error("No agent ID or deployment ID found");
+    if (!agentId) {
+      toast.error("No agent ID found");
       return;
     }
     if (!humanResponse) {
@@ -168,8 +167,8 @@ export default function useInterruptedActions({
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
-    if (!agentId || !deploymentId) {
-      toast.error("No agent ID or deployment ID found");
+    if (!agentId) {
+      toast.error("No agent ID found");
       return;
     }
 

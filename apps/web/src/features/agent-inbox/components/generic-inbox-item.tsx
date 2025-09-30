@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 import { constructOpenInStudioURL } from "../utils";
+import { useDeployment } from "@/lib/environment/deployments";
 
 interface GenericInboxItemProps<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -35,7 +36,7 @@ export function GenericInboxItem<
     parseAsString,
   );
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
 
   const handleOpenInStudio = () => {
     if (!agentId || !deploymentId) {

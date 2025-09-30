@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { useAuthContext } from "@/providers/Auth";
-import { getDeployments } from "@/lib/environment/deployments";
+import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { useAgentsContext } from "@/providers/Agents";
 import { useQueryState } from "nuqs";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
@@ -31,7 +31,7 @@ export default function DeepAgentChatPageContent({
   const deployments = getDeployments();
 
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
 
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);

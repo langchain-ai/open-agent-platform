@@ -9,6 +9,7 @@ import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ChatNavItem } from "./chat-nav-item";
 import { Plus } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 
 export function AgentSidebar() {
   const [selectedAgentId, setSelectedAgentId] = useQueryState("agentId");
@@ -16,12 +17,9 @@ export function AgentSidebar() {
   const [_sidebar, setSidebar] = useQueryState("sidebar");
   const agentSummaries = useAgentSummaries();
 
+  const pathname = usePathname();
+  const router = useRouter();
   const sidebar = useSidebar();
-
-  // Only show when we have agent summaries and an agent is selected
-  if (!agentSummaries.data?.length || selectedAgentId == null) {
-    return null;
-  }
 
   return (
     <div className="border-t">
@@ -40,9 +38,21 @@ export function AgentSidebar() {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => {
-                      setSelectedAgentId(agent.assistant_id);
-                      setCurrentThreadId(null);
-                      setSidebar(latestThread != null ? "1" : null);
+                      if (
+                        pathname !== "/agents/chat" &&
+                        pathname !== "/editor"
+                      ) {
+                        const queryParams = new URLSearchParams({
+                          agentId: agent.assistant_id,
+                          deploymentId: agent.deploymentId,
+                          ...(latestThread != null ? { sidebar: "1" } : {}),
+                        });
+                        router.push(`/agents/chat?${queryParams}`);
+                      } else {
+                        setSelectedAgentId(agent.assistant_id);
+                        setCurrentThreadId(null);
+                        setSidebar(latestThread != null ? "1" : null);
+                      }
                     }}
                     className={cn(
                       "hover:bg-sidebar-accent relative flex h-10 w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-all duration-200",

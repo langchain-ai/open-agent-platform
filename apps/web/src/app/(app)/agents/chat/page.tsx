@@ -14,15 +14,16 @@ import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Check, Edit, Maximize2, Minimize2, SquarePen } from "lucide-react";
+import { Check, Edit, MessagesSquareIcon, SquarePen } from "lucide-react";
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
-import { getDeployments } from "@/lib/environment/deployments";
+import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NextLink from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { useAgentsContext } from "@/providers/Agents";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -67,37 +68,40 @@ const DraftContext = createContext<
   [string | null, Dispatch<SetStateAction<string | null>>]
 >([null, (state) => state]);
 
+function AgentChatThreadButton() {
+  const [sidebar, setSidebar] = useQueryState("sidebar");
+
+  return (
+    <span className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
+      Chat
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={async () => {
+          const next = sidebar ? null : "1";
+          await setSidebar(next);
+        }}
+        className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+        title={sidebar ? "Exit full view" : "Expand chat"}
+      >
+        <MessagesSquareIcon />
+        Threads
+      </Button>
+    </span>
+  );
+}
+
 function ThreadSidebar() {
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
-  const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [sidebar] = useQueryState("sidebar");
   const [statusFilter, setStatusFilter] = useQueryState("status");
   const [draft] = useContext(DraftContext);
 
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
-        <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-          Chat
-          {sidebar && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={async () => {
-                const next = sidebar ? null : "1";
-                await setSidebar(next);
-              }}
-              className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-              title={sidebar ? "Exit full view" : "Expand chat"}
-            >
-              {!sidebar ? (
-                <Minimize2 className="size-5" />
-              ) : (
-                <Maximize2 className="size-5" />
-              )}
-            </Button>
-          )}
-        </h2>
+        <h2>{sidebar && <AgentChatThreadButton />}</h2>
         <div className="flex w-full gap-2">
           {/* Status filter */}
           <Select
@@ -291,7 +295,7 @@ function AgentChatSelectItem(props: {
 function AgentChatSelect() {
   const { agents } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [open, setOpen] = useState(false);
 
@@ -468,9 +472,9 @@ function AgentChat(): React.ReactNode {
   const { agents } = useAgentsContext();
 
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const [threadId, setCurrentThreadId] = useQueryState("threadId");
-  const [sidebar, setSidebar] = useQueryState("sidebar");
+  const [sidebar] = useQueryState("sidebar");
   const [_, setDraft] = useContext(DraftContext);
 
   const deployments = getDeployments();
@@ -492,26 +496,7 @@ function AgentChat(): React.ReactNode {
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid min-h-[64px] min-w-0 grid-cols-[1fr_auto] items-center p-4 px-[18px]">
         <span className="flex items-center gap-4 truncate text-lg font-semibold text-gray-800">
-          {!sidebar && (
-            <>
-              Chat
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={async () => {
-                  await setSidebar(sidebar ? null : "1");
-                }}
-                className="shadow-icon-button size-8 rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-                title={!sidebar ? "Exit full view" : "Expand chat"}
-              >
-                {!sidebar ? (
-                  <Minimize2 className="size-5" />
-                ) : (
-                  <Maximize2 className="size-5" />
-                )}
-              </Button>
-            </>
-          )}
+          {!sidebar && <AgentChatThreadButton />}
         </span>
 
         {threadId && (
@@ -555,6 +540,7 @@ function AgentChat(): React.ReactNode {
           empty={
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
+          skeleton={<ChatThreadSkeleton />}
           onHistoryRevalidate={() => {
             mutate((key) => {
               if (typeof key !== "object" || key == null) return false;
@@ -579,7 +565,7 @@ function AgentChat(): React.ReactNode {
 function PageLayout() {
   const [agentId, setAgentId] = useQueryState("agentId");
   const [sidebar] = useQueryState("sidebar");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const draftState = useState<string | null>(null);
   const { agents } = useAgentsContext();
 
@@ -599,15 +585,9 @@ function PageLayout() {
       window.localStorage.getItem("oap:lastAgentId") ?? ""
     ).split(":");
 
-    let targetDeploymentId = deploymentId;
-    if (!targetDeploymentId) {
-      const deployments = getDeployments();
-      targetDeploymentId = deployments.at(0)?.id ?? null;
-    }
-
     let targetAgentId = agentId;
     if (!targetAgentId) {
-      if (lastDeploymentId === targetDeploymentId) {
+      if (lastDeploymentId === deploymentId) {
         targetAgentId = lastAgentId;
       } else {
         targetAgentId = agents.at(0)?.assistant_id ?? null;
@@ -616,10 +596,6 @@ function PageLayout() {
 
     if (agentId == null && targetAgentId != null) {
       setAgentId(targetAgentId);
-    }
-
-    if (deploymentId == null && targetDeploymentId != null) {
-      setDeploymentId(targetDeploymentId);
     }
   }, [agents, deploymentId, agentId, setAgentId, setDeploymentId]);
 
@@ -667,5 +643,61 @@ export default function Page(): React.ReactNode {
         </AgentsProvider>
       </div>
     </React.Suspense>
+  );
+}
+
+function ChatThreadSkeleton() {
+  return (
+    <div className="flex h-full w-full flex-col">
+      <div className="flex-1 space-y-6 overflow-y-auto py-4">
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[60%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[35%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[80%] rounded-2xl" />
+            <Skeleton className="h-4 w-[65%] rounded-2xl" />
+            <Skeleton className="h-4 w-[45%] rounded-2xl" />
+          </div>
+        </div>
+
+        {/* Human message */}
+        <div className="flex items-start justify-end gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[45%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[20%] rounded-2xl" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-4 w-[32%] rounded-2xl" />
+            </div>
+          </div>
+        </div>
+
+        {/* AI message */}
+        <div className="flex items-start gap-3">
+          <div className="max-w-[75%] flex-1 space-y-2">
+            <Skeleton className="h-4 w-[70%] rounded-2xl" />
+            <Skeleton className="h-4 w-[50%] rounded-2xl" />
+            <Skeleton className="h-4 w-[30%] rounded-2xl" />
+            <Skeleton className="h-4 w-[90%] rounded-2xl" />
+            <Skeleton className="h-4 w-[85%] rounded-2xl" />
+            <Skeleton className="h-4 w-[40%] rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

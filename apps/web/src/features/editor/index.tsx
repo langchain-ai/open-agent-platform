@@ -46,7 +46,7 @@ import {
 import { DeepAgentChatInterface } from "@open-agent-platform/deep-agent-chat";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
-import { getDeployments } from "@/lib/environment/deployments";
+import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
 
@@ -56,7 +56,7 @@ export function EditorPageContent(): React.ReactNode {
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const [_threadId, setThreadId] = useQueryState("threadId");
 
   // State for hierarchical editing

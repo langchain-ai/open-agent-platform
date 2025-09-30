@@ -31,6 +31,7 @@ import {
 import { InterruptDetailsView } from "./interrupt-details-view";
 
 import { logger } from "../utils/logger";
+import { useDeployment } from "@/lib/environment/deployments";
 
 interface ThreadActionsViewProps<
   ThreadValues extends Record<string, any> = Record<string, any>,
@@ -117,7 +118,7 @@ export function ThreadActionsView<
   setThreadData,
 }: ThreadActionsViewProps<ThreadValues>) {
   const [agentId] = useQueryState("agentId");
-  const [deploymentId] = useQueryState("deploymentId");
+  const [deploymentId] = useDeployment();
   const { fetchSingleThread } = useThreadsContext<ThreadValues>();
   const [, setQueryParams] = useQueryStates({
     [VIEW_STATE_THREAD_QUERY_PARAM]: parseAsString,

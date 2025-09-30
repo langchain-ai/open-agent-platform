@@ -11,11 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDeployment } from "@/lib/environment/deployments";
 
 export function AgentChatSelect(): React.ReactNode {
   const { agents } = useAgentsContext();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useQueryState("deploymentId");
+  const [deploymentId, setDeploymentId] = useDeployment();
   const [_, setCurrentThreadId] = useQueryState("threadId");
 
   return (
