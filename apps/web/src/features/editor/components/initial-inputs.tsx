@@ -27,6 +27,8 @@ interface AgentDescriptionProps {
   onDescriptionChange: (description: string) => void;
   onSubmit: () => void;
   loading: boolean;
+  onSkip: () => void;
+  skipLoading: boolean;
 }
 
 function AgentDescription({
@@ -34,6 +36,8 @@ function AgentDescription({
   onDescriptionChange,
   onSubmit,
   loading,
+  onSkip,
+  skipLoading,
 }: AgentDescriptionProps) {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
@@ -66,6 +70,15 @@ function AgentDescription({
         className="w-full"
       >
         Continue
+      </Button>
+
+      <Button
+        onClick={onSkip}
+        variant="link"
+        size="sm"
+      >
+        {skipLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Skip to manual agent creation
       </Button>
     </div>
   );
@@ -190,6 +203,7 @@ function ClarifyingQuestions({
 }
 
 const ASSISTANT_ID = "agent_generator";
+const DEEP_AGENT_ASSISTANT_ID = "deep_agent";
 
 type AgentGeneratorState = {
   messages: Message[];
@@ -201,7 +215,7 @@ type AgentGeneratorState = {
 };
 
 interface InitialInputsProps {
-  onAgentCreated?: (agentId: string, deploymentId: string) => Promise<void>;
+  onAgentCreated: (agentId: string, deploymentId: string) => Promise<void>;
 }
 
 export function InitialInputs({
@@ -227,6 +241,7 @@ export function InitialInputs({
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
+  const [skipLoading, setSkipLoading] = useState(false);
 
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
@@ -530,6 +545,44 @@ export function InitialInputs({
     );
   };
 
+  const handleSkip = async () => {
+    if (!client) return;
+    try {
+      setSkipLoading(true);
+      const newAgent = await client.assistants.create({
+        graphId: DEEP_AGENT_ASSISTANT_ID,
+        name: "Untitled Agent",
+        metadata: {
+          description: "",
+        },
+        config: {
+          configurable: {
+            instructions: "",
+            subagents: [],
+            triggers: [],
+            tools: {
+              url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+              auth_required:
+                process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
+              tools: [],
+              interrupt_config: {},
+            },
+          },
+        },
+      });
+      await refreshAgents();
+      await onAgentCreated(newAgent.assistant_id, deploymentId);
+    } catch (error) {
+      console.error("Failed to create agent", error);
+      toast.error("Failed to skip agent creation", {
+        description: "Please try again later.",
+        richColors: true,
+      });
+    } finally {
+      setSkipLoading(false);
+    }
+  };
+
   if (step === 1) {
     return (
       <AgentDescription
@@ -537,6 +590,8 @@ export function InitialInputs({
         onDescriptionChange={setDescription}
         onSubmit={handleDescriptionSubmit}
         loading={stream.isLoading}
+        onSkip={handleSkip}
+        skipLoading={skipLoading}
       />
     );
   }
@@ -616,11 +671,7 @@ export function InitialInputs({
 
             await refreshAgents();
 
-            if (newAgentId && onAgentCreated) {
-              const deployments = getDeployments();
-              const deploymentId = deployments[0]?.id || "";
-              await onAgentCreated(newAgentId, deploymentId);
-            }
+            await onAgentCreated(newAgentId, deploymentId);
 
             resetState();
           }}

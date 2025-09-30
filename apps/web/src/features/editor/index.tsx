@@ -56,8 +56,10 @@ export function EditorPageContent(): React.ReactNode {
   const { agents, refreshAgents } = useAgentsContext();
   const deployments = getDeployments();
   const [agentId, setAgentId] = useQueryState("agentId");
-  const [deploymentId, setDeploymentId] = useDeployment();
+  const [_newAgentEditor, setNewAgentEditor] = useQueryState("new");
   const [_threadId, setThreadId] = useQueryState("threadId");
+
+  const [deploymentId, setDeploymentId] = useDeployment();
 
   // State for hierarchical editing
   const [currentEditTarget, setCurrentEditTarget] = useState<EditTarget | null>(
@@ -286,6 +288,7 @@ export function EditorPageContent(): React.ReactNode {
         onAgentCreated={async (agentId: string, deploymentId: string) => {
           await setAgentId(agentId);
           await setDeploymentId(deploymentId);
+          await setNewAgentEditor(null);
         }}
       />
     );
