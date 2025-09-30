@@ -488,6 +488,8 @@ export function AgentConfig({
                 tools: currentTools,
                 interrupt_config: currentInterruptConfig,
               },
+              // Persist selected trigger registrations so Editor reflects removals
+              triggers: (triggersForm.getValues().triggerIds ?? []) as string[],
               subagents: sanitizedSubAgents,
             },
           },

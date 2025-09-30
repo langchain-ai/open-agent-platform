@@ -535,17 +535,20 @@ export function AuthRequiredDialog(props: {
                                             );
                                           return `${selectedForTrigger.length} selected`;
                                         })()}
-                                        options={triggerRegistrations.map((r) => ({
-                                          value: r.id,
-                                          label: getRegistrationLabel(r),
-                                        }))}
+                                        options={triggerRegistrations.map(
+                                          (r) => ({
+                                            value: r.id,
+                                            label: getRegistrationLabel(r),
+                                          }),
+                                        )}
                                         selectedOptions={selectedRegistrations}
                                         optionRenderer={(option) => {
                                           const registration =
                                             triggerRegistrations.find(
                                               (r) => r.id === option.value,
                                             );
-                                          if (!registration) return option.label;
+                                          if (!registration)
+                                            return option.label;
                                           return (
                                             <span className="flex items-center gap-2 text-gray-700">
                                               <ResourceRenderer

@@ -605,10 +605,13 @@ export function InitialInputs({
             }
 
             if (toLink && toLink.length) {
-              console.warn("[onboarding] Linking selected trigger registrations", {
-                agentId: newAgentId,
-                registrationIds: toLink,
-              });
+              console.warn(
+                "[onboarding] Linking selected trigger registrations",
+                {
+                  agentId: newAgentId,
+                  registrationIds: toLink,
+                },
+              );
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
                 selectedTriggerIds: toLink,
@@ -622,7 +625,8 @@ export function InitialInputs({
               // Persist triggers on the agent config for UI fallback
               try {
                 const client = createClient(deploymentId, session.accessToken);
-                const cfg = createdAgentConfig ?? ({} as DeepAgentConfiguration);
+                const cfg =
+                  createdAgentConfig ?? ({} as DeepAgentConfiguration);
                 await client.assistants.update(newAgentId, {
                   config: { configurable: { ...cfg, triggers: toLink } },
                 });

@@ -71,7 +71,7 @@ export function EditorPageContent(): React.ReactNode {
   >({});
   const isApplyingToolsResetRef = React.useRef(false);
   // Triggers API access/data
-  const { listTriggers, listUserTriggers, listAgentTriggers } = useTriggers();
+  const { listTriggers, listUserTriggers } = useTriggers();
   const { showTriggersTab } = useFlags<LaunchDarklyFeatureFlags>();
   const [triggers, setTriggers] = useState<Trigger[] | undefined>();
   const [registrations, setRegistrations] = useState<
