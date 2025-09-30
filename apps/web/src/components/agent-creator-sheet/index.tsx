@@ -265,6 +265,8 @@ export function AgentCreatorSheet(props: {
         },
         instructions: currentSystemPrompt,
         subagents: subAgents,
+        // Persist selected trigger registrations on the agent for UI recall
+        triggers: triggerIds || [],
       };
 
       const newAgent = await createAgent(defaultDeploymentId, defaultGraphId, {
@@ -291,6 +293,15 @@ export function AgentCreatorSheet(props: {
           });
           return;
         }
+        // Also persist triggers on the agent config for immediate UI reflection
+        await updateAgent(newAgent.assistant_id, defaultDeploymentId, {
+          config: {
+            tools: config.tools,
+            instructions: config.instructions,
+            subagents: config.subagents,
+            triggers: triggerIds,
+          },
+        });
       }
 
       toast.success("Agent created successfully!", {
@@ -397,6 +408,8 @@ export function AgentCreatorSheet(props: {
         },
         instructions: currentSystemPrompt,
         subagents: subAgents,
+        // Persist selected trigger registrations for UI recall
+        triggers: selectedTriggerIds,
       };
 
       const enabledToolNames = tools;

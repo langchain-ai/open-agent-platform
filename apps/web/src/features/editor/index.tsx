@@ -100,21 +100,7 @@ export function EditorPageContent(): React.ReactNode {
     "hasVisitedEditor",
     false,
   );
-  // Keep latest trigger functions in a ref so effect deps don't churn
-  const triggerFnsRef = React.useRef({
-    listTriggers,
-    listUserTriggers,
-    listAgentTriggers,
-  });
-  React.useEffect(() => {
-    triggerFnsRef.current = {
-      listTriggers,
-      listUserTriggers,
-      listAgentTriggers,
-    };
-  }, [listTriggers, listUserTriggers, listAgentTriggers]);
-  // Prevent duplicate loads for the same agent/token combo (helps in dev Strict Mode)
-  const loadedKeyRef = React.useRef<string | null>(null);
+  // Load available triggers + registrations (options only)
   const setTriggerIds = React.useCallback(
     (ids: string[]) => {
       triggersForm.setValue("triggerIds", ids);
@@ -136,6 +122,18 @@ export function EditorPageContent(): React.ReactNode {
         agent.assistant_id === agentId && agent.deploymentId === deploymentId,
     );
   }, [agents, agentId, deploymentId]);
+
+  // Debug: log when the selected agent changes (avoid console.log per lint rules)
+  useEffect(() => {
+    if (selectedAgent) {
+      console.warn("[editor] Selected agent loaded", {
+        assistant_id: selectedAgent.assistant_id,
+        name: selectedAgent.name,
+        deploymentId: selectedAgent.deploymentId,
+        configurable: selectedAgent.config?.configurable ?? null,
+      });
+    }
+  }, [selectedAgent?.assistant_id]);
 
   const selectedDeployment = useMemo(
     () => deployments.find((d) => d.id === deploymentId),
@@ -210,20 +208,11 @@ export function EditorPageContent(): React.ReactNode {
     toolsForm,
   ]);
 
-  // Load triggers lists and currently selected triggers for main agent
   useEffect(() => {
-    if (!session?.accessToken || !selectedAgent?.assistant_id) return;
-    const key = `${session.accessToken}:${selectedAgent.assistant_id}:${String(
-      showTriggersTab,
-    )}`;
-    if (loadedKeyRef.current === key) return;
-    loadedKeyRef.current = key;
-
+    if (!session?.accessToken) return;
     let cancelled = false;
     (async () => {
       try {
-        const { listTriggers, listUserTriggers, listAgentTriggers } =
-          triggerFnsRef.current;
         const [t, r] = await Promise.all([
           listTriggers(session.accessToken!),
           listUserTriggers(session.accessToken!),
@@ -231,47 +220,22 @@ export function EditorPageContent(): React.ReactNode {
         if (cancelled) return;
         setTriggers(t);
         setRegistrations(r);
-        const ids = await listAgentTriggers(
-          session.accessToken!,
-          selectedAgent.assistant_id,
-        );
-        if (cancelled) return;
-        setTriggerIds(ids);
-
-        // Fallback recheck: some backends update linkage asynchronously.
-        // Re-fetch after a short delay and reconcile if different.
-        setTimeout(async () => {
-          if (cancelled) return;
-          try {
-            const retryIds = await triggerFnsRef.current.listAgentTriggers(
-              session.accessToken!,
-              selectedAgent.assistant_id,
-            );
-            if (cancelled) return;
-            const current = (triggersForm.getValues("triggerIds") ||
-              []) as string[];
-            const same =
-              current.length === retryIds.length &&
-              current.every((x, i) => x === retryIds[i]);
-            if (!same) setTriggerIds(retryIds);
-          } catch {
-            // noop
-          }
-        }, 1200);
       } finally {
         // noop
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [
-    session?.accessToken,
-    selectedAgent?.assistant_id,
-    showTriggersTab,
-    setTriggerIds,
-  ]);
+  }, [session?.accessToken, listTriggers, listUserTriggers]);
+
+  // Drive selected trigger registrations purely from agent config
+  useEffect(() => {
+    const stored = (selectedAgent?.config?.configurable as any)?.triggers as
+      | string[]
+      | undefined;
+    setTriggerIds(stored ?? []);
+  }, [selectedAgent?.assistant_id, setTriggerIds]);
 
   // No chat panel in the new layout; thread reset happens on save where relevant
 
@@ -389,13 +353,12 @@ export function EditorPageContent(): React.ReactNode {
                         ]);
                         setTriggers(t);
                         setRegistrations(r);
-                        const ids = await listAgentTriggers(
-                          session.accessToken,
-                          selectedAgent.assistant_id,
-                        );
-                        triggersForm.setValue("triggerIds", ids);
-                      } catch (error) {
-                        console.error("Failed to reload triggers:", error);
+                        const stored = (
+                          selectedAgent.config?.configurable as any
+                        )?.triggers as string[];
+                        triggersForm.setValue("triggerIds", stored || []);
+                      } catch {
+                        // ignore
                       }
                     }}
                   />

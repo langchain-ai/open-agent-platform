@@ -19,4 +19,6 @@ export interface DeepAgentConfiguration {
   instructions: string;
   subagents: SubAgentConfig[];
   tools: MCPConfig;
+  // Optional: selected trigger registration IDs for UI recall
+  triggers?: string[];
 }

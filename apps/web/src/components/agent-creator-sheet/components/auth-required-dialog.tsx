@@ -22,6 +22,8 @@ import { useOAuthProviders } from "@/hooks/use-oauth-providers";
 import { useAuthContext } from "@/providers/Auth";
 import { AuthenticateTriggerDialog } from "@/features/triggers/components/authenticate-trigger-dialog";
 import type { GroupedTriggerRegistrationsByProvider } from "@/types/triggers";
+import { Combobox } from "@/components/ui/combobox";
+import { ResourceRenderer } from "@/components/ui/resource-renderer";
 
 export function AuthRequiredDialog(props: {
   open: boolean;
@@ -103,6 +105,21 @@ export function AuthRequiredDialog(props: {
       tools,
     }));
   }, [props.displayToolsByProvider, props.authUrls]);
+
+  // Helper to render a friendly label for a registration resource
+  const getRegistrationLabel = (registration: {
+    id: string;
+    resource?: unknown;
+  }) => {
+    const resource = (registration as any).resource;
+    if (typeof resource === "string" && resource.trim()) return resource;
+    if (resource && typeof resource === "object") {
+      const first = Object.values(resource as Record<string, any>)[0];
+      if (typeof first === "string" && first.trim()) return first;
+    }
+    // Fallback to compact ID
+    return `Registration ${registration.id.slice(0, 8)}…`;
+  };
 
   const stepInfo = useMemo(() => {
     switch (currentStep) {
@@ -454,81 +471,122 @@ export function AuthRequiredDialog(props: {
             </div>
           )}
 
-          {/* Step 3: Authentication */}
+          {/* Step 3 content moved below (single implementation) */}
+
+          {/* Step 3: Authenticate Providers (with existing registration selection) */}
           {currentStep === 3 && (
-            <div className="max-w-2xl">
-              <div className="mb-6">
-                <div className="rounded-r border-l-4 border-[#2F6868] bg-teal-50 p-3">
-                  <p className="text-sm text-[#1F4A4A]">
-                    <strong>Secure:</strong> We use OAuth - your passwords are
-                    never stored or visible to us.
-                  </p>
-                </div>
-              </div>
+            <div className="max-w-2xl space-y-6">
+              {/* If user selected triggers, show per-trigger registration selectors */}
+              {props.groupedTriggers && selectedTriggerIds.length > 0 && (
+                <div className="space-y-5">
+                  {Object.entries(props.groupedTriggers).map(
+                    ([provider, { registrations, triggers }]) => {
+                      // Only show triggers that are selected for this provider
+                      const providerTriggers = (triggers ?? []).filter((t) =>
+                        selectedTriggerIds.includes(t.id),
+                      );
+                      if (providerTriggers.length === 0) return null;
 
-              {/* Show triggers that need registration */}
-              {selectedTriggerIds.length > 0 && props.groupedTriggers && (
-                <div className="mb-6">
-                  <h3 className="mb-3 text-sm font-semibold text-gray-900">
-                    Connect Triggers
-                  </h3>
-                  <div className="space-y-4">
-                    {Object.entries(props.groupedTriggers).map(
-                      ([provider, { registrations, triggers }]) => {
-                        const providerTriggers = triggers;
+                      return (
+                        <div key={provider}>
+                          <h4 className="mb-2 text-sm font-medium text-gray-700">
+                            {getProviderDisplayName(provider)}
+                          </h4>
+                          <div className="space-y-3">
+                            {providerTriggers.map((trigger) => {
+                              const triggerRegistrations =
+                                registrations?.[trigger.id] ?? [];
 
-                        // Only show triggers that are selected
-                        const selectedProviderTriggers =
-                          providerTriggers.filter((trigger) =>
-                            selectedTriggerIds.includes(trigger.id),
-                          );
-
-                        if (selectedProviderTriggers.length === 0) return null;
-
-                        return (
-                          <div key={provider}>
-                            <div className="mb-3">
-                              <h4 className="text-sm font-medium text-gray-700">
-                                {getProviderDisplayName(provider)}
-                              </h4>
-                            </div>
-                            <div className="space-y-3">
-                              {selectedProviderTriggers.map((trigger) => {
-                                const triggerRegistrations =
-                                  registrations[trigger.id] || [];
-
-                                return (
-                                  <div
-                                    key={trigger.id}
-                                    className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
-                                  >
-                                    <div>
-                                      <p className="text-sm font-medium text-gray-900">
-                                        {trigger.displayName}
-                                      </p>
-                                      <p className="mt-0.5 text-xs text-gray-500">
-                                        {triggerRegistrations.length > 0
-                                          ? `${triggerRegistrations.length} registration${triggerRegistrations.length > 1 ? "s" : ""}`
-                                          : "No registrations yet"}
-                                      </p>
-                                    </div>
+                              return (
+                                <div
+                                  key={trigger.id}
+                                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 p-3"
+                                >
+                                  <div className="min-w-0">
+                                    <p className="truncate text-sm font-medium text-gray-900">
+                                      {trigger.displayName}
+                                    </p>
+                                    <p className="mt-0.5 text-xs text-gray-500">
+                                      {triggerRegistrations.length > 0
+                                        ? `${triggerRegistrations.length} registration${
+                                            triggerRegistrations.length > 1
+                                              ? "s"
+                                              : ""
+                                          }`
+                                        : "No registrations yet"}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {triggerRegistrations.length > 0 && (
+                                      <Combobox
+                                        displayText={(() => {
+                                          const selected = new Set(
+                                            selectedRegistrations,
+                                          );
+                                          const selectedForTrigger =
+                                            triggerRegistrations.filter((r) =>
+                                              selected.has(r.id),
+                                            );
+                                          if (selectedForTrigger.length === 0)
+                                            return "Select registration";
+                                          if (selectedForTrigger.length === 1)
+                                            return getRegistrationLabel(
+                                              selectedForTrigger[0],
+                                            );
+                                          return `${selectedForTrigger.length} selected`;
+                                        })()}
+                                        options={triggerRegistrations.map((r) => ({
+                                          value: r.id,
+                                          label: getRegistrationLabel(r),
+                                        }))}
+                                        selectedOptions={selectedRegistrations}
+                                        optionRenderer={(option) => {
+                                          const registration =
+                                            triggerRegistrations.find(
+                                              (r) => r.id === option.value,
+                                            );
+                                          if (!registration) return option.label;
+                                          return (
+                                            <span className="flex items-center gap-2 text-gray-700">
+                                              <ResourceRenderer
+                                                resource={registration.resource}
+                                              />
+                                            </span>
+                                          );
+                                        }}
+                                        onSelect={(value) => {
+                                          const current = new Set(
+                                            selectedRegistrations,
+                                          );
+                                          if (current.has(value)) {
+                                            current.delete(value);
+                                          } else {
+                                            current.add(value);
+                                          }
+                                          onSelectedTriggerRegistrationIdsChange?.(
+                                            Array.from(current),
+                                          );
+                                        }}
+                                      />
+                                    )}
                                     <AuthenticateTriggerDialog
                                       trigger={trigger}
                                       reloadTriggers={reloadTriggersNoArg}
                                       onCancel={() => undefined}
                                     />
                                   </div>
-                                );
-                              })}
-                            </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      },
-                    )}
-                  </div>
+                        </div>
+                      );
+                    },
+                  )}
                 </div>
               )}
 
+              {/* Fallback/Additional: Provider auth URLs */}
               {(props.authUrls ?? []).length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-semibold text-gray-900">

@@ -143,6 +143,10 @@ export function useTriggers() {
   ): Promise<boolean> => {
     // Link the agent to each selected trigger individually
     for (const triggerId of args.selectedTriggerIds) {
+      console.warn("[triggers] Linking agent to registration", {
+        registrationId: triggerId,
+        assistant_id: args.agentId,
+      });
       const triggerApiUrl = constructTriggerUrl(
         `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
       );
@@ -156,11 +160,16 @@ export function useTriggers() {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ assistant_id: args.agentId }),
       });
 
       if (!response.ok) {
         toast.error("Failed to setup agent trigger", {
           richColors: true,
+        });
+        console.error("[triggers] Failed link response", {
+          status: response.status,
+          url: `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
         });
         return false;
       }
@@ -257,8 +266,26 @@ export function useTriggers() {
       }
       // Filter to find registrations that have this agent linked
       const agentTriggerIds = registrations
-        .filter((reg) => reg.linked_agent_ids?.includes(agentId))
+        .filter((reg: any) => {
+          const linkedList =
+            reg.linked_agent_ids ||
+            reg.assistant_ids ||
+            reg.agent_ids ||
+            reg.assistants ||
+            reg.agents ||
+            [];
+          if (Array.isArray(linkedList)) return linkedList.includes(agentId);
+          // Some backends may return a single id field
+          const single = reg.assistant_id || reg.agent_id;
+          return typeof single === "string" && single === agentId;
+        })
         .map((reg) => reg.id);
+
+      console.warn("[triggers] listAgentTriggers resolved", {
+        assistant_id: agentId,
+        totalRegistrations: registrations.length,
+        linkedCount: agentTriggerIds.length,
+      });
 
       return agentTriggerIds;
     } catch (error) {

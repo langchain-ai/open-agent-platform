@@ -227,6 +227,8 @@ export function InitialInputs({
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
+  const [createdAgentConfig, setCreatedAgentConfig] =
+    useState<DeepAgentConfiguration | null>(null);
 
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
@@ -369,6 +371,7 @@ export function InitialInputs({
       if (enabledToolNames?.length) {
         setEnabledToolNames(enabledToolNames);
         setNewAgentId(newAgent.assistant_id);
+        setCreatedAgentConfig(agentConfigurable ?? null);
         // Populate authRequiredUrls if needed, but regardless show the modal
         await validateAuth(enabledToolNames);
       }
@@ -602,6 +605,10 @@ export function InitialInputs({
             }
 
             if (toLink && toLink.length) {
+              console.warn("[onboarding] Linking selected trigger registrations", {
+                agentId: newAgentId,
+                registrationIds: toLink,
+              });
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
                 selectedTriggerIds: toLink,
@@ -612,6 +619,27 @@ export function InitialInputs({
                 });
                 return;
               }
+              // Persist triggers on the agent config for UI fallback
+              try {
+                const client = createClient(deploymentId, session.accessToken);
+                const cfg = createdAgentConfig ?? ({} as DeepAgentConfiguration);
+                await client.assistants.update(newAgentId, {
+                  config: { configurable: { ...cfg, triggers: toLink } },
+                });
+              } catch (e) {
+                console.warn(
+                  "[onboarding] Failed to persist triggers on agent config",
+                  e,
+                );
+              }
+            } else {
+              console.warn(
+                "[onboarding] No trigger registrations selected to link",
+                {
+                  agentId: newAgentId,
+                  groupedTriggers: Boolean(groupedTriggers),
+                },
+              );
             }
 
             await refreshAgents();
