@@ -37,10 +37,7 @@ import {
   AgentSummaryCard,
   ThreadHistoryAgentList,
 } from "@/features/chat/components/thread-history-agent-list";
-import {
-  getThreadColor,
-  useAgentSummaries,
-} from "@/features/chat/utils";
+import { getThreadColor, useAgentSummaries } from "@/features/chat/utils";
 import {
   ResizableHandle,
   ResizablePanel,
