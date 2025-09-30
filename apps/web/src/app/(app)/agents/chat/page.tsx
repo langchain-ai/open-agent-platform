@@ -75,24 +75,22 @@ function AgentChatThreadButton() {
   const [sidebar, setSidebar] = useQueryState("sidebar");
 
   return (
-    <>
-      <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-        Chat
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={async () => {
-            const next = sidebar ? null : "1";
-            await setSidebar(next);
-          }}
-          className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-          title={sidebar ? "Exit full view" : "Expand chat"}
-        >
-          <MessagesSquareIcon />
-          Threads
-        </Button>
-      </h2>
-    </>
+    <span className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
+      Chat
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={async () => {
+          const next = sidebar ? null : "1";
+          await setSidebar(next);
+        }}
+        className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
+        title={sidebar ? "Exit full view" : "Expand chat"}
+      >
+        <MessagesSquareIcon />
+        Threads
+      </Button>
+    </span>
   );
 }
 
@@ -106,9 +104,7 @@ function ThreadSidebar() {
   return (
     <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
       <div className="grid grid-cols-[1fr_auto] items-center gap-3 p-4 px-[18px]">
-        <h2 className="flex flex-1 items-center gap-4 text-lg font-semibold whitespace-nowrap">
-          {sidebar && <AgentChatThreadButton />}
-        </h2>
+        <h2>{sidebar && <AgentChatThreadButton />}</h2>
         <div className="flex w-full gap-2">
           {/* Status filter */}
           <Select
