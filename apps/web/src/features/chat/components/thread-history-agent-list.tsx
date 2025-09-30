@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { RefObject, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare } from "lucide-react";
 import type { Thread } from "@langchain/langgraph-sdk";
 import type { AgentSummary, ThreadItem } from "../types";
 import { format } from "date-fns";
@@ -18,6 +18,7 @@ import {
 import { getAgentColor } from "@/features/agents/utils";
 import { useQueryState } from "nuqs";
 import { useDeployment } from "@/lib/environment/deployments";
+import { Button } from "@/components/ui/button";
 
 const GROUP_LABELS = {
   interrupted: "Requiring Attention",
@@ -27,13 +28,17 @@ const GROUP_LABELS = {
   older: "Older",
 } as const;
 
+const DEFAULT_PAGE_SIZE = 20;
+
 export function ThreadHistoryAgentList({
   onThreadSelect,
   showDraft,
   className,
   statusFilter = "all",
+  mutateThreadsRef,
 }: {
   onThreadSelect: (id: string, assistantId?: string) => void;
+  mutateThreadsRef: RefObject<() => void>;
   showDraft?: string;
   className?: string;
   statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
@@ -55,9 +60,24 @@ export function ThreadHistoryAgentList({
 
   const threads = useThreads({
     status: statusFilter === "all" ? undefined : statusFilter,
+    limit: DEFAULT_PAGE_SIZE,
   });
 
+  const flattened = useMemo(() => {
+    return threads.data?.flat() ?? [];
+  }, [threads.data]);
+
   const interrupted = useThreads({ status: "interrupted", limit: 5 });
+
+  mutateThreadsRef.current = () =>
+    Promise.allSettled([threads.mutate(), interrupted.mutate()]);
+
+  const isLoadingMore =
+    threads.size > 0 && threads.data?.[threads.size - 1] == null;
+
+  const isEmpty = threads.data?.at(0)?.length === 0;
+  const isReachingEnd =
+    isEmpty || (threads.data?.at(-1)?.length ?? 0) < DEFAULT_PAGE_SIZE;
 
   const displayThreads = useMemo(() => {
     if (showDraft != null && !currentThreadId && agent) {
@@ -68,10 +88,10 @@ export function ThreadHistoryAgentList({
         title: showDraft,
         description: "Draft thread",
       };
-      return [draft, ...(threads.data ?? [])];
+      return [draft, ...(flattened ?? [])];
     }
-    return threads.data ?? [];
-  }, [showDraft, currentThreadId, agent, threads.data]);
+    return flattened ?? [];
+  }, [showDraft, currentThreadId, agent, flattened]);
 
   const grouped = useMemo(() => {
     const groups: Record<keyof typeof GROUP_LABELS, ThreadItem[]> = {
@@ -86,8 +106,8 @@ export function ThreadHistoryAgentList({
     let ignoreSet: Set<string> | undefined;
 
     if (statusFilter == null || statusFilter === "all") {
-      groups.interrupted = interrupted.data ?? [];
-      ignoreSet = new Set([...(interrupted.data ?? []).map((t) => t.id)]);
+      groups.interrupted = interrupted.data?.flat() ?? [];
+      ignoreSet = new Set(groups.interrupted.map((t) => t.id));
     }
 
     displayThreads.forEach((t) => {
@@ -147,6 +167,24 @@ export function ThreadHistoryAgentList({
                     ))}
                   </ThreadGroup>
                 ))}
+
+              {!isReachingEnd && (
+                <Button
+                  onClick={() => threads.setSize(threads.size + 1)}
+                  disabled={isLoadingMore}
+                  variant="outline"
+                  className="mx-2 mb-2 w-[calc(100%-16px)] self-stretch"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more"
+                  )}
+                </Button>
+              )}
             </div>
           )}
         </ScrollArea>

@@ -3,6 +3,7 @@
 import React, {
   createContext,
   Dispatch,
+  RefObject,
   SetStateAction,
   useContext,
   useEffect,
@@ -44,7 +45,7 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { createClient } from "@/lib/client";
 import { cn } from "@/lib/utils";
 import { getAgentColor } from "@/features/agents/utils";
@@ -91,7 +92,7 @@ function AgentChatThreadButton() {
   );
 }
 
-function ThreadSidebar() {
+function ThreadSidebar(props: { mutateThreadsRef: RefObject<() => void> }) {
   const [_agentId, setAgentId] = useQueryState("agentId");
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
   const [sidebar] = useQueryState("sidebar");
@@ -182,6 +183,7 @@ function ThreadSidebar() {
             await setCurrentThreadId(id);
           }}
           showDraft={draft ?? undefined}
+          mutateThreadsRef={props.mutateThreadsRef}
           statusFilter={
             ((statusFilter as string) || "all") as
               | "all"
@@ -467,7 +469,9 @@ function AgentChatSelect() {
   );
 }
 
-function AgentChat(): React.ReactNode {
+function AgentChat(props: {
+  mutateThreadsRef: RefObject<() => void>;
+}): React.ReactNode {
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
@@ -541,12 +545,7 @@ function AgentChat(): React.ReactNode {
             !threadId ? <AgentChatIntro deploymentId={deploymentId} /> : null
           }
           skeleton={<ChatThreadSkeleton />}
-          onHistoryRevalidate={() => {
-            mutate((key) => {
-              if (typeof key !== "object" || key == null) return false;
-              return "kind" in key && key.kind === "threads";
-            });
-          }}
+          onHistoryRevalidate={() => props.mutateThreadsRef.current?.()}
           onInput={(input) => {
             if (agentId && threadId == null && input.length > 0) {
               setDraft(input);
@@ -567,6 +566,7 @@ function PageLayout() {
   const [sidebar] = useQueryState("sidebar");
   const [deploymentId, setDeploymentId] = useDeployment();
   const draftState = useState<string | null>(null);
+  const mutateThreadsRef = useRef<() => void>(() => void 0);
   const { agents } = useAgentsContext();
 
   useEffect(() => {
@@ -614,7 +614,7 @@ function PageLayout() {
             defaultSize={30}
             className="relative"
           >
-            <ThreadSidebar />
+            <ThreadSidebar mutateThreadsRef={mutateThreadsRef} />
           </ResizablePanel>
         )}
 
@@ -625,7 +625,7 @@ function PageLayout() {
           className="relative"
           order={2}
         >
-          <AgentChat />
+          <AgentChat mutateThreadsRef={mutateThreadsRef} />
         </ResizablePanel>
       </DraftContext.Provider>
     </ResizablePanelGroup>

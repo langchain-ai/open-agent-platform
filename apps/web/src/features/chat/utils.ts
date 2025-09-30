@@ -4,6 +4,7 @@ import type { Agent } from "@/types/agent";
 import type { Message, Thread } from "@langchain/langgraph-sdk";
 import { useAgentsContext } from "@/providers/Agents";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
 import { AgentSummary } from "./types";
 import { useQueryState } from "nuqs";
 import { format } from "date-fns";
@@ -103,23 +104,40 @@ const isMessages = (values: unknown): values is { messages: Message[] } => {
   );
 };
 
-export function useThreads(props?: {
+export function useThreads(props: {
   status?: Thread["status"];
-  limit?: number;
+  limit: number;
 }) {
   const [selectedAgentId] = useQueryState("agentId");
   const [deploymentId] = useDeployment();
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
 
-  return useSWR(
-    {
-      kind: "threads",
-      selectedAgentId,
-      agents,
-      accessToken: session?.accessToken,
-      deploymentId,
-      ...props,
+  const pageSize = props.limit;
+
+  return useSWRInfinite(
+    (pageIndex, previousPageData: unknown[] | null) => {
+      if (!deploymentId || !selectedAgentId || !session?.accessToken) {
+        return null;
+      }
+      // If the previous page returned no items, we've reached the end
+      if (
+        previousPageData &&
+        Array.isArray(previousPageData) &&
+        previousPageData.length === 0
+      ) {
+        return null;
+      }
+      return {
+        kind: "threads",
+        pageIndex,
+        pageSize,
+        selectedAgentId,
+        agents,
+        accessToken: session.accessToken,
+        deploymentId,
+        status: props?.status,
+      } as const;
     },
     async ({
       deploymentId,
@@ -127,9 +145,28 @@ export function useThreads(props?: {
       agents,
       accessToken,
       status,
-      limit,
+      pageIndex,
+      pageSize,
+    }: {
+      kind: "threads";
+      pageIndex: number;
+      pageSize: number;
+      selectedAgentId: string | null;
+      agents: Agent[];
+      accessToken: string;
+      deploymentId: string | null;
+      status?: Thread["status"];
     }) => {
-      if (!deploymentId || !selectedAgentId || !accessToken) return [];
+      if (!deploymentId || !selectedAgentId || !accessToken)
+        return [] as Array<{
+          id: string;
+          updatedAt: Date;
+          status: Thread["status"] | "draft";
+          title: string;
+          description: string;
+          assistantId?: string;
+        }>;
+
       const client = createClient(deploymentId, accessToken);
 
       const agent = agents.find(
@@ -139,8 +176,8 @@ export function useThreads(props?: {
       if (!agent) return [];
 
       const response = await client.threads.search({
-        // TODO: use useSWRInfinite to fetch multiple pages
-        limit: limit ?? 50,
+        limit: pageSize,
+        offset: pageIndex * pageSize,
         sortBy: "created_at",
         sortOrder: "desc",
         status,
@@ -155,7 +192,6 @@ export function useThreads(props?: {
         "No description";
 
       return response.map((t) => {
-        // Try to derive a snippet from the last message in the thread
         let snippet = "";
         let title = "";
 
