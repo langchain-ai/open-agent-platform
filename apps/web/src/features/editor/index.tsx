@@ -146,13 +146,7 @@ export function EditorPageContent(): React.ReactNode {
     if (selectedAgent?.name) {
       setHeaderTitle(selectedAgent.name);
     }
-    if (selectedAgent) {
-      console.log('Full agent object:', selectedAgent);
-      console.log('Raw instructions:', selectedAgent.instructions);
-      console.log('Config:', selectedAgent.config);
-      console.log('Configurable:', selectedAgent.config?.configurable);
-    }
-  }, [selectedAgent?.assistant_id, selectedAgent?.name, selectedAgent?.instructions]);
+  }, [selectedAgent?.assistant_id, selectedAgent?.name]);
 
   // Initialize edit target when agent is selected (used for subagents list selection)
   useEffect(() => {
