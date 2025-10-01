@@ -257,6 +257,20 @@
   background-color: #f3f4f6;
 }
 
+/* Fix for code blocks with 'text' language showing black background */
+.oap-blocknote [data-content-type="codeBlock"] {
+  background-color: #f6f8fa !important;
+}
+.oap-blocknote .shiki,
+.oap-blocknote .shiki span {
+  background-color: #f6f8fa !important;
+  color: #24292f !important;
+}
+.oap-blocknote pre code {
+  background-color: #f6f8fa !important;
+  color: #24292f !important;
+}
+
 .word-added {
   background-color: rgba(46, 160, 67, 0.4);
   color: #ffffff;
