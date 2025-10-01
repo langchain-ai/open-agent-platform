@@ -27,6 +27,8 @@ interface AgentDescriptionProps {
   onDescriptionChange: (description: string) => void;
   onSubmit: () => void;
   loading: boolean;
+  onSkip: () => void;
+  skipLoading: boolean;
 }
 
 function AgentDescription({
@@ -34,6 +36,8 @@ function AgentDescription({
   onDescriptionChange,
   onSubmit,
   loading,
+  onSkip,
+  skipLoading,
 }: AgentDescriptionProps) {
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center space-y-6 p-6">
@@ -66,6 +70,15 @@ function AgentDescription({
         className="w-full"
       >
         Continue
+      </Button>
+
+      <Button
+        onClick={onSkip}
+        variant="link"
+        size="sm"
+      >
+        {skipLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Skip to manual agent creation
       </Button>
     </div>
   );
@@ -190,6 +203,7 @@ function ClarifyingQuestions({
 }
 
 const ASSISTANT_ID = "agent_generator";
+const DEEP_AGENT_ASSISTANT_ID = "deep_agent";
 
 type AgentGeneratorState = {
   messages: Message[];
@@ -201,7 +215,7 @@ type AgentGeneratorState = {
 };
 
 interface InitialInputsProps {
-  onAgentCreated?: (agentId: string, deploymentId: string) => Promise<void>;
+  onAgentCreated: (agentId: string, deploymentId: string) => Promise<void>;
 }
 
 export function InitialInputs({
@@ -227,6 +241,7 @@ export function InitialInputs({
 
   const [creatingAgentLoadingText, setCreatingAgentLoadingText] = useState("");
   const [creatingAgent, setCreatingAgent] = useState(false);
+  const [skipLoading, setSkipLoading] = useState(false);
 
   const [authRequiredDialogOpen, setAuthRequiredDialogOpen] = useState(false);
   const [_enabledToolNames, setEnabledToolNames] = useState<string[]>([]);
@@ -275,7 +290,7 @@ export function InitialInputs({
       // Filter out cron triggers from the enabled trigger IDs for auth dialog
       const nonCronTriggerIds = enabledTriggerIds.filter((triggerId) => {
         const trigger = triggers.find((t) => t.id === triggerId);
-        return trigger && !isCronTrigger(trigger);
+        return trigger;
       });
 
       if (!nonCronTriggerIds.length) return undefined;
@@ -350,17 +365,13 @@ export function InitialInputs({
       if (data.generate_config.cron_schedule?.length && session?.accessToken) {
         await handleAutoCronSetup(
           data.generate_config.cron_schedule,
-          newAgent.assistant_id,
           session.accessToken,
         );
       }
 
-      // Filter out cron triggers from enabled_trigger_ids for auth dialog
-      const nonCronTriggerIds =
-        data.generate_config.enabled_trigger_ids?.filter((triggerId) => {
-          const trigger = triggers.find((t) => t.id === triggerId);
-          return trigger && !isCronTrigger(trigger);
-        });
+      if (data.generate_config.enabled_trigger_ids?.length) {
+        setEnabledTriggerIds(data.generate_config.enabled_trigger_ids);
+      }
 
       const agentConfigurable = newAgent.config?.configurable as
         | DeepAgentConfiguration
@@ -371,9 +382,6 @@ export function InitialInputs({
         setNewAgentId(newAgent.assistant_id);
         // Populate authRequiredUrls if needed, but regardless show the modal
         await validateAuth(enabledToolNames);
-      }
-      if (nonCronTriggerIds?.length) {
-        setEnabledTriggerIds(nonCronTriggerIds);
       }
       // Always present the modal after generation to review triggers/tools/auth
       setAuthRequiredDialogOpen(true);
@@ -410,7 +418,6 @@ export function InitialInputs({
 
   const handleAutoCronSetup = async (
     cronSchedules: string[],
-    agentId: string,
     accessToken: string,
   ): Promise<boolean> => {
     try {
@@ -427,11 +434,25 @@ export function InitialInputs({
       // Register and setup cron triggers for each schedule
       for (const schedule of cronSchedules) {
         try {
+          // First see if we already have a registration for this schedule
+          const existingRegistration = registrations?.find(
+            (reg) =>
+              reg.template_id === cronTrigger.id &&
+              typeof reg.resource === "object" &&
+              reg.resource &&
+              "crontab" in reg.resource &&
+              reg.resource.crontab === schedule,
+          );
+          if (existingRegistration) {
+            successCount++;
+            continue;
+          }
+
           // Register the cron trigger with the specific schedule
           const registerResponse = await registerTrigger(accessToken, {
             id: cronTrigger.id,
             payload: {
-              cron_schedule: schedule,
+              crontab: schedule,
               display_name: `Cron Schedule: ${schedule}`,
             },
             method: cronTrigger.method,
@@ -530,6 +551,44 @@ export function InitialInputs({
     );
   };
 
+  const handleSkip = async () => {
+    if (!client) return;
+    try {
+      setSkipLoading(true);
+      const newAgent = await client.assistants.create({
+        graphId: DEEP_AGENT_ASSISTANT_ID,
+        name: "Untitled Agent",
+        metadata: {
+          description: "",
+        },
+        config: {
+          configurable: {
+            instructions: "",
+            subagents: [],
+            triggers: [],
+            tools: {
+              url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
+              auth_required:
+                process.env.NEXT_PUBLIC_SUPABASE_AUTH_MCP === "true",
+              tools: [],
+              interrupt_config: {},
+            },
+          },
+        },
+      });
+      await refreshAgents();
+      await onAgentCreated(newAgent.assistant_id, deploymentId);
+    } catch (error) {
+      console.error("Failed to create agent", error);
+      toast.error("Failed to skip agent creation", {
+        description: "Please try again later.",
+        richColors: true,
+      });
+    } finally {
+      setSkipLoading(false);
+    }
+  };
+
   if (step === 1) {
     return (
       <AgentDescription
@@ -537,6 +596,8 @@ export function InitialInputs({
         onDescriptionChange={setDescription}
         onSubmit={handleDescriptionSubmit}
         loading={stream.isLoading}
+        onSkip={handleSkip}
+        skipLoading={skipLoading}
       />
     );
   }
@@ -604,7 +665,7 @@ export function InitialInputs({
             if (toLink && toLink.length) {
               const success = await setupAgentTrigger(session.accessToken, {
                 agentId: newAgentId,
-                selectedTriggerIds: toLink,
+                selectedRegistrationIds: toLink,
               });
               if (!success) {
                 toast.error("Failed to add agent triggers", {
@@ -616,11 +677,7 @@ export function InitialInputs({
 
             await refreshAgents();
 
-            if (newAgentId && onAgentCreated) {
-              const deployments = getDeployments();
-              const deploymentId = deployments[0]?.id || "";
-              await onAgentCreated(newAgentId, deploymentId);
-            }
+            await onAgentCreated(newAgentId, deploymentId);
 
             resetState();
           }}

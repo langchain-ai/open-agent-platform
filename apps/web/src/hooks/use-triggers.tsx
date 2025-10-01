@@ -137,14 +137,14 @@ export function useTriggers() {
   const setupAgentTrigger = async (
     accessToken: string,
     args: {
-      selectedTriggerIds: string[];
+      selectedRegistrationIds: string[];
       agentId: string;
     },
   ): Promise<boolean> => {
     // Link the agent to each selected trigger individually
-    for (const triggerId of args.selectedTriggerIds) {
+    for (const registrationId of args.selectedRegistrationIds) {
       const triggerApiUrl = constructTriggerUrl(
-        `/api/triggers/registrations/${triggerId}/agents/${args.agentId}`,
+        `/api/triggers/registrations/${registrationId}/agents/${args.agentId}`,
       );
       if (!triggerApiUrl) {
         return false;

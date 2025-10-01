@@ -4,6 +4,7 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import type { SubAgent } from "@/types/sub-agent";
+import { cn } from "@/lib/utils";
 
 export function SubagentsList({
   subAgents,
@@ -16,7 +17,7 @@ export function SubagentsList({
 }) {
   return (
     <div
-      className={`rounded-md p-2 ${subAgents.length > 0 ? "bg-gray-50" : ""}`}
+      className={cn("rounded-md p-2", subAgents.length > 0 ? "bg-gray-50" : "")}
     >
       <div className="flex flex-wrap gap-1">
         {subAgents.length === 0 && (
