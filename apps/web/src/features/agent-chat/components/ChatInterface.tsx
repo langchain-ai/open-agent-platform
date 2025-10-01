@@ -50,6 +50,7 @@ interface ChatInterfaceProps {
   onInput?: (input: string) => void;
 
   controls: React.ReactNode;
+  banner?: React.ReactNode;
   empty: React.ReactNode;
   skeleton: React.ReactNode;
 }
@@ -89,6 +90,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     onViewChange,
     onInput,
     controls,
+    banner,
     hideInternalToggle,
     empty,
     skeleton,
@@ -784,6 +786,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             </div>
           </form>
         </div>
+        {banner && (
+          <div className="sticky bottom-6 z-10 mx-auto mt-3 w-[calc(100%-32px)] max-w-[512px]">
+            {banner}
+          </div>
+        )}
 
         {isEmpty && <div className="flex-grow-3">{empty}</div>}
       </div>

@@ -21,6 +21,7 @@ export interface DeepAgentChatConfig {
   hideSidebar?: boolean;
   // Controls the controls that are shown in the chat interface
   controls?: React.ReactNode;
+  banner?: React.ReactNode;
   empty?: React.ReactNode;
   skeleton?: React.ReactNode;
   thread?: UseStreamThread<StateType>;
