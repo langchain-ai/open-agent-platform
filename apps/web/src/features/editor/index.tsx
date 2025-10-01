@@ -372,12 +372,12 @@ export function EditorPageContent(): React.ReactNode {
       {/* Main content grid: left side (2 rows) + right side (full height) */}
       <div
         className={cn(
-          "grid min-h-0 flex-1 gap-4",
+          "grid min-h-0 min-w-0 flex-1 gap-4",
           braceOpen ? "grid-cols-[1fr_600px]" : "grid-cols-1",
         )}
       >
         {/* Left side: Top row + Instructions row */}
-        <div className="flex min-h-0 flex-col gap-4">
+        <div className="flex min-h-0 min-w-0 flex-col gap-4">
           {/* Top process sections */}
           <div className="flex flex-wrap gap-4">
             {/* Triggers (Main Agent) */}
@@ -608,12 +608,12 @@ export function EditorPageContent(): React.ReactNode {
 
           {/* Bottom: Always-visible Instructions editor for main agent */}
           {selectedAgent && (
-            <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="px-1 pb-2 text-sm font-semibold text-gray-700">
                 Instructions
               </div>
-              <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="h-full overflow-y-auto">
+              <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="h-full min-w-0 overflow-y-auto">
                   <AgentConfig
                     key={`${selectedAgent.assistant_id}-${chatVersion}`}
                     agent={selectedAgent}

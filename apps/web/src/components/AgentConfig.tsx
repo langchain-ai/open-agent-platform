@@ -533,7 +533,7 @@ export function AgentConfig({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-w-0 flex-col">
       {/* Title section (optional, now moved to page header) */}
       {!hideTitleSection && (
         <div className="flex-shrink-0 px-4 py-2">
@@ -646,12 +646,13 @@ export function AgentConfig({
       </div>
 
       {/* Content based on current view */}
-      <div className="flex-1 overflow-auto">
+      <div className="min-w-0 flex-1 overflow-auto">
         {currentView === "instructions" && (
-          <div className="h-full bg-white">
-            <div className="p-6">
+          <div className="h-full min-w-0 bg-white">
+            <div className="min-w-0 p-6">
               <div
                 key={editorKey}
+                className="min-w-0"
                 onKeyDown={(e) => {
                   // Prevent keyboard shortcuts from bubbling up to parent components
                   if (e.ctrlKey || e.metaKey) {
@@ -662,7 +663,7 @@ export function AgentConfig({
                 <BlockNoteView
                   editor={editor}
                   onChange={() => {}}
-                  className={cn("oap-blocknote min-h-full")}
+                  className={cn("oap-blocknote min-h-full min-w-0")}
                   theme="light"
                   data-color-scheme="light"
                 />
