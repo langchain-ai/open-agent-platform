@@ -19,6 +19,7 @@ function DeepAgentChatInterfaceInternal({
   onViewChange,
   hideInternalToggle,
   controls,
+  banner,
   thread,
   empty,
   skeleton,
@@ -49,6 +50,7 @@ function DeepAgentChatInterfaceInternal({
             empty={empty}
             skeleton={skeleton}
             controls={controls}
+            banner={banner}
           />
         </div>
       </ChatProvider>

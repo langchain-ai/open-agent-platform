@@ -15,7 +15,13 @@ import { AgentsProvider } from "@/providers/Agents";
 import { MCPProvider } from "@/providers/MCP";
 import { useAuthContext } from "@/providers/Auth";
 import { useQueryState } from "nuqs";
-import { Check, Edit, MessagesSquareIcon, SquarePen } from "lucide-react";
+import {
+  Check,
+  Edit,
+  MessagesSquareIcon,
+  SquarePen,
+  Webhook,
+} from "lucide-react";
 import { DeepAgentChatInterface } from "@/features/agent-chat";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { Button } from "@/components/ui/button";
@@ -64,6 +70,8 @@ import {
 } from "@/components/ui/command";
 import { Agent } from "@/types/agent";
 import { SupportedConfigBadge } from "@/features/agents/components/agent-card";
+import { useTriggers } from "@/hooks/use-triggers";
+import { Badge } from "@/components/ui/badge";
 
 const DraftContext = createContext<
   [string | null, Dispatch<SetStateAction<string | null>>]
@@ -274,6 +282,8 @@ function AgentChatSelectItem(props: {
   agent: Agent;
   checked?: boolean;
   className?: string;
+  hasTriggers?: boolean;
+  triggerName?: string;
 }) {
   return (
     <span
@@ -288,7 +298,18 @@ function AgentChatSelectItem(props: {
       >
         {props.agent.name.slice(0, 2).toUpperCase()}
       </span>
-      {props.agent.name}
+      <span className="flex items-center gap-2">
+        {props.agent.name}
+        {props.hasTriggers && (
+          <Badge
+            variant="secondary"
+            className="h-5 gap-1 px-1.5 text-xs"
+          >
+            <Webhook className="size-3" />
+            {props.triggerName && <span>{props.triggerName}</span>}
+          </Badge>
+        )}
+      </span>
       {props.checked && <Check className="ml-3 size-4" />}
     </span>
   );
@@ -296,6 +317,8 @@ function AgentChatSelectItem(props: {
 
 function AgentChatSelect() {
   const { agents } = useAgentsContext();
+  const { session } = useAuthContext();
+  const { listAgentTriggers } = useTriggers();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [deploymentId, setDeploymentId] = useDeployment();
   const [_currentThreadId, setCurrentThreadId] = useQueryState("threadId");
@@ -303,6 +326,25 @@ function AgentChatSelect() {
 
   const [hoverAgentId, setHoverAgentId] = useState<string | null>(agentId);
   const [input, setInput] = useState("");
+
+  // Fetch trigger information for the selected agent
+  const { data: agentTriggerIds } = useSWR(
+    agentId && session?.accessToken
+      ? ["agent-triggers", agentId, session.accessToken]
+      : null,
+    async ([, agentId, accessToken]) => {
+      return await listAgentTriggers(accessToken, agentId);
+    },
+  );
+
+  // Fetch all trigger registrations to get trigger names
+  const { listUserTriggers } = useTriggers();
+  const { data: allTriggerRegistrations } = useSWR(
+    session?.accessToken ? ["user-triggers", session.accessToken] : null,
+    async ([, accessToken]) => {
+      return await listUserTriggers(accessToken);
+    },
+  );
 
   const filteredAgents = agents.filter((agent) =>
     agent.name.toLowerCase().includes(input.toLowerCase()),
@@ -332,6 +374,19 @@ function AgentChatSelect() {
     ? agents.find((agent) => agent.assistant_id === hoverAgentId)
     : null;
 
+  const hasTriggers = (agentTriggerIds?.length ?? 0) > 0;
+
+  // Get trigger name from the first trigger registration
+  const triggerName =
+    hasTriggers && agentTriggerIds && allTriggerRegistrations
+      ? allTriggerRegistrations
+          .find((reg) => agentTriggerIds.includes(reg.id))
+          ?.template_id?.replace(/-/g, " ")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      : undefined;
+
   return (
     <Popover
       open={open}
@@ -343,7 +398,11 @@ function AgentChatSelect() {
           type="button"
         >
           {selectedAgent ? (
-            <AgentChatSelectItem agent={selectedAgent} />
+            <AgentChatSelectItem
+              agent={selectedAgent}
+              hasTriggers={hasTriggers}
+              triggerName={triggerName}
+            />
           ) : (
             <span className="inline-flex items-center gap-2">
               <span className="size-[28px] flex-shrink-0 rounded-full border-2 border-dashed border-gray-400"></span>
@@ -474,6 +533,7 @@ function AgentChat(props: {
 }): React.ReactNode {
   const { session } = useAuthContext();
   const { agents } = useAgentsContext();
+  const { listAgentTriggers } = useTriggers();
 
   const [agentId] = useQueryState("agentId");
   const [deploymentId] = useDeployment();
@@ -486,6 +546,38 @@ function AgentChat(props: {
     () => deployments.find((d) => d.id === deploymentId),
     [deployments, deploymentId],
   );
+
+  // Fetch trigger information for the current agent
+  const { data: agentTriggerIds } = useSWR(
+    agentId && session?.accessToken
+      ? ["agent-triggers-chat", agentId, session.accessToken]
+      : null,
+    async ([, agentId, accessToken]) => {
+      return await listAgentTriggers(accessToken, agentId);
+    },
+  );
+
+  // Fetch all trigger registrations to get trigger names
+  const { listUserTriggers } = useTriggers();
+  const { data: allTriggerRegistrations } = useSWR(
+    session?.accessToken ? ["user-triggers-chat", session.accessToken] : null,
+    async ([, accessToken]) => {
+      return await listUserTriggers(accessToken);
+    },
+  );
+
+  const hasTriggers = (agentTriggerIds?.length ?? 0) > 0;
+
+  // Get trigger name from the first trigger registration
+  const triggerName =
+    hasTriggers && agentTriggerIds && allTriggerRegistrations
+      ? allTriggerRegistrations
+          .find((reg) => agentTriggerIds.includes(reg.id))
+          ?.template_id?.replace(/-/g, " ")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      : undefined;
 
   // Guard missing essentials
   if (!deploymentId || !session?.accessToken) {
@@ -555,6 +647,22 @@ function AgentChat(props: {
           }}
           view="chat"
           controls={<AgentChatSelect />}
+          banner={
+            hasTriggers && triggerName ? (
+              <div className="flex w-full items-center justify-center">
+                <div className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm whitespace-nowrap text-gray-900 shadow-sm">
+                  <div className="flex items-center justify-center rounded-full bg-[#2F6868] p-1">
+                    <Webhook className="size-3 flex-shrink-0 text-white" />
+                  </div>
+                  <span>
+                    This agent has a <strong>{triggerName}</strong> trigger
+                    configured. You can still use the chat interface, but
+                    behavior might be different.
+                  </span>
+                </div>
+              </div>
+            ) : null
+          }
         />
       </div>
     </div>
