@@ -10,7 +10,7 @@ import { FC, memo, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { SyntaxHighlighter } from "./syntax-highlighter";
 
-import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
+import { TooltipIconButton } from "../tooltip-icon-button";
 import { cn } from "@/lib/utils";
 
 import "katex/dist/katex.min.css";
@@ -263,31 +263,3 @@ const MarkdownTextImpl: FC<{ children: string; className?: string }> = ({
 };
 
 export const MarkdownText = memo(MarkdownTextImpl);
-
-const BasicMarkdownTextImpl: FC<{ children: string; className?: string }> = ({
-  children,
-  className,
-}) => {
-  const basicMarkdownComponents = { ...defaultComponents };
-  // Don't render headers, instead render them as bold text
-  delete basicMarkdownComponents.h1;
-  delete basicMarkdownComponents.h2;
-  delete basicMarkdownComponents.h3;
-  delete basicMarkdownComponents.h4;
-  delete basicMarkdownComponents.h5;
-  delete basicMarkdownComponents.h6;
-
-  return (
-    <div className={cn("markdown-content", className)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        components={basicMarkdownComponents}
-      >
-        {children}
-      </ReactMarkdown>
-    </div>
-  );
-};
-
-export const BasicMarkdownText = memo(BasicMarkdownTextImpl);

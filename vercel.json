@@ -1,0 +1,7 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "brace/v2": false
+    }
+  }
+}
