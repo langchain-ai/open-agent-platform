@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfigDialog } from "@/components/ConfigDialog";
 import { getConfig, saveConfig, StandaloneConfig } from "@/lib/config";
@@ -17,9 +17,7 @@ import {
 } from "@/components/ui/resizable";
 import { ThreadList } from "@/components/ThreadList";
 
-export const dynamic = 'force-dynamic';
-
-export default function Page() {
+function PageContent() {
   const [config, setConfig] = useState<StandaloneConfig | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
@@ -223,5 +221,13 @@ export default function Page() {
         </div>
       </ClientProvider>
     </>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <PageContent />
+    </Suspense>
   );
 }
