@@ -77,7 +77,6 @@ export function useThreads(props: {
       });
 
       return threads.map((thread): ThreadItem => {
-        // Extract title from thread metadata or first message
         let title = "Untitled Thread";
         let description = "";
 
@@ -85,7 +84,13 @@ export function useThreads(props: {
           if (thread.values && typeof thread.values === "object") {
             const values = thread.values as any;
 
-            if (values.messages && Array.isArray(values.messages)) {
+            // Try to get email subject from state first
+            if (values.email?.subject) {
+              title = values.email.subject;
+              // Use email page_content for description, fallback to subject
+              description = values.email.page_content || values.email.subject;
+            } else if (values.messages && Array.isArray(values.messages)) {
+              // Fallback to first human message if no email
               const firstHumanMessage = values.messages.find(
                 (m: any) => m.type === "human"
               );
