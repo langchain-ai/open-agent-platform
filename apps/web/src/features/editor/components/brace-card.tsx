@@ -35,7 +35,7 @@ type StateType = {
   triggers: BraceTrigger[];
   enabled_trigger_ids: string[] | null;
   cron_schedule: string[] | null;
-  test_thread_messages: Record<string, any>[];
+  test_thread_messages: Message[];
   agent_config: DeepAgentConfiguration;
   agent_id: string | null;
 };

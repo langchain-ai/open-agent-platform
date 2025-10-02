@@ -208,7 +208,12 @@ const DEEP_AGENT_ASSISTANT_ID = "deep_agent";
 type AgentGeneratorState = {
   messages: Message[];
   assistant: Assistant;
-  tools: { name: string; default_interrupt: boolean }[];
+  tools: {
+    name: string;
+    description?: string;
+    schema: Record<string, any>;
+    default_interrupt: boolean;
+  }[];
   triggers: { id: string; name: string; description: string }[];
   enabled_trigger_ids?: string[];
   cron_schedule?: string[];
@@ -509,6 +514,8 @@ export function InitialInputs({
       ],
       tools: tools.map((tool) => ({
         name: tool.name,
+        description: tool.description,
+        schema: tool.inputSchema,
         default_interrupt: Boolean(tool.default_interrupt),
       })),
       triggers: triggers.map((t) => ({

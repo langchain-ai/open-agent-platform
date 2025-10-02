@@ -10,7 +10,6 @@ import React, {
   Fragment,
 } from "react";
 import { Button } from "./ui/button";
-import { Switch } from "./ui/switch";
 import {
   LoaderCircle,
   Square,
@@ -40,8 +39,6 @@ import { HumanResponseWithEdits } from "../types/inbox";
 
 interface ChatInterfaceProps {
   assistant: Assistant | null;
-  debugMode: boolean;
-  setDebugMode: (debugMode: boolean) => void;
   // Optional controlled view props from host app
   view?: "chat" | "workflow";
   onViewChange?: (view: "chat" | "workflow") => void;
@@ -53,6 +50,7 @@ interface ChatInterfaceProps {
   banner?: React.ReactNode;
   empty: React.ReactNode;
   skeleton: React.ReactNode;
+  testMode?: boolean;
 }
 
 const getStatusIcon = (status: TodoItem["status"], className?: string) => {
@@ -84,8 +82,6 @@ const getStatusIcon = (status: TodoItem["status"], className?: string) => {
 export const ChatInterface = React.memo<ChatInterfaceProps>(
   ({
     assistant,
-    debugMode,
-    setDebugMode,
     view,
     onViewChange,
     onInput,
@@ -94,6 +90,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     hideInternalToggle,
     empty,
     skeleton,
+    testMode = false,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [agentId] = useQueryState("agentId");
@@ -106,6 +103,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const workflowView = isControlledView
       ? view === "workflow"
       : isWorkflowView;
+
+    const debugMode = Boolean(testMode);
 
     useEffect(() => {
       const timeout = setTimeout(() => void textareaRef.current?.focus());
@@ -442,7 +441,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const hasTasks = todos.length > 0;
     const hasFiles = Object.keys(files).length > 0;
 
-    const isEmpty = empty != null && processedMessages.length === 0;
+    const isEmpty =
+      empty != null && processedMessages.length === 0 && !testMode;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInput(e.target.value);
@@ -504,6 +504,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   interrupt={interrupt}
                 />
               ))}
+              {testMode &&
+                processedMessages.length === 0 &&
+                !isThreadLoading && (
+                  <div className="flex h-full items-center justify-center px-4 py-12 text-center text-sm text-gray-500">
+                    Test mode is enabled. Messages here run your agent with the
+                    latest saved configuration for exploration purposes.
+                  </div>
+                )}
               {interrupt && (
                 <ThreadActionsView
                   interrupt={interrupt}
@@ -751,19 +759,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               <div className="flex items-center gap-2">{controls}</div>
 
               <div className="flex justify-end gap-4">
-                <div className="flex items-center gap-2">
-                  <label
-                    htmlFor="debug-toggle"
-                    className="text-xs text-[#3F3F46]"
-                  >
-                    Debug
-                  </label>
-                  <Switch
-                    id="debug-toggle"
-                    checked={debugMode}
-                    onCheckedChange={setDebugMode}
-                  />
-                </div>
                 <Button
                   type={isLoading ? "button" : "submit"}
                   variant={isLoading ? "destructive" : "default"}
