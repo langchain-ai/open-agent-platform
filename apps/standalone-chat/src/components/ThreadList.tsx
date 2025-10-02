@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { Loader2, MessageSquare } from "lucide-react";
 import { useQueryState } from "nuqs";
@@ -104,11 +104,12 @@ function EmptyState() {
   );
 }
 
-export function ThreadList({
-  onThreadSelect,
-}: {
+interface ThreadListProps {
   onThreadSelect: (id: string) => void;
-}) {
+  onMutateReady?: (mutate: () => void) => void;
+}
+
+export function ThreadList({ onThreadSelect, onMutateReady }: ThreadListProps) {
   const [currentThreadId] = useQueryState("threadId");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
@@ -126,6 +127,7 @@ export function ThreadList({
   const isEmpty = threads.data?.at(0)?.length === 0;
   const isReachingEnd = isEmpty || (threads.data?.at(-1)?.length ?? 0) < 20;
 
+  // Group threads by time and status
   const grouped = useMemo(() => {
     const now = new Date();
     const groups: Record<keyof typeof GROUP_LABELS, ThreadItem[]> = {
@@ -160,8 +162,31 @@ export function ThreadList({
   }, [flattened]);
 
   const interruptedCount = useMemo(() => {
-    return (threads.data?.flat() ?? []).filter(t => t.status === "interrupted").length;
-  }, [threads.data]);
+    return flattened.filter((t) => t.status === "interrupted").length;
+  }, [flattened]);
+
+  // Expose thread list revalidation to parent component
+  // Use refs to create a stable callback that always calls the latest mutate function
+  const onMutateReadyRef = useRef(onMutateReady);
+  const mutateRef = useRef(threads.mutate);
+
+  useEffect(() => {
+    onMutateReadyRef.current = onMutateReady;
+  }, [onMutateReady]);
+
+  useEffect(() => {
+    mutateRef.current = threads.mutate;
+  }, [threads.mutate]);
+
+  const mutateFn = useCallback(() => {
+    mutateRef.current();
+  }, []);
+
+  useEffect(() => {
+    onMutateReadyRef.current?.(mutateFn);
+    // Only run once on mount to avoid infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -219,54 +244,55 @@ export function ThreadList({
 
         {!threads.error && !isEmpty && (
           <div className="p-4 space-y-6">
-            {(Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>).map((group) => {
-            const groupThreads = grouped[group];
-            if (groupThreads.length === 0) return null;
+            {(
+              Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>
+            ).map((group) => {
+              const groupThreads = grouped[group];
+              if (groupThreads.length === 0) return null;
 
-            return (
-              <div key={group}>
-                <h3 className="text-xs font-semibold text-gray-500 mb-2 px-2">
-                  {GROUP_LABELS[group]}
-                </h3>
-                <div className="space-y-1">
-                  {groupThreads.map((thread) => (
-                    <button
-                      key={thread.id}
-                      onClick={() => onThreadSelect(thread.id)}
-                      className={cn(
-                        "w-full text-left px-3 py-2 rounded-lg transition-colors",
-                        "hover:bg-gray-100",
-                        currentThreadId === thread.id && "bg-gray-200"
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div
-                              className={cn(
-                                "w-2 h-2 rounded-full flex-shrink-0",
-                                getThreadColor(thread.status)
-                              )}
-                            />
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {thread.title}
+              return (
+                <div key={group}>
+                  <h3 className="text-xs font-semibold text-gray-500 mb-2 px-2">
+                    {GROUP_LABELS[group]}
+                  </h3>
+                  <div className="space-y-1">
+                    {groupThreads.map((thread) => (
+                      <button
+                        key={thread.id}
+                        onClick={() => onThreadSelect(thread.id)}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded-lg transition-colors",
+                          "hover:bg-gray-100",
+                          currentThreadId === thread.id && "bg-gray-200"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div
+                                className={cn(
+                                  "w-2 h-2 rounded-full flex-shrink-0",
+                                  getThreadColor(thread.status)
+                                )}
+                              />
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {thread.title}
+                              </p>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate">
+                              {thread.description}
                             </p>
                           </div>
-                          <p className="text-xs text-gray-500 truncate">
-                            {thread.description}
-                          </p>
+                          <span className="text-xs text-gray-400 flex-shrink-0">
+                            {formatTime(thread.updatedAt)}
+                          </span>
                         </div>
-                        <span className="text-xs text-gray-400 flex-shrink-0">
-                          {formatTime(thread.updatedAt)}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          }
-        )}
+              );
+            })}
 
             {!isReachingEnd && (
               <div className="flex justify-center py-4">

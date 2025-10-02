@@ -25,17 +25,20 @@ function PageContent() {
   const [_threadId, setThreadId] = useQueryState("threadId");
   const [sidebar, setSidebar] = useQueryState("sidebar");
 
+  // Store thread list mutate function to trigger updates from chat actions
+  const [mutateThreads, setMutateThreads] = useState<(() => void) | null>(null);
+
   useEffect(() => {
     const savedConfig = getConfig();
     if (savedConfig) {
       setConfig(savedConfig);
-      // Set agentId in URL for inbox to work
       if (!agentId) {
         setAgentId(savedConfig.assistantId);
       }
     } else {
       setConfigDialogOpen(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update agentId when config changes
@@ -118,93 +121,96 @@ function PageContent() {
       />
       <ClientProvider deploymentUrl={config.deploymentUrl} apiKey={apiKey}>
         <div className="flex h-screen flex-col">
-              <header className="flex h-16 items-center justify-between border-b px-6">
-                <div className="flex items-center gap-4">
-                  <h1 className="text-xl font-semibold">Deep Agent UI</h1>
-                  {!sidebar && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSidebar("1")}
-                      className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
-                    >
-                      <MessagesSquare className="mr-2 h-4 w-4" />
-                      Threads
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {config && (
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium">Assistant:</span>{" "}
-                      {config.assistantId}
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setConfigDialogOpen(true)}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Button>
-                </div>
-              </header>
-
-              <div className="flex-1 overflow-hidden">
-                <ResizablePanelGroup
-                  direction="horizontal"
-                  autoSaveId="standalone-chat"
+          <header className="flex h-16 items-center justify-between border-b px-6">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-semibold">Deep Agent UI</h1>
+              {!sidebar && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebar("1")}
+                  className="shadow-icon-button rounded-md border border-gray-300 bg-white p-3 text-gray-700 hover:bg-gray-100"
                 >
-                  {sidebar && (
-                    <>
-                      <ResizablePanel
-                        id="thread-history"
-                        order={1}
-                        defaultSize={30}
-                        className="relative"
-                      >
-                        <div className="absolute inset-0 flex flex-col">
-                          <div className="overflow-hidden flex-1">
-                            <ThreadList
-                              onThreadSelect={async (id) => {
-                                await setThreadId(id);
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </ResizablePanel>
-                      <ResizableHandle />
-                    </>
-                  )}
-
-                  <ResizablePanel id="chat" className="relative flex flex-col" order={2}>
-                    <ChatProvider
-                      activeAssistant={assistant}
-                      onHistoryRevalidate={() => {}}
-                    >
-                      <ChatInterface
-                        assistant={assistant}
-                        debugMode={debugMode}
-                        setDebugMode={setDebugMode}
-                        controls={<></>}
-                        empty={
-                          <div className="flex-grow-3 flex items-center justify-center">
-                            <p className="text-muted-foreground">
-                              Start a conversation...
-                            </p>
-                          </div>
-                        }
-                        skeleton={
-                          <div className="flex items-center justify-center p-8">
-                            <p className="text-muted-foreground">Loading...</p>
-                          </div>
-                        }
-                      />
-                    </ChatProvider>
-                  </ResizablePanel>
-                </ResizablePanelGroup>
+                  <MessagesSquare className="mr-2 h-4 w-4" />
+                  Threads
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium">Assistant:</span>{" "}
+                {config.assistantId}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfigDialogOpen(true)}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </div>
+          </header>
+
+          <div className="flex-1 overflow-hidden">
+            <ResizablePanelGroup
+              direction="horizontal"
+              autoSaveId="standalone-chat"
+            >
+              {sidebar && (
+                <>
+                  <ResizablePanel
+                    id="thread-history"
+                    order={1}
+                    defaultSize={30}
+                    className="relative"
+                  >
+                    <div className="absolute inset-0 flex flex-col">
+                      <div className="flex-1 overflow-hidden">
+                        <ThreadList
+                          onThreadSelect={async (id) => {
+                            await setThreadId(id);
+                          }}
+                          onMutateReady={(fn) => setMutateThreads(() => fn)}
+                        />
+                      </div>
+                    </div>
+                  </ResizablePanel>
+                  <ResizableHandle />
+                </>
+              )}
+
+              <ResizablePanel
+                id="chat"
+                className="relative flex flex-col"
+                order={2}
+              >
+                <ChatProvider
+                  activeAssistant={assistant}
+                  onHistoryRevalidate={() => mutateThreads?.()}
+                >
+                  <ChatInterface
+                    assistant={assistant}
+                    debugMode={debugMode}
+                    setDebugMode={setDebugMode}
+                    controls={<></>}
+                    empty={
+                      <div className="flex-grow-3 flex items-center justify-center">
+                        <p className="text-muted-foreground">
+                          Start a conversation...
+                        </p>
+                      </div>
+                    }
+                    skeleton={
+                      <div className="flex items-center justify-center p-8">
+                        <p className="text-muted-foreground">Loading...</p>
+                      </div>
+                    }
+                  />
+                </ChatProvider>
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          </div>
         </div>
       </ClientProvider>
     </>

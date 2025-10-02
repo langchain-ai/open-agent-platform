@@ -39,6 +39,7 @@ export function useChat({
     threadId: threadId ?? null,
     onThreadId: setThreadId,
     defaultHeaders: { "x-auth-scheme": "langsmith" },
+    // Revalidate thread list when stream finishes, errors, or creates new thread
     onFinish: onHistoryRevalidate,
     onError: onHistoryRevalidate,
     onCreated: onHistoryRevalidate,
@@ -57,8 +58,10 @@ export function useChat({
           config: { ...(activeAssistant?.config ?? {}), recursion_limit: 100 },
         },
       );
+      // Update thread list immediately when sending a message
+      onHistoryRevalidate?.();
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, onHistoryRevalidate],
   );
 
   const runSingleStep = useCallback(
@@ -110,17 +113,26 @@ export function useChat({
           ? { interruptAfter: ["tools"] }
           : { interruptBefore: ["tools"] }),
       });
+      // Update thread list when continuing stream
+      onHistoryRevalidate?.();
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, onHistoryRevalidate],
   );
 
-  const sendHumanResponse = (response: HumanResponse[]): void => {
-    stream.submit(null, { command: { resume: response } });
-  };
+  const sendHumanResponse = useCallback(
+    (response: HumanResponse[]) => {
+      stream.submit(null, { command: { resume: response } });
+      // Update thread list when resuming from interrupt
+      onHistoryRevalidate?.();
+    },
+    [stream, onHistoryRevalidate],
+  );
 
-  const markCurrentThreadAsResolved = (): void => {
+  const markCurrentThreadAsResolved = useCallback(() => {
     stream.submit(null, { command: { goto: "__end__", update: null } });
-  };
+    // Update thread list when marking thread as resolved
+    onHistoryRevalidate?.();
+  }, [stream, onHistoryRevalidate]);
 
   const stopStream = useCallback(() => {
     stream.stop();
