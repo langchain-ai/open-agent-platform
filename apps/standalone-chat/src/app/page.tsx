@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/resizable";
 import { ThreadList } from "@/components/ThreadList";
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   const [config, setConfig] = useState<StandaloneConfig | null>(null);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
