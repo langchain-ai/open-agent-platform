@@ -164,21 +164,8 @@ function PageContent() {
                         defaultSize={30}
                         className="relative"
                       >
-                        <div className="absolute inset-0 grid grid-rows-[auto_1fr]">
-                          <div className="flex items-center justify-between p-4 px-[18px]">
-                            <h2 className="flex items-center gap-4 text-lg font-semibold">
-                              Threads
-                            </h2>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSidebar(null)}
-                              className="text-sm"
-                            >
-                              Close
-                            </Button>
-                          </div>
-                          <div className="overflow-hidden">
+                        <div className="absolute inset-0 flex flex-col">
+                          <div className="overflow-hidden flex-1">
                             <ThreadList
                               onThreadSelect={async (id) => {
                                 await setThreadId(id);

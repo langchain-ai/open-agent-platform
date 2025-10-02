@@ -1,15 +1,27 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
+import { format } from "date-fns";
 import { Loader2, MessageSquare } from "lucide-react";
-import { useThreads } from "@/features/chat/hooks/useThreads";
-import type { ThreadItem } from "@/features/chat/hooks/useThreads";
 import { useQueryState } from "nuqs";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectLabel,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useThreads } from "@/features/chat/hooks/useThreads";
+import type { ThreadItem } from "@/features/chat/hooks/useThreads";
+
+type StatusFilter = "all" | "idle" | "busy" | "interrupted" | "error";
 
 const GROUP_LABELS = {
   interrupted: "Requiring Attention",
@@ -19,45 +31,86 @@ const GROUP_LABELS = {
   older: "Older",
 } as const;
 
+const STATUS_COLORS: Record<ThreadItem["status"], string> = {
+  idle: "bg-green-500",
+  busy: "bg-yellow-400",
+  interrupted: "bg-red-500",
+  error: "bg-red-600",
+};
+
 function getThreadColor(status: ThreadItem["status"]): string {
-  switch (status) {
-    case "idle":
-      return "bg-green-500";
-    case "busy":
-      return "bg-yellow-400";
-    case "interrupted":
-      return "bg-red-500";
-    case "error":
-      return "bg-red-600";
-    default:
-      return "bg-gray-400";
-  }
+  return STATUS_COLORS[status] ?? "bg-gray-400";
 }
 
-function formatTime(input: Date, now = new Date()) {
-  const date = input;
+function formatTime(date: Date, now = new Date()): string {
   const diff = now.getTime() - date.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-  if (days === 0) {
-    return format(date, "HH:mm");
-  } else if (days === 1) {
-    return "Yesterday";
-  } else if (days < 7) {
-    return format(date, "EEEE");
-  } else {
-    return format(date, "MM/dd");
-  }
+  if (days === 0) return format(date, "HH:mm");
+  if (days === 1) return "Yesterday";
+  if (days < 7) return format(date, "EEEE");
+  return format(date, "MM/dd");
+}
+
+function StatusFilterItem({
+  status,
+  label,
+  badge,
+}: {
+  status: ThreadItem["status"];
+  label: string;
+  badge?: number;
+}) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span
+        className={cn("inline-block size-2 rounded-full", getThreadColor(status))}
+      />
+      {label}
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full">
+          {badge}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-8 text-center">
+      <p className="text-sm text-red-600">Failed to load threads</p>
+      <p className="text-xs text-muted-foreground mt-1">{message}</p>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="space-y-2 p-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-16 w-full" />
+      ))}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center p-8 text-center">
+      <MessageSquare className="h-12 w-12 text-gray-300 mb-2" />
+      <p className="text-sm text-muted-foreground">No threads found</p>
+    </div>
+  );
 }
 
 export function ThreadList({
   onThreadSelect,
-  statusFilter = "all",
 }: {
   onThreadSelect: (id: string) => void;
-  statusFilter?: "all" | "idle" | "busy" | "interrupted" | "error";
 }) {
   const [currentThreadId] = useQueryState("threadId");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const threads = useThreads({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -106,41 +159,67 @@ export function ThreadList({
     return groups;
   }, [flattened]);
 
-  if (threads.error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-sm text-red-600">Failed to load threads</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          {threads.error.message}
-        </p>
-      </div>
-    );
-  }
-
-  if (!threads.data && threads.isLoading) {
-    return (
-      <div className="space-y-2 p-4">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  }
-
-  if (isEmpty) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <MessageSquare className="h-12 w-12 text-gray-300 mb-2" />
-        <p className="text-sm text-muted-foreground">No threads found</p>
-      </div>
-    );
-  }
+  const interruptedCount = useMemo(() => {
+    return (threads.data?.flat() ?? []).filter(t => t.status === "interrupted").length;
+  }, [threads.data]);
 
   return (
-    <ScrollArea className="h-full">
-      <div className="p-4 space-y-6">
-        {(Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>).map(
-          (group) => {
+    <div className="flex flex-col h-full">
+      {/* Filter Dropdown - Always visible */}
+      <div className="flex items-center justify-end px-4 py-3 border-b">
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+        >
+          <SelectTrigger className="w-[180px]" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel>Active</SelectLabel>
+              <SelectItem value="idle">
+                <StatusFilterItem status="idle" label="Idle" />
+              </SelectItem>
+              <SelectItem value="busy">
+                <StatusFilterItem status="busy" label="Busy" />
+              </SelectItem>
+            </SelectGroup>
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel>Attention</SelectLabel>
+              <SelectItem value="interrupted">
+                <StatusFilterItem
+                  status="interrupted"
+                  label="Interrupted"
+                  badge={interruptedCount}
+                />
+              </SelectItem>
+              <SelectItem value="error">
+                <StatusFilterItem status="error" label="Error" />
+              </SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <ScrollArea className="flex-1">
+        {threads.error && (
+          <ErrorState message={threads.error.message} />
+        )}
+
+        {!threads.error && !threads.data && threads.isLoading && (
+          <LoadingState />
+        )}
+
+        {!threads.error && !threads.isLoading && isEmpty && (
+          <EmptyState />
+        )}
+
+        {!threads.error && !isEmpty && (
+          <div className="p-4 space-y-6">
+            {(Object.keys(GROUP_LABELS) as Array<keyof typeof GROUP_LABELS>).map((group) => {
             const groupThreads = grouped[group];
             if (groupThreads.length === 0) return null;
 
@@ -189,26 +268,28 @@ export function ThreadList({
           }
         )}
 
-        {!isReachingEnd && (
-          <div className="flex justify-center py-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => threads.setSize(threads.size + 1)}
-              disabled={isLoadingMore}
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                "Load More"
-              )}
-            </Button>
+            {!isReachingEnd && (
+              <div className="flex justify-center py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => threads.setSize(threads.size + 1)}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load More"
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
-      </div>
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   );
 }
