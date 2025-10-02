@@ -18,6 +18,11 @@ export type StateType = {
   messages: Message[];
   todos: TodoItem[];
   files: Record<string, string>;
+  email?: {
+    id?: string;
+    subject?: string;
+    page_content?: string;
+  };
 };
 
 export function useChat({
@@ -141,6 +146,7 @@ export function useChat({
   return {
     todos: stream.values.todos ?? [],
     files: stream.values.files ?? {},
+    email: stream.values.email,
     setFiles,
     messages: stream.messages,
     isLoading: stream.isLoading,

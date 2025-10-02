@@ -19,6 +19,7 @@ import {
   Clock,
   Circle,
   FileIcon,
+  Mail,
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import type { TodoItem, ToolCall } from "../types";
@@ -139,6 +140,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       messages,
       todos,
       files,
+      email,
       setFiles,
       isLoading,
       isThreadLoading,
@@ -617,10 +619,23 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       );
                     })();
 
+                    const gmailButton = email?.id ? (
+                      <a
+                        href={`https://mail.google.com/mail/u/0/#inbox/${email.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-shrink-0 cursor-pointer items-center gap-2 px-4.5 py-3 text-left text-sm hover:bg-gray-50"
+                      >
+                        <Mail size={16} />
+                        Open in Gmail
+                      </a>
+                    ) : null;
+
                     return (
-                      <div className="grid grid-cols-[1fr_auto] items-center">
+                      <div className="grid grid-cols-[1fr_auto_auto] items-center">
                         {tasksTrigger}
                         {filesTrigger}
+                        {gmailButton}
                       </div>
                     );
                   })()}
