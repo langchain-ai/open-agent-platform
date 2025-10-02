@@ -67,7 +67,7 @@ export function ConfigDialog({
             <Label htmlFor="deploymentUrl">Deployment URL</Label>
             <Input
               id="deploymentUrl"
-              placeholder="https://your-deployment.langsmith.com"
+              placeholder="https://<deployment-url>"
               value={deploymentUrl}
               onChange={(e) => setDeploymentUrl(e.target.value)}
             />
@@ -76,7 +76,7 @@ export function ConfigDialog({
             <Label htmlFor="assistantId">Assistant ID</Label>
             <Input
               id="assistantId"
-              placeholder="asst_..."
+              placeholder="<assistant-id>"
               value={assistantId}
               onChange={(e) => setAssistantId(e.target.value)}
             />
