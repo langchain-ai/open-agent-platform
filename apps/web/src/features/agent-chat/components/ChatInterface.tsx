@@ -37,7 +37,8 @@ import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { FilesPopover } from "./TasksFilesSidebar";
 import useInterruptedActions from "./interrupted-actions/hooks/use-interrupted-actions";
-import { HumanResponseWithEdits } from "../types/inbox";
+import { HumanResponseWithEdits, HumanResponse } from "../types/inbox";
+import { toast } from "sonner";
 
 interface ChatInterfaceProps {
   assistant: Assistant | null;
@@ -102,6 +103,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const tasksContainerRef = useRef<HTMLDivElement | null>(null);
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
+    // State for handling multiple interrupts
+    const [currentInterruptIndex, setCurrentInterruptIndex] =
+      useState<number>(0);
+    const [currentInterrupt, setCurrentInterrupt] = useState<any | null>(null);
+    const [interruptResponses, setInterruptResponses] = useState<
+      Map<number, HumanResponse>
+    >(new Map());
+
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const isControlledView = typeof view !== "undefined";
     const workflowView = isControlledView
@@ -154,6 +163,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       error,
       getMessagesMetadata,
       sendMessage,
+      sendHumanResponse,
       runSingleStep,
       continueStream,
       stopStream,
@@ -173,10 +183,56 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         if (submitDisabled) return;
 
         if (interrupt) {
-          actions.handleSubmit(e);
-          actions.resetState();
-          setInput("");
-          return;
+          const interrupts = (interrupt.value as any[]) || [];
+          const hasMultipleInterrupts = interrupts.length > 1;
+
+          if (hasMultipleInterrupts && currentInterrupt) {
+            // Multiple interrupts: track response for current carousel item
+            const messageText = input.trim();
+
+            const response = {
+              type: "response" as const,
+              args: messageText || "",
+            };
+
+            setInterruptResponses((prev) => {
+              const updated = new Map(prev);
+              updated.set(currentInterruptIndex, response);
+              return updated;
+            });
+
+            toast.success(
+              `Response added to interrupt ${currentInterruptIndex + 1}.`,
+              {
+                duration: 3000,
+              },
+            );
+
+            setInput("");
+            return;
+          } else {
+            // Single interrupt: send response directly
+            const messageText = input.trim();
+            if (!messageText) {
+              toast.error("Please enter a response.");
+              return;
+            }
+
+            const response = {
+              type: "response" as const,
+              args: messageText,
+            };
+
+            sendHumanResponse([response]);
+
+            toast.success("Response submitted successfully.", {
+              duration: 5000,
+            });
+
+            actions.resetState();
+            setInput("");
+            return;
+          }
         }
 
         const messageText = input.trim();
@@ -202,8 +258,10 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         setInput,
         runSingleStep,
         submitDisabled,
-        actions,
         interrupt,
+        currentInterrupt,
+        currentInterruptIndex,
+        setInterruptResponses,
       ],
     );
 
@@ -265,6 +323,14 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         );
       },
       [debugMode, runSingleStep, messages, getMessagesMetadata],
+    );
+
+    const handleCurrentInterruptChange = useCallback(
+      (index: number, interruptData: any) => {
+        setCurrentInterruptIndex(index);
+        setCurrentInterrupt(interruptData);
+      },
+      [],
     );
 
     // Reserved: additional UI state
@@ -568,6 +634,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                 <ThreadActionsView
                   interrupt={interrupt}
                   threadId={threadId}
+                  onCurrentInterruptChange={handleCurrentInterruptChange}
+                  externalResponses={interruptResponses}
                 />
               )}
               {interrupt && debugMode && (
@@ -800,8 +868,8 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               placeholder={
                 isLoading
                   ? "Running..."
-                  : interrupt
-                    ? "Respond to the interrupt..."
+                  : interrupt && currentInterrupt
+                    ? `Respond to ${currentInterrupt.action_request?.action || "interrupt"}...`
                     : "Write your message..."
               }
               className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
