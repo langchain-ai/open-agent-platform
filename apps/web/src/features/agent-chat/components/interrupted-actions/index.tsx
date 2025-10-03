@@ -50,7 +50,7 @@ export function ThreadActionsView({
 
   // Check if all interrupts allow accept (for Accept All button)
   const allAllowAccept = interrupts.every(
-    (int: HumanInterrupt) => int.config?.allow_accept
+    (int: HumanInterrupt) => int.config?.allow_accept,
   );
 
   // Update current index when carousel changes
@@ -118,20 +118,22 @@ export function ThreadActionsView({
         `Please address all ${interrupts.length} interrupts before submitting.`,
         {
           duration: 5000,
-        }
+        },
       );
       return;
     }
 
     try {
       // Collect responses in order
-      const allResponses = interrupts.map((_: HumanInterrupt, index: number) => {
-        const response = addressedInterrupts.get(index);
-        if (!response) {
-          throw new Error(`Missing response for interrupt ${index + 1}`);
-        }
-        return response;
-      });
+      const allResponses = interrupts.map(
+        (_: HumanInterrupt, index: number) => {
+          const response = addressedInterrupts.get(index);
+          if (!response) {
+            throw new Error(`Missing response for interrupt ${index + 1}`);
+          }
+          return response;
+        },
+      );
 
       sendHumanResponse(allResponses);
 
@@ -188,7 +190,7 @@ export function ThreadActionsView({
                   ? "bg-green-500"
                   : index === current
                     ? "bg-gray-400"
-                    : "bg-white border border-gray-300"
+                    : "border border-gray-300 bg-white"
               }`}
             />
           ))}
@@ -201,86 +203,98 @@ export function ThreadActionsView({
           <div className="text-sm font-medium text-gray-700">
             Interrupt {current + 1} of {interrupts.length}
           </div>
-          <Carousel setApi={setApi} className="w-full">
+          <Carousel
+            setApi={setApi}
+            className="w-full"
+          >
             <CarouselContent>
-              {interrupts.map((interruptItem: HumanInterrupt, index: number) => {
-                const isAddressed = addressedInterrupts.has(index);
-                const addressedResponse = addressedInterrupts.get(index);
+              {interrupts.map(
+                (interruptItem: HumanInterrupt, index: number) => {
+                  const isAddressed = addressedInterrupts.has(index);
+                  const addressedResponse = addressedInterrupts.get(index);
 
-                return (
-                  <CarouselItem key={index}>
-                    <div className="space-y-3">
-                      {/* Show addressed status if already responded */}
-                      {isAddressed && (
-                        <div className="flex items-start gap-2 text-sm text-green-600">
-                          <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <div className="text-green-700">
-                            {addressedResponse?.type === "response"
-                              ? addressedResponse.args
-                              : `${addressedResponse?.type === "accept" ? "Accepted" : "Edited"}`}
+                  return (
+                    <CarouselItem key={index}>
+                      <div className="space-y-3">
+                        {/* Show addressed status if already responded */}
+                        {isAddressed && (
+                          <div className="flex items-start gap-2 text-sm text-green-600">
+                            <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                            <div className="text-green-700">
+                              {addressedResponse?.type === "response"
+                                ? addressedResponse.args
+                                : `${addressedResponse?.type === "accept" ? "Accepted" : "Edited"}`}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Show InboxItemInput for accept/edit buttons */}
-                      <InboxItemInput
-                        isLoading={isLoading}
-                        acceptAllowed={interruptItem?.config?.allow_accept ?? false}
-                        hasEdited={actions.hasEdited}
-                        hasAddedResponse={actions.hasAddedResponse}
-                        interruptValue={interruptItem}
-                        humanResponse={actions.humanResponse}
-                        initialValues={
-                          actions.initialHumanInterruptEditValue.current || {}
-                        }
-                        setHumanResponse={actions.setHumanResponse}
-                        supportsMultipleMethods={actions.supportsMultipleMethods}
-                        setSelectedSubmitType={actions.setSelectedSubmitType}
-                        setHasAddedResponse={actions.setHasAddedResponse}
-                        setHasEdited={actions.setHasEdited}
-                        handleSubmit={(e) => {
-                          e?.preventDefault();
-                          const selectedType = actions.selectedSubmitType;
-                          const response = actions.humanResponse.find(
-                            (r) => r.type === selectedType
-                          );
-
-                          if (!response) {
-                            toast.error("No response selected.");
-                            return;
+                        {/* Show InboxItemInput for accept/edit buttons */}
+                        <InboxItemInput
+                          isLoading={isLoading}
+                          acceptAllowed={
+                            interruptItem?.config?.allow_accept ?? false
                           }
-
-                          let args = response.args;
-                          if (
-                            response.type === "edit" &&
-                            "acceptAllowed" in response &&
-                            response.acceptAllowed &&
-                            !("editsMade" in response && response.editsMade)
-                          ) {
-                            // Convert to accept if no edits were made
-                            const updatedResponse = { type: "accept", args };
-                            setAddressedInterrupts((prev) => {
-                              const updated = new Map(prev);
-                              updated.set(index, updatedResponse);
-                              return updated;
-                            });
-                          } else {
-                            setAddressedInterrupts((prev) => {
-                              const updated = new Map(prev);
-                              updated.set(index, { type: response.type, args });
-                              return updated;
-                            });
+                          hasEdited={actions.hasEdited}
+                          hasAddedResponse={actions.hasAddedResponse}
+                          interruptValue={interruptItem}
+                          humanResponse={actions.humanResponse}
+                          initialValues={
+                            actions.initialHumanInterruptEditValue.current || {}
                           }
+                          setHumanResponse={actions.setHumanResponse}
+                          supportsMultipleMethods={
+                            actions.supportsMultipleMethods
+                          }
+                          setSelectedSubmitType={actions.setSelectedSubmitType}
+                          setHasAddedResponse={actions.setHasAddedResponse}
+                          setHasEdited={actions.setHasEdited}
+                          handleSubmit={(e) => {
+                            e?.preventDefault();
+                            const selectedType = actions.selectedSubmitType;
+                            const response = actions.humanResponse.find(
+                              (r) => r.type === selectedType,
+                            );
 
-                          toast.success(`Interrupt ${index + 1} addressed.`, {
-                            duration: 3000,
-                          });
-                        }}
-                      />
-                    </div>
-                  </CarouselItem>
-                );
-              })}
+                            if (!response) {
+                              toast.error("No response selected.");
+                              return;
+                            }
+
+                            const args = response.args;
+                            if (
+                              response.type === "edit" &&
+                              "acceptAllowed" in response &&
+                              response.acceptAllowed &&
+                              !("editsMade" in response && response.editsMade)
+                            ) {
+                              // Convert to accept if no edits were made
+                              const updatedResponse = { type: "accept", args };
+                              setAddressedInterrupts((prev) => {
+                                const updated = new Map(prev);
+                                updated.set(index, updatedResponse);
+                                return updated;
+                              });
+                            } else {
+                              setAddressedInterrupts((prev) => {
+                                const updated = new Map(prev);
+                                updated.set(index, {
+                                  type: response.type,
+                                  args,
+                                });
+                                return updated;
+                              });
+                            }
+
+                            toast.success(`Interrupt ${index + 1} addressed.`, {
+                              duration: 3000,
+                            });
+                          }}
+                        />
+                      </div>
+                    </CarouselItem>
+                  );
+                },
+              )}
             </CarouselContent>
             <CarouselPrevious />
             <CarouselNext />

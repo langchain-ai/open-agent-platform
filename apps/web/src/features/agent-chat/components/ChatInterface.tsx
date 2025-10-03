@@ -104,9 +104,12 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     const [isWorkflowView, setIsWorkflowView] = useState(false);
 
     // State for handling multiple interrupts
-    const [currentInterruptIndex, setCurrentInterruptIndex] = useState<number>(0);
+    const [currentInterruptIndex, setCurrentInterruptIndex] =
+      useState<number>(0);
     const [currentInterrupt, setCurrentInterrupt] = useState<any | null>(null);
-    const [interruptResponses, setInterruptResponses] = useState<Map<number, { type: string; args: any }>>(new Map());
+    const [interruptResponses, setInterruptResponses] = useState<
+      Map<number, { type: string; args: any }>
+    >(new Map());
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const isControlledView = typeof view !== "undefined";
@@ -193,9 +196,12 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             return updated;
           });
 
-          toast.success(`Response added to interrupt ${currentInterruptIndex + 1}.`, {
-            duration: 3000,
-          });
+          toast.success(
+            `Response added to interrupt ${currentInterruptIndex + 1}.`,
+            {
+              duration: 3000,
+            },
+          );
 
           setInput("");
           return;
