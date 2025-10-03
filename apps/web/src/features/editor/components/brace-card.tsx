@@ -182,7 +182,7 @@ export function BraceCard({
   };
 
   return (
-    <div className="flex min-h-0 flex-col rounded-xl border border-gray-200 bg-purple-50 shadow-sm">
+    <div className="flex h-full min-h-0 w-full flex-col rounded-xl border border-gray-200 bg-purple-50 shadow-sm">
       <div className="flex items-center justify-between border-b border-purple-100 bg-purple-100/60 px-3 py-2">
         <div className="flex items-center gap-1.5">
           <div className="text-sm font-semibold text-gray-700">Brace</div>

@@ -8,7 +8,7 @@ import { useQueryState } from "nuqs";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Plus, Loader2, Braces } from "lucide-react";
+import { Plus, Loader2, Braces, X } from "lucide-react";
 import { toast } from "sonner";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -326,7 +326,7 @@ function EditorPageContentComponent(
   // no-op
 
   return (
-    <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
+    <div className="relative flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Page header with title/description and actions */}
       {selectedAgent && (
         <div className="flex items-center justify-between px-1">
@@ -408,26 +408,11 @@ function EditorPageContentComponent(
               {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            <TooltipIconButton
-              size="default"
-              variant="ghost"
-              aria-label={braceOpen ? "Hide Brace Agent" : "Expand Brace Agent"}
-              tooltip={braceOpen ? "Hide Brace Agent" : "Expand Brace Agent"}
-              onClick={() => setBraceOpen(!braceOpen)}
-              className="h-9 w-9 bg-purple-100 text-purple-700 hover:bg-purple-200"
-            >
-              <Braces className="h-4 w-4" />
-            </TooltipIconButton>
           </div>
         </div>
       )}
       {/* Main content grid: left side (2 rows) + right side (full height) */}
-      <div
-        className={cn(
-          "grid min-h-0 min-w-0 flex-1 gap-4",
-          braceOpen ? "grid-cols-[1fr_600px]" : "grid-cols-1",
-        )}
-      >
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4">
         <div className="flex min-h-0 min-w-0 flex-col gap-4">
           {testMode ? (
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -706,24 +691,56 @@ function EditorPageContentComponent(
             </>
           )}
         </div>
-
-        {braceOpen && selectedAgent && (
-          <BraceCard
-            onClose={() => setBraceOpen(false)}
-            assistant={selectedAgent}
-            tools={tools.map((t) => ({
-              name: t.name,
-              default_interrupt: !!t.default_interrupt,
-            }))}
-            triggers={triggers || []}
-            enabledTriggerIds={triggersForm.getValues("triggerIds") || []}
-            onAgentUpdated={async () => {
-              await refreshAgents();
-              setChatVersion((v) => v + 1);
-            }}
-            testThreadMessages={testChatContext.messages}
-          />
-        )}
+      </div>
+      <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-3">
+        <Popover
+          open={braceOpen}
+          onOpenChange={setBraceOpen}
+        >
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={braceOpen ? "Hide Brace Agent" : "Open Brace Agent"}
+              aria-expanded={braceOpen}
+              className={cn(
+                "flex h-14 w-14 items-center justify-center rounded-full border border-purple-500 bg-purple-100/70 text-purple-700 shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-purple-100/90 hover:text-purple-800 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:outline-none",
+                braceOpen ? "ring-2 ring-purple-400" : "",
+              )}
+            >
+              {braceOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Braces className="h-5 w-5" />
+              )}
+            </button>
+          </PopoverTrigger>
+          {selectedAgent && (
+            <PopoverContent
+              side="top"
+              align="end"
+              sideOffset={16}
+              className="max-h-[80vh] w-[calc(100vw-3rem)] p-0 sm:w-[380px]"
+            >
+              <div className="h-[70vh] max-h-[80vh] w-full sm:h-[520px]">
+                <BraceCard
+                  onClose={() => setBraceOpen(false)}
+                  assistant={selectedAgent}
+                  tools={tools.map((t) => ({
+                    name: t.name,
+                    default_interrupt: !!t.default_interrupt,
+                  }))}
+                  triggers={triggers || []}
+                  enabledTriggerIds={triggersForm.getValues("triggerIds") || []}
+                  onAgentUpdated={async () => {
+                    await refreshAgents();
+                    setChatVersion((v) => v + 1);
+                  }}
+                  testThreadMessages={testChatContext.messages}
+                />
+              </div>
+            </PopoverContent>
+          )}
+        </Popover>
       </div>
     </div>
   );
