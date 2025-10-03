@@ -37,7 +37,7 @@ import { ThreadHistorySidebar } from "./ThreadHistorySidebar";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { FilesPopover } from "./TasksFilesSidebar";
 import useInterruptedActions from "./interrupted-actions/hooks/use-interrupted-actions";
-import { HumanResponseWithEdits } from "../types/inbox";
+import { HumanResponseWithEdits, HumanResponse } from "../types/inbox";
 import { toast } from "sonner";
 
 interface ChatInterfaceProps {
@@ -108,7 +108,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       useState<number>(0);
     const [currentInterrupt, setCurrentInterrupt] = useState<any | null>(null);
     const [interruptResponses, setInterruptResponses] = useState<
-      Map<number, { type: string; args: any }>
+      Map<number, HumanResponse>
     >(new Map());
 
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -163,6 +163,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       error,
       getMessagesMetadata,
       sendMessage,
+      sendHumanResponse,
       runSingleStep,
       continueStream,
       stopStream,

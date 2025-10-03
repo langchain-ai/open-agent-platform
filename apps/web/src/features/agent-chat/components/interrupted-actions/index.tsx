@@ -6,6 +6,7 @@ import { InboxItemInput } from "./components/inbox-item-input";
 import { useChatContext } from "../../providers/ChatProvider";
 import { Interrupt } from "@langchain/langgraph-sdk";
 import { HumanInterrupt } from "./types";
+import { HumanResponse } from "../../types/inbox";
 import { getInterruptTitle } from "./utils";
 import {
   Carousel,
@@ -22,7 +23,7 @@ interface ThreadActionsViewProps {
   interrupt: Interrupt;
   threadId: string | null;
   onCurrentInterruptChange?: (index: number, interrupt: HumanInterrupt) => void;
-  externalResponses?: Map<number, { type: string; args: any }>;
+  externalResponses?: Map<number, HumanResponse>;
 }
 
 // Wrapper component for each interrupt item in carousel
@@ -35,7 +36,7 @@ function InterruptItemWrapper({
   interruptItem: HumanInterrupt;
   index: number;
   isLoading: boolean;
-  onSubmit: (response: { type: string; args: any }) => void;
+  onSubmit: (response: HumanResponse) => void;
 }) {
   // Create a mock interrupt object for this single item
   const mockInterrupt = {
@@ -146,7 +147,7 @@ export function ThreadActionsView({
     try {
       const allResponses = interrupts.map((int: HumanInterrupt) => ({
         type: "accept" as const,
-        args: int.action_request.args,
+        args: int.action_request,
       }));
 
       sendHumanResponse(allResponses);
@@ -164,7 +165,7 @@ export function ThreadActionsView({
 
   // Track which interrupts have been addressed and their responses
   const [addressedInterrupts, setAddressedInterrupts] = useState<
-    Map<number, { type: string; args: any }>
+    Map<number, HumanResponse>
   >(new Map());
 
   const allInterruptsAddressed =
@@ -304,7 +305,9 @@ export function ThreadActionsView({
                                     Response provided:
                                   </div>
                                   <div className="text-gray-800">
-                                    {addressedResponse.args}
+                                    {typeof addressedResponse.args === "string"
+                                      ? addressedResponse.args
+                                      : JSON.stringify(addressedResponse.args)}
                                   </div>
                                 </div>
                               </>
