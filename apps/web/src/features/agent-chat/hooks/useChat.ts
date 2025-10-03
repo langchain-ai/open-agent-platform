@@ -24,10 +24,12 @@ export function useChat({
   activeAssistant,
   onHistoryRevalidate,
   thread,
+  testMode,
 }: {
   activeAssistant: Assistant | null;
   onHistoryRevalidate?: () => void;
   thread?: UseStreamThread<StateType>;
+  testMode?: boolean;
 }) {
   const [threadId, setThreadId] = useQueryState("threadId");
   const { client } = useClients();
@@ -48,8 +50,12 @@ export function useChat({
   const sendMessage = useCallback(
     (content: string) => {
       const newMessage: Message = { id: uuidv4(), type: "human", content };
+      const metadata = testMode ? { testMode: true } : undefined;
       stream.submit(
-        { messages: [newMessage] },
+        {
+          messages: [newMessage],
+          ...(metadata ? { metadata } : {}),
+        },
         {
           optimisticValues: (prev) => ({
             messages: [...(prev.messages ?? []), newMessage],
@@ -58,7 +64,7 @@ export function useChat({
         },
       );
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, testMode],
   );
 
   const runSingleStep = useCallback(
@@ -80,13 +86,17 @@ export function useChat({
             : { interruptBefore: ["tools"] }),
         });
       } else {
+        const metadata = testMode ? { testMode: true } : undefined;
         stream.submit(
-          { messages },
+          {
+            messages,
+            ...(metadata ? { metadata } : {}),
+          },
           { config: activeAssistant?.config, interruptBefore: ["tools"] },
         );
       }
     },
-    [stream, activeAssistant?.config],
+    [stream, activeAssistant?.config, testMode],
   );
 
   const setFiles = useCallback(
@@ -134,6 +144,7 @@ export function useChat({
     isLoading: stream.isLoading,
     isThreadLoading: stream.isThreadLoading,
     interrupt: stream.interrupt,
+    error: stream.error,
     getMessagesMetadata: stream.getMessagesMetadata,
     sendMessage,
     runSingleStep,

@@ -8,7 +8,7 @@ import { useQueryState } from "nuqs";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Plus, Loader2, Braces } from "lucide-react";
+import { Plus, Loader2, Braces, X, PenBoxIcon } from "lucide-react";
 import { toast } from "sonner";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -37,31 +37,45 @@ import {
   PopoverContent,
   PopoverAnchor,
 } from "@/components/ui/popover";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { DeepAgentChatInterface } from "@/features/agent-chat";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { DeepAgentChatBreadcrumb } from "@/features/chat/components/breadcrumb";
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
-import { BraceCard } from "./components/brace-card";
+import { BraceAgentState, BraceCard } from "./components/brace-card";
 import { cn } from "@/lib/utils";
 import { useMCPContext } from "@/providers/MCP";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ClientProvider } from "../agent-chat/providers/ClientProvider";
+import {
+  ChatProvider,
+  useChatContext,
+} from "../agent-chat/providers/ChatProvider";
+import { ChatInterface } from "../agent-chat/components/ChatInterface";
+import { Agent } from "@/types/agent";
+import { useStream } from "@langchain/langgraph-sdk/react";
+import { createClient } from "@/lib/client";
+import { Button } from "@/components/ui/button";
+import { formatUnknownError } from "@/lib/errors";
 
-export function EditorPageContent(): React.ReactNode {
+interface EditorPageContentProps {
+  assistant: Agent | null;
+}
+
+function EditorPageContentComponent(
+  props: EditorPageContentProps,
+): React.ReactNode {
   const router = useRouter();
   const { session } = useAuthContext();
   const { agents, refreshAgents } = useAgentsContext();
   const { tools } = useMCPContext();
-  const deployments = getDeployments();
+  const testChatContext = useChatContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [_newAgentEditor, setNewAgentEditor] = useQueryState("new");
-  const [_threadId, setThreadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useQueryState("threadId");
 
   const [deploymentId, setDeploymentId] = useDeployment();
 
@@ -95,12 +109,24 @@ export function EditorPageContent(): React.ReactNode {
     subAgent: SubAgent;
     index: number;
   } | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
+  const [testMode, setTestMode] = useState(true);
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [braceOpen, setBraceOpen] = useState(false);
+
+  const client = useMemo(() => {
+    if (!session?.accessToken || !deploymentId) return undefined;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session?.accessToken]);
+
+  const braceAgentStream = useStream<BraceAgentState>({
+    assistantId: "brace_agent",
+    client: client,
+    reconnectOnMount: true,
+    defaultHeaders: { "x-auth-scheme": "langsmith" },
+  });
 
   // Track first visit to editor page for glow effect
   const [hasVisitedEditor, setHasVisitedEditor] = useLocalStorage(
@@ -144,10 +170,24 @@ export function EditorPageContent(): React.ReactNode {
     );
   }, [agents, agentId, deploymentId]);
 
-  const selectedDeployment = useMemo(
-    () => deployments.find((d) => d.id === deploymentId),
-    [deploymentId, deployments],
-  );
+  const agentDescription = useMemo(() => {
+    if (!selectedAgent) return null;
+    const rawDescription = String(
+      (selectedAgent.metadata as any)?.description || "",
+    );
+    if (rawDescription.length <= 75) {
+      return {
+        display: rawDescription,
+        full: rawDescription,
+        truncated: false,
+      } as const;
+    }
+    return {
+      display: `${rawDescription.slice(0, 75)}…`,
+      full: rawDescription,
+      truncated: true,
+    } as const;
+  }, [selectedAgent]);
 
   useEffect(() => {
     if (selectedAgent?.name) {
@@ -302,7 +342,7 @@ export function EditorPageContent(): React.ReactNode {
   // no-op
 
   return (
-    <div className="flex h-screen flex-col gap-4 bg-gray-50 p-4">
+    <div className="relative flex h-screen flex-col gap-4 bg-gray-50 p-4">
       {/* Page header with title/description and actions */}
       {selectedAgent && (
         <div className="flex items-center justify-between px-1">
@@ -313,11 +353,39 @@ export function EditorPageContent(): React.ReactNode {
               placeholder="Agent name..."
               className="w-full truncate border-none bg-transparent text-[28px] leading-snug font-bold text-gray-900 outline-none focus:outline-none"
             />
-            <div className="mt-0.5 truncate text-sm text-gray-600">
-              {(selectedAgent.metadata as any)?.description || ""}
-            </div>
+            {agentDescription?.full &&
+              (agentDescription.truncated ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="mt-0.5 truncate text-sm text-gray-600">
+                      {agentDescription.display}
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-sm">{agentDescription.full}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <div className="mt-0.5 truncate text-sm text-gray-600">
+                  {agentDescription.display}
+                </div>
+              ))}
           </div>
           <div className="flex items-center gap-2">
+            <div className="mr-3 flex items-center gap-2 text-sm text-gray-700">
+              <Switch
+                id="editor-test-mode"
+                checked={testMode}
+                onCheckedChange={(value) => setTestMode(Boolean(value))}
+                aria-label="Toggle test mode"
+              />
+              <label
+                htmlFor="editor-test-mode"
+                className="cursor-pointer"
+              >
+                Test Mode
+              </label>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -356,342 +424,389 @@ export function EditorPageContent(): React.ReactNode {
               {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
               {isSaving ? "Saving..." : "Save Changes"}
             </button>
-            <TooltipIconButton
-              size="default"
-              variant="ghost"
-              aria-label={braceOpen ? "Hide Brace Agent" : "Expand Brace Agent"}
-              tooltip={braceOpen ? "Hide Brace Agent" : "Expand Brace Agent"}
-              onClick={() => setBraceOpen(!braceOpen)}
-              className="h-9 w-9 bg-purple-100 text-purple-700 hover:bg-purple-200"
-            >
-              <Braces className="h-4 w-4" />
-            </TooltipIconButton>
           </div>
         </div>
       )}
       {/* Main content grid: left side (2 rows) + right side (full height) */}
-      <div
-        className={cn(
-          "grid min-h-0 min-w-0 flex-1 gap-4",
-          braceOpen ? "grid-cols-[1fr_600px]" : "grid-cols-1",
-        )}
-      >
-        {/* Left side: Top row + Instructions row */}
+      <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 gap-4">
         <div className="flex min-h-0 min-w-0 flex-col gap-4">
-          {/* Top process sections */}
-          <div className="flex flex-wrap gap-4">
-            {/* Triggers (Main Agent) */}
-            {showTriggersTab !== false && (
-              <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-                  <div className="text-sm font-semibold text-gray-700">
-                    Triggers
+          {testMode ? (
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                {agentId && deploymentId && session?.accessToken ? (
+                  <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
+                    <ChatInterface
+                      assistant={props.assistant}
+                      empty={false}
+                      skeleton={false}
+                      controls={
+                        <Button
+                          disabled={!threadId}
+                          onClick={() => setThreadId(null)}
+                        >
+                          <PenBoxIcon className="size-3" />
+                          New Thread
+                        </Button>
+                      }
+                      testMode={testMode}
+                      onTestFeedback={() => setBraceOpen(true)}
+                    />
                   </div>
-                  <Popover>
-                    <PopoverTrigger asChild>
+                ) : (
+                  <div className="flex h-full items-center justify-center p-6 text-sm text-gray-500">
+                    Select an agent to test
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-4">
+                {showTriggersTab !== false && (
+                  <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+                      <div className="text-sm font-semibold text-gray-700">
+                        Triggers
+                      </div>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <TooltipIconButton
+                            size="sm"
+                            variant="ghost"
+                            aria-label="Add trigger"
+                            tooltip="Add trigger"
+                            className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </TooltipIconButton>
+                        </PopoverTrigger>
+                        <PopoverAnchor className="block h-0 w-0" />
+                        <PopoverContent
+                          align="start"
+                          sideOffset={6}
+                          className="max-w-[95vw] min-w-[600px] p-0"
+                        >
+                          <TriggersAddPopoverContent
+                            groupedTriggers={groupedTriggers}
+                            form={triggersForm}
+                            reloadTriggers={async () => {
+                              if (!session?.accessToken || !selectedAgent)
+                                return;
+                              try {
+                                const [t, r] = await Promise.all([
+                                  listTriggers(session.accessToken),
+                                  listUserTriggers(session.accessToken),
+                                ]);
+                                setTriggers(t);
+                                setRegistrations(r);
+                                const ids = await listAgentTriggers(
+                                  session.accessToken,
+                                  selectedAgent.assistant_id,
+                                );
+                                triggersForm.setValue("triggerIds", ids);
+                              } catch (error) {
+                                console.error(
+                                  "Failed to reload triggers:",
+                                  error,
+                                );
+                              }
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
+                      <SelectedTriggersStrip
+                        groupedTriggers={groupedTriggers}
+                        form={triggersForm}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+                    <div className="text-sm font-semibold text-gray-700">
+                      Tools
+                    </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <TooltipIconButton
+                          size="sm"
+                          variant="ghost"
+                          aria-label="Add tool"
+                          tooltip="Add tool"
+                          className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </TooltipIconButton>
+                      </PopoverTrigger>
+                      <PopoverAnchor className="block h-0 w-0" />
+                      <PopoverContent
+                        align="start"
+                        sideOffset={6}
+                        className="max-w-[95vw] min-w-[600px] p-0"
+                      >
+                        <ToolsAddPopoverContent toolsForm={toolsForm} />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
+                    <MainAgentToolsDropdown
+                      toolsForm={toolsForm}
+                      hideHeader
+                      hideTitle
+                    />
+                  </div>
+                </div>
+
+                {selectedAgent && (
+                  <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
+                      <div className="text-sm font-semibold text-gray-700">
+                        Subagents
+                      </div>
                       <TooltipIconButton
                         size="sm"
                         variant="ghost"
-                        aria-label="Add trigger"
-                        tooltip="Add trigger"
-                        className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
+                        aria-label="Add sub-agent"
+                        tooltip="Add sub-agent"
+                        className="h-7 w-7 text-gray-600 hover:bg-gray-100"
+                        onClick={() => {
+                          setEditingSubAgent(null);
+                          setSubAgentSheetOpen(true);
+                        }}
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </TooltipIconButton>
-                    </PopoverTrigger>
-                    <PopoverAnchor className="block h-0 w-0" />
-                    <PopoverContent
-                      align="start"
-                      sideOffset={6}
-                      className="max-w-[95vw] min-w-[600px] p-0"
-                    >
-                      <TriggersAddPopoverContent
-                        groupedTriggers={groupedTriggers}
-                        form={triggersForm}
-                        reloadTriggers={async () => {
-                          if (!session?.accessToken || !selectedAgent) return;
-                          try {
-                            const [t, r] = await Promise.all([
-                              listTriggers(session.accessToken),
-                              listUserTriggers(session.accessToken),
-                            ]);
-                            setTriggers(t);
-                            setRegistrations(r);
-                            const ids = await listAgentTriggers(
-                              session.accessToken,
-                              selectedAgent.assistant_id,
-                            );
-                            triggersForm.setValue("triggerIds", ids);
-                          } catch (error) {
-                            console.error("Failed to reload triggers:", error);
-                          }
+                    </div>
+                    <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
+                      <SubagentsList
+                        subAgents={
+                          (selectedAgent.config?.configurable
+                            ?.subagents as SubAgent[]) || []
+                        }
+                        selectedIndex={
+                          currentEditTarget?.type === "subagent"
+                            ? currentEditTarget.index
+                            : null
+                        }
+                        onSelect={(index) => {
+                          const subAgents =
+                            (selectedAgent.config?.configurable
+                              ?.subagents as SubAgent[]) || [];
+                          const sa = subAgents[index];
+                          if (!sa) return;
+                          setCurrentEditTarget({
+                            type: "subagent",
+                            subAgent: sa,
+                            index,
+                          });
+                          setEditingSubAgent({ subAgent: sa, index });
+                          setSubAgentSheetOpen(true);
                         }}
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
-                  <SelectedTriggersStrip
-                    groupedTriggers={groupedTriggers}
-                    form={triggersForm}
-                  />
-                </div>
-              </div>
-            )}
+                    </div>
+                    <SubAgentSheet
+                      open={subAgentSheetOpen}
+                      onOpenChange={(open) => {
+                        setSubAgentSheetOpen(open);
+                        if (!open) setEditingSubAgent(null);
+                      }}
+                      editingSubAgent={editingSubAgent}
+                      onSubmit={(newSubAgent) => {
+                        if (!selectedAgent) return;
+                        const currentSubAgents =
+                          (selectedAgent.config?.configurable
+                            ?.subagents as SubAgent[]) || [];
+                        let updatedSubAgents: SubAgent[];
+                        let targetIndex: number;
+                        if (editingSubAgent) {
+                          updatedSubAgents = currentSubAgents.map((sa, idx) =>
+                            idx === editingSubAgent.index ? newSubAgent : sa,
+                          );
+                          targetIndex = editingSubAgent.index;
+                        } else {
+                          updatedSubAgents = [...currentSubAgents, newSubAgent];
+                          targetIndex = updatedSubAgents.length - 1;
+                        }
+                        if (selectedAgent.config?.configurable) {
+                          selectedAgent.config.configurable.subagents =
+                            updatedSubAgents;
+                        }
+                        setCurrentEditTarget({
+                          type: "subagent",
+                          subAgent: newSubAgent,
+                          index: targetIndex,
+                        });
+                        setEditingSubAgent(null);
+                        toast.success(
+                          `${editingSubAgent ? "Updated" : "Created"} ${newSubAgent.name} - ready to edit!`,
+                        );
+                      }}
+                      onDelete={(index) => {
+                        if (!selectedAgent) return;
+                        const currentSubAgents =
+                          (selectedAgent.config?.configurable
+                            ?.subagents as SubAgent[]) || [];
+                        const deletedSubAgent = currentSubAgents[index];
+                        const updatedSubAgents = currentSubAgents.filter(
+                          (_, idx) => idx !== index,
+                        );
 
-            {/* Tools (Current target; default main) */}
-            <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-                <div className="text-sm font-semibold text-gray-700">Tools</div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <TooltipIconButton
-                      size="sm"
-                      variant="ghost"
-                      aria-label="Add tool"
-                      tooltip="Add tool"
-                      className="ml-auto h-7 w-7 text-gray-600 hover:bg-gray-100"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </TooltipIconButton>
-                  </PopoverTrigger>
-                  <PopoverAnchor className="block h-0 w-0" />
-                  <PopoverContent
-                    align="start"
-                    sideOffset={6}
-                    className="max-w-[95vw] min-w-[600px] p-0"
-                  >
-                    <ToolsAddPopoverContent toolsForm={toolsForm} />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
-                <MainAgentToolsDropdown
-                  toolsForm={toolsForm}
-                  hideHeader
-                  hideTitle
-                />
-              </div>
-            </div>
+                        if (selectedAgent.config?.configurable) {
+                          selectedAgent.config.configurable.subagents =
+                            updatedSubAgents;
+                        }
 
-            {/* Subagents (list with tools) */}
-            {selectedAgent && (
-              <div className="flex h-48 min-w-[320px] flex-1 flex-col rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-gray-200 px-3 py-2">
-                  <div className="text-sm font-semibold text-gray-700">
-                    Subagents
+                        if (
+                          currentEditTarget?.type === "subagent" &&
+                          currentEditTarget.index === index
+                        ) {
+                          setCurrentEditTarget({
+                            type: "main",
+                            agent: selectedAgent,
+                          });
+                        } else if (
+                          currentEditTarget?.type === "subagent" &&
+                          currentEditTarget.index > index
+                        ) {
+                          setCurrentEditTarget({
+                            ...currentEditTarget,
+                            index: currentEditTarget.index - 1,
+                          });
+                        }
+
+                        setEditingSubAgent(null);
+                        toast.success(
+                          `Deleted ${deletedSubAgent?.name || "subagent"}`,
+                        );
+                      }}
+                    />
                   </div>
-                  <TooltipIconButton
-                    size="sm"
-                    variant="ghost"
-                    aria-label="Add sub-agent"
-                    tooltip="Add sub-agent"
-                    className="h-7 w-7 text-gray-600 hover:bg-gray-100"
-                    onClick={() => {
-                      setEditingSubAgent(null);
-                      setSubAgentSheetOpen(true);
-                    }}
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                  </TooltipIconButton>
-                </div>
-                <div className="min-h-0 flex-1 overflow-auto px-3 pt-3 pb-6">
-                  <SubagentsList
-                    subAgents={
-                      (selectedAgent.config?.configurable
-                        ?.subagents as SubAgent[]) || []
-                    }
-                    selectedIndex={
-                      currentEditTarget?.type === "subagent"
-                        ? currentEditTarget.index
-                        : null
-                    }
-                    onSelect={(index) => {
-                      const subAgents =
-                        (selectedAgent.config?.configurable
-                          ?.subagents as SubAgent[]) || [];
-                      const sa = subAgents[index];
-                      if (!sa) return;
-                      setCurrentEditTarget({
-                        type: "subagent",
-                        subAgent: sa,
-                        index,
-                      });
-                      setEditingSubAgent({ subAgent: sa, index });
-                      setSubAgentSheetOpen(true);
-                    }}
-                  />
-                </div>
-                <SubAgentSheet
-                  open={subAgentSheetOpen}
-                  onOpenChange={(open) => {
-                    setSubAgentSheetOpen(open);
-                    if (!open) setEditingSubAgent(null);
-                  }}
-                  editingSubAgent={editingSubAgent}
-                  onSubmit={(newSubAgent) => {
-                    if (!selectedAgent) return;
-                    const currentSubAgents =
-                      (selectedAgent.config?.configurable
-                        ?.subagents as SubAgent[]) || [];
-                    let updatedSubAgents: SubAgent[];
-                    let targetIndex: number;
-                    if (editingSubAgent) {
-                      // Update existing subagent
-                      updatedSubAgents = currentSubAgents.map((sa, idx) =>
-                        idx === editingSubAgent.index ? newSubAgent : sa,
-                      );
-                      targetIndex = editingSubAgent.index;
-                    } else {
-                      // Create new subagent
-                      updatedSubAgents = [...currentSubAgents, newSubAgent];
-                      targetIndex = updatedSubAgents.length - 1;
-                    }
-                    if (selectedAgent.config?.configurable) {
-                      selectedAgent.config.configurable.subagents =
-                        updatedSubAgents;
-                    }
-                    setCurrentEditTarget({
-                      type: "subagent",
-                      subAgent: newSubAgent,
-                      index: targetIndex,
-                    });
-                    setEditingSubAgent(null);
-                    toast.success(
-                      `${editingSubAgent ? "Updated" : "Created"} ${newSubAgent.name} - ready to edit!`,
-                    );
-                  }}
-                  onDelete={(index) => {
-                    if (!selectedAgent) return;
-                    const currentSubAgents =
-                      (selectedAgent.config?.configurable
-                        ?.subagents as SubAgent[]) || [];
-                    const deletedSubAgent = currentSubAgents[index];
-                    const updatedSubAgents = currentSubAgents.filter(
-                      (_, idx) => idx !== index,
-                    );
-
-                    if (selectedAgent.config?.configurable) {
-                      selectedAgent.config.configurable.subagents =
-                        updatedSubAgents;
-                    }
-
-                    // Reset edit target to main if we were editing the deleted subagent
-                    if (
-                      currentEditTarget?.type === "subagent" &&
-                      currentEditTarget.index === index
-                    ) {
-                      setCurrentEditTarget({
-                        type: "main",
-                        agent: selectedAgent,
-                      });
-                    } else if (
-                      currentEditTarget?.type === "subagent" &&
-                      currentEditTarget.index > index
-                    ) {
-                      // Adjust index if we were editing a subagent after the deleted one
-                      setCurrentEditTarget({
-                        ...currentEditTarget,
-                        index: currentEditTarget.index - 1,
-                      });
-                    }
-
-                    setEditingSubAgent(null);
-                    toast.success(
-                      `Deleted ${deletedSubAgent?.name || "subagent"}`,
-                    );
-                  }}
-                />
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Bottom: Always-visible Instructions editor for main agent */}
-          {selectedAgent && (
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <div className="px-1 pb-2 text-sm font-semibold text-gray-700">
-                Instructions
-              </div>
-              <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="h-full min-w-0 overflow-y-auto">
-                  <AgentConfig
-                    key={`${selectedAgent.assistant_id}-${chatVersion}`}
-                    agent={selectedAgent}
-                    editTarget={{ type: "main", agent: selectedAgent }}
-                    onAgentUpdated={handleAgentUpdated}
-                    hideTopTabs={true}
-                    hideTitleSection={true}
-                    externalTitle={headerTitle}
-                    onExternalTitleChange={setHeaderTitle}
-                    saveRef={saveRef}
-                    toolsFormExternal={toolsForm}
-                    triggersFormExternal={triggersForm}
-                    view={"instructions"}
-                    forceMainInstructionsView
-                  />
+              {selectedAgent && (
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+                  <div className="px-1 pb-2 text-sm font-semibold text-gray-700">
+                    Instructions
+                  </div>
+                  <div className="min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                    <div className="h-full min-w-0 overflow-y-auto">
+                      <AgentConfig
+                        key={`${selectedAgent.assistant_id}-${chatVersion}`}
+                        agent={selectedAgent}
+                        editTarget={{ type: "main", agent: selectedAgent }}
+                        onAgentUpdated={handleAgentUpdated}
+                        hideTopTabs={true}
+                        hideTitleSection={true}
+                        externalTitle={headerTitle}
+                        onExternalTitleChange={setHeaderTitle}
+                        saveRef={saveRef}
+                        toolsFormExternal={toolsForm}
+                        triggersFormExternal={triggersForm}
+                        view={"instructions"}
+                        forceMainInstructionsView
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
-
-        {/* Right side: Brace card */}
-        {braceOpen && selectedAgent && (
-          <BraceCard
-            onClose={() => setBraceOpen(false)}
-            assistant={selectedAgent}
-            tools={tools.map((t) => ({
-              name: t.name,
-              default_interrupt: !!t.default_interrupt,
-            }))}
-            triggers={triggers || []}
-            enabledTriggerIds={triggersForm.getValues("triggerIds") || []}
-            onAgentUpdated={async () => {
-              await refreshAgents();
-              setChatVersion((v) => v + 1);
-            }}
-          />
-        )}
       </div>
-
-      {/* Slide-out chat on the right to test the agent */}
-      <Sheet
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-      >
-        <SheetContent
-          side="right"
-          className="w-[min(90vw,520px)] p-0 sm:max-w-lg"
+      <div className="fixed right-6 bottom-6 z-50 flex flex-col items-end gap-3">
+        <Popover
+          open={braceOpen}
+          onOpenChange={setBraceOpen}
         >
-          <SheetHeader className="border-b px-4 py-2">
-            <SheetTitle className="text-sm font-semibold">Use agent</SheetTitle>
-          </SheetHeader>
-          {agentId && deploymentId && session?.accessToken ? (
-            <div className="flex h-[calc(100vh-4rem)] min-h-0 flex-1 flex-col">
-              <DeepAgentChatInterface
-                key={`chat-${agentId}-${deploymentId}-${chatVersion}`}
-                assistant={
-                  agents.find((a) => a.assistant_id === agentId) ?? null
-                }
-                deploymentUrl={selectedDeployment?.deploymentUrl || ""}
-                accessToken={session.accessToken || ""}
-                optimizerDeploymentUrl={selectedDeployment?.deploymentUrl || ""}
-                optimizerAccessToken={session.accessToken || ""}
-                mode="oap"
-                SidebarTrigger={SidebarTrigger}
-                DeepAgentChatBreadcrumb={DeepAgentChatBreadcrumb}
-                view="chat"
-                hideInternalToggle={true}
-                hideSidebar={true}
-              />
-            </div>
-          ) : (
-            <div className="p-4 text-sm text-gray-500">
-              Select an agent to test
-            </div>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={braceOpen ? "Hide Brace Agent" : "Open Brace Agent"}
+              aria-expanded={braceOpen}
+              className={cn(
+                "flex h-14 w-14 items-center justify-center rounded-full border border-purple-500 bg-purple-100/70 text-purple-700 shadow-lg backdrop-blur-sm transition-transform duration-200 hover:scale-105 hover:bg-purple-100/90 hover:text-purple-800 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:outline-none",
+                braceOpen ? "ring-2 ring-purple-400" : "",
+              )}
+            >
+              {braceOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Braces className="h-5 w-5" />
+              )}
+            </button>
+          </PopoverTrigger>
+          {selectedAgent && (
+            <PopoverContent
+              side="top"
+              align="end"
+              sideOffset={16}
+              className="max-h-[80vh] w-[calc(100vw-3rem)] p-0 sm:w-[580px]"
+            >
+              <div className="h-[70vh] w-full">
+                <BraceCard
+                  onClose={() => setBraceOpen(false)}
+                  assistant={selectedAgent}
+                  tools={tools.map((t) => ({
+                    name: t.name,
+                    default_interrupt: !!t.default_interrupt,
+                  }))}
+                  triggers={triggers || []}
+                  enabledTriggerIds={triggersForm.getValues("triggerIds") || []}
+                  onAgentUpdated={async () => {
+                    await refreshAgents();
+                    setChatVersion((v) => v + 1);
+                  }}
+                  testThreadMessages={testChatContext.messages}
+                  testThreadError={
+                    testChatContext.error
+                      ? formatUnknownError(testChatContext.error)
+                      : undefined
+                  }
+                  stream={braceAgentStream}
+                />
+              </div>
+            </PopoverContent>
           )}
-        </SheetContent>
-      </Sheet>
+        </Popover>
+      </div>
     </div>
+  );
+}
+
+export function EditorPageContent() {
+  const { agents } = useAgentsContext();
+  const { session } = useAuthContext();
+  const deployments = getDeployments();
+  const [deploymentId] = useDeployment();
+  const [agentId] = useQueryState("agentId");
+
+  const selectedDeployment = useMemo(
+    () => deployments.find((d) => d.id === deploymentId),
+    [deploymentId, deployments],
+  );
+  const deploymentUrl = selectedDeployment?.deploymentUrl ?? "";
+  const accessToken = session?.accessToken || "";
+
+  const selectedAssistant =
+    agents.find((a) => a.assistant_id === agentId) ?? null;
+
+  return (
+    <ClientProvider
+      deploymentUrl={deploymentUrl}
+      accessToken={accessToken}
+      optimizerUrl={deploymentUrl}
+      optimizerAccessToken={accessToken}
+    >
+      <ChatProvider
+        activeAssistant={selectedAssistant}
+        testMode={true}
+      >
+        <EditorPageContentComponent assistant={selectedAssistant} />
+      </ChatProvider>
+    </ClientProvider>
   );
 }

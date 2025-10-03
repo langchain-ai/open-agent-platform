@@ -1,6 +1,4 @@
 "use client";
-
-import { useState } from "react";
 import { ChatInterface } from "./components/ChatInterface";
 import { ChatProvider } from "./providers/ChatProvider";
 import { DeepAgentChatConfig } from "./types/config";
@@ -23,9 +21,8 @@ function DeepAgentChatInterfaceInternal({
   thread,
   empty,
   skeleton,
+  testMode,
 }: DeepAgentChatConfig) {
-  const [debugMode, setDebugMode] = useState(false);
-
   return (
     <ClientProvider
       deploymentUrl={deploymentUrl}
@@ -37,12 +34,11 @@ function DeepAgentChatInterfaceInternal({
         activeAssistant={assistant}
         onHistoryRevalidate={onHistoryRevalidate}
         thread={thread}
+        testMode={testMode}
       >
         <div className="oap-deep-agent-chat flex h-full w-full gap-4 overflow-hidden">
           <ChatInterface
             assistant={assistant}
-            debugMode={debugMode}
-            setDebugMode={setDebugMode}
             view={view}
             onViewChange={onViewChange}
             onInput={onInput}
@@ -51,6 +47,7 @@ function DeepAgentChatInterfaceInternal({
             skeleton={skeleton}
             controls={controls}
             banner={banner}
+            testMode={Boolean(testMode)}
           />
         </div>
       </ChatProvider>

@@ -10,6 +10,7 @@ interface ChatProviderProps {
   activeAssistant: Assistant | null;
   onHistoryRevalidate?: () => void;
   thread?: UseStreamThread<StateType>;
+  testMode?: boolean;
 }
 
 export function ChatProvider({
@@ -17,8 +18,14 @@ export function ChatProvider({
   activeAssistant,
   onHistoryRevalidate,
   thread,
+  testMode,
 }: ChatProviderProps) {
-  const chat = useChat({ activeAssistant, onHistoryRevalidate, thread });
+  const chat = useChat({
+    activeAssistant,
+    onHistoryRevalidate,
+    thread,
+    testMode,
+  });
   return <ChatContext.Provider value={chat}>{children}</ChatContext.Provider>;
 }
 

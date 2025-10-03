@@ -26,4 +26,5 @@ export interface DeepAgentChatConfig {
   skeleton?: React.ReactNode;
   thread?: UseStreamThread<StateType>;
   onHistoryRevalidate?: () => void;
+  testMode?: boolean;
 }
