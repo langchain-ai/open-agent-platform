@@ -73,6 +73,8 @@ export default function useInterruptedActions({
   const [hasAddedResponse, setHasAddedResponse] = React.useState(false);
   const [acceptAllowed, setAcceptAllowed] = React.useState(false);
 
+  const interruptId = interrupt?.id;
+
   React.useEffect(() => {
     try {
       if (!interrupt) return;
@@ -93,7 +95,7 @@ export default function useInterruptedActions({
       setAcceptAllowed(false);
       console.error("Error formatting and setting human response state", e);
     }
-  }, [interrupt]);
+  }, [interruptId]);
 
   const handleSubmit = (
     e?:

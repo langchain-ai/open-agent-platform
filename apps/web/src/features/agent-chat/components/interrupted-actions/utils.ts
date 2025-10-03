@@ -169,27 +169,12 @@ export function createDefaultHumanResponse(
           stringValue = JSON.stringify(v, null);
         }
 
-        if (
-          !initialHumanInterruptEditValue.current ||
-          !(k in initialHumanInterruptEditValue.current)
-        ) {
-          initialHumanInterruptEditValue.current = {
-            ...initialHumanInterruptEditValue.current,
-            [k]: stringValue,
-          };
-        } else if (
-          k in initialHumanInterruptEditValue.current &&
-          initialHumanInterruptEditValue.current[k] !== stringValue
-        ) {
-          console.error(
-            "KEY AND VALUE FOUND IN initialHumanInterruptEditValue.current THAT DOES NOT MATCH THE ACTION REQUEST",
-            {
-              key: k,
-              value: stringValue,
-              expectedValue: initialHumanInterruptEditValue.current[k],
-            },
-          );
-        }
+        // Always set the initial value - this handles the case where multiple
+        // interrupts in a carousel each have their own refs
+        initialHumanInterruptEditValue.current = {
+          ...initialHumanInterruptEditValue.current,
+          [k]: stringValue,
+        };
       });
       responses.push({
         type: "edit",

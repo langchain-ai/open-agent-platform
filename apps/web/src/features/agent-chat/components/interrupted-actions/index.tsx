@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, MessageSquare } from "lucide-react";
 import useInterruptedActions from "./hooks/use-interrupted-actions";
 import { ThreadIdCopyable } from "./components/thread-id";
 import { InboxItemInput } from "./components/inbox-item-input";
@@ -25,6 +25,70 @@ interface ThreadActionsViewProps {
   externalResponses?: Map<number, { type: string; args: any }>;
 }
 
+// Wrapper component for each interrupt item in carousel
+function InterruptItemWrapper({
+  interruptItem,
+  index,
+  isLoading,
+  onSubmit,
+}: {
+  interruptItem: HumanInterrupt;
+  index: number;
+  isLoading: boolean;
+  onSubmit: (response: { type: string; args: any }) => void;
+}) {
+  // Create a mock interrupt object for this single item
+  const mockInterrupt = {
+    value: [interruptItem],
+  } as Interrupt;
+
+  const actions = useInterruptedActions({
+    interrupt: mockInterrupt,
+  });
+
+  return (
+    <InboxItemInput
+      isLoading={isLoading}
+      acceptAllowed={interruptItem?.config?.allow_accept ?? false}
+      hasEdited={actions.hasEdited}
+      hasAddedResponse={actions.hasAddedResponse}
+      interruptValue={interruptItem}
+      humanResponse={actions.humanResponse}
+      initialValues={actions.initialHumanInterruptEditValue.current || {}}
+      setHumanResponse={actions.setHumanResponse}
+      supportsMultipleMethods={actions.supportsMultipleMethods}
+      setSelectedSubmitType={actions.setSelectedSubmitType}
+      setHasAddedResponse={actions.setHasAddedResponse}
+      setHasEdited={actions.setHasEdited}
+      handleSubmit={(e) => {
+        e?.preventDefault();
+        const selectedType = actions.selectedSubmitType;
+        const response = actions.humanResponse.find(
+          (r) => r.type === selectedType,
+        );
+
+        if (!response) {
+          toast.error("No response selected.");
+          return;
+        }
+
+        const args = response.args;
+        if (
+          response.type === "edit" &&
+          "acceptAllowed" in response &&
+          response.acceptAllowed &&
+          !("editsMade" in response && response.editsMade)
+        ) {
+          // Convert to accept if no edits were made
+          onSubmit({ type: "accept", args });
+        } else {
+          onSubmit({ type: response.type, args });
+        }
+      }}
+    />
+  );
+}
+
 export function ThreadActionsView({
   interrupt,
   threadId,
@@ -43,9 +107,11 @@ export function ThreadActionsView({
 
   const threadTitle = getInterruptTitle(interrupt);
 
-  // Initialize the hook for the current interrupt
+  // For single interrupt, use the hook
+  // For multiple interrupts, we'll manage state locally
+  const singleInterrupt = !hasMultipleInterrupts ? interrupt : null;
   const actions = useInterruptedActions({
-    interrupt,
+    interrupt: singleInterrupt!,
   });
 
   // Check if all interrupts allow accept (for Accept All button)
@@ -71,7 +137,7 @@ export function ThreadActionsView({
     if (onCurrentInterruptChange && interruptValue) {
       onCurrentInterruptChange(current, interruptValue);
     }
-  }, [current, interruptValue, onCurrentInterruptChange]);
+  }, [current, onCurrentInterruptChange]);
 
   // Handle Accept All
   const handleAcceptAll = useCallback(() => {
@@ -218,73 +284,50 @@ export function ThreadActionsView({
                       <div className="space-y-3">
                         {/* Show addressed status if already responded */}
                         {isAddressed && (
-                          <div className="flex items-start gap-2 text-sm text-green-600">
-                            <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                            <div className="text-green-700">
-                              {addressedResponse?.type === "response"
-                                ? addressedResponse.args
-                                : `${addressedResponse?.type === "accept" ? "Accepted" : "Edited"}`}
-                            </div>
+                          <div
+                            className={`flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${
+                              addressedResponse?.type === "response"
+                                ? "border-gray-200 bg-gray-50 text-gray-700"
+                                : "border-green-200 bg-green-50 text-green-700"
+                            }`}
+                          >
+                            {addressedResponse?.type === "accept" ? (
+                              <>
+                                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                                <div className="font-medium">Accepted</div>
+                              </>
+                            ) : addressedResponse?.type === "response" ? (
+                              <>
+                                <MessageSquare className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                                <div>
+                                  <div className="mb-0.5 text-xs font-medium">
+                                    Response provided:
+                                  </div>
+                                  <div className="text-gray-800">
+                                    {addressedResponse.args}
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                                <div className="font-medium">Edited</div>
+                              </>
+                            )}
                           </div>
                         )}
 
-                        {/* Show InboxItemInput for accept/edit buttons */}
-                        <InboxItemInput
+                        {/* Show InboxItemInput for each interrupt */}
+                        <InterruptItemWrapper
+                          interruptItem={interruptItem}
+                          index={index}
                           isLoading={isLoading}
-                          acceptAllowed={
-                            interruptItem?.config?.allow_accept ?? false
-                          }
-                          hasEdited={actions.hasEdited}
-                          hasAddedResponse={actions.hasAddedResponse}
-                          interruptValue={interruptItem}
-                          humanResponse={actions.humanResponse}
-                          initialValues={
-                            actions.initialHumanInterruptEditValue.current || {}
-                          }
-                          setHumanResponse={actions.setHumanResponse}
-                          supportsMultipleMethods={
-                            actions.supportsMultipleMethods
-                          }
-                          setSelectedSubmitType={actions.setSelectedSubmitType}
-                          setHasAddedResponse={actions.setHasAddedResponse}
-                          setHasEdited={actions.setHasEdited}
-                          handleSubmit={(e) => {
-                            e?.preventDefault();
-                            const selectedType = actions.selectedSubmitType;
-                            const response = actions.humanResponse.find(
-                              (r) => r.type === selectedType,
-                            );
-
-                            if (!response) {
-                              toast.error("No response selected.");
-                              return;
-                            }
-
-                            const args = response.args;
-                            if (
-                              response.type === "edit" &&
-                              "acceptAllowed" in response &&
-                              response.acceptAllowed &&
-                              !("editsMade" in response && response.editsMade)
-                            ) {
-                              // Convert to accept if no edits were made
-                              const updatedResponse = { type: "accept", args };
-                              setAddressedInterrupts((prev) => {
-                                const updated = new Map(prev);
-                                updated.set(index, updatedResponse);
-                                return updated;
-                              });
-                            } else {
-                              setAddressedInterrupts((prev) => {
-                                const updated = new Map(prev);
-                                updated.set(index, {
-                                  type: response.type,
-                                  args,
-                                });
-                                return updated;
-                              });
-                            }
-
+                          onSubmit={(response) => {
+                            setAddressedInterrupts((prev) => {
+                              const updated = new Map(prev);
+                              updated.set(index, response);
+                              return updated;
+                            });
                             toast.success(`Interrupt ${index + 1} addressed.`, {
                               duration: 3000,
                             });
@@ -312,7 +355,23 @@ export function ThreadActionsView({
             </Button>
           )}
         </div>
-      ) : null}
+      ) : (
+        <InboxItemInput
+          isLoading={isLoading}
+          acceptAllowed={interruptValue?.config?.allow_accept ?? false}
+          hasEdited={actions.hasEdited}
+          hasAddedResponse={actions.hasAddedResponse}
+          interruptValue={interruptValue}
+          humanResponse={actions.humanResponse}
+          initialValues={actions.initialHumanInterruptEditValue.current || {}}
+          setHumanResponse={actions.setHumanResponse}
+          supportsMultipleMethods={actions.supportsMultipleMethods}
+          setSelectedSubmitType={actions.setSelectedSubmitType}
+          setHasAddedResponse={actions.setHasAddedResponse}
+          setHasEdited={actions.setHasEdited}
+          handleSubmit={actions.handleSubmit}
+        />
+      )}
     </div>
   );
 }
