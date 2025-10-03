@@ -99,12 +99,20 @@ export function ThreadActionsView({
   const { isLoading, sendHumanResponse } = useChatContext();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Get all interrupts from the interrupt value array
   const interrupts = (interrupt.value as any[]) || [];
   const hasMultipleInterrupts = interrupts.length > 1;
 
   const interruptValue = interrupts[current] as HumanInterrupt;
+
+  // Mark as initialized once we have the interrupt data
+  useEffect(() => {
+    if (interrupts.length > 0 && !isInitialized) {
+      setIsInitialized(true);
+    }
+  }, [interrupts.length, isInitialized]);
 
   const threadTitle = getInterruptTitle(interrupt);
 
@@ -221,6 +229,11 @@ export function ThreadActionsView({
     addressedInterrupts,
     sendHumanResponse,
   ]);
+
+  // Don't render until initialized to prevent flash
+  if (!isInitialized) {
+    return null;
+  }
 
   // Handle Valid Interrupted Threads
   return (
