@@ -109,7 +109,7 @@ function EditorPageContentComponent(
     subAgent: SubAgent;
     index: number;
   } | null>(null);
-  const [testMode, setTestMode] = useState(true);
+  const [testMode, setTestMode] = useState(false);
   const [chatVersion, setChatVersion] = useState(0);
   const [headerTitle, setHeaderTitle] = useState<string>("");
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
