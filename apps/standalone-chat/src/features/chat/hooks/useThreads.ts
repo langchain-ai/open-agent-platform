@@ -120,8 +120,8 @@ export function useThreads(props: {
       });
     },
     {
-      revalidateFirstPage: false,
-      revalidateOnFocus: false,
+      revalidateFirstPage: true,
+      revalidateOnFocus: true,
     }
   );
 }
