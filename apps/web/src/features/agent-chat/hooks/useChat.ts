@@ -144,6 +144,7 @@ export function useChat({
     isLoading: stream.isLoading,
     isThreadLoading: stream.isThreadLoading,
     interrupt: stream.interrupt,
+    error: stream.error,
     getMessagesMetadata: stream.getMessagesMetadata,
     sendMessage,
     runSingleStep,

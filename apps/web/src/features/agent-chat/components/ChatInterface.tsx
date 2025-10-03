@@ -18,6 +18,7 @@ import {
   Clock,
   Circle,
   FileIcon,
+  Braces,
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import type { TodoItem, ToolCall } from "../types";
@@ -28,6 +29,7 @@ import {
 } from "../utils";
 import { v4 as uuidv4 } from "uuid";
 import { useChatContext } from "../providers/ChatProvider";
+import { formatUnknownError } from "@/lib/errors";
 import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
 import { ThreadActionsView } from "./interrupted-actions";
@@ -51,6 +53,7 @@ interface ChatInterfaceProps {
   empty: React.ReactNode;
   skeleton: React.ReactNode;
   testMode?: boolean;
+  onTestFeedback?: () => void;
 }
 
 const getStatusIcon = (status: TodoItem["status"], className?: string) => {
@@ -91,6 +94,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     empty,
     skeleton,
     testMode = false,
+    onTestFeedback,
   }) => {
     const [threadId, setThreadId] = useQueryState("threadId");
     const [agentId] = useQueryState("agentId");
@@ -104,7 +108,9 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       ? view === "workflow"
       : isWorkflowView;
 
-    const debugMode = Boolean(testMode);
+    // TODO: This UI is not implemented. Don't enable until UI is enabled.
+    // const debugMode = Boolean(testMode);
+    const debugMode = false;
 
     useEffect(() => {
       const timeout = setTimeout(() => void textareaRef.current?.focus());
@@ -145,6 +151,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       isLoading,
       isThreadLoading,
       interrupt,
+      error,
       getMessagesMetadata,
       sendMessage,
       runSingleStep,
@@ -367,6 +374,16 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       });
     }, [messages, interrupt]);
 
+    const latestAIMessageId = useMemo(() => {
+      for (let i = processedMessages.length - 1; i >= 0; i -= 1) {
+        const message = processedMessages[i]?.message;
+        if (message?.type === "ai" && message.id) {
+          return message.id;
+        }
+      }
+      return null;
+    }, [processedMessages]);
+
     const toggle = !hideInternalToggle && (
       <div className="flex w-full justify-center">
         <div className="flex h-[24px] w-[134px] items-center gap-0 overflow-hidden rounded border border-[#D1D1D6] bg-white p-[3px] text-[12px] shadow-sm">
@@ -491,19 +508,54 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
             skeleton
           ) : (
             <>
-              {processedMessages.map((data, index) => (
-                <ChatMessage
-                  key={data.message.id}
-                  message={data.message}
-                  toolCalls={data.toolCalls}
-                  onRestartFromAIMessage={handleRestartFromAIMessage}
-                  onRestartFromSubTask={handleRestartFromSubTask}
-                  debugMode={debugMode}
-                  isLoading={isLoading}
-                  isLastMessage={index === processedMessages.length - 1}
-                  interrupt={interrupt}
-                />
-              ))}
+              {processedMessages.map((data, index) => {
+                const isLatestAIMessage =
+                  data.message.type === "ai" &&
+                  data.message.id === latestAIMessageId;
+
+                return (
+                  <Fragment key={data.message.id}>
+                    <ChatMessage
+                      message={data.message}
+                      toolCalls={data.toolCalls}
+                      onRestartFromAIMessage={handleRestartFromAIMessage}
+                      onRestartFromSubTask={handleRestartFromSubTask}
+                      debugMode={debugMode}
+                      isLoading={isLoading}
+                      isLastMessage={index === processedMessages.length - 1}
+                      interrupt={interrupt}
+                    />
+                    {error && isLatestAIMessage ? (
+                      <div className="mx-auto my-6 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm">
+                        <span className="font-medium">Error:</span>
+                        <span className="text-red-700">
+                          {formatUnknownError(error)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {testMode &&
+                      onTestFeedback &&
+                      isLatestAIMessage &&
+                      !isLoading && (
+                        <button
+                          type="button"
+                          onClick={onTestFeedback}
+                          className="group mt-3 flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-purple-200 bg-purple-50/80 px-3 py-2 text-left text-sm transition hover:border-purple-300 hover:bg-purple-100 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:outline-none"
+                        >
+                          <span className="text-gray-700 group-hover:text-gray-800">
+                            Not quite right? Ask Brace to revise this reply.
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1 text-purple-700 group-hover:text-purple-800">
+                            <Braces className="h-4 w-4" />
+                            <span className="text-xs font-medium tracking-wide uppercase">
+                              Open Brace
+                            </span>
+                          </span>
+                        </button>
+                      )}
+                  </Fragment>
+                );
+              })}
               {testMode &&
                 processedMessages.length === 0 &&
                 !isThreadLoading && (

@@ -8,7 +8,7 @@ import { useQueryState } from "nuqs";
 import { EditTarget } from "@/components/AgentHierarchyNav";
 import { AgentConfig } from "@/components/AgentConfig";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
-import { Plus, Loader2, Braces, X } from "lucide-react";
+import { Plus, Loader2, Braces, X, PenBoxIcon } from "lucide-react";
 import { toast } from "sonner";
 import { SubAgent } from "@/types/sub-agent";
 import { InitialInputs } from "./components/initial-inputs";
@@ -40,7 +40,7 @@ import {
 import { getDeployments, useDeployment } from "@/lib/environment/deployments";
 import { SubAgentSheet } from "./components/subagent-sheet";
 import { SubagentsList } from "./components/subagents-list";
-import { BraceCard } from "./components/brace-card";
+import { BraceAgentState, BraceCard } from "./components/brace-card";
 import { cn } from "@/lib/utils";
 import { useMCPContext } from "@/providers/MCP";
 import { Switch } from "@/components/ui/switch";
@@ -56,6 +56,10 @@ import {
 } from "../agent-chat/providers/ChatProvider";
 import { ChatInterface } from "../agent-chat/components/ChatInterface";
 import { Agent } from "@/types/agent";
+import { useStream } from "@langchain/langgraph-sdk/react";
+import { createClient } from "@/lib/client";
+import { Button } from "@/components/ui/button";
+import { formatUnknownError } from "@/lib/errors";
 
 interface EditorPageContentProps {
   assistant: Agent | null;
@@ -71,7 +75,7 @@ function EditorPageContentComponent(
   const testChatContext = useChatContext();
   const [agentId, setAgentId] = useQueryState("agentId");
   const [_newAgentEditor, setNewAgentEditor] = useQueryState("new");
-  const [_threadId, setThreadId] = useQueryState("threadId");
+  const [threadId, setThreadId] = useQueryState("threadId");
 
   const [deploymentId, setDeploymentId] = useDeployment();
 
@@ -111,6 +115,18 @@ function EditorPageContentComponent(
   const saveRef = React.useRef<(() => Promise<void>) | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [braceOpen, setBraceOpen] = useState(false);
+
+  const client = useMemo(() => {
+    if (!session?.accessToken || !deploymentId) return undefined;
+    return createClient(deploymentId, session.accessToken);
+  }, [deploymentId, session?.accessToken]);
+
+  const braceAgentStream = useStream<BraceAgentState>({
+    assistantId: "brace_agent",
+    client: client,
+    reconnectOnMount: true,
+    defaultHeaders: { "x-auth-scheme": "langsmith" },
+  });
 
   // Track first visit to editor page for glow effect
   const [hasVisitedEditor, setHasVisitedEditor] = useLocalStorage(
@@ -423,8 +439,17 @@ function EditorPageContentComponent(
                       assistant={props.assistant}
                       empty={false}
                       skeleton={false}
-                      controls={false}
+                      controls={
+                        <Button
+                          disabled={!threadId}
+                          onClick={() => setThreadId(null)}
+                        >
+                          <PenBoxIcon className="size-3" />
+                          New Thread
+                        </Button>
+                      }
                       testMode={testMode}
+                      onTestFeedback={() => setBraceOpen(true)}
                     />
                   </div>
                 ) : (
@@ -719,9 +744,9 @@ function EditorPageContentComponent(
               side="top"
               align="end"
               sideOffset={16}
-              className="max-h-[80vh] w-[calc(100vw-3rem)] p-0 sm:w-[380px]"
+              className="max-h-[80vh] w-[calc(100vw-3rem)] p-0 sm:w-[580px]"
             >
-              <div className="h-[70vh] max-h-[80vh] w-full sm:h-[520px]">
+              <div className="h-[70vh] w-full">
                 <BraceCard
                   onClose={() => setBraceOpen(false)}
                   assistant={selectedAgent}
@@ -736,6 +761,12 @@ function EditorPageContentComponent(
                     setChatVersion((v) => v + 1);
                   }}
                   testThreadMessages={testChatContext.messages}
+                  testThreadError={
+                    testChatContext.error
+                      ? formatUnknownError(testChatContext.error)
+                      : undefined
+                  }
+                  stream={braceAgentStream}
                 />
               </div>
             </PopoverContent>

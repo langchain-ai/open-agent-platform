@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { HelpCircle, Send, X, Braces, Loader2 } from "lucide-react";
 import {
   HoverCard,
@@ -9,9 +9,6 @@ import { useStream } from "@langchain/langgraph-sdk/react";
 import { v4 as uuidv4 } from "uuid";
 import type { Message, Assistant } from "@langchain/langgraph-sdk";
 import { extractStringFromMessageContent } from "@/features/agent-chat/utils";
-import { createClient } from "@/lib/client";
-import { useAuthContext } from "@/providers/Auth";
-import { useDeployment } from "@/lib/environment/deployments";
 import type { Trigger } from "@/types/triggers";
 import { BasicMarkdownText } from "@/components/ui/markdown-text";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +25,7 @@ interface BraceTrigger {
   description?: string;
 }
 
-type StateType = {
+export type BraceAgentState = {
   messages: Message[];
   tools: ToolWithDefaultInterruptConfig[];
   assistant: Assistant | null;
@@ -38,6 +35,7 @@ type StateType = {
   test_thread_messages: Message[];
   agent_config: DeepAgentConfiguration;
   agent_id: string | null;
+  test_thread_error: string | null;
 };
 
 interface BraceCardProps {
@@ -48,6 +46,8 @@ interface BraceCardProps {
   enabledTriggerIds: string[];
   testThreadMessages?: Message[];
   onAgentUpdated: () => void;
+  testThreadError?: string;
+  stream: ReturnType<typeof useStream<BraceAgentState>>;
 }
 
 export function BraceCard({
@@ -58,17 +58,12 @@ export function BraceCard({
   enabledTriggerIds,
   testThreadMessages = [],
   onAgentUpdated,
+  testThreadError,
+  stream,
 }: BraceCardProps): React.ReactNode {
   const [input, setInput] = useState("");
-  const { session } = useAuthContext();
-  const [deploymentId] = useDeployment();
   const [isFirstSubmit, setIsFirstSubmit] = useState(true);
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
-
-  const client = useMemo(() => {
-    if (!session?.accessToken || !deploymentId) return undefined;
-    return createClient(deploymentId, session.accessToken);
-  }, [deploymentId, session?.accessToken]);
 
   const isEditAgentToolMessage = (message: Message): boolean => {
     if (message.type !== "tool") return false;
@@ -115,13 +110,6 @@ export function BraceCard({
     return "no-op";
   };
 
-  const stream = useStream<StateType>({
-    assistantId: "brace_agent",
-    client: client,
-    reconnectOnMount: false,
-    defaultHeaders: { "x-auth-scheme": "langsmith" },
-  });
-
   useEffect(() => {
     const hasEditAgentToolMessage = stream.messages.some((message) => {
       if (!message.id || processedMessageIdsRef.current.has(message.id)) {
@@ -156,8 +144,9 @@ export function BraceCard({
       description: trigger.description ?? undefined,
     }));
 
-    const submitData: Partial<StateType> = {
+    const submitData: Partial<BraceAgentState> = {
       messages: [userMessage],
+      test_thread_error: testThreadError,
     };
 
     if (isFirstSubmit) {
