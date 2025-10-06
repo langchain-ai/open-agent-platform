@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # Main web application (this repo)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reloading
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - apps/web/.env
+    depends_on:
+      - deep-agent
+      - agent-optimizer
+      - triggers
+      - langconnect-oap
+      - tool-server
+    networks:
+      - open-agent-network
+
+  # Deep agent service (external repo)
+  deep-agent:
+    build:
+      context: ../deep-agent
+      dockerfile: Dockerfile
+    ports:
+      - "2024:2024"
+    volumes:
+      - ../deep-agent:/app
+      - /app/node_modules  # If JS/TS
+    env_file:
+      - ../deep-agent/.env
+    networks:
+      - open-agent-network
+
+  # Agent optimizer service (external repo)  
+  agent-optimizer:
+    build:
+      context: ../agent-optimizer
+      dockerfile: Dockerfile
+    ports:
+      - "2025:2025"
+    volumes:
+      - ../agent-optimizer:/app
+      - /app/node_modules  # If JS/TS
+    env_file:
+      - ../agent-optimizer/.env
+    networks:
+      - open-agent-network
+
+  # Triggers service (external repo)
+  triggers:
+    build:
+      context: ../triggers
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../triggers:/app
+      - /app/node_modules  # If JS/TS
+    env_file:
+      - ../triggers/.env
+    networks:
+      - open-agent-network
+
+  # LangConnect PostgreSQL database
+  langconnect-postgres-oap:
+    image: pgvector/pgvector:pg16
+    container_name: langconnect-postgres-oap
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - langconnect_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - open-agent-network
+
+  # LangConnect API service (external repo)
+  langconnect-oap:
+    build:
+      context: ../langconnect
+      dockerfile: Dockerfile
+    container_name: langconnect-api-oap
+    restart: always
+    depends_on:
+      langconnect-postgres-oap:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    env_file:
+      - ../langconnect/.env
+    environment:
+      POSTGRES_HOST: langconnect-postgres-oap
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ../langconnect/langconnect:/app/langconnect
+    networks:
+      - open-agent-network
+
+  # Tool server service (external repo)
+  tool-server:
+    build:
+      context: ../tool-server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../tool-server:/app
+    env_file:
+      - ../tool-server/.env
+    networks:
+      - open-agent-network
+
+volumes:
+  langconnect_postgres_data:
+
+networks:
+  open-agent-network:
+    driver: bridge
