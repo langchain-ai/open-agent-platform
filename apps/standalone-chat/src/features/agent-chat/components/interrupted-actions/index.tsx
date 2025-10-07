@@ -38,7 +38,6 @@ export function ThreadActionsView({
         </div>
         {threadId && <ThreadIdCopyable threadId={threadId} />}
       </div>
-
       {/* Actions */}
       <InboxItemInput
         isLoading={isLoading}

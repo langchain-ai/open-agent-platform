@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -13,12 +13,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { ToolCall } from "../types";
 import { cn } from "@/lib/utils";
+import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 
 interface ToolCallBoxProps {
   toolCall: ToolCall;
+  uiComponent?: any;
+  stream?: any;
+  isInterrupted?: boolean;
 }
 
-export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
+export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall, uiComponent, stream, isInterrupted }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedArgs, setExpandedArgs] = useState<Record<string, boolean>>({});
 
@@ -33,7 +37,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
       parsedArgs = { raw: toolArgs };
     }
     const toolResult = toolCall.result || null;
-    const toolStatus = toolCall.status || "completed";
+    const toolStatus = isInterrupted ? "interrupted" : (toolCall.status || "completed");
 
     return {
       name: toolName,
@@ -41,7 +45,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
       result: toolResult,
       status: toolStatus,
     };
-  }, [toolCall]);
+  }, [toolCall, isInterrupted]);
 
   const statusIcon = useMemo(() => {
     switch (status) {
@@ -91,10 +95,17 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
   const hasContent = result || Object.keys(args).length > 0;
 
+  // Auto-expand when status is interrupted
+  useEffect(() => {
+    if (status === "interrupted" && hasContent) {
+      setIsExpanded(true);
+    }
+  }, [status, hasContent]);
+
   return (
     <div
       className={cn(
-        "hover:bg-accent w-fit max-w-[70vw] overflow-hidden rounded-lg border-none shadow-none transition-colors duration-200 outline-none",
+        "hover:bg-accent w-full overflow-hidden rounded-lg border-none shadow-none transition-colors duration-200 outline-none",
         isExpanded && hasContent && "bg-accent",
       )}
     >
@@ -103,7 +114,7 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
         size="sm"
         onClick={toggleExpanded}
         className={cn(
-          "flex w-full items-center justify-between gap-2 border-none px-2 py-2 text-left shadow-none outline-none disabled:cursor-default",
+          "flex w-full items-center justify-between gap-2 border-none px-2 py-2 text-left shadow-none outline-none disabled:cursor-default focus-visible:ring-0 focus-visible:ring-offset-0",
         )}
         disabled={!hasContent}
       >
@@ -131,59 +142,73 @@ export const ToolCallBox = React.memo<ToolCallBoxProps>(({ toolCall }) => {
 
       {isExpanded && hasContent && (
         <div className="px-4 pb-4">
-          {Object.keys(args).length > 0 && (
+          {uiComponent && stream ? (
             <div className="mt-4">
-              <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
-                Arguments
-              </h4>
-              <div className="space-y-2">
-                {Object.entries(args).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="border-border rounded-sm border"
-                  >
-                    <button
-                      onClick={() => toggleArgExpanded(key)}
-                      className="bg-muted/20 hover:bg-muted/40 flex w-full items-center justify-between p-2 text-left text-xs font-medium transition-colors"
-                    >
-                      <span className="font-mono">{key}</span>
-                      {expandedArgs[key] ? (
-                        <ChevronUp
-                          size={12}
-                          className="text-[#70707B]"
-                        />
-                      ) : (
-                        <ChevronDown
-                          size={12}
-                          className="text-[#70707B]"
-                        />
-                      )}
-                    </button>
-                    {expandedArgs[key] && (
-                      <div className="border-border bg-muted/10 border-t p-2">
-                        <pre className="text-foreground m-0 overflow-x-auto font-mono text-xs leading-6 break-all whitespace-pre-wrap">
-                          {typeof value === "string"
-                            ? value
-                            : JSON.stringify(value, null, 2)}
-                        </pre>
+              <LoadExternalComponent
+                key={uiComponent.id}
+                stream={stream}
+                message={uiComponent}
+                namespace="deepagent"
+                meta={{ status, args, result: result ?? "No Result Yet" }}
+              />
+            </div>
+          ) : (
+            <>
+              {Object.keys(args).length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
+                    Arguments
+                  </h4>
+                  <div className="space-y-2">
+                    {Object.entries(args).map(([key, value]) => (
+                      <div
+                        key={key}
+                        className="border-border rounded-sm border"
+                      >
+                        <button
+                          onClick={() => toggleArgExpanded(key)}
+                          className="bg-muted/20 hover:bg-muted/40 flex w-full items-center justify-between p-2 text-left text-xs font-medium transition-colors"
+                        >
+                          <span className="font-mono">{key}</span>
+                          {expandedArgs[key] ? (
+                            <ChevronUp
+                              size={12}
+                              className="text-[#70707B]"
+                            />
+                          ) : (
+                            <ChevronDown
+                              size={12}
+                              className="text-[#70707B]"
+                            />
+                          )}
+                        </button>
+                        {expandedArgs[key] && (
+                          <div className="border-border bg-muted/10 border-t p-2">
+                            <pre className="text-foreground m-0 overflow-x-auto font-mono text-xs leading-6 break-all whitespace-pre-wrap">
+                              {typeof value === "string"
+                                ? value
+                                : JSON.stringify(value, null, 2)}
+                            </pre>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {result && (
-            <div className="mt-4">
-              <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
-                Result
-              </h4>
-              <pre className="border-border bg-muted/30 text-foreground m-0 overflow-x-auto rounded-sm border p-2 font-mono text-xs leading-7 break-all whitespace-pre-wrap">
-                {typeof result === "string"
-                  ? result
-                  : JSON.stringify(result, null, 2)}
-              </pre>
-            </div>
+                </div>
+              )}
+              {result && (
+                <div className="mt-4">
+                  <h4 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
+                    Result
+                  </h4>
+                  <pre className="border-border bg-muted/30 text-foreground m-0 overflow-x-auto rounded-sm border p-2 font-mono text-xs leading-7 break-all whitespace-pre-wrap">
+                    {typeof result === "string"
+                      ? result
+                      : JSON.stringify(result, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

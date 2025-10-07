@@ -23,6 +23,7 @@ export type StateType = {
     subject?: string;
     page_content?: string;
   };
+  ui?: any;
 };
 
 export function useChat({
@@ -144,9 +145,11 @@ export function useChat({
   }, [stream]);
 
   return {
+    stream,
     todos: stream.values.todos ?? [],
     files: stream.values.files ?? {},
     email: stream.values.email,
+    ui: stream.values.ui,
     setFiles,
     messages: stream.messages,
     isLoading: stream.isLoading,
