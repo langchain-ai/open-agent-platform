@@ -149,7 +149,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       stopStream,
     } = useChatContext();
 
-    const submitDisabled = isLoading || !assistant || !!interrupt;
+    const submitDisabled = isLoading || !assistant;
 
     const handleSubmit = useCallback(
       (e?: FormEvent) => {
@@ -683,9 +683,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               placeholder={
                 isLoading
                   ? "Running..."
-                  : interrupt
-                    ? "Please resolve the interrupt above..."
-                    : "Write your message..."
+                  : "Write your message..."
               }
               className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
               rows={1}
