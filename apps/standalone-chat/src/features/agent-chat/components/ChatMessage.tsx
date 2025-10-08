@@ -92,8 +92,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
       >
         <div
           className={cn(
-            "max-w-full min-w-0 flex-shrink-0",
-            isUser && "max-w-[70%]",
+            "max-w-full min-w-0",
+            isUser ? "max-w-[70%]" : "w-full",
           )}
         >
           {(hasContent || debugMode) && (
