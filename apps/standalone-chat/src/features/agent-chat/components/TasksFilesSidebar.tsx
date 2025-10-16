@@ -49,24 +49,43 @@ export function FilesPopover({
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(256px,1fr))] gap-2">
-          {Object.keys(files).map((file) => (
-            <button
-              key={file}
-              type="button"
-              onClick={() =>
-                setSelectedFile({ path: file, content: files[file] })
+          {Object.keys(files).map((file) => {
+            const filePath = String(file);
+            const rawContent = files[file];
+
+            // Handle new format: { content: ["line1", "line2"] }
+            // Also handle old format: "line1\nline2"
+            let fileContent: string;
+            if (typeof rawContent === "object" && rawContent !== null && "content" in rawContent) {
+              const contentArray = (rawContent as { content: unknown }).content;
+              if (Array.isArray(contentArray)) {
+                fileContent = contentArray.join("\n");
+              } else {
+                fileContent = String(contentArray || "");
               }
-              className="hover:bg-muted/40 bg-background cursor-pointer space-y-1 truncate rounded-md border px-2 py-3"
-            >
-              <FileText
-                size={24}
-                className="text-muted-foreground mx-auto"
-              />
-              <span className="text-muted-foreground mx-auto block w-full truncate text-center text-sm leading-relaxed break-words">
-                {file}
-              </span>
-            </button>
-          ))}
+            } else {
+              fileContent = String(rawContent || "");
+            }
+
+            return (
+              <button
+                key={filePath}
+                type="button"
+                onClick={() =>
+                  setSelectedFile({ path: filePath, content: fileContent })
+                }
+                className="hover:bg-muted/40 bg-background cursor-pointer space-y-1 truncate rounded-md border px-2 py-3"
+              >
+                <FileText
+                  size={24}
+                  className="text-muted-foreground mx-auto"
+                />
+                <span className="text-muted-foreground mx-auto block w-full truncate text-center text-sm leading-relaxed break-words">
+                  {filePath}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 

@@ -57,8 +57,8 @@ export const FileViewDialog = React.memo<{
   editDisabled: boolean;
 }>(({ file, onSaveFile, onClose, editDisabled }) => {
   const [isEditingMode, setIsEditingMode] = useState(file === null);
-  const [fileName, setFileName] = useState(file?.path || "");
-  const [fileContent, setFileContent] = useState(file?.content || "");
+  const [fileName, setFileName] = useState(String(file?.path || ""));
+  const [fileContent, setFileContent] = useState(String(file?.content || ""));
 
   const fileUpdate = useSWRMutation(
     { kind: "files-update", fileName, fileContent },
@@ -73,13 +73,14 @@ export const FileViewDialog = React.memo<{
   );
 
   useEffect(() => {
-    setFileName(file?.path || "");
-    setFileContent(file?.content || "");
+    setFileName(String(file?.path || ""));
+    setFileContent(String(file?.content || ""));
     setIsEditingMode(file === null);
   }, [file]);
 
   const fileExtension = useMemo(() => {
-    return fileName.split(".").pop()?.toLowerCase() || "";
+    const fileNameStr = String(fileName || "");
+    return fileNameStr.split(".").pop()?.toLowerCase() || "";
   }, [fileName]);
 
   const isMarkdown = useMemo(() => {
@@ -118,8 +119,8 @@ export const FileViewDialog = React.memo<{
     if (file === null) {
       onClose();
     } else {
-      setFileName(file.path);
-      setFileContent(file.content);
+      setFileName(String(file.path));
+      setFileContent(String(file.content));
       setIsEditingMode(false);
     }
   }, [file, onClose]);
