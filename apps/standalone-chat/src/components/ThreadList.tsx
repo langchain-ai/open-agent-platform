@@ -189,9 +189,9 @@ export function ThreadList({ onThreadSelect, onMutateReady }: ThreadListProps) {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="absolute inset-0 flex flex-col">
       {/* Filter Dropdown - Always visible */}
-      <div className="flex items-center justify-end px-4 py-3 border-b">
+      <div className="flex items-center justify-end px-4 py-3 border-b flex-shrink-0">
         <Select
           value={statusFilter}
           onValueChange={(v) => setStatusFilter(v as StatusFilter)}
@@ -229,7 +229,7 @@ export function ThreadList({ onThreadSelect, onMutateReady }: ThreadListProps) {
         </Select>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-0">
         {threads.error && (
           <ErrorState message={threads.error.message} />
         )}

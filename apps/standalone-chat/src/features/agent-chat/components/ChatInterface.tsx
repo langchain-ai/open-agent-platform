@@ -19,7 +19,6 @@ import {
   Clock,
   Circle,
   FileIcon,
-  Mail,
 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import type { TodoItem, ToolCall } from "../types";
@@ -32,11 +31,8 @@ import { v4 as uuidv4 } from "uuid";
 import { useChatContext } from "../providers/ChatProvider";
 import { useQueryState } from "nuqs";
 import { cn } from "@/lib/utils";
-import { ThreadActionsView } from "./interrupted-actions";
 import { useStickToBottom } from "use-stick-to-bottom";
 import { FilesPopover } from "./TasksFilesSidebar";
-import useInterruptedActions from "./interrupted-actions/hooks/use-interrupted-actions";
-import { HumanResponseWithEdits } from "../types/inbox";
 
 interface ChatInterfaceProps {
   assistant: Assistant | null;
@@ -137,10 +133,11 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
     );
 
     const {
+      stream,
       messages,
       todos,
       files,
-      email,
+      ui,
       setFiles,
       isLoading,
       isThreadLoading,
@@ -152,10 +149,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
       stopStream,
     } = useChatContext();
 
-    const actions = useInterruptedActions({
-      interrupt,
-    });
-
     const submitDisabled = isLoading || !assistant;
 
     const handleSubmit = useCallback(
@@ -164,13 +157,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           e.preventDefault();
         }
         if (submitDisabled) return;
-
-        if (interrupt) {
-          actions.handleSubmit(e);
-          actions.resetState();
-          setInput("");
-          return;
-        }
 
         const messageText = input.trim();
         if (!messageText || isLoading) return;
@@ -195,8 +181,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
         setInput,
         runSingleStep,
         submitDisabled,
-        actions,
-        interrupt,
       ],
     );
 
@@ -432,36 +416,6 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInput(e.target.value);
-
-      if (interrupt) {
-        actions.setSelectedSubmitType("response");
-        actions.setHasAddedResponse(true);
-
-        actions.setHumanResponse((prev) => {
-          const newResponse: HumanResponseWithEdits = {
-            type: "response",
-            args: e.target.value,
-          };
-
-          if (prev.find((p) => p.type === newResponse.type)) {
-            return prev.map((p) => {
-              if (p.type === newResponse.type) {
-                if (p.acceptAllowed) {
-                  return {
-                    ...newResponse,
-                    acceptAllowed: true,
-                    editsMade: !!e.target.value,
-                  };
-                }
-                return newResponse;
-              }
-              return p;
-            });
-          } else {
-            throw new Error("No human response found for string response");
-          }
-        });
-      }
     };
 
     return (
@@ -471,32 +425,33 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           ref={scrollRef}
         >
           <div
-            className="mx-auto w-full max-w-[1024px] px-6 pt-4 pb-6"
+            className="mx-auto w-full px-6 pt-4 pb-6"
             ref={contentRef}
           >
           {isThreadLoading ? (
             skeleton
           ) : (
             <>
-              {processedMessages.map((data, index) => (
-                <ChatMessage
-                  key={data.message.id}
-                  message={data.message}
-                  toolCalls={data.toolCalls}
-                  onRestartFromAIMessage={handleRestartFromAIMessage}
-                  onRestartFromSubTask={handleRestartFromSubTask}
-                  debugMode={debugMode}
-                  isLoading={isLoading}
-                  isLastMessage={index === processedMessages.length - 1}
-                  interrupt={interrupt}
-                />
-              ))}
-              {interrupt && (
-                <ThreadActionsView
-                  interrupt={interrupt}
-                  threadId={threadId}
-                />
-              )}
+              {processedMessages.map((data, index) => {
+                const messageUi = ui?.filter(
+                  (u: any) => u.metadata?.message_id === data.message.id
+                );
+                return (
+                  <ChatMessage
+                    key={data.message.id}
+                    message={data.message}
+                    toolCalls={data.toolCalls}
+                    onRestartFromAIMessage={handleRestartFromAIMessage}
+                    onRestartFromSubTask={handleRestartFromSubTask}
+                    debugMode={debugMode}
+                    isLoading={isLoading}
+                    isLastMessage={index === processedMessages.length - 1}
+                    interrupt={interrupt}
+                    ui={messageUi}
+                    stream={stream}
+                  />
+                );
+              })}
               {interrupt && debugMode && (
                 <div className="mt-4">
                   <Button
@@ -525,7 +480,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
           <div
             className={cn(
               "bg-background mx-4 mb-6 flex flex-shrink-0 flex-col overflow-hidden rounded-xl border",
-              "mx-auto w-[calc(100%-32px)] max-w-[1024px] transition-colors duration-200 ease-in-out",
+              "mx-auto w-[calc(100%-32px)] transition-colors duration-200 ease-in-out",
             )}
           >
           {(hasTasks || hasFiles) && (
@@ -619,23 +574,10 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                       );
                     })();
 
-                    const gmailButton = email?.id ? (
-                      <a
-                        href={`https://mail.google.com/mail/u/0/#inbox/${email.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex flex-shrink-0 cursor-pointer items-center gap-2 px-4.5 py-3 text-left text-sm hover:bg-gray-50"
-                      >
-                        <Mail size={16} />
-                        Open in Gmail
-                      </a>
-                    ) : null;
-
                     return (
                       <div className="grid grid-cols-[1fr_auto_auto] items-center">
                         {tasksTrigger}
                         {filesTrigger}
-                        {gmailButton}
                       </div>
                     );
                   })()}
@@ -741,9 +683,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
               placeholder={
                 isLoading
                   ? "Running..."
-                  : interrupt
-                    ? "Respond to the interrupt..."
-                    : "Write your message..."
+                  : "Write your message..."
               }
               className="font-inherit text-primary placeholder:text-tertiary field-sizing-content flex-1 resize-none border-0 bg-transparent p-4.5 pb-7.5 text-sm leading-6 outline-none"
               rows={1}
@@ -779,7 +719,7 @@ export const ChatInterface = React.memo<ChatInterfaceProps>(
                   ) : (
                     <>
                       <ArrowUp size={18} />
-                      <span>{interrupt ? "Resume" : "Send"}</span>
+                      <span>Send</span>
                     </>
                   )}
                 </Button>

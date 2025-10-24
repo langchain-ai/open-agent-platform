@@ -23,6 +23,8 @@ interface ChatMessageProps {
   isLastMessage?: boolean;
   isLoading?: boolean;
   interrupt?: Interrupt;
+  ui?: any[];
+  stream?: any;
 }
 
 export const ChatMessage = React.memo<ChatMessageProps>(
@@ -35,6 +37,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
     isLastMessage,
     isLoading,
     interrupt,
+    ui,
+    stream,
   }) => {
     const isUser = message.type === "human";
     const isAIMessage = message.type === "ai";
@@ -88,8 +92,8 @@ export const ChatMessage = React.memo<ChatMessageProps>(
       >
         <div
           className={cn(
-            "max-w-full min-w-0 flex-shrink-0",
-            isUser && "max-w-[70%]",
+            "max-w-full min-w-0",
+            isUser ? "max-w-[70%]" : "w-full",
           )}
         >
           {(hasContent || debugMode) && (
@@ -125,20 +129,21 @@ export const ChatMessage = React.memo<ChatMessageProps>(
             </div>
           )}
           {hasToolCalls && (
-            <div className="mt-4 flex w-fit max-w-full flex-col">
+            <div className="mt-4 flex w-full flex-col">
               {toolCalls.map((toolCall: ToolCall, idx, arr) => {
                 if (toolCall.name === "task") return null;
-                // Don't show tool call if it's the interrupted tool call.
-                if (
-                  idx === arr.length - 1 &&
-                  toolCall.name === interruptTitle
-                ) {
-                  return null;
-                }
+                const uiComponent = ui?.find(
+                  (u) => u.metadata?.tool_call_id === toolCall.id
+                );
+                const isInterrupted =
+                  idx === arr.length - 1 && toolCall.name === interruptTitle && isLastMessage;
                 return (
                   <ToolCallBox
                     key={toolCall.id}
                     toolCall={toolCall}
+                    uiComponent={uiComponent}
+                    stream={stream}
+                    isInterrupted={isInterrupted}
                   />
                 );
               })}
