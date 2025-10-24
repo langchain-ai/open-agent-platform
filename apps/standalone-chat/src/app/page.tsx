@@ -165,16 +165,12 @@ function PageContent() {
                     defaultSize={30}
                     className="relative"
                   >
-                    <div className="absolute inset-0 flex flex-col">
-                      <div className="flex-1 overflow-hidden">
-                        <ThreadList
-                          onThreadSelect={async (id) => {
-                            await setThreadId(id);
-                          }}
-                          onMutateReady={(fn) => setMutateThreads(() => fn)}
-                        />
-                      </div>
-                    </div>
+                    <ThreadList
+                      onThreadSelect={async (id) => {
+                        await setThreadId(id);
+                      }}
+                      onMutateReady={(fn) => setMutateThreads(() => fn)}
+                    />
                   </ResizablePanel>
                   <ResizableHandle />
                 </>
