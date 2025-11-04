@@ -808,8 +808,83 @@ export const ConfigurationSidebar = forwardRef<
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
                                 <p className="text-xs text-gray-500 mb-2">
-                                  Additional tools ONLY for orchestrator (on top of graph-wide). Configure in General tab.
+                                  Additional tools ONLY for orchestrator (on top of graph-wide)
                                 </p>
+
+                                {Object.entries(groupedTools).map(
+                                  ([serverName, serverTools]) => {
+                                    const orchestratorTools = serverTools.filter((t) =>
+                                      orchestratorEnabledTools.includes(t.name),
+                                    );
+
+                                    if (
+                                      orchestratorTools.length === 0 &&
+                                      toolSearchTerm
+                                    )
+                                      return null;
+
+                                    return (
+                                      <ToolGroupSection
+                                        key={`orchestrator-${serverName}`}
+                                        groupName={`mcp__${serverName}`}
+                                        tools={serverTools}
+                                        agentId={agentId}
+                                        toolId={orchestratorToolConfig.label}
+                                        source="agent"
+                                        enabledTools={orchestratorEnabledTools}
+                                        onToggleAll={() => {
+                                          const allEnabled = serverTools.every(
+                                            (t) =>
+                                              orchestratorEnabledTools.includes(
+                                                t.name,
+                                              ),
+                                          );
+                                          const toolNames = serverTools.map(
+                                            (t) => t.name,
+                                          );
+
+                                          const currentConfig =
+                                            configsByAgentId[
+                                              `${agentId}:selected-tools`
+                                            ]?.[orchestratorToolConfig.label] ||
+                                            orchestratorToolConfig.default;
+
+                                          if (allEnabled) {
+                                            const newTools = (
+                                              currentConfig.tools || []
+                                            ).filter(
+                                              (t: string) =>
+                                                !toolNames.includes(t),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              orchestratorToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          } else {
+                                            const newTools = Array.from(
+                                              new Set([
+                                                ...(currentConfig.tools || []),
+                                                ...toolNames,
+                                              ]),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              orchestratorToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  },
+                                )}
                               </>
                             )}
 
@@ -824,8 +899,83 @@ export const ConfigurationSidebar = forwardRef<
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
                                 <p className="text-xs text-gray-500 mb-2">
-                                  Additional tools ONLY for research sub-agent (on top of graph-wide). Configure in General tab.
+                                  Additional tools ONLY for research sub-agent (on top of graph-wide)
                                 </p>
+
+                                {Object.entries(groupedTools).map(
+                                  ([serverName, serverTools]) => {
+                                    const researchTools = serverTools.filter((t) =>
+                                      researchEnabledTools.includes(t.name),
+                                    );
+
+                                    if (
+                                      researchTools.length === 0 &&
+                                      toolSearchTerm
+                                    )
+                                      return null;
+
+                                    return (
+                                      <ToolGroupSection
+                                        key={`research-${serverName}`}
+                                        groupName={`mcp__${serverName}`}
+                                        tools={serverTools}
+                                        agentId={agentId}
+                                        toolId={researchToolConfig.label}
+                                        source="agent"
+                                        enabledTools={researchEnabledTools}
+                                        onToggleAll={() => {
+                                          const allEnabled = serverTools.every(
+                                            (t) =>
+                                              researchEnabledTools.includes(
+                                                t.name,
+                                              ),
+                                          );
+                                          const toolNames = serverTools.map(
+                                            (t) => t.name,
+                                          );
+
+                                          const currentConfig =
+                                            configsByAgentId[
+                                              `${agentId}:selected-tools`
+                                            ]?.[researchToolConfig.label] ||
+                                            researchToolConfig.default;
+
+                                          if (allEnabled) {
+                                            const newTools = (
+                                              currentConfig.tools || []
+                                            ).filter(
+                                              (t: string) =>
+                                                !toolNames.includes(t),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              researchToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          } else {
+                                            const newTools = Array.from(
+                                              new Set([
+                                                ...(currentConfig.tools || []),
+                                                ...toolNames,
+                                              ]),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              researchToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  },
+                                )}
                               </>
                             )}
 
@@ -840,8 +990,83 @@ export const ConfigurationSidebar = forwardRef<
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
                                 <p className="text-xs text-gray-500 mb-2">
-                                  Additional tools ONLY for critique sub-agent (on top of graph-wide). Configure in General tab.
+                                  Additional tools ONLY for critique sub-agent (on top of graph-wide)
                                 </p>
+
+                                {Object.entries(groupedTools).map(
+                                  ([serverName, serverTools]) => {
+                                    const critiqueTools = serverTools.filter((t) =>
+                                      critiqueEnabledTools.includes(t.name),
+                                    );
+
+                                    if (
+                                      critiqueTools.length === 0 &&
+                                      toolSearchTerm
+                                    )
+                                      return null;
+
+                                    return (
+                                      <ToolGroupSection
+                                        key={`critique-${serverName}`}
+                                        groupName={`mcp__${serverName}`}
+                                        tools={serverTools}
+                                        agentId={agentId}
+                                        toolId={critiqueToolConfig.label}
+                                        source="agent"
+                                        enabledTools={critiqueEnabledTools}
+                                        onToggleAll={() => {
+                                          const allEnabled = serverTools.every(
+                                            (t) =>
+                                              critiqueEnabledTools.includes(
+                                                t.name,
+                                              ),
+                                          );
+                                          const toolNames = serverTools.map(
+                                            (t) => t.name,
+                                          );
+
+                                          const currentConfig =
+                                            configsByAgentId[
+                                              `${agentId}:selected-tools`
+                                            ]?.[critiqueToolConfig.label] ||
+                                            critiqueToolConfig.default;
+
+                                          if (allEnabled) {
+                                            const newTools = (
+                                              currentConfig.tools || []
+                                            ).filter(
+                                              (t: string) =>
+                                                !toolNames.includes(t),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              critiqueToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          } else {
+                                            const newTools = Array.from(
+                                              new Set([
+                                                ...(currentConfig.tools || []),
+                                                ...toolNames,
+                                              ]),
+                                            );
+                                            updateConfig(
+                                              `${agentId}:selected-tools`,
+                                              critiqueToolConfig.label,
+                                              {
+                                                ...currentConfig,
+                                                tools: newTools,
+                                              },
+                                            );
+                                          }
+                                        }}
+                                      />
+                                    );
+                                  },
+                                )}
                               </>
                             )}
 
@@ -1133,9 +1358,21 @@ export const ConfigurationSidebar = forwardRef<
                                   </span>
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">
-                                  Additional collections ONLY for orchestrator (on top of graph-wide). Configure in General tab.
-                                </p>
+                                <div className="rounded-md border border-purple-100 bg-purple-50/30 p-3">
+                                  <div className="mb-2 flex items-center gap-2">
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-purple-50 text-xs text-purple-700"
+                                    >
+                                      Orchestrator Only
+                                    </Badge>
+                                  </div>
+                                  <ConfigFieldRAG
+                                    id={orchestratorRagConfig.label}
+                                    label={orchestratorRagConfig.label}
+                                    agentId={agentId}
+                                  />
+                                </div>
                               </>
                             )}
 
@@ -1149,9 +1386,21 @@ export const ConfigurationSidebar = forwardRef<
                                   </span>
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">
-                                  Additional collections ONLY for research sub-agent (on top of graph-wide). Configure in General tab.
-                                </p>
+                                <div className="rounded-md border border-green-100 bg-green-50/30 p-3">
+                                  <div className="mb-2 flex items-center gap-2">
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-green-50 text-xs text-green-700"
+                                    >
+                                      Research Only
+                                    </Badge>
+                                  </div>
+                                  <ConfigFieldRAG
+                                    id={researchRagConfig.label}
+                                    label={researchRagConfig.label}
+                                    agentId={agentId}
+                                  />
+                                </div>
                               </>
                             )}
 
@@ -1165,9 +1414,21 @@ export const ConfigurationSidebar = forwardRef<
                                   </span>
                                   <div className="h-px flex-1 bg-gray-200" />
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">
-                                  Additional collections ONLY for critique sub-agent (on top of graph-wide). Configure in General tab.
-                                </p>
+                                <div className="rounded-md border border-orange-100 bg-orange-50/30 p-3">
+                                  <div className="mb-2 flex items-center gap-2">
+                                    <Badge
+                                      variant="secondary"
+                                      className="bg-orange-50 text-xs text-orange-700"
+                                    >
+                                      Critique Only
+                                    </Badge>
+                                  </div>
+                                  <ConfigFieldRAG
+                                    id={critiqueRagConfig.label}
+                                    label={critiqueRagConfig.label}
+                                    agentId={agentId}
+                                  />
+                                </div>
                               </>
                             )}
 
