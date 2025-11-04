@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useConfigStore } from "@/features/chat/hooks/use-config-store";
 import { useRagContext } from "@/features/rag/providers/RAG";
 import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -31,6 +32,14 @@ import {
 } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 import _ from "lodash";
 import { cn } from "@/lib/utils";
 import {
@@ -70,6 +79,17 @@ interface ConfigFieldProps {
   value?: any;
   setValue?: (value: any) => void;
   agentId: string;
+  // New UI enhancement fields
+  icon?: string;
+  visible_if?: {
+    field: string;
+    value: any;
+  };
+  default?: any; // For showing "modified" badge
+  // Group fields (for rendering context, not used in ConfigField itself)
+  group?: string;
+  group_order?: number;
+  group_collapsed?: boolean;
 }
 
 export function ConfigField({
@@ -86,12 +106,27 @@ export function ConfigField({
   value: externalValue, // Rename to avoid conflict
   setValue: externalSetValue, // Rename to avoid conflict
   agentId,
+  icon,
+  visible_if,
+  default: defaultValue,
 }: ConfigFieldProps) {
   const store = useConfigStore();
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   // Determine whether to use external state or Zustand store
   const isExternallyManaged = externalSetValue !== undefined;
+
+  // Handle conditional visibility
+  if (visible_if) {
+    const dependentValue = isExternallyManaged
+      ? undefined // External management doesn't support visible_if currently
+      : store.configsByAgentId[agentId]?.[visible_if.field];
+
+    // Hide field if condition not met
+    if (dependentValue !== visible_if.value) {
+      return null;
+    }
+  }
 
   const currentValue = isExternallyManaged
     ? externalValue
@@ -144,15 +179,48 @@ export function ConfigField({
     }
   };
 
+  // Render field icon if provided
+  const FieldIcon = icon ? (LucideIcons as any)[icon] : null;
+
+  // Check if value has been modified from default
+  const isModified =
+    defaultValue !== undefined && currentValue !== defaultValue;
+
   return (
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          {_.startCase(label)}
-        </Label>
+        <div className="flex items-center gap-1.5">
+          <Label
+            htmlFor={id}
+            className="flex items-center gap-2 text-sm font-medium"
+          >
+            {FieldIcon && <FieldIcon className="h-4 w-4 text-gray-500" />}
+            {_.startCase(label)}
+            {isModified && (
+              <Badge
+                variant="secondary"
+                className="ml-1 text-xs"
+              >
+                Modified
+              </Badge>
+            )}
+          </Label>
+          {description && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="h-3.5 w-3.5 cursor-help text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent
+                  className="max-w-xs"
+                  side="top"
+                >
+                  <p className="text-xs">{description}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         {type === "switch" && (
           <Switch
             id={id}
@@ -162,6 +230,7 @@ export function ConfigField({
         )}
       </div>
 
+      {/* Keep full description text for depth, tooltip is just quick reference */}
       {description && (
         <p className="text-xs whitespace-pre-line text-gray-500">
           {description}
@@ -331,6 +400,7 @@ export function ConfigFieldTool({
   toolId,
   value: externalValue, // Rename to avoid conflict
   setValue: externalSetValue, // Rename to avoid conflict
+  source,
 }: Pick<
   ConfigFieldProps,
   | "id"
@@ -340,7 +410,10 @@ export function ConfigFieldTool({
   | "className"
   | "value"
   | "setValue"
-> & { toolId: string }) {
+> & {
+  toolId: string;
+  source?: "graph" | "agent" | "excluded";
+}) {
   const store = useConfigStore();
   const actualAgentId = `${agentId}:selected-tools`;
 
@@ -383,16 +456,35 @@ export function ConfigFieldTool({
   return (
     <div className={cn("w-full space-y-2", className)}>
       <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="text-sm font-medium"
-        >
-          {_.startCase(label)}
-        </Label>
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor={id}
+            className="text-sm font-medium"
+          >
+            {_.startCase(label)}
+          </Label>
+          {source === "graph" && (
+            <Badge
+              variant="secondary"
+              className="bg-blue-50 text-xs text-blue-700"
+            >
+              Graph
+            </Badge>
+          )}
+          {source === "excluded" && (
+            <Badge
+              variant="secondary"
+              className="bg-red-50 text-xs text-red-700"
+            >
+              Excluded
+            </Badge>
+          )}
+        </div>
         <Switch
           id={id}
           checked={checked} // Use currentValue
           onCheckedChange={handleCheckedChange}
+          disabled={source === "excluded"}
         />
       </div>
 

@@ -35,7 +35,7 @@ export function getCollectionName(name: string | undefined) {
  * @param files An array of File objects to upload.
  * @param metadatas Optional array of metadata objects, one for each file.
  *                  Each item in the array should be a serializable object (dictionary).
- * @param apiUrlBase The base URL of your LangConnect API (e.g., "http://localhost:8000").
+ * @param apiUrlBase The base URL of your LangConnect API (e.g., "http://localhost:8040").
  * @returns A promise that resolves with the API response.
  */
 async function uploadDocuments(

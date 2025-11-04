@@ -1,0 +1,100 @@
+[33mf928f23[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m docs: Add clarifications to OAP quickstart instructions (#334)
+[1mdiff --git a/apps/docs/quickstart.mdx b/apps/docs/quickstart.mdx[m
+[1mindex 491f482..18756f1 100644[m
+[1m--- a/apps/docs/quickstart.mdx[m
+[1m+++ b/apps/docs/quickstart.mdx[m
+[36m@@ -5,14 +5,34 @@[m [mdescription: 'Follow these steps to get your Open Agent Platform up and running[m
+ [m
+ <Info>[m
+   **Prerequisites:**[m
+[31m-  - Clone the [Open Agent Platform Repository](https://github.com/langchain-ai/open-agent-platform)[m
+[32m+[m[32m  - [Corepack](https://github.com/nodejs/corepack?tab=readme-ov-file#how-to-install) for building and running the platform locally[m
+   - [LangSmith](https://smith.langchain.com/) Account (free tier is sufficient)[m
+   - [Supabase](https://supabase.com/) Account[m
+   - MCP Server (e.g. [Arcade](https://arcade-ai.com/))[m
+   - An LLM API Key (e.g. [OpenAI](https://platform.openai.com/), [Anthropic](https://console.anthropic.com/), [Google](https://aistudio.google.com/))[m
+ </Info>[m
+ [m
+[31m-## 1. Authentication Setup[m
+[32m+[m[32m## 1. Download the Open Agent Platform code[m
+[32m+[m
+[32m+[m[32m<Steps>[m
+[32m+[m[32m  <Step title="Clone the Repository">[m
+[32m+[m[32m    Clone the [Open Agent Platform Repository](https://github.com/langchain-ai/open-agent-platform) from GitHub[m
+[32m+[m[32m  </Step>[m
+[32m+[m[32m  <Step title="Set Environment Variables">[m
+[32m+[m[32m    <Tip>[m
+[32m+[m[32m      The repository contains a `.env.example` file listing all of the environment variables you need to run the platform.[m
+[32m+[m[32m    </Tip>[m
+[32m+[m[32m    Set the following environment variables:[m
+[32m+[m[32m    ```bash[m
+[32m+[m[32m      NEXT_PUBLIC_BASE_API_URL="http://localhost:3000/api"[m
+[32m+[m[32m      LANGSMITH_API_KEY="lsv2_..."[m
+[32m+[m[32m      # Or whichever LLM's API key you're using[m
+[32m+[m[32m      OPENAI_API_KEY="..."[m
+[32m+[m[32m    ```[m
+[32m+[m[32m  </Step>[m
+[32m+[m[32m</Steps>[m
+[32m+[m
+[32m+[m[32m## 2. Authentication Setup[m
+ [m
+ Open Agent Platform uses Supabase for authentication by default.[m
+ [m
+[36m@@ -22,6 +42,9 @@[m [mOpen Agent Platform uses Supabase for authentication by default.[m
+   </Step>[m
+   <Step title="Configure Environment Variables">[m
+     Set the following environment variables inside the `apps/web/` directory:[m
+[32m+[m[32m    <Tip>[m
+[32m+[m[32m    You can find these Next.js-specific variables in the "Connect" window in the Supabase dashboard, under "App Frameworks"[m
+[32m+[m[32m    </Tip>[m
+     ```bash[m
+     NEXT_PUBLIC_SUPABASE_URL="<your supabase url>"[m
+     NEXT_PUBLIC_SUPABASE_ANON_KEY="<your supabase anon key>"[m
+[36m@@ -32,7 +55,7 @@[m [mOpen Agent Platform uses Supabase for authentication by default.[m
+   </Step>[m
+ </Steps>[m
+ [m
+[31m-## 2. Deploying Agents[m
+[32m+[m[32m## 3. Deploying Agents[m
+ [m
+ The next step in setting up Open Agent Platform is to deploy and configure your agents.[m
+ [m
+[36m@@ -77,7 +100,7 @@[m [mThe next step in setting up Open Agent Platform is to deploy and configure your[m
+   </Step>[m
+ </Steps>[m
+ [m
+[31m-## 3. RAG Server Setup[m
+[32m+[m[32m## 4. RAG Server Setup[m
+ [m
+ <Steps>[m
+   <Step title="Deploy LangConnect">[m
+[36m@@ -91,17 +114,18 @@[m [mThe next step in setting up Open Agent Platform is to deploy and configure your[m
+   </Step>[m
+ </Steps>[m
+ [m
+[31m-## 4. MCP Server Setup[m
+[32m+[m[32m## 5. MCP Server Setup[m
+ [m
+ <Tip>[m
+   Open Agent Platform only supports connecting to MCP servers which support Streamable HTTP requests.[m
+[32m+[m[32m  If you don't have an MCP server set up yet, you can use [Arcade](https://docs.arcade.dev/home/mcp-desktop-clients/vscode-client)'s public beta MCP server.[m
+ </Tip>[m
+ [m
+ <Steps>[m
+   <Step title="Configure MCP Server URL">[m
+     Set your MCP server URL inside the `apps/web/` directory (ensure it does not end with `/mcp`. This will be auto-applied by OAP):[m
+     ```bash[m
+[31m-    NEXT_PUBLIC_MCP_SERVER_URL="<your MCP server URL>"[m
+[32m+[m[32m    NEXT_PUBLIC_MCP_SERVER_URL="https://api.arcade.dev/v1/mcps/arcade-anon/"[m
+     ```[m
+   </Step>[m
+   <Step title="Configure Authentication (if required)">[m
+[36m@@ -112,7 +136,7 @@[m [mThe next step in setting up Open Agent Platform is to deploy and configure your[m
+   </Step>[m
+ </Steps>[m
+ [m
+[31m-## 5. Run Your Platform[m
+[32m+[m[32m## 6. Run Your Platform[m
+ [m
+ Start the application with your configured environment variables:[m
+ [m

@@ -136,6 +136,18 @@ export const GraphConfiguration = z.object({
             label: "o4",
             value: "openai/o4",
           },
+          {
+            label: "Ollama Turbo 20B",
+            value: "ollama/gpt-oss:20b-cloud",
+          },
+          {
+            label: "Ollama Turbo 120B",
+            value: "ollama/gpt-oss:120b-cloud",
+          },
+          {
+            label: "Ollama Turbo DeepSeek 671B",
+            value: "ollama/deepseek-v3.1:671b-cloud",
+          },
         ],
       },
     }),
@@ -213,6 +225,9 @@ class GraphConfigPydantic(BaseModel):
                     {"label": "GPT 4o", "value": "openai:gpt-4o"},
                     {"label": "GPT 4o mini", "value": "openai:gpt-4o-mini"},
                     {"label": "GPT 4.1", "value": "openai:gpt-4.1"},
+                    {"label": "Ollama Turbo 20B", "value": "ollama:gpt-oss:20b-cloud"},
+                    {"label": "Ollama Turbo 120B", "value": "ollama:gpt-oss:120b-cloud"},
+                    {"label": "Ollama Turbo DeepSeek 671B", "value": "ollama:deepseek-v3.1:671b-cloud"},
                 ],
             }
         }

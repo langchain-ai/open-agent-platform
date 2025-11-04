@@ -4,14 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3003",
     "build": "turbo build:internal --filter=@open-agent-platform/web",
     "build:internal": "next build",
-    "start": "next start",
+    "start": "next start -p 3003",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check": "tsc --noEmit && next lint",
+    "fix": "prettier --write . && next lint --fix"
   },
   "dependencies": {
     "@langchain/core": "^0.3.44",

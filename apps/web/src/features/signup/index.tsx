@@ -152,7 +152,7 @@ export default function SignupInterface() {
             Create an Account
           </CardTitle>
           <CardDescription className="text-center">
-            Sign up to get started with Open Agent Platform
+            Sign up to get started with Vi Builder
           </CardDescription>
         </CardHeader>
         <CardContent>

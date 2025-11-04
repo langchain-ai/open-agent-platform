@@ -24,7 +24,7 @@ description: 'Follow these steps to get your Open Agent Platform up and running 
     </Tip>
     Set the following environment variables:
     ```bash
-      NEXT_PUBLIC_BASE_API_URL="http://localhost:3000/api"
+      NEXT_PUBLIC_BASE_API_URL="http://localhost:3003/api"
       LANGSMITH_API_KEY="lsv2_..."
       # Or whichever LLM's API key you're using
       OPENAI_API_KEY="..."
@@ -109,7 +109,7 @@ The next step in setting up Open Agent Platform is to deploy and configure your 
   <Step title="Configure Environment Variables">
     Set the RAG server URL inside the `apps/web/` directory:
     ```bash
-    NEXT_PUBLIC_RAG_API_URL="http://localhost:8080"
+    NEXT_PUBLIC_RAG_API_URL="http://localhost:8040"
     ```
   </Step>
 </Steps>
@@ -151,4 +151,4 @@ yarn install
 yarn dev
 ```
 
-Your Open Agent Platform should now be running at http://localhost:3000!
+Your Open Agent Platform should now be running at http://localhost:3003!

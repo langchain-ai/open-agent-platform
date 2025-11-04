@@ -17,7 +17,7 @@ import {
   AssistantMessageLoading,
 } from "@/features/chat/components/thread/messages/ai";
 import { HumanMessage } from "@/features/chat/components/thread/messages/human";
-import { LangGraphLogoSVG } from "@/components/icons/langgraph";
+import { ViIconSVG } from "@/components/icons/vi-icon";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import {
   ArrowDown,
@@ -25,6 +25,7 @@ import {
   SquarePen,
   AlertCircle,
   Plus,
+  X,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -416,10 +417,20 @@ export function Thread() {
                   )}
                   {isLoading && <AssistantMessageLoading />}
                   {errorMessage && (
-                    <Alert variant="destructive">
+                    <Alert
+                      variant="destructive"
+                      className="relative"
+                    >
                       <AlertCircle className="size-4" />
                       <AlertTitle>An error occurred:</AlertTitle>
                       <AlertDescription>{errorMessage}</AlertDescription>
+                      <button
+                        onClick={() => setErrorMessage("")}
+                        className="ring-offset-background focus:ring-ring absolute top-2 right-2 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                        aria-label="Close"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </Alert>
                   )}
                 </>
@@ -430,9 +441,9 @@ export function Thread() {
             <div className="sticky bottom-0 flex flex-col items-center gap-8 bg-white">
               {!hasMessages && !threadId && (
                 <div className="flex items-center gap-3">
-                  <LangGraphLogoSVG className="h-8 flex-shrink-0" />
+                  <ViIconSVG className="h-8 flex-shrink-0" />
                   <h1 className="text-2xl font-semibold tracking-tight">
-                    Open Agent Platform
+                    Vi Builder
                   </h1>
                 </div>
               )}

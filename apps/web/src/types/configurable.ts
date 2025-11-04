@@ -66,11 +66,39 @@ export type ConfigurableFieldUIMetadata = {
    * This is only applicable for number fields.
    */
   step?: number;
+  /**
+   * The group this field belongs to for organizational purposes.
+   * Fields with the same group will be rendered together in a collapsible section.
+   */
+  group?: string;
+  /**
+   * The order in which groups should be displayed.
+   * Lower numbers appear first.
+   */
+  group_order?: number;
+  /**
+   * Whether the group should be collapsed by default.
+   * @default false
+   */
+  group_collapsed?: boolean;
+  /**
+   * Lucide icon name to display next to the field label.
+   */
+  icon?: string;
+  /**
+   * Conditional visibility based on another field's value.
+   * Field will only be shown if the specified field has the specified value.
+   */
+  visible_if?: {
+    field: string;
+    value: any;
+  };
 };
 
 export type ConfigurableFieldMCPMetadata = {
   label: string;
   type: "mcp";
+  scope?: "graph" | "agent"; // Graph-wide vs agent-specific
   default?: {
     tools?: string[];
     url?: string;
@@ -84,6 +112,7 @@ export type ConfigurableFieldRAGMetadata = {
    */
   label: string;
   type: "rag";
+  scope?: "graph" | "agent"; // Graph-wide vs agent-specific
   default?: {
     rag_url?: string;
     collections?: string[];

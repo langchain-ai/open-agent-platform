@@ -28,6 +28,14 @@ export default function SettingsInterface(): React.ReactNode {
     "lg:settings:tavilyApiKey",
     "",
   );
+  const [ollamaApiKey, setOllamaApiKey] = useLocalStorage<string>(
+    "lg:settings:ollamaApiKey",
+    "",
+  );
+  const [xaiApiKey, setXaiApiKey] = useLocalStorage<string>(
+    "lg:settings:xaiApiKey",
+    "",
+  );
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">
@@ -84,6 +92,28 @@ export default function SettingsInterface(): React.ReactNode {
               placeholder="Enter your Tavily API key"
               value={tavilyApiKey}
               onChange={(e) => setTavilyApiKey(e.target.value)}
+            />
+          </div>
+
+          {/* Ollama API Key */}
+          <div className="grid gap-2">
+            <Label htmlFor="ollama-api-key">Ollama API Key</Label>
+            <PasswordInput
+              id="ollama-api-key"
+              placeholder="Enter your Ollama API key (for Ollama Turbo)"
+              value={ollamaApiKey}
+              onChange={(e) => setOllamaApiKey(e.target.value)}
+            />
+          </div>
+
+          {/* xAI API Key */}
+          <div className="grid gap-2">
+            <Label htmlFor="xai-api-key">xAI API Key</Label>
+            <PasswordInput
+              id="xai-api-key"
+              placeholder="Enter your xAI API key (for Grok models)"
+              value={xaiApiKey}
+              onChange={(e) => setXaiApiKey(e.target.value)}
             />
           </div>
         </div>
