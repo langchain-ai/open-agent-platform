@@ -641,11 +641,11 @@ export const ConfigurationSidebar = forwardRef<
                         const graphEnabledTools =
                           graphToolConfig?.default?.tools || [];
                         const orchestratorEnabledTools =
-                          orchestratorToolConfig?.default || [];
+                          orchestratorToolConfig?.default?.tools || [];
                         const researchEnabledTools =
-                          researchToolConfig?.default || [];
+                          researchToolConfig?.default?.tools || [];
                         const critiqueEnabledTools =
-                          critiqueToolConfig?.default || [];
+                          critiqueToolConfig?.default?.tools || [];
 
                         // Filter tools by search
                         const filteredTools = displayTools.filter(
@@ -842,96 +842,6 @@ export const ConfigurationSidebar = forwardRef<
                                 <p className="text-xs text-gray-500 mb-2">
                                   Additional tools ONLY for critique sub-agent (on top of graph-wide). Configure in General tab.
                                 </p>
-                              </>
-                            )}
-
-                            {/* OLD Agent-specific tools section - REMOVE THIS */}
-                            {false && agentToolConfig && (
-                              <>
-                                <div className="mt-6 flex items-center gap-2">
-                                  <div className="h-px flex-1 bg-gray-200" />
-                                  <span className="text-xs font-semibold text-gray-500 uppercase">
-                                    Agent-Specific Tools
-                                  </span>
-                                  <div className="h-px flex-1 bg-gray-200" />
-                                </div>
-
-                                {Object.entries(groupedTools).map(
-                                  ([serverName, serverTools]) => {
-                                    const agentTools = serverTools.filter(
-                                      (t) =>
-                                        agentEnabledTools.includes(t.name) &&
-                                        !graphEnabledTools.includes(t.name),
-                                    );
-
-                                    if (
-                                      agentTools.length === 0 &&
-                                      toolSearchTerm
-                                    )
-                                      return null;
-
-                                    return (
-                                      <ToolGroupSection
-                                        key={`agent-${serverName}`}
-                                        groupName={`mcp__${serverName}`}
-                                        tools={serverTools}
-                                        agentId={agentId}
-                                        toolId={agentToolConfig.label}
-                                        source="agent"
-                                        enabledTools={agentEnabledTools}
-                                        onToggleAll={() => {
-                                          const allEnabled = serverTools.every(
-                                            (t) =>
-                                              agentEnabledTools.includes(
-                                                t.name,
-                                              ),
-                                          );
-                                          const toolNames = serverTools.map(
-                                            (t) => t.name,
-                                          );
-
-                                          const currentConfig =
-                                            configsByAgentId[
-                                              `${agentId}:selected-tools`
-                                            ]?.[agentToolConfig.label] ||
-                                            agentToolConfig.default;
-
-                                          if (allEnabled) {
-                                            const newTools = (
-                                              currentConfig.tools || []
-                                            ).filter(
-                                              (t: string) =>
-                                                !toolNames.includes(t),
-                                            );
-                                            updateConfig(
-                                              `${agentId}:selected-tools`,
-                                              agentToolConfig.label,
-                                              {
-                                                ...currentConfig,
-                                                tools: newTools,
-                                              },
-                                            );
-                                          } else {
-                                            const newTools = Array.from(
-                                              new Set([
-                                                ...(currentConfig.tools || []),
-                                                ...toolNames,
-                                              ]),
-                                            );
-                                            updateConfig(
-                                              `${agentId}:selected-tools`,
-                                              agentToolConfig.label,
-                                              {
-                                                ...currentConfig,
-                                                tools: newTools,
-                                              },
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    );
-                                  },
-                                )}
                               </>
                             )}
 
@@ -1144,11 +1054,11 @@ export const ConfigurationSidebar = forwardRef<
                         const graphCollections =
                           graphRagConfig?.default?.collections || [];
                         const orchestratorCollections =
-                          orchestratorRagConfig?.default || [];
+                          orchestratorRagConfig?.default?.collections || [];
                         const researchCollections =
-                          researchRagConfig?.default || [];
+                          researchRagConfig?.default?.collections || [];
                         const critiqueCollections =
-                          critiqueRagConfig?.default || [];
+                          critiqueRagConfig?.default?.collections || [];
                         const totalCollections =
                           graphCollections.length +
                           orchestratorCollections.length +
