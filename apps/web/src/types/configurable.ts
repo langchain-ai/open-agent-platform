@@ -7,6 +7,7 @@ export type ConfigurableFieldUIType =
   | "boolean"
   | "slider"
   | "select"
+  | "multiselect"
   | "json";
 
 /**
@@ -93,6 +94,19 @@ export type ConfigurableFieldUIMetadata = {
     field: string;
     value: any;
   };
+};
+
+export type ConfigurableFieldMultiselectMetadata = {
+  label: string;
+  type: "multiselect";
+  description?: string;
+  placeholder?: string;
+  options: Array<{
+    label: string;
+    value: string;
+    description?: string;
+  }>;
+  default?: string[];
 };
 
 export type ConfigurableFieldMCPMetadata = {
