@@ -41,13 +41,14 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import _ from "lodash";
-import { cn } from "@/lib/utils";
+import { cn, deepEqual } from "@/lib/utils";
 import {
   ConfigurableFieldAgentsMetadata,
   ConfigurableFieldMCPMetadata,
   ConfigurableFieldRAGMetadata,
 } from "@/types/configurable";
 import { AgentsCombobox } from "@/components/ui/agents-combobox";
+import { MultiselectCombobox } from "@/components/ui/multiselect-combobox";
 import { useAgentsContext } from "@/providers/Agents";
 import { getDeployments } from "@/lib/environment/deployments";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ interface ConfigFieldProps {
     | "switch"
     | "slider"
     | "select"
+    | "multiselect"
     | "json";
   description?: string;
   placeholder?: string;
@@ -122,8 +124,8 @@ export function ConfigField({
       ? undefined // External management doesn't support visible_if currently
       : store.configsByAgentId[agentId]?.[visible_if.field];
 
-    // Hide field if condition not met
-    if (dependentValue !== visible_if.value) {
+    // Hide field if condition not met using deep equality
+    if (!deepEqual(dependentValue, visible_if.value)) {
       return null;
     }
   }
@@ -334,6 +336,17 @@ export function ConfigField({
             ))}
           </SelectContent>
         </Select>
+      )}
+
+      {type === "multiselect" && (
+        <MultiselectCombobox
+          options={options || []}
+          value={currentValue as string[] | undefined}
+          setValue={(newValue) => handleChange(newValue)}
+          placeholder={placeholder || "Select options..."}
+          multiple={true}
+          className="w-full"
+        />
       )}
 
       {type === "json" && (
