@@ -1,4 +1,5 @@
 import { useLocalStorage } from "@/hooks/use-local-storage";
+import { useMemo } from "react";
 
 export function useApiKeys() {
   const [openaiApiKey] = useLocalStorage<string>(
@@ -17,6 +18,11 @@ export function useApiKeys() {
     "lg:settings:tavilyApiKey",
     "",
   );
+  const [ollamaApiKey] = useLocalStorage<string>(
+    "lg:settings:ollamaApiKey",
+    "",
+  );
+  const [xaiApiKey] = useLocalStorage<string>("lg:settings:xaiApiKey", "");
 
   return {
     apiKeys: {
@@ -24,6 +30,8 @@ export function useApiKeys() {
       ANTHROPIC_API_KEY: anthropicApiKey,
       GOOGLE_API_KEY: googleApiKey,
       TAVILY_API_KEY: tavilyApiKey,
+      OLLAMA_API_KEY: ollamaApiKey,
+      XAI_API_KEY: xaiApiKey,
     },
   };
 }
@@ -35,6 +43,32 @@ export function useApiKeys() {
  */
 export function useHasApiKeys(): boolean {
   const { apiKeys } = useApiKeys();
+  const {
+    OPENAI_API_KEY,
+    ANTHROPIC_API_KEY,
+    GOOGLE_API_KEY,
+    TAVILY_API_KEY,
+    OLLAMA_API_KEY,
+    XAI_API_KEY,
+  } = apiKeys;
 
-  return Object.values(apiKeys).some((key) => key && key.trim() !== "");
+  return useMemo(
+    () =>
+      [
+        OPENAI_API_KEY,
+        ANTHROPIC_API_KEY,
+        GOOGLE_API_KEY,
+        TAVILY_API_KEY,
+        OLLAMA_API_KEY,
+        XAI_API_KEY,
+      ].some((key) => key && key.trim() !== ""),
+    [
+      OPENAI_API_KEY,
+      ANTHROPIC_API_KEY,
+      GOOGLE_API_KEY,
+      TAVILY_API_KEY,
+      OLLAMA_API_KEY,
+      XAI_API_KEY,
+    ],
+  );
 }

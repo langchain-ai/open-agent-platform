@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Open Agent Platform - Auth",
-  description: "Open Agent Platform by LangChain",
+  title: "Vi Builder - Auth",
+  description: "Vi Builder by ConceptV",
 };
 
 export default function Layout({

@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAgents } from "@/hooks/use-agents";
 import { Bot, LoaderCircle, X } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
@@ -20,6 +20,12 @@ import { getDeployments } from "@/lib/environment/deployments";
 import { GraphSelect } from "./graph-select";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { FormProvider, useForm } from "react-hook-form";
+import { usePromptModes } from "@/hooks/use-prompt-modes";
+import { useMCPContext } from "@/providers/MCP";
+import {
+  compileSystemPrompt,
+  buildToolModeSelections,
+} from "@/lib/prompt-compiler";
 
 interface CreateAgentDialogProps {
   agentId?: string;
@@ -57,6 +63,22 @@ function CreateAgentFormContent(props: {
   } = useAgentConfig();
   const [submitting, setSubmitting] = useState(false);
 
+  // Get prompt modes and tools
+  const promptModes = usePromptModes(props.selectedGraph.assistant_id);
+  const { tools } = useMCPContext();
+
+  // Determine schema labels for system prompt and MCP config from current configurations
+  const systemPromptLabel = useMemo(() => {
+    const labels = new Set((configurations || []).map((c) => c.label));
+    if (labels.has("systemPrompt")) return "systemPrompt";
+    if (labels.has("system_prompt")) return "system_prompt";
+    return undefined;
+  }, [configurations]);
+
+  const toolConfigLabel = useMemo(() => {
+    return toolConfigurations[0]?.label;
+  }, [toolConfigurations]);
+
   const handleSubmit = async (data: {
     name: string;
     description: string;
@@ -70,6 +92,44 @@ function CreateAgentFormContent(props: {
       return;
     }
 
+    // Prepare final config with prompt data
+    const finalConfig = { ...config };
+
+    // Add prompt modes if any are selected (under the MCP config schema label)
+    if (Object.keys(promptModes.promptModes).length > 0 && toolConfigLabel) {
+      finalConfig[toolConfigLabel] = {
+        ...(finalConfig[toolConfigLabel] || {}),
+        tool_prompt_modes: promptModes.promptModes,
+      };
+    }
+
+    // Add system prompt if customized or compiled, targeting the schema-defined label
+    if (systemPromptLabel && promptModes.customPrompt) {
+      finalConfig[systemPromptLabel] = promptModes.customPrompt;
+    } else if (
+      systemPromptLabel &&
+      Object.keys(promptModes.promptModes).length > 0
+    ) {
+      // Compile system prompt from selected modes
+      try {
+        const selectedTools = finalConfig[toolConfigLabel || ""]?.tools || [];
+        const selections = buildToolModeSelections(
+          tools,
+          selectedTools,
+          promptModes.promptModes,
+        );
+        const compiledPrompt = await compileSystemPrompt(selections);
+        finalConfig[systemPromptLabel] = compiledPrompt;
+      } catch (_error) {
+        const errorMessage =
+          _error instanceof Error ? _error.message : "Unknown error";
+        toast.error("Failed to compile system prompt", {
+          description: `${errorMessage}. The agent will be created without a custom system prompt.`,
+          richColors: true,
+        });
+      }
+    }
+
     setSubmitting(true);
     const newAgent = await createAgent(
       props.selectedDeployment.id,
@@ -77,7 +137,7 @@ function CreateAgentFormContent(props: {
       {
         name,
         description,
-        config,
+        config: finalConfig,
       },
     );
     setSubmitting(false);

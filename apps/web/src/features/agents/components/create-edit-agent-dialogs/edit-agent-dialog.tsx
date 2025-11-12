@@ -11,12 +11,18 @@ import {
 import { useAgents } from "@/hooks/use-agents";
 import { useAgentConfig } from "@/hooks/use-agent-config";
 import { Bot, LoaderCircle, Trash, X } from "lucide-react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useAgentsContext } from "@/providers/Agents";
 import { AgentFieldsForm, AgentFieldsFormLoading } from "./agent-form";
 import { Agent } from "@/types/agent";
 import { FormProvider, useForm } from "react-hook-form";
+import { usePromptModes } from "@/hooks/use-prompt-modes";
+import { useMCPContext } from "@/providers/MCP";
+import {
+  compileSystemPrompt,
+  buildToolModeSelections,
+} from "@/lib/prompt-compiler";
 
 interface EditAgentDialogProps {
   agent: Agent;
@@ -50,6 +56,78 @@ function EditAgentDialogContent({
     config: Record<string, any>;
   }>({ defaultValues: async () => getSchemaAndUpdateConfig(agent) });
 
+  // Get prompt modes and tools
+  const promptModes = usePromptModes(agent.assistant_id);
+  const { tools } = useMCPContext();
+
+  // Determine schema labels for system prompt and MCP config from current configurations
+  const systemPromptLabel = useMemo(() => {
+    const labels = new Set((configurations || []).map((c) => c.label));
+    if (labels.has("systemPrompt")) return "systemPrompt";
+    if (labels.has("system_prompt")) return "system_prompt";
+    return undefined;
+  }, [configurations]);
+
+  const toolConfigLabel = useMemo(() => {
+    return toolConfigurations[0]?.label;
+  }, [toolConfigurations]);
+
+  // Hydrate prompt modes from saved agent config; update only when different
+  useEffect(() => {
+    type AgentConfigurable = {
+      mcp_config?: {
+        tool_prompt_modes?: Record<string, string>;
+      };
+      system_prompt?: string;
+    };
+
+    const savedConfig = agent.config?.configurable as
+      | AgentConfigurable
+      | undefined;
+
+    if (!savedConfig) return;
+
+    // Compare and sync tool_prompt_modes
+    const savedModes = savedConfig.mcp_config?.tool_prompt_modes || {};
+    const currentModes = promptModes.promptModes || {};
+
+    const savedKeys = Object.keys(savedModes);
+    const currentKeys = Object.keys(currentModes);
+
+    const modesDiffer =
+      savedKeys.length !== currentKeys.length ||
+      savedKeys.some((k) => currentModes[k] !== savedModes[k]);
+
+    if (modesDiffer && savedKeys.length > 0) {
+      for (const [toolName, templateKey] of Object.entries(savedModes)) {
+        if (currentModes[toolName] !== templateKey) {
+          promptModes.setToolPromptMode(toolName, templateKey);
+        }
+      }
+    }
+
+    // Load system prompt from schema-defined label if present
+    const savedSystemPrompt = systemPromptLabel
+      ? (savedConfig as any)[systemPromptLabel]
+      : undefined;
+    if (savedSystemPrompt && promptModes.customPrompt !== savedSystemPrompt) {
+      promptModes.setCustomPrompt(savedSystemPrompt);
+
+      // Determine if using compiled (has tool_prompt_modes) or custom
+      const hasToolModes = savedKeys.length > 0;
+      if (promptModes.useCompiled !== hasToolModes) {
+        promptModes.setUseCompiled(hasToolModes);
+      }
+    }
+  }, [
+    agent.assistant_id,
+    agent.config?.configurable,
+    systemPromptLabel,
+    promptModes.customPrompt,
+    promptModes.useCompiled,
+    promptModes.promptModes,
+  ]);
+
   const handleSubmit = async (data: {
     name: string;
     description: string;
@@ -60,10 +138,52 @@ function EditAgentDialogContent({
       return;
     }
 
+    // Prepare final config with prompt data
+    const finalConfig = { ...data.config };
+
+    // Add prompt modes if any are selected (under the MCP config schema label)
+    if (Object.keys(promptModes.promptModes).length > 0 && toolConfigLabel) {
+      finalConfig[toolConfigLabel] = {
+        ...(finalConfig[toolConfigLabel] || {}),
+        tool_prompt_modes: promptModes.promptModes,
+      };
+    }
+
+    // Add system prompt if customized or compiled, targeting the schema-defined label
+    if (systemPromptLabel && promptModes.customPrompt) {
+      finalConfig[systemPromptLabel] = promptModes.customPrompt;
+    } else if (
+      systemPromptLabel &&
+      Object.keys(promptModes.promptModes).length > 0
+    ) {
+      // Compile system prompt from selected modes
+      try {
+        const selectedTools = finalConfig[toolConfigLabel || ""]?.tools || [];
+        const selections = buildToolModeSelections(
+          tools,
+          selectedTools,
+          promptModes.promptModes,
+        );
+        const compiledPrompt = await compileSystemPrompt(selections);
+        finalConfig[systemPromptLabel] = compiledPrompt;
+      } catch (_error) {
+        const errorMessage =
+          _error instanceof Error ? _error.message : "Unknown error";
+        toast.error("Failed to compile system prompt", {
+          description: `${errorMessage}. The agent will be updated without a custom system prompt.`,
+          richColors: true,
+        });
+      }
+    }
+
     const updatedAgent = await updateAgent(
       agent.assistant_id,
       agent.deploymentId,
-      data,
+      {
+        name: data.name,
+        description: data.description,
+        config: finalConfig,
+      },
     );
 
     if (!updatedAgent) {

@@ -119,6 +119,20 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     }
   });
 
+  // MODIFICATION START: Session Persistence Fix for Workspace Tools
+  // Get the OAP thread ID from the custom header sent by the frontend.
+  const threadId = req.headers.get("X-OAP-Thread-ID");
+  if (threadId) {
+    // The langchain-tool-server workspace tools are designed to use the
+    // 'mcp-session-id' header to isolate agent sessions. By forwarding
+    // OAP's stable threadId as this header, we ensure that all tool calls
+    // within the same conversation share the same workspace session.
+    // This enables stateful, multi-call operations like selecting a project
+    // and then working with its files via relative paths.
+    headers.set("mcp-session-id", `oap-thread-${threadId}`);
+  }
+  // MODIFICATION END
+
   const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
   // Authentication priority:
   // 1. X-MCP-Access-Token header

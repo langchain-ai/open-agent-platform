@@ -110,6 +110,7 @@ function configSchemaToToolsConfig(
     fields.push({
       label: key,
       type: uiConfig.type,
+      scope: uiConfig.scope, // Pass through scope (graph | agent)
       default: {
         url: process.env.NEXT_PUBLIC_MCP_SERVER_URL,
         tools: [],
@@ -123,26 +124,26 @@ function configSchemaToToolsConfig(
 
 function configSchemaToRagConfig(
   schema: GraphSchema["config_schema"],
-): ConfigurableFieldRAGMetadata | undefined {
+): ConfigurableFieldRAGMetadata[] {
   if (!schema || !schema.properties) {
-    return undefined;
+    return [];
   }
 
-  let ragField: ConfigurableFieldRAGMetadata | undefined;
+  const ragFields: ConfigurableFieldRAGMetadata[] = [];
   for (const [key, value] of Object.entries(schema.properties)) {
     const uiConfig = getUiConfig(value);
     if (!uiConfig || uiConfig.type !== "rag") {
       continue;
     }
 
-    ragField = {
+    ragFields.push({
       label: key,
       type: uiConfig.type,
+      scope: uiConfig.scope, // Pass through scope
       default: uiConfig.default,
-    };
-    break;
+    });
   }
-  return ragField;
+  return ragFields;
 }
 
 function configSchemaToAgentsConfig(
@@ -213,24 +214,18 @@ export function extractConfigurationsFromAgent({
     };
   });
 
-  const configRagWithDefaults = ragConfig
-    ? {
-        ...ragConfig,
-        default: {
-          collections:
-            (
-              configurable[
-                ragConfig.label
-              ] as ConfigurableFieldRAGMetadata["default"]
-            )?.collections ??
-            ragConfig.default?.collections ??
-            [],
-          rag_url:
-            configurable[ragConfig.label]?.rag_url ??
-            process.env.NEXT_PUBLIC_RAG_API_URL,
-        },
-      }
-    : undefined;
+  const configRagWithDefaults = ragConfig.map((rag) => ({
+    ...rag,
+    default: {
+      collections:
+        (configurable[rag.label] as ConfigurableFieldRAGMetadata["default"])
+          ?.collections ??
+        rag.default?.collections ??
+        [],
+      rag_url:
+        configurable[rag.label]?.rag_url ?? process.env.NEXT_PUBLIC_RAG_API_URL,
+    },
+  }));
 
   const configurableAgentsWithDefaults = agentsConfig
     ? {
@@ -252,7 +247,7 @@ export function extractConfigurationsFromAgent({
   return {
     configFields: configFieldsWithDefaults,
     toolConfig: configToolsWithDefaults,
-    ragConfig: configRagWithDefaults ? [configRagWithDefaults] : [],
+    ragConfig: configRagWithDefaults,
     agentsConfig: configurableAgentsWithDefaults
       ? [configurableAgentsWithDefaults]
       : [],

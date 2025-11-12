@@ -1,7 +1,7 @@
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Tool } from "@/types/tool";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 function getMCPUrlOrThrow() {
   if (!process.env.NEXT_PUBLIC_BASE_API_URL) {
@@ -27,15 +27,29 @@ export default function useMCP({
   const [tools, setTools] = useState<Tool[]>([]);
   const [cursor, setCursor] = useState("");
 
+  // CRITICAL FIX: Cache MCP client to maintain stable session across tool calls
+  // Previously: new Client created per call → new session ID → workspace bindings lost
+  // Now: Single Client instance reused → same session ID → workspace persists
+  const mcpClientRef = useRef<Client | null>(null);
+
   /**
-   * Creates an MCP client and connects it to the specified server URL.
-   * @param url - The URL of the MCP server.
-   * @param options - Client identification options.
-   * @param options.name - The name of the client.
-   * @param options.version - The version of the client.
-   * @returns A promise that resolves to the connected MCP client instance.
+   * Get or create MCP client (cached for session stability).
+   *
+   * IMPORTANT: The MCP SDK Client generates a new session UUID on each instantiation.
+   * Creating a new client for every tool call causes:
+   * - New session ID sent in mcp-session-id header
+   * - Server creates new session, can't find previous workspace bindings
+   * - select_project() and subsequent calls see different sessions
+   *
+   * Solution: Create client ONCE per component lifecycle, reuse for all calls.
    */
-  const createAndConnectMCPClient = async () => {
+  const getOrCreateClient = async (): Promise<Client> => {
+    // Return cached client if available
+    if (mcpClientRef.current) {
+      return mcpClientRef.current;
+    }
+
+    // Create new client and cache it
     const url = getMCPUrlOrThrow();
     const connectionClient = new StreamableHTTPClientTransport(new URL(url));
     const mcp = new Client({
@@ -44,19 +58,20 @@ export default function useMCP({
     });
 
     await mcp.connect(connectionClient);
+
+    // Cache for future calls
+    mcpClientRef.current = mcp;
+
     return mcp;
   };
 
   /**
    * Connects to an MCP server and retrieves the list of available tools.
-   * @param url - The URL of the MCP server.
-   * @param options - Client identification options.
-   * @param options.name - The name of the client.
-   * @param options.version - The version of the client.
+   * @param nextCursor - Optional cursor for pagination
    * @returns A promise that resolves to an array of available tools.
    */
   const getTools = async (nextCursor?: string): Promise<Tool[]> => {
-    const mcp = await createAndConnectMCPClient();
+    const mcp = await getOrCreateClient(); // ← REUSES cached client
     const tools = await mcp.listTools({ cursor: nextCursor });
     if (tools.nextCursor) {
       setCursor(tools.nextCursor);
@@ -69,8 +84,8 @@ export default function useMCP({
   /**
    * Calls a tool on the MCP server.
    * @param name - The name of the tool.
-   * @param version - The version of the tool. Optional.
    * @param args - The arguments to pass to the tool.
+   * @param version - The version of the tool. Optional.
    * @returns A promise that resolves to the response from the tool.
    */
   const callTool = async ({
@@ -82,7 +97,7 @@ export default function useMCP({
     args: Record<string, any>;
     version?: string;
   }) => {
-    const mcp = await createAndConnectMCPClient();
+    const mcp = await getOrCreateClient(); // ← REUSES cached client
     const response = await mcp.callTool({
       name,
       version,
@@ -91,10 +106,21 @@ export default function useMCP({
     return response;
   };
 
+  // Cleanup: Close client connection when component unmounts
+  useEffect(() => {
+    return () => {
+      if (mcpClientRef.current) {
+        // Close the MCP client connection
+        mcpClientRef.current.close?.();
+        mcpClientRef.current = null;
+      }
+    };
+  }, []); // Empty deps = run cleanup only on unmount
+
   return {
     getTools,
     callTool,
-    createAndConnectMCPClient,
+    createAndConnectMCPClient: getOrCreateClient, // Keep old name for backwards compatibility
     tools,
     setTools,
     cursor,

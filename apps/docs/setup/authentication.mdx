@@ -31,7 +31,7 @@ If you do *not* want to use custom authentication in your LangGraph server, and 
 Lastly, ensure you have the `NEXT_PUBLIC_BASE_API_URL` environment variable set to the base API URL of your **web** server. For local development, this should be set to:
 
 ```bash
-NEXT_PUBLIC_BASE_API_URL="http://localhost:3000/api"
+NEXT_PUBLIC_BASE_API_URL="http://localhost:3003/api"
 ```
 
 This will cause all requests made to your web client to first pass through a proxy route, which injects the LangSmith API key into the request from the server, as to not expose the API key to the client. The request is then forwarded on to your LangGraph server.

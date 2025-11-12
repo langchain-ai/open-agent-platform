@@ -74,75 +74,90 @@ async function getAgents(
 ): Promise<Agent[]> {
   const agentsPromise: Promise<Agent[]>[] = deployments.map(
     async (deployment) => {
-      const client = createClient(deployment.id, accessToken);
+      try {
+        const client = createClient(deployment.id, accessToken);
 
-      const [defaultAssistants, allUserAssistants] = await Promise.all([
-        getOrCreateDefaultAssistants(deployment, accessToken),
-        client.assistants.search({
-          limit: 100,
-        }),
-      ]);
-      const assistantMap = new Map<string, Assistant>();
+        const [defaultAssistants, allUserAssistants] = await Promise.all([
+          getOrCreateDefaultAssistants(deployment, accessToken),
+          client.assistants.search({
+            limit: 100,
+          }),
+        ]);
+        const assistantMap = new Map<string, Assistant>();
 
-      // Add default assistants to the map
-      defaultAssistants.forEach((assistant) => {
-        assistantMap.set(assistant.assistant_id, assistant);
-      });
-
-      // Add user assistants to the map, potentially overriding defaults
-      allUserAssistants.forEach((assistant) => {
-        assistantMap.set(assistant.assistant_id, assistant);
-      });
-
-      // Convert map values back to array
-      const allAssistants: Assistant[] = Array.from(assistantMap.values());
-
-      const assistantsGroupedByGraphs = groupAgentsByGraphs(allAssistants);
-
-      const assistantsPromise: Promise<Agent[]>[] =
-        assistantsGroupedByGraphs.map(async (group) => {
-          // We must get the agent config schema for each graph in a deployment,
-          // not just for each deployment, as a deployment can have multiple graphs
-          // each with their own unique config schema.
-          const defaultAssistant =
-            group.find((a) => isUserCreatedDefaultAssistant(a)) ?? group[0];
-          const schema = await getAgentConfigSchema(
-            defaultAssistant.assistant_id,
-            deployment.id,
-          );
-
-          const supportedConfigs: string[] = [];
-          if (schema) {
-            const { toolConfig, ragConfig, agentsConfig } =
-              extractConfigurationsFromAgent({
-                agent: defaultAssistant,
-                schema,
-              });
-            if (toolConfig.length) {
-              supportedConfigs.push("tools");
-            }
-            if (ragConfig.length) {
-              supportedConfigs.push("rag");
-            }
-            if (agentsConfig.length) {
-              supportedConfigs.push("supervisor");
-            }
-          }
-
-          return group.map((assistant) => ({
-            ...assistant,
-            deploymentId: deployment.id,
-            supportedConfigs: supportedConfigs as [
-              "tools" | "rag" | "supervisor",
-            ],
-          }));
+        // Add default assistants to the map
+        defaultAssistants.forEach((assistant) => {
+          assistantMap.set(assistant.assistant_id, assistant);
         });
 
-      return (await Promise.all(assistantsPromise)).flat();
+        // Add user assistants to the map, potentially overriding defaults
+        allUserAssistants.forEach((assistant) => {
+          assistantMap.set(assistant.assistant_id, assistant);
+        });
+
+        // Convert map values back to array
+        const allAssistants: Assistant[] = Array.from(assistantMap.values());
+
+        const assistantsGroupedByGraphs = groupAgentsByGraphs(allAssistants);
+
+        const assistantsPromise: Promise<Agent[]>[] =
+          assistantsGroupedByGraphs.map(async (group) => {
+            // We must get the agent config schema for each graph in a deployment,
+            // not just for each deployment, as a deployment can have multiple graphs
+            // each with their own unique config schema.
+            const defaultAssistant =
+              group.find((a) => isUserCreatedDefaultAssistant(a)) ?? group[0];
+            const schema = await getAgentConfigSchema(
+              defaultAssistant.assistant_id,
+              deployment.id,
+            );
+
+            const supportedConfigs: string[] = [];
+            if (schema) {
+              const { toolConfig, ragConfig, agentsConfig } =
+                extractConfigurationsFromAgent({
+                  agent: defaultAssistant,
+                  schema,
+                });
+              if (toolConfig.length) {
+                supportedConfigs.push("tools");
+              }
+              if (ragConfig.length) {
+                supportedConfigs.push("rag");
+              }
+              if (agentsConfig.length) {
+                supportedConfigs.push("supervisor");
+              }
+            }
+
+            return group.map((assistant) => ({
+              ...assistant,
+              deploymentId: deployment.id,
+              supportedConfigs: supportedConfigs as [
+                "tools" | "rag" | "supervisor",
+              ],
+            }));
+          });
+
+        return (await Promise.all(assistantsPromise)).flat();
+      } catch (error) {
+        console.error(
+          `Failed to load agents from deployment ${deployment.name} (${deployment.id}):`,
+          error,
+        );
+        // Return empty array for this deployment so other deployments can still load
+        return [];
+      }
     },
   );
 
-  return (await Promise.all(agentsPromise)).flat();
+  // Use Promise.allSettled to ensure all deployments are attempted
+  // even if some fail, so working agents still show up
+  const results = await Promise.allSettled(agentsPromise);
+  return results
+    .filter((result) => result.status === "fulfilled")
+    .map((result) => result.value)
+    .flat();
 }
 
 type AgentsContextType = {

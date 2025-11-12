@@ -13,4 +13,4 @@ npm i -g mintlify
 mintlify dev
 ```
 
-This will start a local development server at http://localhost:3000. You can now view and edit your docs in real-time.
+This will start a local development server at http://localhost:3003. You can now view and edit your docs in real-time.
