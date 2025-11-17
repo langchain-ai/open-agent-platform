@@ -4,7 +4,7 @@
   "repository": "https://github.com/langchain-ai/open-agent-platform",
   "private": true,
   "scripts": {
-    "dev": "mint dev"
+    "dev": "PORT=3005 mint dev"
   },
   "devDependencies": {
     "mint": "^4.1.19"

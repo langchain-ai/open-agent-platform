@@ -112,7 +112,7 @@ export default function SigninInterface() {
         <CardHeader>
           <CardTitle className="text-center text-2xl">Sign In</CardTitle>
           <CardDescription className="text-center">
-            Welcome back to Open Agent Platform
+            Welcome back to Vi Builder
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -123,14 +123,14 @@ export default function SigninInterface() {
           )}
 
           {isSuccess && (
-            <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
+            <Alert className="mb-4 border-[#E2C521]/30 bg-[#E2C521]/10 text-[#99885E]">
               <AlertDescription className="flex flex-col gap-2">
                 <span>Success! We're redirecting you to the dashboard...</span>
                 {showManualRedirect && (
                   <Button
                     onClick={() => router.push("/")}
                     variant="outline"
-                    className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                    className="mt-2 border-[#E2C521]/40 text-[#99885E] hover:bg-[#E2C521]/10"
                   >
                     Go to Dashboard Now
                   </Button>

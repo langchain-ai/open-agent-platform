@@ -9,10 +9,11 @@ import {
 } from "@/components/ui/card";
 import { Tool } from "@/types/tool";
 import { ToolDetailsDialog } from "../tool-details-dialog";
-import { Eye, FlaskConical } from "lucide-react";
+import { Eye, FlaskConical, Sparkles } from "lucide-react";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import NextLink from "next/link";
 import _ from "lodash";
 
@@ -21,12 +22,26 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
+  const agentModesCount =
+    tool.metadata?.agent_prompts?.available_templates?.length || 0;
+
   return (
     <Card className="border border-gray-200 shadow-xs">
       <CardHeader>
-        <CardTitle className="truncate pb-2 text-lg font-medium">
-          {_.startCase(tool.name)}
-        </CardTitle>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="truncate pb-2 text-lg font-medium">
+            {_.startCase(tool.name)}
+          </CardTitle>
+          {agentModesCount > 0 && (
+            <Badge
+              variant="brand"
+              className="shrink-0"
+            >
+              <Sparkles className="size-3" />
+              {agentModesCount} {agentModesCount === 1 ? "mode" : "modes"}
+            </Badge>
+          )}
+        </div>
 
         <CardDescription className="line-clamp-3">
           {tool.description}

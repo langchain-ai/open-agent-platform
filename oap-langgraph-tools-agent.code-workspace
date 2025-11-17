@@ -1,0 +1,19 @@
+{
+    "folders": [
+		{
+			"path": "../oap-langgraph-tools-agent"
+		},
+		{
+			"path": "."
+		},
+		{
+			"path": "../open_deep_research"
+		},
+		{
+			"path": "../multi-modal-researcher"
+		},
+		{
+			"path": "../oap-agent-supervisor"
+		}
+	]
+}
