@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import {
+  getMCPServerConfigs,
+  isMCPServerConfig,
+} from "@/lib/environment/mcp-servers";
+import { validate } from "uuid";
+import { MCPServerConfig } from "@/types/mcp";
 
 // This will contain the object which contains the access token
-const MCP_TOKENS = process.env.MCP_TOKENS;
-const MCP_SERVER_URL = process.env.NEXT_PUBLIC_MCP_SERVER_URL;
-const MCP_AUTH_REQUIRED = process.env.NEXT_PUBLIC_MCP_AUTH_REQUIRED === "true";
+const mcpServers = getMCPServerConfigs();
+
+const isAuthRequired = (server: MCPServerConfig): boolean => !!server.authUrl;
 
 async function getSupabaseToken(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -79,6 +85,60 @@ async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: URL) {
   }
 }
 
+function getIdAndPath(url: URL): {
+  id: string | null;
+  pathRest: string;
+} {
+  // Extract the path and ID from the new format
+  // Example: /api/oap_mcp/proxy/[id] -> extract [id] and use it for the path
+  const pathMatch = url.pathname.match(
+    /^\/api\/oap_mcp\/proxy\/([^/]+)(?:\/(.*))?$/,
+  );
+
+  let id: string | null = null;
+  let pathRest = "";
+
+  if (pathMatch) {
+    // New path format: /api/oap_mcp/proxy/[id]
+    id = pathMatch[1];
+    pathRest = pathMatch[2] ? `/${pathMatch[2]}` : "";
+  }
+  return { id, pathRest };
+}
+
+function findServerOrThrow(url: URL): MCPServerConfig | Response {
+  if (!mcpServers?.length) {
+    return new Response(
+      JSON.stringify({
+        message:
+          "No MCP servers found. Please set NEXT_PUBLIC_MCP_SERVERS environment variable.",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  const { id } = getIdAndPath(url);
+  if (!id || !validate(id)) {
+    return new Response(
+      JSON.stringify({
+        message: "Invalid MCP server ID.",
+      }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const selectedServer = mcpServers.find((mcpServer) => mcpServer.id === id);
+  if (!selectedServer) {
+    return new Response(
+      JSON.stringify({
+        message: "MCP server not found.",
+      }),
+      { status: 404, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  return selectedServer;
+}
+
 /**
  * Proxies requests from the client to the MCP server.
  * Extracts the path after '/api/oap_mcp', constructs the target URL,
@@ -89,24 +149,17 @@ async function getMcpAccessToken(supabaseToken: string, mcpServerUrl: URL) {
  * @returns The response from the MCP server.
  */
 export async function proxyRequest(req: NextRequest): Promise<Response> {
-  if (!MCP_SERVER_URL) {
-    return new Response(
-      JSON.stringify({
-        message:
-          "MCP_SERVER_URL environment variable is not set. Please set it to the URL of your MCP server, or NEXT_PUBLIC_MCP_SERVER_URL if you do not want to use the proxy route.",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+  const reqUrl = new URL(req.url);
+  const selectedServer = findServerOrThrow(reqUrl);
+  if (!isMCPServerConfig(selectedServer)) {
+    return selectedServer;
   }
 
-  // Extract the path after '/api/oap_mcp/'
-  // Example: /api/oap_mcp/foo/bar -> /foo/bar
-  const url = new URL(req.url);
-  const path = url.pathname.replace(/^\/api\/oap_mcp/, "");
+  const { pathRest } = getIdAndPath(reqUrl);
 
   // Construct the target URL
-  const targetUrlObj = new URL(MCP_SERVER_URL);
-  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}mcp${path}${url.search}`;
+  const targetUrlObj = new URL(selectedServer.url);
+  targetUrlObj.pathname = `${targetUrlObj.pathname}${targetUrlObj.pathname.endsWith("/") ? "" : "/"}${pathRest}${reqUrl.search}`;
   const targetUrl = targetUrlObj.toString();
 
   // Prepare headers, forwarding original headers except Host
@@ -119,36 +172,22 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
     }
   });
 
-  const mcpAccessTokenCookie = req.cookies.get("X-MCP-Access-Token")?.value;
-  // Authentication priority:
-  // 1. X-MCP-Access-Token header
-  // 2. X-MCP-Access-Token cookie
-  // 3. MCP_TOKENS environment variable
-  // 4. Supabase-JWT token exchange
+  const mcpAccessTokenCookieName = `X-MCP-Access-Token-${selectedServer.id}`;
+  const mcpAccessTokenCookie = req.cookies.get(mcpAccessTokenCookieName)?.value;
   let accessToken: string | null = null;
 
-  if (MCP_AUTH_REQUIRED) {
+  if (isAuthRequired(selectedServer)) {
     const supabaseToken = await getSupabaseToken(req);
 
     if (mcpAccessTokenCookie) {
       accessToken = mcpAccessTokenCookie;
-    } else if (MCP_TOKENS) {
-      // Try to use MCP_TOKENS environment variable
-      try {
-        const { access_token } = JSON.parse(MCP_TOKENS);
-        if (access_token) {
-          accessToken = access_token;
-        }
-      } catch (e) {
-        console.error("Failed to parse MCP_TOKENS env variable", e);
-      }
     }
 
     // If no token yet, try Supabase-JWT token exchange
-    if (!accessToken && supabaseToken && MCP_SERVER_URL) {
+    if (!accessToken && supabaseToken) {
       accessToken = await getMcpAccessToken(
         supabaseToken,
-        new URL(MCP_SERVER_URL),
+        new URL(selectedServer.url),
       );
     }
 
@@ -209,13 +248,13 @@ export async function proxyRequest(req: NextRequest): Promise<Response> {
       newResponse.headers.set(key, value);
     });
 
-    if (MCP_AUTH_REQUIRED) {
+    if (isAuthRequired(selectedServer)) {
       // If we used the Supabase token exchange, add the access token to the response
       // so it can be used in future requests
-      if (!mcpAccessTokenCookie && !MCP_TOKENS && accessToken) {
+      if (!mcpAccessTokenCookie && accessToken) {
         // Set a cookie with the access token that will be included in future requests
         newResponse.cookies.set({
-          name: "X-MCP-Access-Token",
+          name: mcpAccessTokenCookieName,
           value: accessToken,
           httpOnly: false, // Allow JavaScript access so it can be read for headers
           secure: process.env.NODE_ENV === "production",
