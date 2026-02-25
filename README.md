@@ -1,5 +1,15 @@
 # Open Agent Platform
 
+> [!CAUTION]
+> **This repository has been deprecated.**
+>
+> We recommend using [Agent Builder](https://www.langchain.com/langsmith/agent-builder) on [LangSmith](https://smith.langchain.com/) instead. Agent Builder provides a fully managed, no-code experience for creating, testing, and deploying agents — no self-hosting required.
+
+---
+
+<details>
+<summary>Original README (archived)</summary>
+
 Open Agent Platform is a no-code agent building platform. These agents can be connected to a wide range of tools, RAG servers, and even other agents through an Agent Supervisor!
 
 <video src="https://github.com/user-attachments/assets/bc91304b-e704-41d7-a0cd-9806d37640c0.mp4" controls="controls"></video>
@@ -54,7 +64,7 @@ Yes! See the [Building Your Own Agents](https://github.com/langchain-ai/open-age
 
 ### How can I use non-supabase auth?
 
-Yes! It requires some modifications to be made to the code, but we've implemented authentication in a way which makes it easy to swap out with any other authentication provider. 
+Yes! It requires some modifications to be made to the code, but we've implemented authentication in a way which makes it easy to swap out with any other authentication provider.
 
 ### How can I use non-langgraph agents?
 
@@ -65,3 +75,5 @@ No. All agents you intend to use with OAP must be LangGraph agents, deployed on 
 First, ensure you're using the latest version of LangGraph. If running locally, make sure you're using the latest version of the LangGraph API, and CLI packages. If deploying, make sure you've published a revision after 05/14/2025. Then, check that you have the `x_oap_ui_config` metadata set on your configurable fields. If you have, check that your configurable object is defined using LangGraph Zod (if using TypeScript), as this is required for the Open Agent Platform to recognize & render your UI fields.
 
 If it's still not working, confirm your `x_oap_ui_config` metadata has the proper fields set.
+
+</details>
