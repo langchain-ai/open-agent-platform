@@ -2,14 +2,23 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { Tool } from "@/types/tool";
 import { useState } from "react";
+import { getMCPServerConfigs } from "@/lib/environment/mcp-servers";
 
-function getMCPUrlOrThrow() {
+function getMCPUrlOrThrow(id?: string) {
   if (!process.env.NEXT_PUBLIC_BASE_API_URL) {
     throw new Error("NEXT_PUBLIC_BASE_API_URL is not defined");
   }
 
+  const mcpServers = getMCPServerConfigs();
+  const mcpServer = id
+    ? mcpServers.find((mcpServer) => mcpServer.id === id)
+    : mcpServers[0];
+  if (!mcpServer) {
+    throw new Error(`MCP server ${id} not found`);
+  }
+
   const url = new URL(process.env.NEXT_PUBLIC_BASE_API_URL);
-  url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp`;
+  url.pathname = `${url.pathname}${url.pathname.endsWith("/") ? "" : "/"}oap_mcp/${id}`;
   return url;
 }
 
@@ -20,9 +29,11 @@ function getMCPUrlOrThrow() {
 export default function useMCP({
   name,
   version,
+  id,
 }: {
   name: string;
   version: string;
+  id?: string;
 }) {
   const [tools, setTools] = useState<Tool[]>([]);
   const [cursor, setCursor] = useState("");
@@ -36,7 +47,7 @@ export default function useMCP({
    * @returns A promise that resolves to the connected MCP client instance.
    */
   const createAndConnectMCPClient = async () => {
-    const url = getMCPUrlOrThrow();
+    const url = getMCPUrlOrThrow(id);
     const connectionClient = new StreamableHTTPClientTransport(new URL(url));
     const mcp = new Client({
       name,
