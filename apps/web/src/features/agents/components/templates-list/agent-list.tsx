@@ -32,11 +32,11 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="relative w-full max-w-sm">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+        <div className="relative w-full max-w-md">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
           <Input
             placeholder="Search agents..."
-            className="pl-8"
+            className="bg-background/50 border-border/50 focus:bg-background pl-10 transition-colors"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -44,6 +44,7 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
         <Button
           size="sm"
           onClick={() => setShowCreateDialog(true)}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Agent
@@ -51,15 +52,17 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-          <h3 className="text-lg font-medium">No agents found</h3>
-          <p className="text-muted-foreground mt-1 text-sm">
+        <div className="border-border/50 from-muted/20 to-muted/5 flex flex-col items-center justify-center rounded-xl border border-dashed bg-gradient-to-br p-8 text-center">
+          <h3 className="text-foreground text-lg font-medium">
+            No agents found
+          </h3>
+          <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
             Create a new agent or try a different search.
           </p>
           <Button
             variant="outline"
             size="sm"
-            className="mt-4"
+            className="hover:bg-accent/50 mt-4 transition-colors"
             onClick={() => setShowCreateDialog(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -67,7 +70,7 @@ export function AgentList({ agents, deploymentId }: AgentListProps) {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredAgents.map((agent) => (
             <AgentCard
               key={`agent-list-${agent.assistant_id}`}

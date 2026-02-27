@@ -84,11 +84,11 @@ export function AgentDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="relative w-full max-w-sm">
-            <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <div className="relative w-full max-w-md">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search agents..."
-              className="pl-8"
+              className="bg-background/50 border-border/50 focus:bg-background pl-10 transition-colors"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -98,14 +98,16 @@ export function AgentDashboard() {
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="text-muted-foreground h-4 w-4" />
-            <span className="text-sm font-medium">Filters:</span>
+            <span className="text-foreground text-sm font-medium">
+              Filters:
+            </span>
           </div>
 
           <Select
             value={graphFilter}
             onValueChange={setGraphFilter}
           >
-            <SelectTrigger className="h-9 min-w-[180px]">
+            <SelectTrigger className="bg-background/50 border-border/50 focus:bg-background h-9 min-w-[180px] transition-colors">
               <SelectValue placeholder="All Templates" />
             </SelectTrigger>
             <SelectContent>
@@ -134,21 +136,26 @@ export function AgentDashboard() {
       </div>
 
       {filteredAgents.length === 0 ? (
-        <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <div className="bg-muted mx-auto flex h-20 w-20 items-center justify-center rounded-full">
-            <Search className="text-muted-foreground h-10 w-10" />
+        <div className="animate-in fade-in-50 border-border/50 from-muted/30 to-muted/10 flex flex-col items-center justify-center rounded-xl border border-dashed bg-gradient-to-br p-12 text-center">
+          <div className="bg-muted/50 border-border/50 mx-auto flex h-24 w-24 items-center justify-center rounded-full border">
+            <Search className="text-muted-foreground h-12 w-12" />
           </div>
-          <h2 className="mt-6 text-xl font-semibold">No agents found</h2>
-          <p className="text-muted-foreground mt-2 mb-8 text-center">
+          <h2 className="text-foreground mt-6 text-2xl font-semibold">
+            No agents found
+          </h2>
+          <p className="text-muted-foreground mt-3 mb-8 max-w-md text-center leading-relaxed">
             We couldn't find any agents matching your search criteria. Try
             adjusting your filters or create a new agent.
           </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md"
+          >
             Create Agent
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredAgents.map((agent) => (
             <AgentCard
               key={`agent-dashboard-${agent.assistant_id}`}
