@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Bot,
   Brain,
+  Clock,
   Cloud,
   Edit,
   MessageSquare,
@@ -25,6 +26,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { isUserCreatedDefaultAssistant } from "@/lib/agent-utils";
+import { CronDialog } from "@/features/crons/components/cron-dialog";
 
 function SupportedConfigBadge({
   type,
@@ -67,6 +69,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, showDeployment }: AgentCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCronDialog, setShowCronDialog] = useState(false);
   const deployments = getDeployments();
   const selectedDeployment = deployments.find(
     (d) => d.id === agent.deploymentId,
@@ -131,16 +134,28 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
           </div>
         </CardHeader>
         <CardFooter className="mt-auto flex w-full justify-between pt-2">
-          {!isDefaultAgent && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditDialog(true)}
-            >
-              <Edit className="mr-2 h-3.5 w-3.5" />
-              Edit
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {!isDefaultAgent && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditDialog(true)}
+                >
+                  <Edit className="mr-2 h-3.5 w-3.5" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCronDialog(true)}
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  Crons
+                </Button>
+              </>
+            )}
+          </div>
           <NextLink
             href={`/?agentId=${agent.assistant_id}&deploymentId=${agent.deploymentId}`}
             className="ml-auto"
@@ -156,6 +171,11 @@ export function AgentCard({ agent, showDeployment }: AgentCardProps) {
         agent={agent}
         open={showEditDialog}
         onOpenChange={(c) => setShowEditDialog(c)}
+      />
+      <CronDialog
+        agent={agent}
+        open={showCronDialog}
+        onOpenChange={(c) => setShowCronDialog(c)}
       />
     </>
   );
